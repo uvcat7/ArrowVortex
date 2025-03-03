@@ -1,0 +1,124 @@
+#include <Dialogs/GenerateNotes.h>
+
+#include <Core/Draw.h>
+#include <Core/WidgetsLayout.h>
+
+#include <Editor/Selection.h>
+#include <Editor/StreamGenerator.h>
+#include <Editor/Common.h>
+#include <Editor/Editor.h>
+
+#include <Core/Utils.h>
+
+#include <Managers/ChartMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/SimfileMan.h>
+
+#define Dlg DialogGenerateNotes
+
+namespace Vortex {
+
+static const char* SpacingStrings[] =
+{
+	"4th", "8th", "12th", "16th", "20th", "24th", "32nd"
+};
+
+static SnapType SpacingTypes[] =
+{
+	ST_4TH, ST_8TH, ST_12TH, ST_16TH, ST_20TH, ST_24TH, ST_32ND
+};
+
+static const int IFP_SIZE = 24;
+static const int IFP_SPACING = 4;
+
+Dlg::~Dlg()
+{
+}
+
+Dlg::Dlg()
+	: myFootSelectorIndex(0)
+	, mySpacing(0)
+{
+	setTitle("GENERATE NOTES");
+	myCreateWidgets();
+}
+
+void Dlg::myCreateWidgets()
+{
+	myLayout.row().col(true);
+	myLayout.addBlank();
+
+	myLayout.row().col(60).col(116);
+	mySpacingList = myLayout.add<WgDroplist>("Spacing");
+	mySpacingList->value.bind(&mySpacing);
+	for(int i = 0; i < 6; ++i)
+	{
+		mySpacingList->addItem(SpacingStrings[i]);
+	}
+
+	myLayout.row().col(180);
+	WgLabel* repetitions = myLayout.add<WgLabel>();
+	repetitions->text.set("Maximum note repetition");
+
+	myLayout.row().col(116).col(60);
+
+	WgSpinner* scol = myLayout.add<WgSpinner>("Single column");
+	scol->value.bind(&myStream.maxColRep);
+	scol->setRange(1.0, 16.0);
+	scol->setPrecision(0, 0);
+
+	WgSpinner* pcol = myLayout.add<WgSpinner>("Paired columns");
+	pcol->value.bind(&myStream.maxBoxRep);
+	pcol->setRange(1.0, 16.0);
+	pcol->setPrecision(0, 0);
+
+	myLayout.row().col(60).col(116);
+
+	WgSlider* sdiff = myLayout.add<WgSlider>("Difficulty");
+	sdiff->value.bind(&myStream.patternDifficulty);
+
+	myLayout.row().col(180);
+
+	WgCheckbox* cfoot = myLayout.add<WgCheckbox>();
+	cfoot->text.set("Start with right foot");
+	cfoot->value.bind(&myStream.startWithRight);
+
+	WgButton* generate = myLayout.add<WgButton>();
+	generate->text.set("Generate notes");
+	generate->onPress.bind(this, &Dlg::myGenerateNotes);
+
+	onChanges(VCM_ALL_CHANGES);
+}
+
+void Dlg::onChanges(int changes)
+{
+	if(changes & VCM_CHART_CHANGED)
+	{
+		int w = 180;
+		auto style = gStyle->get();
+		if(style && style->padWidth > 0)
+		{
+			w = max(w, gStyle->getNumCols() * (IFP_SIZE + IFP_SPACING));
+			myStream.feetCols = style->padInitialFeetCols[0];
+		}
+	}
+}
+
+void Dlg::myGenerateNotes()
+{
+	auto region = gSelection->getSelectedRegion();
+	if(gSimfile->isClosed())
+	{
+		HudNote("%s", "Open a simfile or music file first.");
+	}
+	else if(region.beginRow == region.endRow)
+	{
+		HudNote("%s", "Select a region first.");
+	}
+	else
+	{
+		myStream.generate(region.beginRow, region.endRow, SpacingTypes[mySpacing]);
+	}
+}
+
+}; // namespace Vortex
