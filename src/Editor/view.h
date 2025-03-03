@@ -23,6 +23,7 @@ struct View
 	virtual void tick() = 0;
 
 	virtual void toggleReverseScroll() = 0;
+	virtual void toggleChartPreview() = 0;
 
 	virtual void setTimeBased(bool enabled) = 0;
 
@@ -37,7 +38,7 @@ struct View
 	virtual void setCursorToSelection(bool top) = 0;
 
 	virtual void setSnapType(int type) = 0;
-	virtual int snapRow(int row, SnapDir direction) = 0;
+	virtual int  snapRow(int row, SnapDir direction) = 0;
 	virtual bool isAlignedToSnap(int row) = 0;
 
 	virtual int getZoomLevel() const = 0;
@@ -63,6 +64,7 @@ struct View
 	virtual SnapType getSnapType() const = 0;
 	virtual bool isTimeBased() const = 0;
 	virtual bool hasReverseScroll() const = 0;
+	virtual bool hasChartPreview() const = 0;
 	virtual int getNoteScale() const = 0;
 
 	virtual double getPixPerSec() const = 0;

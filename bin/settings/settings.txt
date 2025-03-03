@@ -6,7 +6,6 @@ general {
 view {
   backgroundStyle = stretch
   showTempoHelp = yes
-  useTimeBasedView = yes
   noteskinPrefs = Metal, Classic, Simple, Pump
 }
 interface {

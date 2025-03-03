@@ -77,6 +77,7 @@ int myZoomLevel, myMini;
 bool myIsDraggingReceptors;
 bool myUseTimeBasedView;
 bool myUseReverseScroll;
+bool myUseChartPreview;
 SnapType mySnapType;
 
 // ================================================================================================
@@ -96,8 +97,9 @@ ViewImpl()
 	, myZoomLevel(0)
 	, myMini(0)
 	, mySnapType(ST_NONE)
-	, myUseTimeBasedView(false)
+	, myUseTimeBasedView(true)
 	, myUseReverseScroll(false)
+	, myUseChartPreview(true)
 	, myIsDraggingReceptors(false)
 	, myPixPerSec(sPixPerSec[0])
 	, myPixPerRow(sPixPerBeat[0] * BEATS_PER_ROW)
@@ -116,6 +118,7 @@ void loadSettings(XmrNode& settings)
 	{
 		view->get("useTimeBasedView", &myUseTimeBasedView);
 		view->get("useReverseScroll", &myUseReverseScroll);
+		view->get("useChartPreview" , &myUseChartPreview);
 	}
 
 	updateScrollValues();
@@ -227,6 +230,11 @@ bool isTimeBased() const
 bool hasReverseScroll() const
 {
 	return myUseReverseScroll;
+}
+
+bool hasChartPreview() const
+{
+	return myUseChartPreview;
 }
 
 double getPixPerSec() const
@@ -349,6 +357,12 @@ void toggleReverseScroll()
 	myReceptorY = myRect.h - myReceptorY;
 	updateScrollValues();
 	gMenubar->update(Menubar::USE_REVERSE_SCROLL);
+}
+
+void toggleChartPreview()
+{
+	myUseChartPreview = !myUseChartPreview;
+	gMenubar->update(Menubar::USE_CHART_PREVIEW);
 }
 
 void setTimeBased(bool enabled)

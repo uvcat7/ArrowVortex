@@ -594,6 +594,8 @@ void drawNotes()
 	Renderer::bindShader(Renderer::SH_TEXTURE);
 	Renderer::bindTexture(noteskin->noteTex.handle());
 
+	int targetY = gView->getNotefieldCoords().y;
+
 	// Render arrows/holds/mines interleaved, so the z-order is correct.
 	bool hasLabels = false;	
 	auto batch = Renderer::batchT();
@@ -611,8 +613,13 @@ void drawNotes()
 			by = drawPos.get(note.endrow, note.endtime);
 		}
 
-		// Don't show notes before the notefield when playing.
-		if (!gMusic->isPaused() && gView->getNotefieldCoords().y > by) continue;
+		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
+		if (!gMusic->isPaused() && gView->hasChartPreview()
+			&& (targetY > by != gView->hasReverseScroll()) && note.type != NOTE_MINE)
+		{
+			continue;
+		}
+
 		// Don't show notes off the screen
 		if(max(y, by) < -32 || min(y, by) > maxY) continue;
 
@@ -630,8 +637,19 @@ void drawNotes()
 			int bodyY = noteskin->holdY[index] * signedScale / 256;
 			int tailH = tail.height * signedScale / 512;
 
-			body.draw(&batch, x, y + bodyY, by + bodyY);
-			tail.draw(&batch, x, by - tailH, by + tailH);
+			//If we are doing chart preview, only show the part of the tail past the targets, and don't show the arrow
+			if (!gMusic->isPaused() && gView->hasChartPreview() && 
+				((targetY > y && targetY <= by && !gView->hasReverseScroll()) || (targetY < y && targetY >= by && gView->hasReverseScroll())))
+			{
+				body.draw(&batch, x, targetY + bodyY, by + bodyY);
+				tail.draw(&batch, x, by - tailH, by + tailH);
+				continue;
+			}
+			else
+			{
+				body.draw(&batch, x, y + bodyY, by + bodyY);
+				tail.draw(&batch, x, by - tailH, by + tailH);
+			}
 		}
 
 		// Note sprite.
