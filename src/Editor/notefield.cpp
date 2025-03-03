@@ -611,7 +611,9 @@ void drawNotes()
 			by = drawPos.get(note.endrow, note.endtime);
 		}
 
-		// Check if the note is visible.
+		// Don't show notes before the notefield when playing.
+		if (!gMusic->isPaused() && gView->getNotefieldCoords().y > by) continue;
+		// Don't show notes off the screen
 		if(max(y, by) < -32 || min(y, by) > maxY) continue;
 
 		int rowtype = ToRowType(note.row);

@@ -423,7 +423,7 @@ void setCursorToNextMeasure(bool up)
 {
 	if(gView->hasReverseScroll()) up = !up;
 
-	int rowsPerMeasure = 48;
+	int rowsPerMeasure = 192;
 
 	if(up)
 	{
