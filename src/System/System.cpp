@@ -994,7 +994,9 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, char*, int)
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF);
 
 	ApplicationStart();
+#ifdef DEBUG
 	Debug::openConsole();
+#endif
 	gSystem = new SystemImpl;
 	((SystemImpl*)gSystem)->messageLoop();
 	delete (SystemImpl*)gSystem;

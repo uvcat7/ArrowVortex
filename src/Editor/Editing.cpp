@@ -148,6 +148,7 @@ void onKeyPress(KeyPress& evt) override
 	{
 		int col = KeyToCol(kc);
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
+		gView->setCursorRow(row);
 		if(evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
 		if(col >= 0 && col < gStyle->getNumCols())
 		{
@@ -253,6 +254,8 @@ void onKeyRelease(KeyRelease& evt) override
 		{
 			finishNotePlacement(col);
 		}
+		//Snap to next row, if not playing
+		//gView->setCursorRow(gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
 	}
 }
 

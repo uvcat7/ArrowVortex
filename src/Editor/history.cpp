@@ -90,10 +90,12 @@ static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Temp
 	if(hasTempo) header.write(t);
 	header.writeNum(size);
 
+#ifdef DEBUG
 	HudNote("Creating entry [header=%ib, data=%ib, chart:%c, tempo:%c",
 		header.size(), size,
 		hasChart ? 'y' : 'n',
 		hasTempo ? 'y' : 'n');
+#endif
 
 	uchar* mem = (uchar*)malloc(header.size() + size);
 	memcpy(mem, header.data(), header.size());
