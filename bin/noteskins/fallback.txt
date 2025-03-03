@@ -1,0 +1,27 @@
+Texture-notes     = "bar/tex notes.png"
+Texture-receptors = "bar/tex receptors.png"
+Texture-glow      = "bar/tex glow.png"
+
+Receptor-on { size=64,64; src=0,0 }
+Receptor-off { size=64,64; src=64,0 }
+Receptor-glow { size=96,96; src=0,0 }
+
+Note { size=64,64 }
+
+Note { row=4;   src=0,0 }
+Note { row=8;   src=64,0 }
+Note { row=12;  src=128,0 }
+Note { row=16;  src=192,0 }
+Note { row=24;  src=0,64 }
+Note { row=32;  src=64,64 }
+Note { row=48;  src=128,64 }
+Note { row=64;  src=192,64 }
+Note { row=192; src=0,128 }
+
+Mine { size=64,64; src=64,128 }
+
+Hold-body { size=64,0;  src=128,160 }
+Hold-tail { size=64,64; src=128,192 }
+
+Roll-body { size=64,0;  src=192,160 }
+Roll-tail { size=64,64; src=192,192 }

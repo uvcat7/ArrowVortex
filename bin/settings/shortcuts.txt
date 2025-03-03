@@ -1,83 +1,99 @@
-General {
-	Undo = edit-undo, ctrl + z
-	Redo = edit-redo, ctrl + y
-	Cut = edit-cut, ctrl + x
-	Copy = edit-copy, ctrl + c
-	Paste = edit-paste, ctrl + v
-	Delete = edit-delete, delete
-	Select all = edit-select-all, ctrl + a
-}
-Simfile {
-	Open simfile = simfile-open, ctrl + o
-	Save simfile = simfile-save, ctrl + s
-	Close simfile = simfile-close, ctrl + f4
-	Next simfile = simfile-open-next, shift + f5
-	Previous simfile = simfile-open-previous, shift + f6
-}
-Chart {
-	Previous chart = chart-open-previous, f5
-	Next chart = chart-open-next, f6
-	Delete chart = chart-delete, ctrl + delete
-}
-Notes {
-	Mirror horizontally = notes-mirror-horizontally, ctrl + shift + h
-	Mirror vertically = notes-mirror-vertically, ctrl + shift + v
-	Mirror both = notes-mirror-both, ctrl + shift + f
-}
-Cursor {
-	Play/Pause = cursor-play-or-pause, space
-	Next snap = cursor-next-snap, right
-	Previous snap = cursor-previous-snap, left
-	Move up = cursor-up, up
-	Move down = cursor-down, down
-	Previous measure = cursor-to-previous-measure, page up
-	Next measure = cursor-to-next-measure, page down
-	Start of stream  = cursor-to-stream-start, ctrl + up
-	End of stream = cursor-to-stream-end, ctrl + down
-	Start of selection = cursor-to-selection-start, ctrl + home
-	End of selection = cursor-to-selection-end, ctrl + end
-	Start of chart = cursor-to-chart-start, home
-	End of chart = cursor-to-chart-end, end
-}
-Region {
-	Select region = region-select-start-or-end, tab
-	Select region above cursor = region-select-before-cursor, shift + home
-	Select region below cursor = region-select-after-cursor, shift + end
-}
-Audio {
-	Beat tick = toggle-beat-tick, f3
-	Note tick = toggle-note-tick, f4
-	Increase volume = music-volume-up, shift + up
-	Decrease volume = music-volume-down, shift + down
-	Mute = toggle-mute-audio, shift + m
-	Increase music rate = music-speed-up, shift + right
-	Decrease music rate = music-speed-down, shift + left
-}
-Dialogs {
-	Song properties = dialog-open-song-properties, shift + p
-	Chart properties = dialog-open-chart-properties, shift + c
-	Chart list = dialog-open-chart-list, shift + l
-	New chart = dialog-open-new-chart, shift + n
-	Adjust sync = dialog-open-adjust-sync, shift + s
-	Adjust tempo = dialog-open-adjust-tempo, shift + t
-	Dancing bot = dialog-open-dancing-bot, shift + d
-	Generate notes = dialog-open-generate-notes, shift + g
-	Tempo breakdown = dialog-open-tempo-breakdown, shift + b
-	Waveform settings = dialog-open-waveform-settings, shift + w
-}
-View {
-	Zoom in = zoom-in, numpad add
-	Zoom out = zoom-out, numpad subtract
-	Increase note spacing = increase-note-spacing, ctrl + numpad add
-	Decrease note spacing = decrease-note-spacing, ctrl + numpad subtract
-	Increase BG brightness = background-brightness-up, shift + numpad add
-	Decrease BG brightness = background-brightness-down, shift + numpad subtract
-	Show shortcuts = show-shortcuts, f1
-	Show message log = show-message-log, f2
-	Show about = show-about, f3
-	Show command line = show-command-line, ctrl + accent
-}
-Other {
-	Reload noteskins = reload-noteskins, ctrl + r
-	Exit application = exit-application, alt + f4
-}
+FILE_OPEN    = ctrl + o
+FILE_SAVE    = ctrl + s
+FILE_SAVE_AS =
+FILE_CLOSE   =
+
+OPEN_DIALOG_SONG_PROPERTIES   = shift + p
+OPEN_DIALOG_CHART_PROPERTIES  = shift + c
+OPEN_DIALOG_CHART_LIST        = shift + l
+OPEN_DIALOG_NEW_CHART         = shift + n
+OPEN_DIALOG_ADJUST_SYNC       = shift + s
+OPEN_DIALOG_ADJUST_TEMPO      = shift + t
+OPEN_DIALOG_ADJUST_TEMPO_SM5  = shift + y
+OPEN_DIALOG_DANCING_BOT       = shift + d
+OPEN_DIALOG_GENERATE_NOTES    = shift + g
+OPEN_DIALOG_TEMPO_BREAKDOWN   = shift + b
+OPEN_DIALOG_WAVEFORM_SETTINGS = shift + w
+
+SELECT_REGION               = tab
+SELECT_REGION_BEFORE_CURSOR = shift + home
+SELECT_REGION_AFTER_CURSOR  = shift + end
+
+CHART_PREVIOUS = F5
+CHART_NEXT     = F6
+CHART_DELETE   = ctrl + delete
+
+SIMFILE_PREVIOUS = shift + F5
+SIMFILE_NEXT     = shift + F6
+
+CHANGE_HOLDS_TO_STEPS          =
+CHANGE_BETWEEN_HOLDS_AND_ROLLS = accent
+CHANGE_BETWEEN_PLAYER_NUMBERS  = slash
+
+MIRROR_NOTES_VERTICALLY   =
+MIRROR_NOTES_HORIZONTALLY =
+MIRROR_NOTES_FULL         =
+
+EXPORT_NOTES_AS_LUA_TABLE = ctrl + shift + e
+
+SCALE_NOTES_2_TO_1 =
+SCALE_NOTES_3_TO_2 =
+SCALE_NOTES_4_TO_3 =
+SCALE_NOTES_1_TO_2 =
+SCALE_NOTES_2_TO_3 =
+SCALE_NOTES_3_TO_4 =
+
+VOLUME_RESET    =
+VOLUME_INCREASE = shift + up
+VOLUME_DECREASE = shift + down
+VOLUME_MUTE     =
+
+SPEED_RESET    =
+SPEED_INCREASE = shift + right
+SPEED_DECREASE = shift + left
+
+TOGGLE_BEAT_TICK = F3
+TOGGLE_NOTE_TICK = F4
+
+TOGGLE_SHOW_WAVEFORM      =
+TOGGLE_SHOW_BEAT_LINES    =
+TOGGLE_SHOW_NOTES         =
+TOGGLE_SHOW_TEMPO_CHANGES =
+TOGGLE_CLASSIC_NOTESKIN   =
+TOGGLE_REVERSE_SCROLL     =
+
+BACKGROUND_HIDE           =
+BACKGROUND_INCREASE_ALPHA = shift + numpad add
+BACKGROUND_DECREASE_ALPHA = shift + numpad subtract
+
+SNAP_RESET    =
+SNAP_NEXT     = right
+SNAP_PREVIOUS = left
+
+ZOOM_RESET =
+ZOOM_IN    = numpad add, ctrl + scroll up
+ZOOM_OUT   = numpad subtract, ctrl + scroll down
+
+CURSOR_UP               = up
+CURSOR_DOWN             = down
+CURSOR_PREVIOUS_MEASURE = page up
+CURSOR_NEXT_MEASURE     = page down
+CURSOR_STREAM_START     = ctrl + up
+CURSOR_STREAM_END       = ctrl + down
+CURSOR_SELECTION_START  = ctrl + home
+CURSOR_SELECTION_END    = ctrl + end
+CURSOR_CHART_START      = home
+CURSOR_CHART_END        = end
+
+TOGGLE_STATUS_CHART   =
+TOGGLE_STATUS_SNAP    =
+TOGGLE_STATUS_BPM     =
+TOGGLE_STATUS_ROW     =
+TOGGLE_STATUS_BEAT    =
+TOGGLE_STATUS_MEASURE =
+TOGGLE_STATUS_TIME    =
+
+SHOW_SHORTCUTS   = F1
+SHOW_MESSAGE_LOG = F2
+SHOW_DEBUG_LOG   =
+SHOW_ABOUT       =

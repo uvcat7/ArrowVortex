@@ -1,5 +1,0 @@
-action {
-	name = RemoveHigherDiffs
-	file = main.lua
-	function = removeHigherDiffs
-}

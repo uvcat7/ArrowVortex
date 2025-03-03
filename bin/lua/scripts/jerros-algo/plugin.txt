@@ -1,5 +1,0 @@
-action {
-	name = RegressTree
-	file = main.lua
-	function = processPack
-}

@@ -1,3 +1,0 @@
-intended-for = Keyboard
-
-all-styles = "all-styles.txt"

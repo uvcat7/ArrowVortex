@@ -1,6 +1,0 @@
-importer {
-	format = Dance With Intensity
-	extensions = dwi
-	file = importer.lua
-	function = loadDwi
-}

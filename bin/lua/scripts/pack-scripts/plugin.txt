@@ -1,5 +1,0 @@
-action {
-	name = Breakdown
-	file = main.lua
-	function = dumpBreakdown
-}

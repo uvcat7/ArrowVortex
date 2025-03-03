@@ -36,17 +36,11 @@ Note { col=1,5; rot=0 }
 Note { col=2,6; rot=180 }
 Note { col=3,7; rot=270 }
 
-Note { row=4;   src=0,0 }
-Note { row=8;   src=64,0 }
-Note { row=12;  src=128,0 }
-Note { row=16;  src=192,0 }
-Note { row=24;  src=0,64 }
-Note { row=32;  src=64,64 }
-Note { row=48;  src=128,64 }
-Note { row=64;  src=192,64 }
-Note { row=192; src=0,128 }
+Note { player=0; src=0,0 }
+Note { player=1; src=64,0 }
 
-Mine { size=64,64; src=64,128 }
+Mine { player=0; size=64,64; src=64,128 }
+Mine { player=1; size=64,64; src=64,192 }
 
 Hold-body { size=64,0;  src=128,160 }
 Hold-tail { size=64,64; src=128,192 }

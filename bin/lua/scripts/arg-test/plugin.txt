@@ -1,5 +1,0 @@
-action {
-	name = ArgTest
-	file = main.lua
-	function = dumpInfo
-}

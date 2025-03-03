@@ -1,6 +1,0 @@
-intended-for = Pop'n Music, Beatmania
-
-pnm-five = "pnm-five.txt"
-pnm-nine = "pnm-nine.txt"
-
-all-styles = "all-styles.txt"

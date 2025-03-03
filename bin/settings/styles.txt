@@ -1,0 +1,118 @@
+style {
+	id = dance-single
+	name = Dance Single
+	numCols = 4
+	pad {
+		row = -C-
+		row = A-D
+		row = -B-
+	}
+	feetPos = AD
+	mirrorH = AD
+	mirrorV = CB
+}
+style {
+	id = dance-double
+	name = Dance Double
+	numCols = 8
+	pad {
+		row = -C--G-
+		row = A-DE-H
+		row = -B--F-
+	}
+	feetPos = DE
+	mirrorH = CG, AH, DE, BF
+	mirrorV = CB, GF
+}
+style {
+	id = dance-couple
+	name = Dance Couple
+	numCols = 8
+	pad {
+		row = -C--G-
+		row = A-DE-H
+		row = -B--F-
+	}
+	feetPos = DE
+	mirrorH = CG, AH, DE, BF
+	mirrorV = CB, GF
+}
+style {
+	id = dance-routine
+	name = Dance Routine
+	numCols = 8
+	numPlayers = 2
+	pad {
+		row = -C--G-
+		row = A-DE-H
+		row = -B--F-
+	}
+	feetPos = AD, EH
+	mirrorH = CG, AH, DE, BF
+	mirrorV = CB, GF
+}
+style {
+	id = dance-solo
+	name = Dance Solo
+	numCols = 6
+	pad {
+		row = BDE
+		row = A-F
+		row = -C-
+	}
+	feetPos = AF
+	mirrorH = BE, AF
+	mirrorV = CD
+}
+style {
+	id = pump-single
+	name = Pump Single
+	numCols = 5 
+	pad {
+		row = B-D
+		row = -C-
+		row = A-E
+	}
+	feetPos = AE
+	mirrorH = BD, AE
+	mirrorV = BA, DE
+}
+style {
+	id = pump-halfdouble
+	name = Pump Halfdouble
+	numCols = 6
+	pad {
+		row = -BE-
+		row = A--F
+		row = -CD-
+	}
+	feetPos = AF
+	mirrorH = BE, AF, CD
+	mirrorV = BC, ED
+}
+style {
+	id = pump-double
+	name = Pump Double
+	numCols = 10
+	pad {
+		row = B-DG-I
+		row = -C--H-
+		row = A-EF-J
+	}
+	feetPos = CH
+	mirrorH = BI, DG, CH, AJ, EF
+	mirrorV = BA, DE, GF, IJ
+}
+style {
+	id = pump-couple
+	name = Pump Couple
+	numCols = 10
+	pad {
+		row = B-DG-I
+		row = -C--H-
+		row = A-EF-J
+	}
+	feetPos = CH
+	mirrorH = BI, DG, CH, AJ, EF
+	mirrorV = BA, DE, GF, IJ
+}

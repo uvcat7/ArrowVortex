@@ -1,3 +1,0 @@
-intended-for = Dance
-
-dance-single = "dance-single.txt"
