@@ -57,6 +57,8 @@ static Note PlacingNoteToNote(const PlacingNote& pnote, int col)
 	return out;
 }
 
+int noteKeysHeld = 0;
+
 // ================================================================================================
 // EditingImpl :: member data.
 
@@ -65,6 +67,7 @@ struct EditingImpl : public Editing {
 int myCurPlayer;
 PlacingNote myPlacingNotes[SIM_MAX_COLUMNS];
 
+bool myUseJumpToNextNote;
 bool myUseUndoRedoJump;
 bool myUseTimeBasedCopy;
 
@@ -146,6 +149,9 @@ void onKeyPress(KeyPress& evt) override
 	// Placing notes.
 	if(gChart->isOpen() && kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 && !evt.repeated)
 	{
+		noteKeysHeld++;
+		if (noteKeysHeld > 10) noteKeysHeld = 0;
+
 		int col = KeyToCol(kc);
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
 		gView->setCursorRow(row);
@@ -244,9 +250,11 @@ void turnIntoTriplets()
 
 void onKeyRelease(KeyRelease& evt) override
 {
-	// Finish placing notes.
 	if(gChart->isOpen() && evt.key >= Key::DIGIT_0 && evt.key <= Key::DIGIT_9)
 	{
+		// Finish placing notes.
+		noteKeysHeld--;
+		if (noteKeysHeld < 0) noteKeysHeld = 0;
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
 		int col = KeyToCol(evt.key);
 		if(evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
@@ -254,8 +262,11 @@ void onKeyRelease(KeyRelease& evt) override
 		{
 			finishNotePlacement(col);
 		}
-		//Snap to next row, if not playing
-		//gView->setCursorRow(gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
+		// Don't advance when we're stepping jumps
+		if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
+		{
+			gView->setCursorRow(gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
+		}
 	}
 }
 
@@ -917,6 +928,17 @@ void drawGhostNotes()
 			gNotefield->drawGhostNote(PlacingNoteToNote(pnote, col));
 		}
 	}
+}
+
+void toggleJumpToNextNote()
+{
+	myUseJumpToNextNote = !myUseJumpToNextNote;
+	gMenubar->update(Menubar::USE_JUMP_TO_NEXT_NOTE);
+}
+
+bool hasJumpToNextNote()
+{
+	return myUseJumpToNextNote;
 }
 
 void toggleUndoRedoJump()
