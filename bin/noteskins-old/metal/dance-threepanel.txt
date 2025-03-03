@@ -1,0 +1,88 @@
+Texture-notes = "tex notes.png"
+Texture-receptors = "tex receptors.png"
+Texture-glow = "tex glow.png"
+
+Receptor { col=0; mirror=v }
+Receptor { col=1; x=0 }
+Receptor { col=2; mirror=hv }
+
+Receptor-spacing = 68
+
+Receptor-off { size=64,64; src=64,0 }
+Receptor-off { col=1; src=0,0 }
+
+Receptor-on { size=64,64; src=64,64 }
+Receptor-on { col=1; src=0,64 }
+
+Receptor-glow { size=80,80; src=80,0 }
+Receptor-glow { col=1; src=0,0 }
+
+Note { size=64,64 }
+
+Note { col=0; mirror=v }
+Note { col=1; rot=0 }
+Note { col=2; mirror=hv }
+
+Timing-colors {
+	Note { type=4;   src=256,0 }
+	Note { type=8;   src=320,0 }
+	Note { type=12;  src=384,0 }
+	Note { type=16;  src=448,0 }
+	Note { type=24;  src=256,64 }
+	Note { type=32;  src=320,64 }
+	Note { type=48;  src=384,64 }
+	Note { type=64;  src=448,64 }
+	Note { type=192; src=256,128 }
+
+	Note { col=1; type=4;   src=0,0 }
+	Note { col=1; type=8;   src=64,0 }
+	Note { col=1; type=12;  src=128,0 }
+	Note { col=1; type=16;  src=192,0 }
+	Note { col=1; type=24;  src=0,64 }
+	Note { col=1; type=32;  src=64,64 }
+	Note { col=1; type=48;  src=128,64 }
+	Note { col=1; type=64;  src=192,64 }
+	Note { col=1; type=192; src=0,128 }
+}
+
+Column-colors {
+	Note { scheme=0; src=256,0 }
+	Note { scheme=1; src=320,0 }
+	Note { scheme=2; src=256,64 }
+	Note { scheme=3; src=256,128 }
+
+	Note { scheme=0; col=1; src=0,0 }
+	Note { scheme=1; col=1; src=64,0 }
+	Note { scheme=2; col=1; src=0,64 }
+	Note { scheme=3; col=1; src=0,128 }
+}
+
+Mine { size=64,64; src=448,384 }
+
+Forward-scroll {
+	Hold-head { size=64,64; col=0,2; src=384,256 }
+	Hold-head { col=2; mirror=h }
+	Roll-head { size=64,64; col=0,2; src=448,256 }
+	Roll-head { col=2; mirror=h }
+}
+
+Reverse-scroll {
+	Hold-head { size=64,64; col=0,2; src=256,256 }
+	Hold-head { col=2; mirror=h }
+	Roll-head { size=64,64; col=0,2; src=320,256 }
+	Roll-head { col=2; mirror=h }
+}
+
+Hold-body { size=64,32; src=384,144 }
+Roll-body { size=64,32; src=448,144 }
+Hold-body { col=1; src=128,144 }
+Roll-body { col=1; src=192,144 }
+Hold-body { col=2; mirror=h }
+Roll-body { col=2; mirror=h }
+
+Hold-tail { size=64,64; src=384,192 }
+Roll-tail { size=64,64; src=448,192 }
+Hold-tail { col=1; src=128,192 }
+Roll-tail { col=1; src=192,192 }
+Hold-body { col=2; mirror=h }
+Roll-body { col=2; mirror=h }

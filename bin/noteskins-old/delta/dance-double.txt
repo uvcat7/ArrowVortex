@@ -1,0 +1,52 @@
+Texture-notes = "tex notes.png"
+Texture-receptors = "tex receptors.png"
+Texture-glow = "tex glow.png"
+
+Receptor { col=0; rot=90  }
+Receptor { col=1; rot=0   }
+Receptor { col=2; rot=180 }
+Receptor { col=3; rot=270 }
+Receptor { col=4; rot=90  }
+Receptor { col=5; rot=0   }
+Receptor { col=6; rot=180 }
+Receptor { col=7; rot=270 }
+
+Receptor-spacing = 68
+
+Receptor-off { size=64,64; src=0,0 }
+Receptor-on { size=64,64; src=0,64 }
+Receptor-glow { size=80,80; src=0,0 }
+
+Note { size=64,64 }
+
+Note { col=0,4; rot=90 }
+Note { col=1,5; rot=0 }
+Note { col=2,6; rot=180 }
+Note { col=3,7; rot=270 }
+
+Timing-colors {
+	Note { type=4;   src=0,0 }
+	Note { type=8;   src=64,0 }
+	Note { type=12;  src=128,0 }
+	Note { type=16;  src=192,0 }
+	Note { type=24;  src=0,64 }
+	Note { type=32;  src=64,64 }
+	Note { type=48;  src=128,64 }
+	Note { type=64;  src=192,64 }
+	Note { type=192; src=0,128 }
+}
+
+Column-colors {
+	Note { scheme=0; src=0,0 }
+	Note { scheme=1; src=64,0 }
+	Note { scheme=2; src=0,64 }
+	Note { scheme=3; src=0,128 }
+}
+
+Mine { size=64,64; src=448,384 }
+
+Hold-body { size=64,32; src=128,144 }
+Roll-body { size=64,32; src=192,144 }
+
+Hold-tail { size=64,64; src=128,192 }
+Roll-tail { size=64,64; src=192,192 }

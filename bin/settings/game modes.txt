@@ -1,0 +1,223 @@
+game {
+	name = Dance
+	mode {
+		id = dance-single
+		name = Single
+		numCols = 4
+		pad {
+			row = -C-
+			row = A-D
+			row = -B-
+		}
+		feetPos = AD
+		mirrorH = AD
+		mirrorV = CB
+		colorScheme = 0,1,1,0
+	}
+	mode {
+		id = dance-double
+		name = Double
+		numCols = 8
+		pad {
+			row = -C--G-
+			row = A-DE-H
+			row = -B--F-
+		}
+		feetPos = DE
+		mirrorH = CG, AH, DE, BF
+		mirrorV = CB, GF
+		colorScheme = 0,1,0,2,2,0,1,0
+	}
+	mode {
+		id = dance-couple
+		name = Couple
+		numCols = 8
+		pad {
+			row = -C--G-
+			row = A-DE-H
+			row = -B--F-
+		}
+		feetPos = DE
+		mirrorH = CG, AH, DE, BF
+		mirrorV = CB, GF
+		colorScheme = 0,1,1,0,0,1,1,0
+	}
+	mode {
+		id = dance-routine
+		name = Routine
+		numCols = 8
+		numPlayers = 2
+		pad {
+			row = -C--G-
+			row = A-DE-H
+			row = -B--F-
+		}
+		feetPos = AD, EH
+		mirrorH = CG, AH, DE, BF
+		mirrorV = CB, GF
+	}
+	mode {
+		id = dance-solo
+		name = Solo
+		numCols = 6
+		pad {
+			row = BDE
+			row = A-F
+			row = -C-
+		}
+		feetPos = AF
+		mirrorH = BE, AF
+		mirrorV = CD
+		colorScheme = 0,1,0,0,1,0
+	}
+	mode {
+		id = dance-threepanel
+		name = Three Panel
+		numCols = 3
+		pad {
+			row = A-C
+			row = ---
+			row = -B-
+		}
+		feetPos = AC
+		mirrorH = AC
+		colorScheme = 0,1,0
+	}
+}
+game {
+	name = Pump
+	mode {
+		id = pump-single
+		name = Single
+		numCols = 5 
+		pad {
+			row = B-D
+			row = -C-
+			row = A-E
+		}
+		feetPos = AE
+		mirrorH = BD, AE
+		mirrorV = BA, DE
+		colorScheme = 0,1,2,1,0
+	}
+	mode {
+		id = pump-double
+		name = Double
+		numCols = 10
+		pad {
+			row = B-DG-I
+			row = -C--H-
+			row = A-EF-J
+		}
+		feetPos = CH
+		mirrorH = BI, DG, CH, AJ, EF
+		mirrorV = BA, DE, GF, IJ
+		colorScheme = 0,1,2,1,0,0,1,2,1,0
+	}
+	mode {
+		id = pump-couple
+		name = Couple
+		numCols = 10
+		pad {
+			row = B-DG-I
+			row = -C--H-
+			row = A-EF-J
+		}
+		feetPos = CH
+		mirrorH = BI, DG, CH, AJ, EF
+		mirrorV = BA, DE, GF, IJ
+		colorScheme = 0,1,2,1,0,0,1,2,1,0
+	}
+	mode {
+		id = pump-routine
+		name = Routine
+		numCols = 10
+		numPlayers = 2
+		pad {
+			row = B-DG-I
+			row = -C--H-
+			row = A-EF-J
+		}
+		feetPos = CH
+		mirrorH = BI, DG, CH, AJ, EF
+		mirrorV = BA, DE, GF, IJ
+	}
+	mode {
+		id = pump-halfdouble
+		name = Halfdouble
+		numCols = 6
+		pad {
+			row = -BE-
+			row = A--F
+			row = -CD-
+		}
+		feetPos = AF
+		mirrorH = BE, AF, CD
+		mirrorV = BC, ED
+		colorScheme = 2,1,0,0,1,2
+	}
+}
+game {
+	name = Keyboard
+	mode {
+		id = kb7-single
+		name = 7 Key
+		numCols = 7
+		mirrorH = AG, BF, CE
+		colorScheme = 0,1,0,2,0,1,0
+	}
+}
+game {
+	name = Pop'n Music
+	mode {
+		id = pnm-five
+		name = 5 Buttons
+		numCols = 5
+		colorScheme = 0,1,2,1,0
+	}
+	mode {
+		id = pnm-nine
+		name = 9 Buttons
+		numCols = 9
+		colorScheme = 0,1,2,3,4,3,2,1,0
+	}
+}
+game {
+	name = Beatmania
+	mode {
+		id = bm-single5
+		name = 5K Single
+		numCols = 6
+		colorScheme = 0,1,2,1,2,1
+	}
+	mode {
+		id = bm-versus5
+		name = 5K Versus
+		numCols = 6
+		colorScheme = 0,1,2,1,2,1
+	}
+	mode {
+		id = bm-double5
+		name = 5K Double
+		numCols = 12
+		colorScheme = 0,1,2,1,2,1,1,2,1,2,1,0
+	}
+	mode {
+		id = bm-single7
+		name = 7K Single
+		numCols = 8
+		colorScheme = 0,1,2,1,2,1,2,1
+	}
+	mode {
+		id = bm-versus7
+		name = 7K Versus
+		numCols = 8
+		colorScheme = 0,1,2,1,2,1,2,1
+	}
+	mode {
+		id = bm-double7
+		name = 7K Double
+		numCols = 16
+		colorScheme = 0,1,2,1,2,1,2,1,1,2,1,2,1,2,1,0
+	}
+}

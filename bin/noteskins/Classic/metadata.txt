@@ -1,0 +1,5 @@
+game-modes {
+	dance-single = "dance-single.txt"
+	dance-double = "dance-double.txt"
+	dance-solo = "dance-solo.txt"
+}

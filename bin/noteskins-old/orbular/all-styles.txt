@@ -1,0 +1,40 @@
+Texture-notes = "tex notes.png"
+
+Receptor-on { size=64,64; src=64,128 }
+Receptor-off { size=64,64; src=128,128 }
+Receptor-glow { size=64,64; src=192,128 }
+
+Note { size=64,64 }
+Mine { size=64,64; src=0,192 }
+
+Timing-colors {
+	Note { type=4;   src=0,0 }
+	Note { type=8;   src=64,0 }
+	Note { type=12;  src=128,0 }
+	Note { type=16;  src=192,0 }
+	Note { type=24;  src=0,64 }
+	Note { type=32;  src=64,64 }
+	Note { type=48;  src=128,64 }
+	Note { type=64;  src=192,64 }
+	Note { type=192; src=0,128 }
+}
+
+Column-colors {
+	Note { scheme=0; src=0,0; }
+	Note { scheme=1; src=64,0; }
+	Note { scheme=2; src=0,64; }
+	Note { scheme=3; src=0,128; }
+}
+
+Player-colors {
+	Note { player=0; src=0,0 }
+	Note { player=1; src=64,0 }
+	Note { player=2; src=192,0 }
+	Note { player=3; src=192,64 }
+}
+
+Hold-body { size=64,4; src=64,194 }
+Roll-body { size=64,4; src=64,226 }
+
+Hold-tail { size=64,64; src=128,192 }
+Roll-tail { size=64,64; src=192,192 }

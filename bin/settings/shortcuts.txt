@@ -1,0 +1,83 @@
+General {
+	Undo = edit-undo, ctrl + z
+	Redo = edit-redo, ctrl + y
+	Cut = edit-cut, ctrl + x
+	Copy = edit-copy, ctrl + c
+	Paste = edit-paste, ctrl + v
+	Delete = edit-delete, delete
+	Select all = edit-select-all, ctrl + a
+}
+Simfile {
+	Open simfile = simfile-open, ctrl + o
+	Save simfile = simfile-save, ctrl + s
+	Close simfile = simfile-close, ctrl + f4
+	Next simfile = simfile-open-next, shift + f5
+	Previous simfile = simfile-open-previous, shift + f6
+}
+Chart {
+	Previous chart = chart-open-previous, f5
+	Next chart = chart-open-next, f6
+	Delete chart = chart-delete, ctrl + delete
+}
+Notes {
+	Mirror horizontally = notes-mirror-horizontally, ctrl + shift + h
+	Mirror vertically = notes-mirror-vertically, ctrl + shift + v
+	Mirror both = notes-mirror-both, ctrl + shift + f
+}
+Cursor {
+	Play/Pause = cursor-play-or-pause, space
+	Next snap = cursor-next-snap, right
+	Previous snap = cursor-previous-snap, left
+	Move up = cursor-up, up
+	Move down = cursor-down, down
+	Previous measure = cursor-to-previous-measure, page up
+	Next measure = cursor-to-next-measure, page down
+	Start of stream  = cursor-to-stream-start, ctrl + up
+	End of stream = cursor-to-stream-end, ctrl + down
+	Start of selection = cursor-to-selection-start, ctrl + home
+	End of selection = cursor-to-selection-end, ctrl + end
+	Start of chart = cursor-to-chart-start, home
+	End of chart = cursor-to-chart-end, end
+}
+Region {
+	Select region = region-select-start-or-end, tab
+	Select region above cursor = region-select-before-cursor, shift + home
+	Select region below cursor = region-select-after-cursor, shift + end
+}
+Audio {
+	Beat tick = toggle-beat-tick, f3
+	Note tick = toggle-note-tick, f4
+	Increase volume = music-volume-up, shift + up
+	Decrease volume = music-volume-down, shift + down
+	Mute = toggle-mute-audio, shift + m
+	Increase music rate = music-speed-up, shift + right
+	Decrease music rate = music-speed-down, shift + left
+}
+Dialogs {
+	Song properties = dialog-open-song-properties, shift + p
+	Chart properties = dialog-open-chart-properties, shift + c
+	Chart list = dialog-open-chart-list, shift + l
+	New chart = dialog-open-new-chart, shift + n
+	Adjust sync = dialog-open-adjust-sync, shift + s
+	Adjust tempo = dialog-open-adjust-tempo, shift + t
+	Dancing bot = dialog-open-dancing-bot, shift + d
+	Generate notes = dialog-open-generate-notes, shift + g
+	Tempo breakdown = dialog-open-tempo-breakdown, shift + b
+	Waveform settings = dialog-open-waveform-settings, shift + w
+}
+View {
+	Zoom in = zoom-in, numpad add
+	Zoom out = zoom-out, numpad subtract
+	Increase note spacing = increase-note-spacing, ctrl + numpad add
+	Decrease note spacing = decrease-note-spacing, ctrl + numpad subtract
+	Increase BG brightness = background-brightness-up, shift + numpad add
+	Decrease BG brightness = background-brightness-down, shift + numpad subtract
+	Show shortcuts = show-shortcuts, f1
+	Show message log = show-message-log, f2
+	Show about = show-about, f3
+	Show command line = show-command-line, ctrl + accent
+}
+Other {
+	Reload noteskins = reload-noteskins, ctrl + r
+	Exit application = exit-application, alt + f4
+}

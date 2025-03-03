@@ -1,0 +1,10 @@
+action {
+	name = PackDumpChartBreakdowns
+	file = main.lua
+	function = dumpChartBreakdowns
+}
+action {
+	name = PackDumpSongInfo
+	file = main.lua
+	function = dumpSongInfo
+}

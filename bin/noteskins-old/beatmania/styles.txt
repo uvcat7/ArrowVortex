@@ -1,0 +1,14 @@
+intended-for = Beatmania, Pop'n Music
+
+pnm-five = "pnm-five.txt"
+pnm-nine = "pnm-nine.txt"
+
+bm-single5 = "bm-single.txt"
+bm-versus5 = "bm-single.txt"
+bm-double5 = "bm-double.txt"
+
+bm-single7 = "bm-single.txt"
+bm-versus7 = "bm-single.txt"
+bm-double7 = "bm-double.txt"
+
+all-styles = "all-styles.txt"

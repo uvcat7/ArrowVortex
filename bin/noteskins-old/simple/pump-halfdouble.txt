@@ -1,0 +1,92 @@
+Texture-notes = "tex notes.png"
+Texture-receptors = "tex receptors.png"
+Texture-glow = "tex glow.png"
+
+Receptor { col=0; x=-150 }
+Receptor { col=1; mirror=hv; x=-90 }
+Receptor { col=2; mirror=h; x=-30 }
+Receptor { col=3; x=30 }
+Receptor { col=4; mirror=v; x=90 }
+Receptor { col=5; x=150 }
+
+Receptor-off { size=64,64; src=64,0 }
+Receptor-off { col=0,5; src=128,0 }
+
+Receptor-on { size=64,64; src=64,64 }
+Receptor-on { col=0,5; src=128,64 }
+
+Receptor-glow { size=80,80; src=80,0 }
+Receptor-glow { col=0,5; src=160,0 }
+
+Note { size=64,64; }
+Note { col=4; mirror=v }
+Note { col=1; mirror=hv }
+Note { col=2; mirror=h }
+
+Timing-colors {
+	Note { type=4;   src=256,0 }
+	Note { type=8;   src=320,0 }
+	Note { type=12;  src=384,0 }
+	Note { type=16;  src=448,0 }
+	Note { type=24;  src=256,64 }
+	Note { type=32;  src=320,64 }
+	Note { type=48;  src=384,64 }
+	Note { type=64;  src=448,64 }
+	Note { type=192; src=256,128 }
+
+	Note { col=0,5; type=4;   src=0,256 }
+	Note { col=0,5; type=8;   src=64,256 }
+	Note { col=0,5; type=12;  src=128,256 }
+	Note { col=0,5; type=16;  src=192,256 }
+	Note { col=0,5; type=24;  src=0,320 }
+	Note { col=0,5; type=32;  src=64,320 }
+	Note { col=0,5; type=48;  src=128,320 }
+	Note { col=0,5; type=64;  src=192,320 }
+	Note { col=0,5; type=192; src=0,384 }
+}
+
+Column-colors {
+	Note { scheme=0; src=320,0 }
+	Note { scheme=1; src=256,0 }
+	Note { scheme=2; src=448,0 }
+	Note { scheme=3; src=256,128 }
+
+	Note { scheme=0; col=0,5; src=64,256 }
+	Note { scheme=1; col=0,5; src=0,256 }
+	Note { scheme=2; col=0,5; src=192,256 }
+	Note { scheme=3; col=0,5; src=0,384 }
+}
+
+Forward-scroll {
+	Hold-head { size=64,64; col=1,4; src=384,256 }
+	Hold-head { size=64,64; col=2,3; src=256,256 }
+	Hold-head { col=1,2; mirror=h }
+	Roll-head { size=64,64; col=1,4; src=448,256 }
+	Roll-head { size=64,64; col=2,3; src=320,256 }
+	Roll-head { col=1,2; mirror=h }
+}
+
+Reverse-scroll {
+	Hold-head { size=64,64; col=1,4; src=256,256 }
+	Hold-head { size=64,64; col=2,3; src=384,256 }
+	Hold-head { col=1,2; mirror=h }
+	Roll-head { size=64,64; col=1,4; src=320,256 }
+	Roll-head { size=64,64; col=2,3; src=448,256 }
+	Roll-head { col=1,2; mirror=h }
+}
+
+Mine { size=64,64; src=448,384 }
+
+Hold-body { size=64,32; src=384,144 }
+Roll-body { size=64,32; src=448,144 }
+Hold-body { col=0,5; src=128,400 }
+Roll-body { col=0,5; src=192,400 }
+Hold-body { col=1,2; mirror=h }
+Roll-body { col=1,2; mirror=h }
+
+Hold-tail { size=64,64; src=384,192 }
+Roll-tail { size=64,64; src=448,192 }
+Hold-tail { col=0,5; src=128,448 }
+Roll-tail { col=0,5; src=192,448 }
+Hold-tail { col=1,2; mirror=h }
+Roll-tail { col=1,2; mirror=h }

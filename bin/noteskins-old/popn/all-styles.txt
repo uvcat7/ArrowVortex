@@ -1,0 +1,51 @@
+Texture-notes = "tex notes.png"
+Texture-background = "tex background.png"
+
+Receptor-on { size=64,32; src=64,64 }
+Receptor-off { size=64,32; src=128,64 }
+Receptor-glow { size=64,32; src=192,64 }
+
+Column { width=60 }
+
+Column-bg { size=58,8 }
+
+Note { size=64,32 }
+Mine { size=64,32; src=0,96 }
+
+Timing-colors {
+	Column-bg { src=64,24 }
+
+	Note { type=4;   src=0,0 }
+	Note { type=8;   src=64,0 }
+	Note { type=12;  src=128,0 }
+	Note { type=16;  src=192,0 }
+	Note { type=24;  src=0,32 }
+	Note { type=32;  src=64,32 }
+	Note { type=48;  src=128,32 }
+	Note { type=64;  src=192,32 }
+	Note { type=192; src=0,64 }
+}
+
+Column-colors {
+	Column-bg { scheme=0; src=64,8 }
+	Column-bg { scheme=1; src=0,56 }
+	Column-bg { scheme=2; src=0,8 }
+
+	Note { scheme=0; src=0,0 }
+	Note { scheme=1; src=64,0 }
+	Note { scheme=2; src=0,64 }
+}
+
+Player-colors {
+	Note { player=0; src=0,0 }
+	Note { player=1; src=64,0 }
+
+	Mine { player=0; src=0,244 }
+	Mine { player=1; src=32,244 }
+}
+
+Hold-body { size=64,4; src=64,98 }
+Roll-body { size=64,4; src=64,114 }
+
+Hold-tail { size=64,32; src=128,96 }
+Roll-tail { size=64,32; src=192,96 }

@@ -1,0 +1,66 @@
+notefield { width=552 }
+
+column {
+  texture-notes="notes up.png"
+  texture-receptors="receptors up.png"
+  texture-glow="glow up.png"
+  texture-holds="holds orthogonal.png"
+}
+
+column c1 { x=-240 }
+column c2 { x=-172 }
+column c3 { x=-104 }
+column c4 { x=-36 }
+column c5 { x=36 }
+column c6 { x=104 }
+column c7 { x=172 }
+column c8 { x=240 }
+
+receptor { scale=0.5 }
+
+receptor c1 c5 { transform=rotate-270 }
+receptor c2 c6 { transform=rotate-180 }
+receptor c4 c8 { transform=rotate-90 }
+
+receptor off { src=0,0,128,128 }
+receptor on { src=128,0,128,128 }
+
+glow { scale=0.5 }
+
+glow c1 c5 { transform=rotate-270 }
+glow c2 c6 { transform=rotate-180 }
+glow c4 c8 { transform=rotate-90 }
+
+note { scale=0.5 }
+
+note c1 c5 { transform=rotate-270 }
+note c2 c6 { transform=rotate-180 }
+note c4 c8 { transform=rotate-90 }
+
+note q4 { src=0,0,128,128 }
+note q8 { src=128,0,128,128 }
+note q12 { src=256,0,128,128 }
+note q16 { src=384,0,128,128 }
+note q24 { src=0,128,128,128 }
+note q32 { src=128,128,128,128 }
+note q48 { src=256,128,128,128 }
+note q64 { src=384,128,128,128 }
+note q192 { src=0,256,128,128 }
+
+hold { scale=0.5 }
+hold body { src=0,0,128,256 }
+hold tail { src=256,0,128,128 }
+
+roll { scale=0.5 }
+roll body { src=128,0,128,256 }
+roll tail { src=384,0,128,128 }
+
+mine {
+  scale=0.5
+  src=384,256,128,128
+}
+
+scheme c1 { note=q4 }
+scheme c2 { note=q8 }
+scheme c3 { note=q16 }
+scheme c4 { note=q12 }

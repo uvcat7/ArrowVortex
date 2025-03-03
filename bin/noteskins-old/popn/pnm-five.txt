@@ -1,0 +1,76 @@
+Texture-notes = "tex notes.png"
+Texture-background = "tex background.png"
+
+Receptor-on { size=64,32; src=64,64 }
+Receptor-on { col=1,3,5; src=64,192 }
+
+Receptor-off { size=64,32; src=128,64 }
+Receptor-off { col=1,3,5; src=128,192 }
+
+Receptor-glow { size=64,32; src=192,64 }
+Receptor-glow { col=1,3,5; src=192,192 }
+
+Column-bg { size=56,8 }
+Column-bg { col=1,3; size=42,8 }
+
+Column { width=60 }
+Column { col=1,3,~; width=44 }
+
+Note { size=64,32 }
+
+Mine { size=64,32; src=0,96 }
+Mine { col=1,3,5,7; src=0,224 }
+
+Timing-colors {
+	Column-bg { src=64,24 }
+
+	Note { type=4;   src=0,0 }
+	Note { type=8;   src=64,0 }
+	Note { type=12;  src=128,0 }
+	Note { type=16;  src=192,0 }
+	Note { type=24;  src=0,32 }
+	Note { type=32;  src=64,32 }
+	Note { type=48;  src=128,32 }
+	Note { type=64;  src=192,32 }
+	Note { type=192; src=0,64 }
+
+	Note { col=1,3,5,7; type=4;   src=0,128 }
+	Note { col=1,3,5,7; type=8;   src=64,128 }
+	Note { col=1,3,5,7; type=12;  src=128,128 }
+	Note { col=1,3,5,7; type=16;  src=192,128 }
+	Note { col=1,3,5,7; type=24;  src=0,160 }
+	Note { col=1,3,5,7; type=32;  src=64,160 }
+	Note { col=1,3,5,7; type=48;  src=128,160 }
+	Note { col=1,3,5,7; type=64;  src=192,160 }
+	Note { col=1,3,5,7; type=192; src=0,192 }
+}
+
+Column-colors {
+	Column-bg { col=0,4; src=0,40 }
+	Column-bg { col=1,3; size=42,8; src=0,56 }
+	Column-bg { col=2; src=64,8 }
+
+	Note { scheme=0; src=192,32 }
+	Note { scheme=1; src=64,128 }
+	Note { scheme=2; src=0,0 }
+}
+
+Player-colors {
+	Note { player=0; src=0,0 }
+	Note { player=1; src=64,0 }
+
+	Note { col=1,3,5,7; player=0; src=0,0 }
+	Note { col=1,3,5,7; player=1; src=64,0 }
+}
+
+Hold-body { size=64,4; src=64,98 }
+Roll-body { size=64,4; src=64,114 }
+
+Hold-body { col=1,3,5,7; src=64,226 }
+Roll-body { col=1,3,5,7; src=64,242 }
+
+Hold-tail { size=64,32; src=128,96 }
+Roll-tail { size=64,32; src=192,96 }
+
+Hold-tail { col=1,3,5,7; src=128,224 }
+Roll-tail { col=1,3,5,7; src=192,224 }

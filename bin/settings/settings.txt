@@ -1,0 +1,51 @@
+audio {
+  beatTick = false
+  musicVolume = 100
+  mute = false
+  noteTick = false
+  tickOffsetMs = 0
+}
+editor {
+  defaultSaveFormat = sm
+  timeBasedCopy = false
+  undoRedoJump = true
+}
+general {
+  fontPath = assets/bokutachi no gothic 2.otf
+  fontSize = 13
+  multithread = true
+  verticalSync = true
+}
+status {
+  showBeat = false
+  showBpm = true
+  showChart = true
+  showMeasure = true
+  showRow = false
+  showSnap = true
+  showTime = true
+  showTimingMode = true
+}
+view {
+  backgroundBrightness = 50
+  backgroundMode = stretch
+  columnColors = false
+  isTimeBased = false
+  minimapMode = notes
+  reverseScroll = false
+  showBeatLines = true
+  showColumnBg = true
+  showNotes = true
+  showPassedNotes = false
+  showTempoBoxes = true
+  showTempoHelp = true
+  showWaveform = true
+}
+waveform {
+  antiAliasing = 1
+  backgroundColor = 0.000, 0.000, 0.000, 1.000
+  filterColor = 0.800, 0.800, 0.500, 1.000
+  luminance = uniform
+  waveColor = 0.400, 0.600, 0.400, 1.000
+  waveShape = rectified
+}
