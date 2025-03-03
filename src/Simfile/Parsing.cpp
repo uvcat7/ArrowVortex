@@ -87,6 +87,7 @@ static char* ZeroTerminateItem(char* start, char* end)
 
 bool ParseNextTag(char*& p, char*& outTag, char*& outVal)
 {
+
 	while(*p && *p != '#') ++p;
 	if(*p == 0) return false;
 	outTag = ++p;
@@ -95,7 +96,8 @@ bool ParseNextTag(char*& p, char*& outTag, char*& outVal)
 	if(*p) *p++ = 0;
 
 	outVal = p;
-	while(*p && *p != ';' && !(p[0] == '\n' && p[1] == '#')) ++p;
+	//Allow : and ; to be escaped
+	while(*p && (*p != ';' || *(p-1) == '\\') && !(p[0] == '\n' && p[1] == '#')) ++p;
 	if(*p) *p++ = 0;
 
 	return true;
