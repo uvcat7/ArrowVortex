@@ -78,8 +78,8 @@ ZOOM_OUT   = numpad subtract, ctrl + scroll down
 
 CURSOR_UP               = up
 CURSOR_DOWN             = down
-CURSOR_PREVIOUS_BEAT    = alt + up
-CURSOR_NEXT_BEAT        = alt + down
+CURSOR_PREVIOUS_BEAT    = shift + page up
+CURSOR_NEXT_BEAT        = shift + page down
 CURSOR_PREVIOUS_MEASURE = page up
 CURSOR_NEXT_MEASURE     = page down
 CURSOR_STREAM_START     = ctrl + up

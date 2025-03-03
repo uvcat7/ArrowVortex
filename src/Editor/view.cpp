@@ -433,24 +433,24 @@ void setCursorOffset(ChartOffset ofs)
 	}
 }
 
-void setCursorToNextMeasure(bool up)
+void setCursorToNextInterval(int rows)
 {
-	if(gView->hasReverseScroll()) up = !up;
+	if(gView->hasReverseScroll()) rows = rows * -1;
 
-	int rowsPerMeasure = 192;
+	int rowsInInterval = abs(rows);
 
-	if(up)
+	if(rows < 0)
 	{
-		int delta = myCursorRow % rowsPerMeasure;
-		if(delta == 0 || (delta < rowsPerMeasure / 2 && !gMusic->isPaused()))
+		int delta = myCursorRow % rowsInInterval;
+		if(delta == 0 || (delta < rowsInInterval / 2 && !gMusic->isPaused()))
 		{
-			delta += rowsPerMeasure;
+			delta += rowsInInterval;
 		}
 		setCursorRow(myCursorRow - delta);
 	}
 	else
 	{
-		int delta = rowsPerMeasure - myCursorRow % rowsPerMeasure;
+		int delta = rowsInInterval - myCursorRow % rowsInInterval;
 		setCursorRow(myCursorRow + delta);
 	}
 }

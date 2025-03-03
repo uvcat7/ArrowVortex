@@ -172,6 +172,8 @@ void LoadShortcuts()
 	addShortcut(Action::SPEED_DECREASE, "Decrease speed");
 
 	addShortcutHeader("Navigation");
+	addShortcut(Action::CURSOR_PREVIOUS_MEASURE, "Previous beat");
+	addShortcut(Action::CURSOR_NEXT_MEASURE, "Next beat");
 	addShortcut(Action::CURSOR_PREVIOUS_MEASURE, "Previous measure");
 	addShortcut(Action::CURSOR_NEXT_MEASURE, "Next measure");
 	addShortcut(Action::CURSOR_STREAM_START, "Start of stream");

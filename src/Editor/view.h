@@ -33,7 +33,7 @@ struct View
 	virtual void setCursorTime(double time) = 0;
 	virtual void setCursorRow(int row) = 0;
 	virtual void setCursorOffset(ChartOffset ofs) = 0;
-	virtual void setCursorToNextMeasure(bool up) = 0;
+	virtual void setCursorToNextInterval(int rows) = 0;
 	virtual void setCursorToStream(bool top) = 0;
 	virtual void setCursorToSelection(bool top) = 0;
 
