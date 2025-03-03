@@ -1,0 +1,162 @@
+File {
+	Open... = simfile-open
+	Recent Files = recent-files-menu
+	Close = simfile-close
+	---
+	Save = simfile-save
+	Save as... = simfile-save-as
+	---
+	Properties... = dialog-open-song-properties
+	---
+	Exit = application-exit
+}
+Edit {
+	Run script = run-script
+	---
+	Undo = edit-undo
+	Redo = edit-redo
+	---
+	Cut = edit-cut
+	Copy = edit-copy
+	Paste = edit-paste
+	Delete = edit-delete
+	---
+	Select all = edit-select-all
+	---
+	Enable undo/redo jump = toggle-undo-redo-jump
+	Enable time-based copy = toggle-time-based-copy
+}
+Chart {
+	Chart list... = dialog-open-chart-list
+	Properties... = dialog-open-chart-properties
+	Dancing bot... = dialog-open-dancing-bot
+	---
+	New chart... = dialog-open-new-chart
+	---
+	Previous chart = chart-open-previous
+	Next char = chart-open-next
+	---
+	Delete chart = chart-delete
+}
+Notes {
+	Select {
+		Quantization {
+			4ths = notes-select-quantization-4
+			8ths = notes-select-quantization-8
+			12ths = notes-select-quantization-12
+			16ths = notes-select-quantization-16
+			24ths = notes-select-quantization-24
+			32nds = notes-select-quantization-32
+			48ths = notes-select-quantization-48
+			64ths = notes-select-quantization-64
+			192nds = notes-select-quantization-192
+		}
+		---
+		Steps = notes-select-steps
+		Mines = notes-select-mines
+		Holds = notes-select-holds
+		Rolls = notes-select-rolls
+		All = notes-select-all
+	}
+	Convert {
+		Note to Mine = notes-convert-to-mine
+		Note to Fake = notes-convert-to-fake
+		Note to Lift = notes-convert-to-lift
+		Hold to Step = notes-convert-to-step
+		Hold to/from Roll = notes-toggle-hold-roll
+	}
+	Mirror {
+		Horizontally = notes-mirror-horizontally
+		Vertically = notes-mirror-vertically
+		Both = notes-mirror-both
+	}
+	Expand {
+		2:1 (8th to 4th) = notes-expand-2-to-1
+		3:2 (12th to 8th) = notes-expand-3-to-2
+		4:3 (16th to 12th) = notes-expand-4-to-3
+	}
+	Compress {
+		1:2 (4th to 8th) = notes-compress-1-to-2
+		2:3 (8th to 12th) = notes-compress-2-to-3
+		3:4 (12th to 16th) = notes-compress-3-to-4
+	}
+}
+Tempo {
+	Sync mode = chart-close
+	---
+	Adjust sync... = dialog-open-adjust-sync
+	Adjust tempo... = dialog-open-adjust-tempo
+	---
+	Breakdown... = dialog-open-tempo-breakdown
+}
+Audio {
+	Volume {
+		Default = music-volume-reset
+		---
+		Louder = music-volume-up
+		Softer = music-volume-down
+		---
+		Mute = toggle-mute-audio
+	}
+	Speed {
+		Default = music-speed-reset
+		---
+		Faster = music-speed-up
+		Slower = music-speed-down
+	}
+	---
+	Beat tick = toggle-beat-tick
+	Note tick = toggle-note-tick
+	---
+	Convert to ogg = music-convert-to-ogg
+}
+View {
+	Show waveform = toggle-show-waveform
+	Show beat lines = toggle-show-beat-lines
+	Show tempo boxes = toggle-show-tempo-boxes
+	Show tempo help = toggle-show-tempo-help
+	Show column BG = toggle-show-column-background
+	Show notes = toggle-show-notes
+	Show passed notes = toggle-show-passed-notes
+	---
+	Reverse scroll = toggle-reverse-scroll
+	Column colors = toggle-column-colors
+	---
+	Time-based (C-mod) = enable-time-based-scroll
+	Beat-based (X-mod) = enable-beat-based-scroll
+	---
+	Waveform settings... = dialog-open-waveform-settings
+	---
+	Noteskin = noteskins-menu
+	Minimap {
+		Show notes = minimap-show-notes
+		Show density = minimap-show-density
+	}
+	Background {
+		Hide = background-hide
+		---
+		More visible = background-brightness-up
+		Less visible = background-brightness-down
+		---
+		Stretch = background-mode-stretch
+		Letterbox = background-mode-letterbox
+		Crop = background-mode-crop
+	}
+	Status = {
+		Show chart = toggle-status-chart
+		Show snap = toggle-status-snap
+		Show BPM = toggle-status-bpm
+		Show row = toggle-status-row
+		Show beat = toggle-status-beat
+		Show measure = toggle-status-measure
+		Show time = toggle-status-time
+		Show timing = toggle-status-timing-mode
+	}
+}
+Help {
+	Shortcuts... = show-shortcuts
+	Message log... = show-message-log
+	Debug log... = show-debug-log
+	---
+	About... = show-about
+}

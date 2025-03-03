@@ -1,0 +1,5 @@
+action {
+	name = JerrosDebug
+	file = main.lua
+	function = main
+}

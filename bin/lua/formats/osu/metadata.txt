@@ -1,0 +1,12 @@
+importer {
+	format = Osu!mania
+	extensions = osu, osz
+	file = importer.lua
+	function = loadOsu
+}
+exporter {
+	format = Osu!mania
+	extensions = osu
+	file = exporter.lua
+	function = saveOsu
+}

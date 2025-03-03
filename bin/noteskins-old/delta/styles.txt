@@ -1,0 +1,14 @@
+intended-for = Pump
+
+dance-couple = "dance-couple.txt"
+dance-double = "dance-double.txt"
+dance-routine = "dance-routine.txt"
+dance-single = "dance-single.txt"
+dance-solo = "dance-solo.txt"
+dance-threepanel = "dance-threepanel.txt"
+
+pump-couple = "pump-couple.txt"
+pump-double = "pump-double.txt"
+pump-routine = "pump-routine.txt"
+pump-halfdouble = "pump-halfdouble.txt"
+pump-single = "pump-single.txt"

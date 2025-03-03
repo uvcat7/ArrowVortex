@@ -1,0 +1,34 @@
+column-spacing = 70
+
+column {
+  texture-notes="notes.png"
+  texture-receptors="receptors.png"
+  texture-glow="glow.png"
+  texture-holds="holds.png"
+}
+
+receptor off { src=64,0,64,32 }
+receptor on { src=0,0,64,32 }
+	 
+note q4 { src=0,0,64,32 }
+note q8 { src=64,0,64,32 }
+note q12 { src=128,0,64,32 }
+note q16 { src=192,0,64,32 }
+note q24 { src=0,32,64,32 }
+note q32 { src=64,32,64,32 }
+note q48 { src=128,32,64,32 }
+note q64 { src=192,32,64,32 }
+note q192 { src=0,64,64,32 }
+
+hold body { src=0,0,64,64 }
+hold tail { src=128,0,64,32 }
+
+roll body { src=64,0,64,64 }
+roll tail { src=192,0,64,32 }
+
+mine { src=64,64,64,32 }
+
+scheme c1 { note=q4 }
+scheme c2 { note=q8 }
+scheme c3 { note=q16 }
+scheme c4 { note=q12 }
