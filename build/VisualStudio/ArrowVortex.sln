@@ -42,7 +42,8 @@ Global
 		{E118033D-BAD2-407D-AD3F-72E5B79A0E9D}.release|ARM.ActiveCfg = release|Win32
 		{E118033D-BAD2-407D-AD3F-72E5B79A0E9D}.release|Win32.ActiveCfg = release|Win32
 		{E118033D-BAD2-407D-AD3F-72E5B79A0E9D}.release|Win32.Build.0 = release|Win32
-		{E118033D-BAD2-407D-AD3F-72E5B79A0E9D}.release|x64.ActiveCfg = release|Win32
+		{E118033D-BAD2-407D-AD3F-72E5B79A0E9D}.release|x64.ActiveCfg = release|x64
+		{E118033D-BAD2-407D-AD3F-72E5B79A0E9D}.release|x64.Build.0 = release|x64
 		{78B079BD-9FC7-4B9E-B4A6-96DA0F00248B}.debug|ARM.ActiveCfg = debug|x64
 		{78B079BD-9FC7-4B9E-B4A6-96DA0F00248B}.debug|ARM.Build.0 = debug|x64
 		{78B079BD-9FC7-4B9E-B4A6-96DA0F00248B}.debug|Win32.ActiveCfg = debug|x64
