@@ -1,0 +1,316 @@
+#pragma once
+
+#include <Precomp.h>
+
+// Math functions used in tempo detection.
+// The library this came from (mathalgo) seems to be lost to time, but the code still works.
+
+namespace AV {
+namespace Mathalgo {
+
+template <typename T>
+struct Matrix
+{
+	Matrix(uint nRows, uint nCols) :
+		rows(nRows),
+		cols(nCols),
+		data(nRows * nCols, T())
+	{
+	}
+
+	static Matrix identity(uint nSize)
+	{
+		Matrix oResult(nSize, nSize);
+
+		int nCount = 0;
+		std::generate(oResult.data.begin(), oResult.data.end(),
+			[&nCount, nSize]() { return !(nCount++ % (nSize + 1)); });
+
+		return oResult;
+	}
+
+	inline T& operator()(uint nRow, uint nCol)
+	{
+		return data[nCol + cols*nRow];
+	}
+
+	inline Matrix operator*(Matrix& other)
+	{
+		Matrix oResult(rows, other.cols);
+		for (uint r = 0; r < rows; ++r)
+		{
+			for (uint ocol = 0; ocol < other.cols; ++ocol)
+			{
+				for (uint c = 0; c < cols; ++c)
+				{
+					oResult(r, ocol) += (*this)(r, c) * other(c, ocol);
+				}
+			}
+		}
+		return oResult;
+	}
+
+	inline Matrix transpose()
+	{
+		Matrix oResult(cols, rows);
+		for (uint r = 0; r < rows; ++r)
+		{
+			for (uint c = 0; c < cols; ++c)
+			{
+				oResult(c, r) += (*this)(r, c);
+			}
+		}
+		return oResult;
+	}
+
+	vector<T> data;
+	uint rows;
+	uint cols;
+};
+
+template <typename T>
+struct Givens
+{
+public:
+	Givens() : m_oJ(2, 2), m_oQ(1, 1), m_oR(1, 1)
+	{
+	}
+
+	/*
+	Calculate the inverse of a matrix using the QR decomposition.
+
+	param:
+	A	matrix to inverse
+	*/
+	const Matrix<T> Inverse(Matrix<T>& oMatrix)
+	{
+		Matrix<T> oIdentity = Matrix<T>::identity(oMatrix.rows());
+		Decompose(oMatrix);
+		return Solve(oIdentity);
+	}
+
+	/*
+	Performs QR factorization using Givens rotations.
+	*/
+	void Decompose(Matrix<T>& oMatrix)
+	{
+		int nRows = oMatrix.rows;
+		int nCols = oMatrix.cols;
+
+
+		if (nRows == nCols)
+		{
+			nCols--;
+		}
+		else if (nRows < nCols)
+		{
+			nCols = nRows - 1;
+		}
+
+		m_oQ = Matrix<T>::identity(nRows);
+		m_oR = oMatrix;
+
+		for (int j = 0; j < nCols; j++)
+		{
+			for (int i = j + 1; i < nRows; i++)
+			{
+				GivensRotation(m_oR(j, j), m_oR(i, j));
+				PreMultiplyGivens(m_oR, j, i);
+				PreMultiplyGivens(m_oQ, j, i);
+			}
+		}
+
+		m_oQ = m_oQ.transpose();
+	}
+
+	/*
+	Find the solution for a matrix.
+	http://en.wikipedia.org/wiki/QR_decomposition#Using_for_solution_to_linear_inverse_problems
+	*/
+	Matrix<T> Solve(Matrix<T>& oMatrix)
+	{
+		Matrix<T> oQtM(m_oQ.transpose() * oMatrix);
+		int nCols = m_oR.cols;
+		Matrix<T> oS(1, nCols);
+		for (int i = nCols - 1; i >= 0; i--)
+		{
+			oS(0, i) = oQtM(i, 0);
+			for (int j = i + 1; j < nCols; j++)
+			{
+				oS(0, i) -= oS(0, j) * m_oR(i, j);
+			}
+			oS(0, i) /= m_oR(i, i);
+		}
+
+		return oS;
+	}
+
+	const Matrix<T>& GetQ()
+	{
+		return m_oQ;
+	}
+
+	const Matrix<T>& GetR()
+	{
+		return m_oR;
+	}
+
+private:
+	/*
+	Givens rotation is a rotation in the plane spanned by two coordinates axes.
+	http://en.wikipedia.org/wiki/Givens_rotation
+	*/
+	void GivensRotation(T a, T b)
+	{
+		T t, s, c;
+		if (b == 0)
+		{
+			c = (a >= 0) ? T(1) : T(-1);
+			s = 0;
+		}
+		else if (a == 0)
+		{
+			c = 0;
+			s = (b >= 0) ? T(-1) : T(1);
+		}
+		else if (abs(b) > abs(a))
+		{
+			t = a / b;
+			s = -1 / sqrt(1 + t*t);
+			c = -s*t;
+		}
+		else
+		{
+			t = b / a;
+			c = 1 / sqrt(1 + t*t);
+			s = -c*t;
+		}
+		m_oJ(0, 0) = c; m_oJ(0, 1) = -s;
+		m_oJ(1, 0) = s; m_oJ(1, 1) = c;
+	}
+
+	/*
+	Get the premultiplication of a given matrix
+	by the Givens rotation.
+	*/
+	void PreMultiplyGivens(Matrix<T>& oMatrix, int i, int j)
+	{
+		int nRowSize = oMatrix.cols;
+
+		for (int nRow = 0; nRow < nRowSize; nRow++)
+		{
+			double nTemp = oMatrix(i, nRow) * m_oJ(0, 0) + oMatrix(j, nRow) * m_oJ(0, 1);
+			oMatrix(j, nRow) = oMatrix(i, nRow) * m_oJ(1, 0) + oMatrix(j, nRow) * m_oJ(1, 1);
+			oMatrix(i, nRow) = T(nTemp);
+		}
+	}
+
+private:
+	Matrix<T> m_oQ, m_oR, m_oJ;
+};
+
+/*
+	Finds the coefficients of a polynomial p(x) of degree n that fits the data,
+	p(x(i)) to y(i), in a least squares sense. The result p is a row vector of
+	length n+1 containing the polynomial coefficients in incremental powers.
+
+	param:
+		oX				x axis values
+		oY				y axis values
+		nDegree			polynomial degree including the constant
+
+	return:
+		coefficients of a polynomial starting at the constant coefficient and
+		ending with the coefficient of power to nDegree. C++0x-compatible
+		compilers make returning locally created vectors very efficient.
+
+*/
+template<typename T>
+vector<T> polyfit(const T* oX, const T* oY, size_t nCount, int nDegree)
+{
+	// more intuitive this way
+	nDegree++;
+
+	Matrix<T> oXMatrix(nCount, nDegree);
+	Matrix<T> oYMatrix(nCount, 1);
+
+	// copy y matrix
+	for (size_t i = 0; i < nCount; i++)
+	{
+		oYMatrix(i, 0) = oY[i];
+	}
+
+	// create the X matrix
+	for (size_t nRow = 0; nRow < nCount; nRow++)
+	{
+		T nVal = 1.0f;
+		for (int nCol = 0; nCol < nDegree; nCol++)
+		{
+			oXMatrix(nRow, nCol) = nVal;
+			nVal *= oX[nRow];
+		}
+	}
+
+	// transpose X matrix
+	Matrix<T> oXtMatrix(oXMatrix.transpose());
+	// multiply transposed X matrix with X matrix
+	Matrix<T> oXtXMatrix(oXtMatrix * oXMatrix);
+	// multiply transposed X matrix with Y matrix
+	Matrix<T> oXtYMatrix(oXtMatrix * oYMatrix);
+
+	Givens<T> oGivens;
+	oGivens.Decompose(oXtXMatrix);
+	Matrix<T> oCoeff = oGivens.Solve(oXtYMatrix);
+	// copy the result to coeff
+	return oCoeff.data();
+}
+
+// Specialized version for BPM testing, writes degree + 1 coefficients to outCoefs.
+template <typename T>
+void polyfit(int degree, T* outCoefs, const T* inValues, size_t numNonZeroValues, int offsetX)
+{
+	// more intuative this way
+	++degree;
+
+	Matrix<T> oXMatrix((uint)numNonZeroValues, degree);
+	Matrix<T> oYMatrix((uint)numNonZeroValues, 1);
+
+	// copy y matrix
+	for (uint nRow = 0, i = 0; nRow < numNonZeroValues; ++nRow, ++i)
+	{
+		while (inValues[i] == 0) ++i;
+		oYMatrix(nRow, 0) = inValues[i];
+	}
+
+	// create the X matrix
+	for (uint nRow = 0, i = 0; nRow < numNonZeroValues; ++nRow, ++i)
+	{
+		while (inValues[i] == 0) ++i;
+		T nVal = 1.0f, x = T(offsetX + i);
+		for (int nCol = 0; nCol < degree; nCol++)
+		{
+			oXMatrix(nRow, nCol) = nVal;
+			nVal *= x;
+		}
+	}
+
+	// transpose X matrix
+	Matrix<T> oXtMatrix(oXMatrix.transpose());
+	// multiply transposed X matrix with X matrix
+	Matrix<T> oXtXMatrix(oXtMatrix * oXMatrix);
+	// multiply transposed X matrix with Y matrix
+	Matrix<T> oXtYMatrix(oXtMatrix * oYMatrix);
+
+	Givens<T> oGivens;
+	oGivens.Decompose(oXtXMatrix);
+	Matrix<T> oCoeff = oGivens.Solve(oXtYMatrix);
+
+	// copy the result to coeff
+	for (int i = 0; i < degree; ++i)
+	{
+		outCoefs[i] = oCoeff.data[i];
+	}
+}
+
+} // namespace Mathalgo
+} // namespace AV

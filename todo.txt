@@ -1,0 +1,16 @@
+TODO:
+
+- option to repattern notes by selecting notes when using the stream generator
+- bug met notes plaatsen in routine
+- soms selecteerd tab van het chart begin tot cursor
+- optie voor volume note click
+
+DONE:
+
+? fix memory leak in glyph cache!
+- mines niet meetellen bij NPS berekening
+- holds worden niet goed gekopieerd in time-based copy
+- er moet een warning komen als een sm-veld "\\" bevat, want dat mag niet
+- warning voor te hoge negative offset (-25 max?)
+- het is mogelijk om newlines te copy-pasten in tekst velden
+- hold doortrekken in roll wordt een hold

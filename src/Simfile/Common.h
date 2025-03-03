@@ -1,45 +1,72 @@
 #pragma once
 
-#include <Core/String.h>
+#include <Precomp.h>
 
-namespace Vortex {
+namespace AV {
+namespace SimfileConstants {
 
-/// Determines how the selection is modified.
-enum SelectModifier
+constexpr int MaxColumns = 32;
+constexpr int MaxPlayers = 16;
+constexpr int MaxKeysounds = 4095;
+
+} // Simfile constants
+
+// Supported note types.
+enum class NoteType
 {
-	SELECT_SET, ///< Replace the current selection.
-	SELECT_ADD, ///< Add to the current selection.
-	SELECT_SUB, ///< Subtract from the current selection.
+	None,
+
+	Step,
+	Mine,
+	Hold,
+	Roll,
+	Lift,
+	Fake,
+	AutomaticKeysound,
+
+	Count
 };
 
-/// Simfile limitations/constants.
-enum SimConstants
+// Represents a row/column index.
+struct RowCol
 {
-	SIM_MAX_COLUMNS = 32,
-	SIM_MAX_PLAYERS = 16,
-	SIM_DEFAULT_BPM = 120,
+	Row row;
+	int col;
 };
 
-/// Supported difficulties.
-enum Difficulty
+// Represents a single note.
+struct Note
 {
-	DIFF_BEGINNER,
-	DIFF_EASY,
-	DIFF_MEDIUM,
-	DIFF_HARD,
-	DIFF_CHALLENGE,
-	DIFF_EDIT,
+	Note()
+		: row(0)
+		, endRow(0)
+		, type(0)
+		, player(0)
+		, keysoundId(0)
+		, isWarped(0)
+		, unused(0)
+	{
+	}
 
-	NUM_DIFFICULTIES
+	Note(Row row, Row endRow, NoteType type, uint player, uint keysoundId)
+		: row(row)
+		, endRow(endRow)
+		, type((uint)type)
+		, player(player)
+		, keysoundId(keysoundId)
+		, isWarped(0)
+		, unused(0)
+	{
+	}
+
+	Row row;
+	Row endRow;
+
+	uint type : 4;
+	uint player : 4;
+	uint keysoundId : 12;
+	uint isWarped : 1;
+	uint unused : 3;
 };
 
-/// Represents a row/column index.
-struct RowCol { int row, col; };
-
-// Represents a generic tag/value property.
-struct Property { String tag, val; };
-
-/// Represents a single note.
-struct Note { int row, endrow; uint col:8; uint player:4; uint type:4; };
-
-}; // namespace Vortex
+} // namespace AV

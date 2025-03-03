@@ -1,0 +1,119 @@
++++ CUTTING EDGE
+
+Added: Full support for Dance/Pump styles on all noteskins.
+Added: Option for using column colors instead of timing colors on the noteskin (View > Use column colors).
+Added: Additional styles: dance-threepanel, kb7-single, and Pump-routine.
+Added: Notes to fakes conversion (Notes > Convert)
+Added: Notes to lifts conversion (Notes > Convert)
+
+Fixed: AV no longer crashes when ctrl+up/down is used without an open chart.
+Fixed: The dancing bot no longer dances to fake notes.
+Fixed: The recent files menu now properly displays ampersands.
+
+Changed: AV now loads/saves the step artist field in SSC charts as CREDIT instead of DESCRIPTION.
+Changed: Time based view and row based view are now referred to as "Time spacing" and "Beat spacing". This mirrors the naming convention used in the RH editor, which I think is more clear.
+Changed: Styles are now seperated into a "Game" and "Style" component in both "styles.txt" and the New Chart dialog.
+
++++ 2017-02-25 BUILD
+
+Added: Support for all current SM5 segment types (Delays, Warps, Time Signatures, Ticks, Combos, Speeds, Scrolls, Fakes, and Labels).
+Added: Support for existing files with seperate song/step timing. The option to add step timing in AV is still in development.
+Added: Adjust Tempo SM5 dialog to edit the above mentioned SM5 segment types.
+Added: Note density and stream measures info in the Chart Properties dialog.
+Added: Shortcut to export notes as a lua table, which is written to the log.
+Added: Selected region and selected notes are now highlighed on the minimap.
+Added: Note selection by quantization (Notes > Select > Quantization).
+Added: Insert/delete beats (new section in the Adjust Tempo dialog).
+Added: Dialogs can now be pinned, which locks their position and size.
+Added: AV will save the position and size of pinned dialogs and will reopen them on startup.
+Added: Selecting/deleting segments is no longer restricted to sync mode.
+Added: Hovering over segments will show help boxes (can be disabled with View > Show tempo help).
+Added: Status now shows timing mode for songs with split timing (View > Status > Show timing mode).
+Added: Osu exporter now shows a warning when unsupported segments/note types are used.
+
+Fixed: AV no longer crashes if there is insufficient memory to load the audio file.
+Fixed: AV no longer crashes if there is insufficient memory to perform BPM detection.
+Fixed: No more text rendering issues on systems that do not support shaders.
+Fixed: No more BG/banner/glow rendering issues on systems that do not support NPOT textures.
+Fixed: Change player number (slash) now cycles through all players instead of just P1/P2.
+Fixed: Hold/roll conversion text is now the right way around.
+Fixed: The chart list is now resorted when a chart difficulty/rating changes.
+Fixed: Osu importer no longer crashes on files with more than 5 unknown difficulties.
+Fixed: Placing notes on a row that does not fit the current snap no longer creates a short hold.
+
+Changed: AV now prioritizes the load format over the default format when saving.
+Changed: Osu importer now assigns difficulties pet style instead of across all styles.
+
++++ 09-12-2016 BUILD
+
+Added: Lift notes and Fake notes are now indicated with L/F icons.
+Added: The widgets in the dialogs now show tooltips when hovering over them.
+Added: Dialogs can now be minimized, which hides their contents.
+Added: The tempo breakdown dialog can now be resized and has a scrollbar when necessary.
+Added: The chart list dialog can now be resized and has a scrollbar when necessary.
+Added: The minimap now has an alternative display mode: note density.
+Added: Customization options for the appearance of the waveform.
+Added: Filtering options for the waveform.
+Added: Improved error logging and debugging information.
+Added: The list of charts now shows charts as buttons.
+Added: The list of charts can now be resized and has a scrollbar when necessary.
+Added: The SM exporter now warns the user if paths have unicode characters.
+Added: The SM exporter now warns the user if the music preview is too short/long.
+Added: The undo/redo jump can now be enabled/disabled in the edit menu.
+Added: Time-based copy can now be enabled/disabled in the edit menu.
+Added: Additional noteskins can now be selected through the View > Noteskin menu.
+Added: There is now an option to support AV by donating (Help > Donate).
+
+Fixed: The cursor now jumps to the previous measure when usign PgUp. 
+Fixed: The beat tick and note tick sounds are now resampled when the music rate is adjusted.
+Fixed: Dialogs are now constrained to the editor view.
+Fixed: Simfile backup no longer fails if [filename].sm.old already exists.
+Fixed: Music playback no longer glitches on very long charts (13+ hours)
+Fixed: Waveform display no longer glitches on very long charts (13+ hours)
+Fixed: Statusbar no longer displays invalid time values on VERY long charts (590+ hours)
+
+Changed: Simplified the text rendering (the current shader was giving some people issues)
+
+Removed: The initial feet positions option in generate notes is no longer available.
+
++++ 14-10-2016 BUILD
+
+Added: The following SM5 tags are now properly loaded and formatted when saved: DELAYS, WARPS, LABELS, TICKCOUNTS, COMBOS, SPEEDS, SCROLLS, FAKES, TIMESIGNATURES, ATTACKS, KEYSOUNDS.
+Added: Several extra tags are now saved by default: TITLETRANSLIT, SUBTITLETRANSLIT, ARTISTTRANSLIT, GENRE, CREDIT, CDTITLE.
+Added: It is now possible to specify multiple shortcuts per action.
+Added: It is now possible to use "scroll up" and "scroll down" for shortcuts.
+Added: Using ctrl + mouse scroll now zooms in/out.
+Added: The Osu loader is smarter at selecting difficulties when opening charts, and it is no longer possible to end up with all edit charts when opening Osu files, which gave issues in stepmania/ITG.
+Added: The Osu exporter is now able to export files with stops, by recalculating the stops as BPM changes.
+Added: The Osu loader and exporter are now able to open/save 10-key, 8-key, 7-key, 6-key and 5-key files.
+Added: Load music and convert to ogg now show an info box with progress percentage.
+Added: The editor will now jump to the position of the changed notes when using undo/redo. This option can be disabled by changing the "enableUndoRedoJumps" setting to "no".
+Added: The editor settings now have several background resize modes which change the appearance of the background image.
+
+Fixed: Stepfiles with unicode paths are now saved correcty.
+Fixed: Stepfiles with unicode paths are now displayed correctly in recent files.
+Fixed: Backgrounds/banners with unicode paths are now loaded correctly when viewed.
+Fixed: The step artist field in LIST OF CHARTS is now truncated with ellipses if it is too long.
+Fixed: The stepfile exporter now shows a warning when trying to save duplicate difficulties, and saves the duplicates as edit instead.
+Fixed: The cursor time now updates immediately when offset/stops/BPM changes are made.
+Fixed: Pending text input is now finalized before dialogs are closed.
+Fixed: The initial feet positions in the generate notes dialog is now usable again.
+
+Changed: The repeat stop button in the tempo dialog is replaced by convert region to stop.
+Changed: The remove stop button in the tempo dialog is replaced by convert region to stutter.
+
++++ 09-09-2016 BUILD
+
+Added: ArrowVortex now has an application icon (shoutouts to Benjaboyy for the design).
+Added: Tempo events can now be selected/cut/copied/pasted in sync mode.
+Added: V-sync can now be enabled/disabled using the "enableVerticalSync" setting.
+
+Fixed: Pasting notes in sync mode no longer crashes the editor.
+Fixed: Difficulty estimation on an empty chart no longer crashes the editor.
+Fixed: Creating new charts is now only possible when a file is opened.
+Fixed: HUD messages now fade correctly on high framerates.
+Fixed: HUD messages now show left braces in song/artist/chart names correctly.
+Fixed: The Notes > Convert menu now correctly displays the associated shortcuts.
+Fixed: The recent files loader no longer combines two lines if the linebreak happens to be on the 256th character.
+
+Removed: The offset events after cursor feature is no longer available (it was buggy and not that useful).
