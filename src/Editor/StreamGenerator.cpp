@@ -67,8 +67,10 @@ struct StreamPlanner
 	float random();
 	int getNextCol();
 
-	std::mt19937 randMt;
-	std::uniform_real<float> randDistr;
+	std::random_device random_device;
+	std::mt19937 random_generator;
+	std::uniform_real_distribution<float> random_distribution;
+
 	FootPlanner feet[2];
 
 	Vector<float> weights;
@@ -174,6 +176,7 @@ int FootPlanner::getNextCol(int xmin, int xmax)
 }
 
 StreamPlanner::StreamPlanner(const StreamGenerator* sg)
+	: random_generator(random_device()), random_distribution(0.0f, 1.0f)
 {
 	auto style = gStyle->get();
 
@@ -185,7 +188,6 @@ StreamPlanner::StreamPlanner(const StreamGenerator* sg)
 	feet[FOOT_L].curCol = sg->feetCols.x;
 	feet[FOOT_R].curCol = sg->feetCols.y;
 
-	randMt.seed((ulong)(gSystem->getElapsedTime() * 1000.0));
 	pad.resize(numCols);
 	weights.resize(numCols);
 	stepDists.resize(numCols);
@@ -239,7 +241,7 @@ StreamPlanner::StreamPlanner(const StreamGenerator* sg)
 
 float StreamPlanner::random()
 {
-	return randDistr(randMt);
+	return random_distribution(random_generator);
 }
 
 int StreamPlanner::getNextCol()
