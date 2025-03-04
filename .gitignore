@@ -400,3 +400,7 @@ FodyWeavers.xsd
 .envrc
 .direnv
 shell.nix
+
+# vcpkg and building-related
+vcpkg_installed
+build
