@@ -5,6 +5,7 @@
 #include <Core/StringUtils.h>
 
 #include <vector>
+#include <array>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -501,18 +502,21 @@ String getText(StringRef path, bool* success)
 
 Vector<String> getLines(StringRef path, bool* success)
 {
+	constexpr size_t kBufferSize = 256;
+	constexpr size_t kNumberOne = 1;
+
 	Vector<String> out;
 	FILE* fp = OpenFile(path, false);
 	if(!fp) { if(success) *success = false; return out; }
 	out.append();
-	char buffer[256];
-	for(int bytesRead; bytesRead = fread(buffer, 1, 256, fp);)
+	std::array<char, kBufferSize> buffer;
+	for (size_t bytesRead; bytesRead = fread(buffer.data(), kNumberOne, buffer.size(), fp);)
 	{
 		if(bytesRead > 0 && isNewline(buffer[0]) && out.back().len())
 		{
 			out.append();
 		}
-		for(int pos = 0, end = 0; pos < bytesRead;)
+		for (size_t pos = 0, end = 0; pos < bytesRead;)
 		{
 			while(pos < bytesRead && isNewline(buffer[pos]))
 			{
@@ -524,7 +528,7 @@ Vector<String> getLines(StringRef path, bool* success)
 			}
 			if(end > pos)
 			{
-				Str::append(out.back(), buffer + pos, end - pos);
+				Str::append(out.back(), buffer.data() + pos, static_cast<int>(end - pos));
 			}
 			if(end < bytesRead && isNewline(buffer[end]))
 			{
