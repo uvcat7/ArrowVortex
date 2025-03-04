@@ -5,6 +5,7 @@
 #include <Core/StringUtils.h>
 
 #include <vector>
+#include <array>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -141,7 +142,7 @@ static void AddItems(Vector<PathItem>& out, StringRef path)
 	{
 		if(*b == '\\' || *b == '/' || *b == 0)
 		{
-			int size = b - a;
+			int size = static_cast<int>(b - a);
 			if(size == 2 && a[0] == '.' && a[1] == '.')
 			{
 				if(out.size() && !out.back().dotdot())
@@ -178,7 +179,7 @@ static String Concatenate(StringRef first, StringRef second, EndSlash slash = SL
 
 	// First, copy the characters in the path prefix.
 	const char* dirBegin = GetDirStart(*pathBegin);
-	String out(pathBegin->begin(), dirBegin - pathBegin->begin());
+	String out(pathBegin->begin(), static_cast<int>(dirBegin - pathBegin->begin()));
 
 	// If the first character after the prefix was a slash, append a slash.
 	if(*dirBegin == '\\' || *dirBegin == '/') Str::append(out, '\\');
@@ -188,11 +189,11 @@ static String Concatenate(StringRef first, StringRef second, EndSlash slash = SL
 
 	// Reconstruct the rest of the path from the items.
 	auto i = items.begin();
-	Str::append(out, i->p, i->n);
+	Str::append(out, i->p, static_cast<int>(i->n));
 	for(++i; i != items.end(); ++i)
 	{
 		Str::append(out, '\\');
-		Str::append(out, i->p, i->n);
+		Str::append(out, i->p, static_cast<int>(i->n));
 	}
 
 	// End with a slash if requested.
@@ -277,13 +278,13 @@ void Path::clear()
 void Path::dropExt()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, GetFileEnd(file) - str.begin());
+	Str::erase(str, static_cast<int>(GetFileEnd(file) - str.begin()));
 }
 
 void Path::dropFile()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, file - str.begin());
+	Str::erase(str, static_cast<int>(file - str.begin()));
 }
 
 int Path::attributes() const
@@ -382,42 +383,46 @@ bool FileReader::open(StringRef path)
 
 void FileReader::close()
 {
-	if(file) fclose((FILE*)file);
-	file = nullptr;
+	if (file)
+	{
+		fclose(static_cast<FILE*>(file));
+		file = nullptr;
+	}
 }
 
 size_t FileReader::size() const
 {
-	long pos = ftell((FILE*)file);
-	fseek((FILE*)file, 0, SEEK_END);
-	size_t size = ftell((FILE*)file);
-	fseek((FILE*)file, pos, SEEK_SET);
+	if (!file) return 0;
+	long pos = ftell(static_cast<FILE*>(file));
+	fseek(static_cast<FILE*>(file), 0, SEEK_END);
+	size_t size = ftell(static_cast<FILE*>(file));
+	fseek(static_cast<FILE*>(file), pos, SEEK_SET);
 	return size;
 }
 
 long FileReader::tell() const
 {
-	return ftell((FILE*)file);
+	return file ? ftell(static_cast<FILE*>(file)) : -1;
 }
 
 size_t FileReader::read(void* ptr, size_t size, size_t count)
 {
-	return fread(ptr, size, count, (FILE*)file);
+	return file ? fread(ptr, size, count, static_cast<FILE*>(file)) : 0;
 }
 
 int FileReader::seek(long offset, int origin)
 {
-	return fseek((FILE*)file, offset, origin);
+	return file ? fseek(static_cast<FILE*>(file), offset, origin) : -1;
 }
 
 void FileReader::skip(size_t n)
 {
-	fseek((FILE*)file, n, SEEK_CUR);
+	if (file) fseek(static_cast<FILE*>(file), static_cast<long>(n), SEEK_CUR);
 }
 
 bool FileReader::eof()
 {
-	return (feof((FILE*)file) != 0);
+	return file ? feof(static_cast<FILE*>(file)) != 0 : true;
 }
 
 // ================================================================================================
@@ -441,7 +446,10 @@ bool FileWriter::open(StringRef path)
 
 void FileWriter::close()
 {
-	if(file) fclose((FILE*)file);
+	if(file)
+	{
+		fclose(static_cast<FILE*>(file));
+	}
 	file = nullptr;
 }
 
@@ -454,7 +462,7 @@ void FileWriter::printf(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	vfprintf((FILE*)file, fmt, args);
+	vfprintf(static_cast<FILE*>(file), fmt, args);
 	va_end(args);
 }
 
@@ -494,18 +502,21 @@ String getText(StringRef path, bool* success)
 
 Vector<String> getLines(StringRef path, bool* success)
 {
+	constexpr size_t kBufferSize = 256;
+	constexpr size_t kNumberOne = 1;
+
 	Vector<String> out;
 	FILE* fp = OpenFile(path, false);
 	if(!fp) { if(success) *success = false; return out; }
 	out.append();
-	char buffer[256];
-	for(int bytesRead; bytesRead = fread(buffer, 1, 256, fp);)
+	std::array<char, kBufferSize> buffer;
+	for (size_t bytesRead; bytesRead = fread(buffer.data(), kNumberOne, buffer.size(), fp);)
 	{
 		if(bytesRead > 0 && isNewline(buffer[0]) && out.back().len())
 		{
 			out.append();
 		}
-		for(int pos = 0, end = 0; pos < bytesRead;)
+		for (size_t pos = 0, end = 0; pos < bytesRead;)
 		{
 			while(pos < bytesRead && isNewline(buffer[pos]))
 			{
@@ -517,7 +528,7 @@ Vector<String> getLines(StringRef path, bool* success)
 			}
 			if(end > pos)
 			{
-				Str::append(out.back(), buffer + pos, end - pos);
+				Str::append(out.back(), buffer.data() + pos, static_cast<int>(end - pos));
 			}
 			if(end < bytesRead && isNewline(buffer[end]))
 			{
@@ -648,7 +659,7 @@ Vector<Path> findFiles(StringRef path, bool recursive, const char* filters)
 		for(const char* begin = filters, *end = begin; true; end = begin)
 		{
 			while(*end && *end != ';') ++end;
-			if(end != begin) filterlist.push_back(String(begin, end - begin));
+			if (end != begin) filterlist.push_back(String(begin, static_cast<int>(end - begin)));
 			if(*end == 0) break;
 			begin = end + 1;
 		}

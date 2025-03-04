@@ -2,6 +2,8 @@
 
 #include <Core/Utils.h>
 
+#include <vector>
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -125,9 +127,14 @@ ParallelThreads::~ParallelThreads()
 
 int ParallelThreads::concurrency()
 {
-	SYSTEM_INFO sysinfo;
-	GetSystemInfo(&sysinfo);
-	return clamp<int>(sysinfo.dwNumberOfProcessors, 1, 16);
+	static int s_num_of_procs = 0;
+	if (s_num_of_procs == 0)
+	{
+		SYSTEM_INFO sysinfo;
+		GetSystemInfo(&sysinfo);
+		s_num_of_procs = clamp<int>(sysinfo.dwNumberOfProcessors, 1, 16);
+	}
+	return s_num_of_procs;
 }
 
 void ParallelThreads::run(int numItems, int numThreads)
@@ -139,26 +146,22 @@ void ParallelThreads::run(int numItems, int numThreads)
 	shared.size = *shared.counter = numItems;
 	shared.owner = this;
 
-	ParallelThreadsData* threads;
-	HANDLE* handles;
-	threads = new ParallelThreadsData[numThreads];
-	handles = new HANDLE[numThreads];
+	std::vector<ParallelThreadsData> threads(numThreads);
+	std::vector<HANDLE> handles(numThreads);
 
 	for(int i = 0; i < numThreads; ++i)
 	{
 		threads[i].shared = &shared;
 		threads[i].index = i;
-		handles[i] = CreateThread(0, 0, ParallelThreadsFunc, threads + i, 0, 0);
+		handles[i] = CreateThread(0, 0, ParallelThreadsFunc, &threads[i], 0, 0);
 	}
 
-	WaitForMultipleObjects(numThreads, handles, TRUE, INFINITE);
-	for(int i = 0; i < numThreads; ++i)
+	WaitForMultipleObjects(numThreads, handles.data(), TRUE, INFINITE);
+	for(HANDLE handle : handles)
 	{
-		CloseHandle(handles[i]);
+		CloseHandle(handle);
 	}
 
-	delete[] threads;
-	delete[] handles;
 	AlignedFree(shared.counter);
 }
 
