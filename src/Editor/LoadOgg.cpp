@@ -2,8 +2,8 @@
 
 #include <Editor/Sound.h>
 
-#include <libvorbis/include/ogg/ogg.h>
-#include <libvorbis/include/vorbis/vorbisfile.h>
+#include <ogg/ogg.h>
+#include <vorbis/vorbisfile.h>
 #include <errno.h>
 
 #include <cstring>
