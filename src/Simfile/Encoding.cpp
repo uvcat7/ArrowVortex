@@ -4,8 +4,8 @@
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
 
-#include <Managers/Tempo.h>
-#include <Managers/Notes.h>
+#include <Managers/TempoMan.h>
+#include <Managers/NoteMan.h>
 
 #include <Editor/Common.h>
 

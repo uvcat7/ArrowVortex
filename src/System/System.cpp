@@ -1,4 +1,4 @@
-#ifdef _DEBUG
+#ifndef DEBUG
 #define CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
