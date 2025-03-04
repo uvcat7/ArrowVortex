@@ -397,3 +397,5 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /bin/ArrowVortex_d.exe
+bin/settings/recent files.txt
+bin/settings/settings.txt
