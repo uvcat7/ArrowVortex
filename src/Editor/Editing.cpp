@@ -265,7 +265,7 @@ void onKeyRelease(KeyRelease& evt) override
 		// Don't advance when we're stepping jumps
 		if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
 		{
-			gView->setCursorRow(gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
+			gView->setCursorRow(gView->snapRow(gView->getCursorRow(), gView->hasReverseScroll() ? View::SNAP_UP : View::SNAP_DOWN));
 		}
 	}
 }
