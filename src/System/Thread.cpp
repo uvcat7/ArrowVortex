@@ -127,9 +127,14 @@ ParallelThreads::~ParallelThreads()
 
 int ParallelThreads::concurrency()
 {
-	SYSTEM_INFO sysinfo;
-	GetSystemInfo(&sysinfo);
-	return clamp<int>(sysinfo.dwNumberOfProcessors, 1, 16);
+	static int s_num_of_procs = 0;
+	if (s_num_of_procs == 0)
+	{
+		SYSTEM_INFO sysinfo;
+		GetSystemInfo(&sysinfo);
+		s_num_of_procs = clamp<int>(sysinfo.dwNumberOfProcessors, 1, 16);
+	}
+	return s_num_of_procs;
 }
 
 void ParallelThreads::run(int numItems, int numThreads)
