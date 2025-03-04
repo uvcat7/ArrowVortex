@@ -79,10 +79,9 @@ MixerImpl()
 	, myIsPaused(true)
 {
 	myBlockMemory = (BYTE*)_aligned_malloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16);
-	for(int i = 0; i < WAVEOUT_BLOCKS; ++i)
+	for (WAVEHDR& header : myHeaders)
 	{
-		WAVEHDR* header = myHeaders + i;
-		memset(header, 0, sizeof(WAVEHDR));
+		memset(&header, 0, sizeof(WAVEHDR));
 	}
 }
 
@@ -148,22 +147,22 @@ bool open(MixSource* source, int samplerate)
 	}
 
 	// Create the output buffer blocks.
-	for(int i = 0; i < WAVEOUT_BLOCKS; ++i)
+	int index = 0;
+	for (WAVEHDR& header : myHeaders)
 	{
-		WAVEHDR* header = myHeaders + i;
+		memset(&header, 0, sizeof(WAVEHDR));
+		header.lpData = reinterpret_cast<LPSTR>(myBlockMemory + static_cast<size_t>(WAVEOUT_BLOCK_SIZE) * index);
+		header.dwBufferLength = WAVEOUT_BLOCK_SIZE;
+		header.dwUser = index;
 
-		memset(header, 0, sizeof(WAVEHDR));
-		header->lpData = (LPSTR)(myBlockMemory + WAVEOUT_BLOCK_SIZE * i);
-		header->dwBufferLength = WAVEOUT_BLOCK_SIZE;
-		header->dwUser = i;
-
-		MMRESULT res = waveOutPrepareHeader(myWaveout, header, sizeof(WAVEHDR));
-		if(res != MMSYSERR_NOERROR)
+		MMRESULT res = waveOutPrepareHeader(myWaveout, &header, sizeof(WAVEHDR));
+		if (res != MMSYSERR_NOERROR)
 		{
 			HudError("Could not prepare waveout header: %i", res);
 			close();
 			return false;
 		}
+		++index;
 	}
 
 	myFrequency = samplerate;
