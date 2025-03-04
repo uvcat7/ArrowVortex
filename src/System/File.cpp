@@ -382,42 +382,46 @@ bool FileReader::open(StringRef path)
 
 void FileReader::close()
 {
-	if(file) fclose((FILE*)file);
-	file = nullptr;
+	if (file)
+	{
+		fclose(static_cast<FILE*>(file));
+		file = nullptr;
+	}
 }
 
 size_t FileReader::size() const
 {
-	long pos = ftell((FILE*)file);
-	fseek((FILE*)file, 0, SEEK_END);
-	size_t size = ftell((FILE*)file);
-	fseek((FILE*)file, pos, SEEK_SET);
+	if (!file) return 0;
+	long pos = ftell(static_cast<FILE*>(file));
+	fseek(static_cast<FILE*>(file), 0, SEEK_END);
+	size_t size = ftell(static_cast<FILE*>(file));
+	fseek(static_cast<FILE*>(file), pos, SEEK_SET);
 	return size;
 }
 
 long FileReader::tell() const
 {
-	return ftell((FILE*)file);
+	return file ? ftell(static_cast<FILE*>(file)) : -1;
 }
 
 size_t FileReader::read(void* ptr, size_t size, size_t count)
 {
-	return fread(ptr, size, count, (FILE*)file);
+	return file ? fread(ptr, size, count, static_cast<FILE*>(file)) : 0;
 }
 
 int FileReader::seek(long offset, int origin)
 {
-	return fseek((FILE*)file, offset, origin);
+	return file ? fseek(static_cast<FILE*>(file), offset, origin) : -1;
 }
 
 void FileReader::skip(size_t n)
 {
-	fseek((FILE*)file, n, SEEK_CUR);
+	if (file) fseek(static_cast<FILE*>(file), n, SEEK_CUR);
 }
 
 bool FileReader::eof()
 {
-	return (feof((FILE*)file) != 0);
+	return file ? feof(static_cast<FILE*>(file)) != 0 : true;
 }
 
 // ================================================================================================
@@ -441,7 +445,10 @@ bool FileWriter::open(StringRef path)
 
 void FileWriter::close()
 {
-	if(file) fclose((FILE*)file);
+	if(file)
+	{
+		fclose(static_cast<FILE*>(file));
+	}
 	file = nullptr;
 }
 
@@ -454,7 +461,7 @@ void FileWriter::printf(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	vfprintf((FILE*)file, fmt, args);
+	vfprintf(static_cast<FILE*>(file), fmt, args);
 	va_end(args);
 }
 
