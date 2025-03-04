@@ -142,7 +142,7 @@ static void AddItems(Vector<PathItem>& out, StringRef path)
 	{
 		if(*b == '\\' || *b == '/' || *b == 0)
 		{
-			int size = b - a;
+			int size = static_cast<int>(b - a);
 			if(size == 2 && a[0] == '.' && a[1] == '.')
 			{
 				if(out.size() && !out.back().dotdot())
@@ -179,7 +179,7 @@ static String Concatenate(StringRef first, StringRef second, EndSlash slash = SL
 
 	// First, copy the characters in the path prefix.
 	const char* dirBegin = GetDirStart(*pathBegin);
-	String out(pathBegin->begin(), dirBegin - pathBegin->begin());
+	String out(pathBegin->begin(), static_cast<int>(dirBegin - pathBegin->begin()));
 
 	// If the first character after the prefix was a slash, append a slash.
 	if(*dirBegin == '\\' || *dirBegin == '/') Str::append(out, '\\');
@@ -189,11 +189,11 @@ static String Concatenate(StringRef first, StringRef second, EndSlash slash = SL
 
 	// Reconstruct the rest of the path from the items.
 	auto i = items.begin();
-	Str::append(out, i->p, i->n);
+	Str::append(out, i->p, static_cast<int>(i->n));
 	for(++i; i != items.end(); ++i)
 	{
 		Str::append(out, '\\');
-		Str::append(out, i->p, i->n);
+		Str::append(out, i->p, static_cast<int>(i->n));
 	}
 
 	// End with a slash if requested.
@@ -278,13 +278,13 @@ void Path::clear()
 void Path::dropExt()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, GetFileEnd(file) - str.begin());
+	Str::erase(str, static_cast<int>(GetFileEnd(file) - str.begin()));
 }
 
 void Path::dropFile()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, file - str.begin());
+	Str::erase(str, static_cast<int>(file - str.begin()));
 }
 
 int Path::attributes() const
@@ -417,7 +417,7 @@ int FileReader::seek(long offset, int origin)
 
 void FileReader::skip(size_t n)
 {
-	if (file) fseek(static_cast<FILE*>(file), n, SEEK_CUR);
+	if (file) fseek(static_cast<FILE*>(file), static_cast<long>(n), SEEK_CUR);
 }
 
 bool FileReader::eof()
@@ -659,7 +659,7 @@ Vector<Path> findFiles(StringRef path, bool recursive, const char* filters)
 		for(const char* begin = filters, *end = begin; true; end = begin)
 		{
 			while(*end && *end != ';') ++end;
-			if(end != begin) filterlist.push_back(String(begin, end - begin));
+			if (end != begin) filterlist.push_back(String(begin, static_cast<int>(end - begin)));
 			if(*end == 0) break;
 			begin = end + 1;
 		}
