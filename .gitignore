@@ -407,3 +407,4 @@ shell.nix
 # vcpkg and building-related
 vcpkg_installed
 build
+out
