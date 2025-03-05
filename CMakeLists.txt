@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.30)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(VCPKG_TARGET_TRIPLET x64-windows-static)
 
 project(ArrowVortex)
 
