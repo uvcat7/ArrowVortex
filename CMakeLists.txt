@@ -19,3 +19,8 @@ add_subdirectory(src/Editor)
 add_subdirectory(src/Managers)
 add_subdirectory(src/Simfile)
 add_subdirectory(src/System)
+
+install(TARGETS ArrowVortex RUNTIME)
+install(DIRECTORY bin/assets DESTINATION bin)
+install(DIRECTORY bin/noteskins DESTINATION bin)
+install(DIRECTORY bin/settings DESTINATION bin)
