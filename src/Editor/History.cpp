@@ -90,7 +90,7 @@ static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Temp
 	if(hasTempo) header.write(t);
 	header.writeNum(size);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 	HudNote("Creating entry [header=%ib, data=%ib, chart:%c, tempo:%c",
 		header.size(), size,
 		hasChart ? 'y' : 'n',
