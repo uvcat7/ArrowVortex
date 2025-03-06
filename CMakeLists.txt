@@ -5,6 +5,8 @@ set(VCPKG_TARGET_TRIPLET x64-windows-static)
 
 project(ArrowVortex)
 
+set(CMAKE_CONFIGURATION_TYPES Debug Release)
+
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 find_package(Freetype REQUIRED)
