@@ -498,7 +498,7 @@ static void WriteSections(ExportData& data)
 		const Note* end = chart->notes.end();
 
 		// Write all notes for the current player in blocks of one section.
-		for(; it != end; startRow += ROWS_PER_NOTE_SECTION)
+		for(; it != end || remainingHolds > 0; startRow += ROWS_PER_NOTE_SECTION)
 		{
 			memset(section, '0', sectionSize);
 			int endRow = startRow + ROWS_PER_NOTE_SECTION;
