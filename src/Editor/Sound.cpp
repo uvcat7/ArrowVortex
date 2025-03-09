@@ -280,7 +280,7 @@ bool Sound::load(const char* path, bool threaded, String& title, String& artist)
 	// If the number of frames is known beforehand, we can pre-allocate the buffer.
 	if(myNumFrames > 0)
 	{
-		ulong numBytes = myNumFrames * sizeof(short);
+		uint64_t numBytes = myNumFrames * sizeof(short);
 
 		if(threaded)
 		{
