@@ -1,12 +1,14 @@
 #pragma once
 
+#include <cstdint>
+
 namespace Vortex {
 
-typedef unsigned long  ulong;
-typedef unsigned int   uint;
-typedef unsigned short ushort;
-typedef unsigned char  uchar;
-typedef unsigned int   color32;
+typedef uint64_t  ulong;
+typedef uint32_t   uint;
+typedef uint16_t ushort;
+typedef uint8_t  uchar;
+typedef uint32_t   color32;
 
 template <typename T> struct vec2t { T x, y; };
 template <typename T> struct vec3t { T x, y, z; };
@@ -47,7 +49,7 @@ struct Simfile;
 struct TimingData;
 
 typedef const String& StringRef;
-typedef ulong TextureHandle;
+typedef uint64_t TextureHandle;
 
 extern float deltaTime;
 
