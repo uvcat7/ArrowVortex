@@ -36,6 +36,7 @@ typedef void(*UpdateFunction)();
 typedef System::MenuItem Item;
 
 Item* myFileMenu;
+Item* myVisualSyncMenu;
 Item* myViewMenu;
 Item* myMinimapMenu;
 Item* myBgStyleMenu;
@@ -219,6 +220,11 @@ void init(Item* menu)
 	sub(hNotes, hNoteCompress, "Compress");
 	add(hNotes, OPEN_DIALOG_GENERATE_NOTES, "Generate...");
 
+	// Tempo > Visual sync menu
+	myVisualSyncMenu = newMenu();
+	add(myVisualSyncMenu, SET_VISUAL_SYNC_CURSOR_ANCHOR, "Cursor row");
+	add(myVisualSyncMenu, SET_VISUAL_SYNC_RECEPTOR_ANCHOR, "Receptors row");
+
 	// Tempo menu.
 	Item* hTempo = newMenu();
 	add(hTempo, SWITCH_TO_SYNC_MODE, "Sync mode");
@@ -228,6 +234,7 @@ void init(Item* menu)
 	add(hTempo, OPEN_DIALOG_ADJUST_TEMPO_SM5, "Adjust tempo SM5...");
 	sep(hTempo);
 	add(hTempo, OPEN_DIALOG_TEMPO_BREAKDOWN, "Breakdown...");
+	sub(hTempo, myVisualSyncMenu, "Visual sync anchor");
 
 	// Audio > Volume menu.
 	Item* hAudioVol = newMenu();
@@ -422,6 +429,11 @@ void registerUpdateFunctions()
 	myUpdateFunctions[USE_TIME_BASED_COPY] = []
 	{
 		MENU->myEditMenu->setChecked(TOGGLE_TIME_BASED_COPY, gEditing->hasTimeBasedCopy());
+	};
+	myUpdateFunctions[VISUAL_SYNC_ANCHOR] = []
+	{
+		MENU->myVisualSyncMenu->setChecked(SET_VISUAL_SYNC_CURSOR_ANCHOR, gEditing->getVisualSyncMode() == Editing::VisualSyncAnchor::CURSOR);
+		MENU->myVisualSyncMenu->setChecked(SET_VISUAL_SYNC_RECEPTOR_ANCHOR, gEditing->getVisualSyncMode() == Editing::VisualSyncAnchor::RECEPTORS);
 	};
 	myUpdateFunctions[USE_REVERSE_SCROLL] = []
 	{
