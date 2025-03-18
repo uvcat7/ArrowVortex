@@ -70,6 +70,7 @@ PlacingNote myPlacingNotes[SIM_MAX_COLUMNS];
 bool myUseJumpToNextNote;
 bool myUseUndoRedoJump;
 bool myUseTimeBasedCopy;
+VisualSyncAnchor myVisualSyncAnchor;
 
 // ================================================================================================
 // EditingImpl :: constructor and destructor.
@@ -88,6 +89,7 @@ EditingImpl()
 
 	myUseUndoRedoJump = true;
 	myUseTimeBasedCopy = false;
+	myVisualSyncAnchor = VisualSyncAnchor::CURSOR;
 }
 
 // ================================================================================================
@@ -668,6 +670,49 @@ void insertRows(int row, int numRows, bool curChartOnly)
 	}
 }
 
+int getAnchorRow() {
+	Vortex::vec2i mouse_pos = gSystem->getMousePos();
+	Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+
+	switch (this->myVisualSyncAnchor) {
+	case VisualSyncAnchor::RECEPTORS:
+		return gView->getCursorRow();
+	case VisualSyncAnchor::CURSOR:
+		return gView->snapRow(gView->offsetToRow(chart_offset), Vortex::View::SnapDir::SNAP_CLOSEST);
+	default:
+		HudError("Unknown anchor row type");
+		return -1;
+	}
+}
+
+void injectBoundingBpmChange() {
+	if (gSimfile == nullptr || !gView->isTimeBased()) {
+		return;
+	}
+
+	int anchor_row = this->getAnchorRow();
+
+	gTempo->injectBoundingBpmChange(anchor_row);
+}
+
+void shiftAnchorRowToMousePosition(bool is_destructive) {
+	if (gSimfile == nullptr || !gView->isTimeBased()) {
+		return;
+	}
+	Vortex::vec2i mouse_pos = gSystem->getMousePos();
+	Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+
+	double target_time = gView->offsetToTime(chart_offset);
+	int anchor_row = this->getAnchorRow();
+
+	if (is_destructive) {
+		gTempo->destructiveShiftRowToTime(anchor_row, target_time);
+	}
+	else {
+		gTempo->nonDestructiveShiftRowToTime(anchor_row, target_time);
+	}
+}
+
 /*
 void streamToTriplets()
 {
@@ -961,6 +1006,23 @@ void toggleTimeBasedCopy()
 bool hasTimeBasedCopy()
 {
 	return myUseTimeBasedCopy;
+}
+
+void setVisualSyncAnchor(VisualSyncAnchor anchor) {
+	myVisualSyncAnchor = anchor;
+	switch (myVisualSyncAnchor) {
+	case VisualSyncAnchor::RECEPTORS:
+		HudInfo("Visual sync will use current row");
+		break;
+	case VisualSyncAnchor::CURSOR:
+		HudInfo("Visual sync will use mouse cursor's closest row of selected snap");
+		break;
+	}
+	gMenubar->update(Menubar::VISUAL_SYNC_ANCHOR);
+}
+
+VisualSyncAnchor getVisualSyncMode() {
+	return myVisualSyncAnchor;
 }
 
 }; // EditingImpl

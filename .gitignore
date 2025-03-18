@@ -400,4 +400,5 @@ FodyWeavers.xsd
 bin/settings/recent files.txt
 bin/settings/settings.txt
 bin/ArrowVortex.exe
-build/VisualStudio/ArrowVortex.vcxproj
+bin/settings/recent files.txt
+bin/settings/settings.txt

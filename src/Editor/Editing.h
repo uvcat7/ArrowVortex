@@ -14,6 +14,14 @@ struct Editing : public InputHandler
 		MIRROR_V,
 		MIRROR_HV,
 	};
+	
+	enum class VisualSyncAnchor
+	{
+		/// Visual sync shifts receptor's row
+		RECEPTORS,
+		/// Visual sync shifts closest snapping row at mouse cursor
+		CURSOR,
+	};
 
 	static void create(XmrNode& settings);
 	static void destroy();
@@ -50,6 +58,11 @@ struct Editing : public InputHandler
 
 	virtual void toggleTimeBasedCopy() = 0;
 	virtual bool hasTimeBasedCopy() = 0;
+
+	virtual void setVisualSyncAnchor(VisualSyncAnchor anchor) = 0;
+	virtual VisualSyncAnchor getVisualSyncMode() = 0;
+	virtual void injectBoundingBpmChange() = 0;
+	virtual void shiftAnchorRowToMousePosition(bool is_destructive) = 0;
 };
 
 extern Editing* gEditing;

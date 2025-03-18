@@ -136,7 +136,7 @@ static void Decode(ReadStream& in, BpmChange& seg)
 template <>
 static bool IsRedundant(const BpmChange& seg, const BpmChange* prev)
 {
-	return (prev && prev->bpm == seg.bpm);
+	return prev && prev->row == seg.row;
 }
 
 template <>
