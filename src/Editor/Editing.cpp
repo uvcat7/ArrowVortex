@@ -86,6 +86,7 @@ EditingImpl()
 		n.mode = PLACE_NONE;
 	}
 
+	myUseJumpToNextNote = false;
 	myUseUndoRedoJump = true;
 	myUseTimeBasedCopy = false;
 }
@@ -98,6 +99,7 @@ void loadSettings(XmrNode& settings)
 	XmrNode* editing = settings.child("editing");
 	if(editing)
 	{
+		editing->get("useJumpToNextNote", &myUseJumpToNextNote);
 		editing->get("useUndoRedoJumps", &myUseUndoRedoJump);
 		editing->get("useTimeBasedCopy", &myUseTimeBasedCopy);
 	}
@@ -107,6 +109,7 @@ void saveSettings(XmrNode& settings)
 {
 	XmrNode* editing = settings.addChild("editing");
 
+	editing->addAttrib("useJumpToNextNote", myUseJumpToNextNote);
 	editing->addAttrib("useUndoRedoJumps", myUseUndoRedoJump);
 	editing->addAttrib("useTimeBasedCopy", myUseTimeBasedCopy);
 }
