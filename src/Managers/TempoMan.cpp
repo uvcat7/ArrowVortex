@@ -691,15 +691,15 @@ void stopTweaking(bool apply)
 	{
 		if(mode == TWEAK_OFFSET)
 		{
-			setOffset(myTweakValue);
+			setOffset(value);
 		}
 		else if(mode == TWEAK_BPM)
 		{
-			addSegment(BpmChange(myTweakRow, myTweakValue));
+			addSegment(BpmChange(row, value));
 		}
 		else if(mode == TWEAK_STOP)
 		{
-			addSegment(Stop(myTweakRow, myTweakValue));
+			addSegment(Stop(row, value));
 		}
 	}
 
