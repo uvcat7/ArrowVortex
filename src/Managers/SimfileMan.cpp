@@ -86,6 +86,15 @@ void myUpdateEndRow()
 		}
 	}
 
+	// Row of the last note.
+	if(myChart) 
+	{
+		for (auto& n : myChart->notes)
+		{
+			endRow = max(endRow, n.endrow);
+		}
+	}
+
 	// Row of the end of the music.
 	endRow = max(endRow, gTempo->timeToRow(gMusic->getSongLength()));
 
