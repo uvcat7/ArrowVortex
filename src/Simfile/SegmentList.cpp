@@ -441,6 +441,7 @@ void SegmentList::prepareEdit(const List& inAdd, const List& inRem,
 					outAdd.append(add.ptr);
 					VerifyAdd(myType, add.ptr, prev, prevRow);
 				}
+				++add;
 				remove = true;
 			}
 		}
