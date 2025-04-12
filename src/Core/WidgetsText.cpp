@@ -539,6 +539,7 @@ void WgSpinner::setPrecision(int minDecimalPlaces, int maxDecimalPlaces)
 {
 	myMinDecimalPlaces = minDecimalPlaces;
 	myMaxDecimalPlaces = maxDecimalPlaces;
+	myUpdateText();
 }
 
 void WgSpinner::myUpdateValue(double v)
