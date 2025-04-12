@@ -62,13 +62,15 @@ static String ApplyStringProperty(ReadStream& in, History::Bindings bound, bool 
 	auto name = in.read<const char*>();
 	if(in.success())
 	{
+		bool isRemove = (before != "" && after == "");
+		bool isChange = (before != "" && after != "");
+
 		*target = undo ? before : after;
 
-		msg = (undo ? "Reverted " : "Changed ");
+		msg = (isChange ? "Changed " : (isRemove ? "Removed " : "Added "));
 		msg += name;
-		msg += " to \"";
-		msg += *target;
-		msg += '"';
+		msg += ": ";
+		msg += (isChange ? (before + " {g:arrow right} " + after) : (isRemove ? before : after));
 
 		auto sim = bound.simfile;
 		int changes = VCM_SONG_PROPERTIES_CHANGED;
@@ -117,8 +119,7 @@ static String ApplyMusicPreview(ReadStream& in, History::Bindings bound, bool un
 		}
 		else
 		{
-			msg = (undo ? "Reverted" : "Changed");
-			msg += " music preview to ";
+			msg = "Changed music preview: ";
 			msg += Str::formatTime(value.start);
 			msg += " - ";
 			msg += Str::formatTime(value.start + value.len);
