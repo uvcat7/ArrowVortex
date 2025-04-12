@@ -71,7 +71,7 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Warp");
 	spinner->value.bind(&myWarp);
 	spinner->setPrecision(3, 3);
-	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_DELAY_SET);
+	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_WARP_SET);
 	spinner->setTooltip("Warp length at the current beat, in beats");
 
 	myLayout.row().col(84).col(75).col(75);
