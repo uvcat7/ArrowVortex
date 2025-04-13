@@ -196,20 +196,23 @@ String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 			}
 		}
 
+		String remove = rem.descriptionValues();
+		String after = add.descriptionValues();
+
 		if(addMatchesRem)
 		{
-			msg += "Changed " + add.description();
+			msg += "Changed " + add.description() + ": " + remove + " {g:arrow right} " + after;
 		}
 		else
 		{
 			if(numAdd > 0)
 			{
-				msg += "Added " + add.description();
+				msg += "Added " + add.description() + ": " + after;
 			}
 			if(numRem > 0)
 			{
 				if(msg.len()) msg += ", ";
-				msg += "Removed " + rem.description();
+				msg += "Removed " + rem.description() + ": " + remove;
 			}
 		}
 
@@ -376,9 +379,10 @@ String myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 	{
 		double newOffset = undo ? before : after;
 
-		msg = (undo ? "reverted" : "changed");
-		msg += " offset to ";
-		Str::appendVal(msg, newOffset);
+		msg = "Changed offset: ";
+		Str::appendVal(msg, before);
+		msg += " {g:arrow right} ";
+		Str::appendVal(msg, after);
 
 		myStartEdit(out);
 		out->offset = newOffset;
@@ -597,7 +601,7 @@ void pasteFromClipboard()
 	clipboard.add.decode(stream);
 	if(stream.success() == false || stream.bytesleft() > 0)
 	{
-		HudError("Clipboard contains invalid tempo data");
+		HudError("Clipboard contains invalid tempo data.");
 		return;
 	}
 
