@@ -73,8 +73,10 @@ SNAP_NEXT     = right
 SNAP_PREVIOUS = left
 
 ZOOM_RESET =
-ZOOM_IN    = numpad add, ctrl + scroll up
-ZOOM_OUT   = numpad subtract, ctrl + scroll down
+ZOOM_IN    = ctrl + numpad add, ctrl + alt + scroll up
+ZOOM_OUT   = ctrl + numpad subtract, ctrl + alt + scroll down
+SPACING_INCREASE    = numpad add, ctrl + scroll up
+SPACING_DECREASE    = numpad subtract, ctrl + scroll down
 
 CURSOR_UP               = up
 CURSOR_DOWN             = down

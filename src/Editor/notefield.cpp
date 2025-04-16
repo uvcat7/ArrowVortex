@@ -351,7 +351,7 @@ void drawBeatLines()
 	Renderer::resetColor();
 	Renderer::bindShader(Renderer::SH_COLOR);
 
-	bool zoomedIn = (gView->getZoomLevel() >= 4);
+	bool zoomedIn = (gView->getZoomLevel() >= 2);
 	int viewH = gView->getHeight();
 	
 	// We keep track of the measure labels to render them afterwards.
@@ -440,7 +440,6 @@ void drawStopsAndWarps()
 	Renderer::resetColor();
 	Renderer::bindShader(Renderer::SH_COLOR);
 
-	int zoom = gView->getZoomLevel();
 	double oy = gView->offsetToY(0.0);
 	double dy = gView->getPixPerOfs();
 	int viewTop = gView->getRect().y;
@@ -755,7 +754,7 @@ void drawSongPreviewArea()
 		int yt = max(0, gView->timeToY(start));
 		int yb = min(gView->getHeight(), gView->timeToY(end));
 		Draw::fill({myX, yt, myW, yb - yt}, COLOR32(255, 255, 255, 64));
-		if(gView->getZoomLevel() > 4)
+		if(gView->getZoomLevel() > 2)
 		{
 			TextStyle textStyle;
 			Text::arrange(Text::TL, textStyle, "SONG PREVIEW");

@@ -39,7 +39,6 @@ Item* myFileMenu;
 Item* myViewMenu;
 Item* myMinimapMenu;
 Item* myBgStyleMenu;
-Item* myMiniMenu;
 Item* myStatusMenu;
 Item* myEditMenu;
 
@@ -277,14 +276,8 @@ void init(Item* menu)
 	sep(hViewZoom);
 	add(hViewZoom, ZOOM_IN, "Zoom in");
 	add(hViewZoom, ZOOM_OUT, "Zoom out");
-
-	// View > Mini menu.
-	myMiniMenu = newMenu();
-	add(myMiniMenu, SET_MINI_0, "  0% Mini");
-	add(myMiniMenu, SET_MINI_1, " 25% Mini");
-	add(myMiniMenu, SET_MINI_2, " 50% Mini");
-	add(myMiniMenu, SET_MINI_3, " 75% Mini");
-	add(myMiniMenu, SET_MINI_4, "100% Mini");
+	add(hViewZoom, SPACING_INCREASE, "Spacing increase");
+	add(hViewZoom, SPACING_DECREASE, "Spacing decrease");
 
 	// View > Snap menu.
 	Item* hViewSnap = newMenu();
@@ -342,7 +335,6 @@ void init(Item* menu)
 	sub(myViewMenu, myMinimapMenu, "Minimap");
 	sub(myViewMenu, myBgStyleMenu, "Background");
 	sub(myViewMenu, hViewZoom, "Zoom");
-	sub(myViewMenu, myMiniMenu, "Mini");
 	sub(myViewMenu, hViewSnap, "Snap");
 	sub(myViewMenu, hViewCursor, "Cursor");
 	sub(myViewMenu, myStatusMenu, "Status");
@@ -448,15 +440,6 @@ void registerUpdateFunctions()
 		MENU->myBgStyleMenu->setChecked(BACKGROUND_SET_STRETCH, bg == BG_STYLE_STRETCH);
 		MENU->myBgStyleMenu->setChecked(BACKGROUND_SET_LETTERBOX, bg == BG_STYLE_LETTERBOX);
 		MENU->myBgStyleMenu->setChecked(BACKGROUND_SET_CROP, bg == BG_STYLE_CROP);
-	};
-	myUpdateFunctions[VIEW_MINI] = []
-	{
-		auto mini = gView->getMiniLevel();
-		MENU->myMiniMenu->setChecked(SET_MINI_0, mini == 0);
-		MENU->myMiniMenu->setChecked(SET_MINI_1, mini == 1);
-		MENU->myMiniMenu->setChecked(SET_MINI_2, mini == 2);
-		MENU->myMiniMenu->setChecked(SET_MINI_3, mini == 3);
-		MENU->myMiniMenu->setChecked(SET_MINI_4, mini == 4);
 	};
 	myUpdateFunctions[VIEW_NOTESKIN] = []
 	{

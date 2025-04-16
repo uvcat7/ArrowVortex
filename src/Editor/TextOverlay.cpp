@@ -137,6 +137,8 @@ void LoadShortcuts()
 	addShortcut(Action::CURSOR_DOWN, "Move cursor down");
 	addShortcut(Action::ZOOM_IN, "Zoom in");
 	addShortcut(Action::ZOOM_OUT, "Zoom out");
+	addShortcut(Action::SPACING_INCREASE, "Spacing Increase");
+	addShortcut(Action::SPACING_DECREASE, "Spacing Decrease");
 	
 	addShortcutHeader("File");
 	addShortcut(Action::FILE_OPEN, "Open");

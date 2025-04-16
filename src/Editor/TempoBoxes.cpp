@@ -331,7 +331,7 @@ void tick()
 
 void draw()
 {
-	if(myShowBoxes == false || myBoxes.empty() || gView->getZoomLevel() < 4) return;
+	if(myShowBoxes == false || myBoxes.empty() || gView->getZoomLevel() < 2) return;
 
 	auto coords = gView->getNotefieldCoords();
 	const int baseX[2] = {coords.xl, coords.xr};
