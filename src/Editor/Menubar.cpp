@@ -272,6 +272,8 @@ void init(Item* menu)
 
 	// View > Zoom menu.
 	Item* hViewZoom = newMenu();
+	add(hViewZoom, OPEN_DIALOG_ZOOM, "Options");
+	sep(hViewZoom);
 	add(hViewZoom, ZOOM_RESET, "Reset");
 	sep(hViewZoom);
 	add(hViewZoom, ZOOM_IN, "Zoom in");
