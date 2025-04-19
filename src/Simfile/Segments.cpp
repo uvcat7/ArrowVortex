@@ -328,7 +328,7 @@ static const SegmentMeta WarpMeta =
 // TimeSignature.
 
 TimeSignature::TimeSignature()
-	: rowsPerMeasure(4), beatNote(4)
+	: rowsPerMeasure(192), beatNote(4)
 {
 }
 
@@ -523,7 +523,7 @@ static void Decode(ReadStream& in, Speed& seg)
 template <>
 static String GetDescription(const Speed& seg)
 {
-	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'B' : 'T');
+	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'T' : 'B');
 }
 
 template <>
