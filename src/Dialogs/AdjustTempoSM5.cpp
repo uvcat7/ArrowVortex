@@ -64,6 +64,7 @@ void Dlg::myCreateWidgets()
 	WgSpinner* spinner = myLayout.add<WgSpinner>("Delay");
 	spinner->value.bind(&myDelay);
 	spinner->setPrecision(3, 3);
+	spinner->setStep(0.001);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_DELAY_SET);
 	spinner->setTooltip("Stop length at the current beat, in seconds");
 
@@ -71,7 +72,7 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Warp");
 	spinner->value.bind(&myWarp);
 	spinner->setPrecision(3, 3);
-	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_DELAY_SET);
+	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_WARP_SET);
 	spinner->setTooltip("Warp length at the current beat, in beats");
 
 	myLayout.row().col(84).col(75).col(75);
@@ -115,12 +116,14 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Speed");
 	spinner->value.bind(&mySpeedRatio);
 	spinner->setPrecision(2, 2);
+	spinner->setStep(0.01);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SPEED_SET);
 	spinner->setTooltip("Stretch ratio");
 
 	spinner = myLayout.add<WgSpinner>();
 	spinner->value.bind(&mySpeedDelay);
 	spinner->setPrecision(2, 2);
+	spinner->setStep(0.01);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SPEED_SET);
 	spinner->setTooltip("Delay time");
 
@@ -136,6 +139,7 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Scroll");
 	spinner->value.bind(&myScrollRatio);
 	spinner->setPrecision(2, 2);
+	spinner->setStep(0.01);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SCROLL_SET);
 	spinner->setTooltip("Scroll ratio");
 
@@ -147,7 +151,7 @@ void Dlg::myCreateWidgets()
 
 	WgLineEdit* text = myLayout.add<WgLineEdit>("Label");
 	text->text.bind(&myLabelText);
-	text->setMaxLength(32);
+	text->setMaxLength(1000);
 	text->onChange.bind(this, &Dlg::onAction, (int)ACT_LABEL_SET);
 	text->setTooltip("Label text");
 }
@@ -215,31 +219,31 @@ void Dlg::onAction(int id)
 		gTempo->addSegment(Warp(row, rows));
 	} break;
 	case ACT_TIME_SIG_SET: {
-		int rowsPerMeasure = ROWS_PER_BEAT * max(1, (int)myTimeSigBpm);
-		int beatNote = max(1, myTimeSigNote);
+		int rowsPerMeasure = min(1000, ROWS_PER_BEAT * max(1, (int)myTimeSigBpm));
+		int beatNote = min(1000, max(1, myTimeSigNote));
 		gTempo->addSegment(TimeSignature(row, rowsPerMeasure, beatNote));
 	} break;
 	case ACT_TICK_COUNT_SET: {
-		int ticks = max(0, myTickCount);
+		int ticks = min(1000, max(0, myTickCount));
 		gTempo->addSegment(TickCount(row, ticks));
 	} break;
 	case ACT_COMBO_SET: {
-		int hit = max(1, myComboHit);
-		int miss = max(1, myComboMiss);
+		int hit = min(1000, max(1, myComboHit));
+		int miss = min(1000, max(1, myComboMiss));
 		gTempo->addSegment(Combo(row, hit, miss));
 	} break;
 	case ACT_SPEED_SET: {
-		double ratio = max(0.01, mySpeedRatio);
-		double delay = max(0.0, mySpeedDelay);
+		double ratio = min(1000.0, max(0.0, mySpeedRatio));
+		double delay = min(1000.0, max(0.0, mySpeedDelay));
 		int unit = clamp(mySpeedUnit, 0, 1);
 		gTempo->addSegment(Speed(row, ratio, delay, unit));
 	} break;
 	case ACT_SCROLL_SET: {
-		double ratio = max(0.01, myScrollRatio);
+		double ratio = min(1000.0, max(0.0, myScrollRatio));
 		gTempo->addSegment(Scroll(row, ratio));
 	} break;
 	case ACT_FAKE_SET: {
-		int rows = max(0, (int)(ROWS_PER_BEAT * myFakeBeats));
+		int rows = max(0, (int)(ROWS_PER_BEAT * min(1000.0, myFakeBeats)));
 		gTempo->addSegment(Fake(row, rows));
 	} break;
 	case ACT_LABEL_SET: {

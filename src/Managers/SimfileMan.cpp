@@ -329,6 +329,8 @@ static String ApplyRemoveChart(ReadStream& in, History::Bindings bound, bool und
 
 void removeChart(const Chart* chart)
 {
+	if(!chart) return;
+
 	if(mySimfile)
 	{
 		int pos = mySimfile->charts.find((Chart*)chart);

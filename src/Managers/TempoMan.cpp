@@ -196,20 +196,23 @@ String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 			}
 		}
 
+		String remove = rem.descriptionValues();
+		String after = add.descriptionValues();
+
 		if(addMatchesRem)
 		{
-			msg += "Changed " + add.description();
+			msg += "Changed " + add.description() + ": " + remove + " {g:arrow right} " + after;
 		}
 		else
 		{
 			if(numAdd > 0)
 			{
-				msg += "Added " + add.description();
+				msg += "Added " + add.description() + ": " + after;
 			}
 			if(numRem > 0)
 			{
 				if(msg.len()) msg += ", ";
-				msg += "Removed " + rem.description();
+				msg += "Removed " + rem.description() + ": " + remove;
 			}
 		}
 
@@ -376,9 +379,10 @@ String myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 	{
 		double newOffset = undo ? before : after;
 
-		msg = (undo ? "reverted" : "changed");
-		msg += " offset to ";
-		Str::appendVal(msg, newOffset);
+		msg = "Changed offset: ";
+		Str::appendVal(msg, before);
+		msg += " {g:arrow right} ";
+		Str::appendVal(msg, after);
 
 		myStartEdit(out);
 		out->offset = newOffset;
@@ -400,8 +404,8 @@ struct DisplayBpmEdit { DisplayBpm type; BpmRange range; };
 void myQueueDisplayBpm(const DisplayBpmEdit& change)
 {
 	WriteStream stream;
-	stream.write(change);
 	stream.write(DisplayBpmEdit{myTempo->displayBpmType, myTempo->displayBpmRange});
+	stream.write(change);
 	gHistory->addEntry(myApplyDisplayBpmId, stream.data(), stream.size(), myTempo);
 }
 
@@ -414,31 +418,37 @@ String myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo)
 	{
 		DisplayBpmEdit value = (undo ? before : after);
 
-		msg = (undo ? "Reverted" : "Changed");
-		msg += "display BPM to ";
-		if(value.type == BPM_ACTUAL)
-		{
-			msg += "default";
-		}
-		else if(value.type == BPM_RANDOM)
-		{
-			msg += "random";
-		}
-		else
-		{
-			Str::appendVal(msg, after.range.min, 3);
-			if(value.range.min != value.range.max)
-			{
-				msg += ":";
-				Str::appendVal(msg, after.range.max, 3);
-			}
-		}
-
+		msg = "Changed display BPM: ";
+		myApplyDisplayBpmMessage(msg, before);
+		msg += " {g:arrow right} ";
+		myApplyDisplayBpmMessage(msg, after);
+		
 		tempo->displayBpmType = value.type;
 		tempo->displayBpmRange = value.range;
 		gEditor->reportChanges(VCM_SONG_PROPERTIES_CHANGED);
 	}
 	return msg;
+}
+
+void myApplyDisplayBpmMessage(String &msg, DisplayBpmEdit &edit)
+{
+	if (edit.type == BPM_ACTUAL)
+	{
+		msg += "default";
+	}
+	else if (edit.type == BPM_RANDOM)
+	{
+		msg += "random";
+	}
+	else
+	{
+		Str::appendVal(msg, edit.range.min);
+		if (edit.range.min != edit.range.max)
+		{
+			msg += "-";
+			Str::appendVal(msg, edit.range.max);
+		}
+	}
 }
 
 static String ApplyDisplayBpm(ReadStream& in, History::Bindings bound, bool undo, bool redo)
@@ -591,7 +601,7 @@ void pasteFromClipboard()
 	clipboard.add.decode(stream);
 	if(stream.success() == false || stream.bytesleft() > 0)
 	{
-		HudError("Clipboard contains invalid tempo data");
+		HudError("Clipboard contains invalid tempo data.");
 		return;
 	}
 

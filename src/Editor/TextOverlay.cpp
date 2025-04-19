@@ -28,7 +28,7 @@ struct ProgressMessage { int id; String text; };
 
 struct Shortcut { String a, b; bool isHeader; };
 
-static const int NUM_ICONS = 15;
+static const int NUM_ICONS = 16;
 
 static uchar donateLink[] =
 {
@@ -59,6 +59,7 @@ static const char* iconNames[NUM_ICONS] = {
 	"search",
 	"copy",
 	"play",
+	"arrow right",
 };
 
 }; // anonymous namespace

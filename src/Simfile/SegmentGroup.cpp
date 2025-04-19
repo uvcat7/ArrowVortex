@@ -166,6 +166,35 @@ String SegmentGroup::description() const
 	return GetSegmentDescription(numSegments, "segment", "segments");
 }
 
+String SegmentGroup::descriptionValues() const
+{
+	int numTypes = 0, numSegments = 0, lastType = 0;
+	ForEachType(type)
+	{
+		auto& list = myLists[type];
+		numSegments += list.size();
+		numTypes += (list.size() > 0);
+		if (list.size() > 0) lastType = type;
+	}
+
+	if (numTypes <= 1)
+	{
+		Vector<String> info;
+
+		auto& list = myLists[lastType];
+		auto meta = Segment::meta[lastType];
+		auto seg = list.begin(), segEnd = list.end();
+		while (seg != segEnd)
+		{
+			info.push_back(meta->getDescription(seg.ptr));
+			++seg;
+		}
+		return Str::join(info, ", ");
+	}
+
+	return GetSegmentDescription(numSegments, "segment", "segments");
+}
+
 int SegmentGroup::numSegments() const
 {
 	int numSegments = 0;
