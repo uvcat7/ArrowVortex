@@ -152,15 +152,17 @@ void onKeyPress(KeyPress& evt) override
 	// Placing notes.
 	if(gChart->isOpen() && kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 && !evt.repeated)
 	{
-		noteKeysHeld++;
-		if (noteKeysHeld > 10) noteKeysHeld = 0;
-
 		int col = KeyToCol(kc);
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
-		gView->setCursorRow(row);
 		if(evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
 		if(col >= 0 && col < gStyle->getNumCols())
 		{
+			noteKeysHeld++;
+			if (noteKeysHeld > 10) noteKeysHeld = 0;
+			if (gMusic->isPaused())
+			{
+				gView->setCursorRow(row);
+			}
 			NoteEdit edit;
 			auto note = gNotes->getNoteAt(row, col);
 			if(note)
@@ -253,22 +255,23 @@ void turnIntoTriplets()
 
 void onKeyRelease(KeyRelease& evt) override
 {
+	if (evt.handled) return;
 	if(gChart->isOpen() && evt.key >= Key::DIGIT_0 && evt.key <= Key::DIGIT_9)
 	{
 		// Finish placing notes.
-		noteKeysHeld--;
-		if (noteKeysHeld < 0) noteKeysHeld = 0;
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
 		int col = KeyToCol(evt.key);
 		if(evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
 		if(col >= 0 && col < gStyle->getNumCols())
 		{
+			noteKeysHeld--;
+			if (noteKeysHeld < 0) noteKeysHeld = 0;
 			finishNotePlacement(col);
-		}
-		// Don't advance when we're stepping jumps
-		if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
-		{
-			gView->setCursorRow(gView->snapRow(gView->getCursorRow(), gView->hasReverseScroll() ? View::SNAP_UP : View::SNAP_DOWN));
+			// Don't advance when we're stepping jumps
+			if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
+			{
+				gView->setCursorRow(gView->snapRow(gView->getCursorRow(), gView->hasReverseScroll() ? View::SNAP_UP : View::SNAP_DOWN));
+			}
 		}
 	}
 }
@@ -343,6 +346,7 @@ void finishNotePlacement(int col)
 		NoteEdit edit;
 		edit.add.append(note);
 		gNotes->modify(edit, false);
+
 	}
 	pnote.mode = PLACE_NONE;
 }

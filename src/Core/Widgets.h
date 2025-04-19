@@ -274,6 +274,7 @@ public:
 	WgLineEdit(GuiContext* gui);
 
 	void onKeyPress(KeyPress& evt) override;
+	void onKeyRelease(KeyRelease& evt) override;
 	void onMousePress(MousePress& evt) override;
 	void onMouseRelease(MouseRelease& evt) override;
 	void onTextInput(TextInput& evt) override;
