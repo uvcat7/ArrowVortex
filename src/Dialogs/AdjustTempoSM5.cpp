@@ -151,7 +151,7 @@ void Dlg::myCreateWidgets()
 
 	WgLineEdit* text = myLayout.add<WgLineEdit>("Label");
 	text->text.bind(&myLabelText);
-	text->setMaxLength(255);
+	text->setMaxLength(1000);
 	text->onChange.bind(this, &Dlg::onAction, (int)ACT_LABEL_SET);
 	text->setTooltip("Label text");
 }
