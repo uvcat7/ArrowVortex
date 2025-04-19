@@ -580,6 +580,23 @@ void drawSnapDiamonds()
 		mySnapIcons[snapType].draw(&batch, vx, myY);
 	}
 	batch.flush();
+
+	// Custom Snap
+	if (snapType == NUM_SNAP_TYPES - 1)
+	{
+		TextStyle textStyle;
+		textStyle.fontSize = 11;
+
+		String snap = Str::val(gView->getCustomSnap());
+
+		for (int i = 0; i < 2; ++i)
+		{
+			int vx = x[i] + gView->applyZoom(i * 40 - 20);
+
+			Text::arrange(Text::MC, textStyle, snap.str());
+			Text::draw(vec2i{ vx, myY - 1 });
+		}
+	}
 }
 
 void drawNotes()

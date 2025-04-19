@@ -69,6 +69,8 @@ void Action::perform(Type action)
 		gEditor->openDialog(DIALOG_TEMPO_BREAKDOWN);
 	CASE(OPEN_DIALOG_WAVEFORM_SETTINGS)
 		gEditor->openDialog(DIALOG_WAVEFORM_SETTINGS);
+	CASE(OPEN_DIALOG_CUSTOM_SNAP)
+		gEditor->openDialog(DIALOG_CUSTOM_SNAP);
 
 	CASE(EDIT_UNDO)
 		gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);

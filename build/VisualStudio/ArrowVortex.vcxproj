@@ -346,6 +346,7 @@
     <ClCompile Include="..\..\src\Dialogs\AdjustTempoSM5.cpp" />
     <ClCompile Include="..\..\src\Dialogs\ChartList.cpp" />
     <ClCompile Include="..\..\src\Dialogs\ChartProperties.cpp" />
+    <ClCompile Include="..\..\src\Dialogs\CustomSnap.cpp" />
     <ClCompile Include="..\..\src\Dialogs\DancingBot.cpp" />
     <ClCompile Include="..\..\src\Dialogs\Dialog.cpp" />
     <ClCompile Include="..\..\src\Dialogs\GenerateNotes.cpp" />
@@ -452,6 +453,7 @@
     <ClInclude Include="..\..\src\Dialogs\AdjustTempoSM5.h" />
     <ClInclude Include="..\..\src\Dialogs\ChartList.h" />
     <ClInclude Include="..\..\src\Dialogs\ChartProperties.h" />
+    <ClInclude Include="..\..\src\Dialogs\CustomSnap.h" />
     <ClInclude Include="..\..\src\Dialogs\DancingBot.h" />
     <ClInclude Include="..\..\src\Dialogs\Dialog.h" />
     <ClInclude Include="..\..\src\Dialogs\GenerateNotes.h" />

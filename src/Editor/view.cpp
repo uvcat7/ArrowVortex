@@ -56,7 +56,7 @@ static const int sMiniScales[NUM_MINI_LEVELS] =
 
 static const int sRowSnapTypes[NUM_SNAP_TYPES] =
 {
-	1, 48, 24, 16, 12, 10, 8, 6, 4, 3, 2, 1
+	1, 48, 24, 16, 12, 10, 8, 6, 4, 3, 2, 1, 0
 };
 
 }; // anonymous namespace
@@ -78,6 +78,8 @@ bool myIsDraggingReceptors;
 bool myUseTimeBasedView;
 bool myUseReverseScroll;
 bool myUseChartPreview;
+int myCustomSnap;
+int myCustomSnapSteps[193];
 SnapType mySnapType;
 
 // ================================================================================================
@@ -97,6 +99,7 @@ ViewImpl()
 	, myZoomLevel(0)
 	, myMini(0)
 	, mySnapType(ST_NONE)
+	, myCustomSnap(1)
 	, myUseTimeBasedView(true)
 	, myUseReverseScroll(false)
 	, myUseChartPreview(true)
@@ -119,9 +122,13 @@ void loadSettings(XmrNode& settings)
 		view->get("useTimeBasedView", &myUseTimeBasedView);
 		view->get("useReverseScroll", &myUseReverseScroll);
 		view->get("useChartPreview" , &myUseChartPreview);
+		view->get("customSnap", &myCustomSnap);
+
+		myCustomSnap = min(max(myCustomSnap, 1), 192);
 	}
 
 	updateScrollValues();
+	updateCustomSnapSteps();
 }
 
 void saveSettings(XmrNode& settings)
@@ -130,6 +137,7 @@ void saveSettings(XmrNode& settings)
 	if(!view) view = settings.addChild("view");
 
 	view->addAttrib("useTimeBasedView", myUseTimeBasedView);
+	view->addAttrib("customSnap", (long)myCustomSnap);
 }
 
 // ================================================================================================
@@ -220,6 +228,11 @@ int getZoomLevel() const
 int getMiniLevel() const
 {
 	return myMini;
+}
+
+int getCustomSnap() const
+{
+	return myCustomSnap;
 }
 
 SnapType getSnapType() const
@@ -356,6 +369,15 @@ void updateScrollValues()
 	}
 }
 
+void updateCustomSnapSteps()
+{
+	double inc = 192.0 / myCustomSnap;
+	for (int i = 0; i <= myCustomSnap; ++i)
+	{
+		myCustomSnapSteps[i] = static_cast<int>(round(inc * i));
+	}
+}
+
 void toggleReverseScroll()
 {
 	myUseReverseScroll = !myUseReverseScroll;
@@ -405,6 +427,18 @@ void setSnapType(int type)
 	{
 		mySnapType = (SnapType)type;
 		HudNote("Snap: %s", ToString(mySnapType));
+	}
+}
+
+void setCustomSnap(int size)
+{
+	if (size < 1) size = 1;
+	if (size > 192) size = 192;
+	if (myCustomSnap != size)
+	{
+		myCustomSnap = size;
+		updateCustomSnapSteps();
+		HudNote("Custom Snap: %s", OrdinalSuffix(myCustomSnap));
 	}
 }
 
@@ -729,6 +763,33 @@ int snapRow(int row, SnapDir dir)
 			}
 			row = beat * 48 + beatrow;
 		}
+		// Special case, custom snapping.
+		else if (snap == 0)
+		{
+			int measure = row / 192, measurerow = row % 192;
+			if (dir == SNAP_UP)
+			{
+				for (int i = myCustomSnap; i >= 0; --i)
+				{
+					if (myCustomSnapSteps[i] <= measurerow)
+					{
+						measurerow = myCustomSnapSteps[i]; break;
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i <= myCustomSnap; ++i)
+				{
+					if (myCustomSnapSteps[i] >= measurerow)
+					{
+						measurerow = myCustomSnapSteps[i]; break;
+					}
+				}
+
+			}
+			row = measure * 192 + measurerow;
+		}
 		else // Regular case, snap is divisible by 192.
 		{
 			if(row % snap && dir != SNAP_UP) row += snap;
@@ -748,6 +809,11 @@ bool isAlignedToSnap(int row)
 	{
 		int rows[5] = { 0, 10, 19, 29, 38 };
 		return std::find(rows, rows + 5, row % 48) != rows + 5;
+	}
+	// Special case, custom snapping.
+	else if (snap == 0)
+	{
+		return std::find(myCustomSnapSteps, myCustomSnapSteps + myCustomSnap, row % 192) != myCustomSnapSteps + myCustomSnap;
 	}
 
 	return (row % snap == 0);

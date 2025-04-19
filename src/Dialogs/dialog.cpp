@@ -16,6 +16,7 @@ static const char* IdStrings[NUM_DIALOG_IDS] =
 	"songProperties",
 	"tempoBreakdown",
 	"waveformSettings",
+	"customSnap"
 };
 
 EditorDialog::~EditorDialog()

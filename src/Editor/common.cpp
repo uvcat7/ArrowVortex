@@ -124,9 +124,35 @@ const char* ToString(SnapType st)
 {
 	static const char* text[NUM_SNAP_TYPES] =
 	{
-		"None", "4th", "8th", "12th", "16th", "20th", "24th", "32nd", "48th", "64th", "96th", "192nd"
+		"None", "4th", "8th", "12th", "16th", "20th", "24th", "32nd", "48th", "64th", "96th", "192nd", "Custom"
 	};
 	return (st >= 0 && st < NUM_SNAP_TYPES) ? text[st] : text[0];
+}
+
+const String OrdinalSuffix(int i)
+{
+	int j = i % 10, k = i % 100;
+
+	String out = Str::val(i, 0);
+
+	if (j == 1 && k != 11)
+	{
+		out += "st";
+	}
+	else if (j == 2 && k != 12)
+	{
+		out += "nd";
+	}
+	else if (j == 3 && k != 13)
+	{
+		out += "rd";
+	}
+	else
+	{
+		out += "th";
+	}
+
+	return out;
 }
 
 RowType ToRowType(int rowIndex)
