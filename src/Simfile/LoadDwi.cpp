@@ -97,7 +97,7 @@ static void CharToColumnPair(char c, const int* map, int &first, int &second)
 	second = map[b];
 }
 
-static char* ReadNoteRow(char* p, NoteList& out, int row, const int* map, int* holds)
+static char* ReadNoteRow(char* p, NoteList& out, int row, const int* map, int* holds, int quantization)
 {
 	enum { STEP_BIT = 1, HOLD_BIT = 2 };
 
@@ -144,7 +144,7 @@ static char* ReadNoteRow(char* p, NoteList& out, int row, const int* map, int* h
 			}
 			else
 			{
-				out.append({row, row, (uint)col, 0, NOTE_STEP_OR_HOLD});
+				out.append({row, row, (uint)col, 0, NOTE_STEP_OR_HOLD, (uint) quantization});
 				if(cols[col] & HOLD_BIT)
 				{
 					holds[col] = out.size();
@@ -206,7 +206,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols, const ch
 			case  '}':
 			case '\'': quantization = 32; ++n; break;
 			default:
-				n = ReadNoteRow(n, chart->notes, row, map, holds);
+				n = ReadNoteRow(n, chart->notes, row, map, holds, quantization);
 				row += quantization;
 				break;
 			};

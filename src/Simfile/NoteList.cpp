@@ -228,6 +228,7 @@ void NoteList::sanitize(const Chart* chart)
 	int numInvalidCols = 0;
 	int numOverlapping = 0;
 	int numUnsorted = 0;
+	int numInvalidQuant = 0;
 
 	Vector<int> endrowVec(numCols, -1);
 	int* endrows = endrowVec.data();
@@ -257,6 +258,11 @@ void NoteList::sanitize(const Chart* chart)
 			++numUnsorted;
 			note.row = -1;
 		}
+		else if (note.quant <= 0 || note.quant > 192)
+		{
+			++numInvalidQuant;
+			note.row = -1;
+		}
 		else
 		{
 			col = note.col;
@@ -266,7 +272,7 @@ void NoteList::sanitize(const Chart* chart)
 	}
 
 	// Notify the user if the chart contained invalid notes.
-	if(numInvalidCols + numInvalidPlayers + numOverlapping + numUnsorted > 0)
+	if(numInvalidCols + numInvalidPlayers + numOverlapping + numUnsorted + numInvalidQuant > 0)
 	{
 		cleanup();
 
@@ -288,6 +294,10 @@ void NoteList::sanitize(const Chart* chart)
 		if(numUnsorted > 0)
 		{
 			HudNote("Removed %i out of order note(s)%s.", numUnsorted, suffix.str());
+		}
+		if (numInvalidQuant > 0)
+		{
+			HudNote("Removed %i note(s) with invalid quantization label(s)%s.", numInvalidQuant, suffix.str());
 		}
 	}
 }
@@ -465,6 +475,7 @@ static void EncodeNote(WriteStream& out, const Note& in, int offsetRows)
 	{
 		out.write<uchar>(in.col);
 		out.writeNum(in.row + offsetRows);
+		out.write<uchar>(in.quant);
 	}
 	else
 	{
@@ -472,6 +483,7 @@ static void EncodeNote(WriteStream& out, const Note& in, int offsetRows)
 		out.writeNum(in.row + offsetRows);
 		out.writeNum(in.endrow + offsetRows);
 		out.write<uchar>((in.player << 4) | in.type);
+		out.write<uchar>(in.quant);
 	}
 }
 
@@ -482,6 +494,7 @@ static void EncodeNote(WriteStream& out, const Note& in, TempoTimeTracker& track
 	{
 		out.write<uchar>(in.col);
 		out.write<double>(time + offsetTime);
+		out.write<uchar>(in.quant);
 	}
 	else
 	{
@@ -489,6 +502,31 @@ static void EncodeNote(WriteStream& out, const Note& in, TempoTimeTracker& track
 		out.write<double>(time + offsetTime);
 		out.write<double>(tracker.lookAhead(in.endrow) + offsetTime);
 		out.write<uchar>((in.player << 4) | in.type);
+		out.write<uchar>(in.quant);
+	}
+}
+
+// If we are outputting something marked as a non-standard quantization,
+// adjust it to align with the expected custom snap.
+static void ApplyQuantOffset(Note& out, int offsetRows) 
+{
+	int startingOffset = (out.row - offsetRows) % 192;
+	int rowsOffset = offsetRows % 192;
+	int endingOffset = out.row % 192;
+	int endingRowOffset = out.endrow % 192;
+	if (out.quant == 0 || out.quant > 192)
+	{ 
+		out.quant = 192;
+		HudError("Bug: Missing quantization label for note at %i", out.row);
+	}
+	// Use the starting row to shift basis to the correct one
+	// get quant position of starting note/offset -> quant position of starting quant/offset
+	// -> quant position of end location -> approximate position "rounded" to row
+	if (192 % out.quant > 0 && startingOffset != endingOffset)
+	{
+		int quantsToOffset = (int) (round(startingOffset / 192.0f * out.quant) + round(rowsOffset / 192.0f * out.quant)) % 192;
+		out.row = out.row - endingOffset + (int)round(192.0f / out.quant * quantsToOffset);
+		out.endrow = out.endrow - endingRowOffset + (int)round(192.0f / out.quant * quantsToOffset);
 	}
 }
 
@@ -498,7 +536,8 @@ static void DecodeNote(ReadStream& in, Note& out, int offsetRows)
 	if((col & 0x80) == 0)
 	{
 		int row = in.readNum() + offsetRows;
-		out = {row, row, col, 0, 0};
+		uchar quant = in.read<uchar>();
+		out = { row, row, col, 0, 0, quant };
 	}
 	else
 	{
@@ -508,17 +547,21 @@ static void DecodeNote(ReadStream& in, Note& out, int offsetRows)
 		uint v = in.read<uchar>();
 		out.player = v >> 4;
 		out.type = v & 0xF;
+		out.quant = in.read<uchar>();
 	}
+	ApplyQuantOffset(out, offsetRows);
 }
 
 static void DecodeNote(ReadStream& in, Note& out, TempoRowTracker& tracker, double offsetTime)
 {
 	uchar col = in.read<uchar>();
+	int offsetRows = tracker.lookAhead(offsetTime);
 	if((col & 0x80) == 0)
 	{
 		double time = in.read<double>() + offsetTime;
 		int row = tracker.advance(time);
-		out = {row, row, col, 0, 0};
+		uchar quant = in.read<uchar>();
+		out = {row, row, col, 0, 0, quant};
 	}
 	else
 	{
@@ -530,7 +573,9 @@ static void DecodeNote(ReadStream& in, Note& out, TempoRowTracker& tracker, doub
 		uint v = in.read<uchar>();
 		out.player = v >> 4;
 		out.type = v & 0xF;
+		out.quant = in.read<uchar>();
 	}
+	ApplyQuantOffset(out, offsetRows);
 }
 
 void NoteList::encode(WriteStream& out, bool removeOffset) const

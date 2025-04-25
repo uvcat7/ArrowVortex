@@ -509,11 +509,11 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart)
 		if(hitObject.endtime > hitObject.time)
 		{
 			int endrow = timing.timeToRow(hitObject.endtime);
-			chart.notes.append({row, endrow, (uint)col, 0, NOTE_STEP_OR_HOLD});
+			chart.notes.append({row, endrow, (uint)col, 0, NOTE_STEP_OR_HOLD, 192});
 		}
 		else
 		{
-			chart.notes.append({row, row, (uint)col, 0, NOTE_STEP_OR_HOLD});
+			chart.notes.append({row, row, (uint)col, 0, NOTE_STEP_OR_HOLD, 192});
 		}
 	}
 }

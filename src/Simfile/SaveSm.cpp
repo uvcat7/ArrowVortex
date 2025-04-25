@@ -10,6 +10,7 @@
 #include <Simfile/TimingData.h>
 
 #include <Managers/StyleMan.h>
+#include <list>
 
 namespace Vortex {
 namespace Sm {
@@ -448,26 +449,55 @@ static const char* GetDifficultyString(Difficulty difficulty)
 	return "Edit";
 }
 
-static void GetSectionCompression(const char* section, int width, int& count, int& pitch)
+static int gcd(int a, int b)
+{
+	if (a == 0)
+	{
+		return b;
+	}
+	if (b == 0)
+	{
+		return a;
+	}
+	if (a > b)
+	{
+		return gcd(a - b, b);
+	}
+	else
+	{
+		return gcd(a, b - a);
+	}
+}
+
+static void GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
 {
 	// Determines the best compression for the given section.
 	int best = ROWS_PER_NOTE_SECTION;
 	String zeroline(width, '0');
-	for(int i = NUM_MEASURE_SUBDIV - 1; i >= 0; --i)
+	std::list<uint>::iterator it;
+	int lcm = 1;
+	for (it = quantVec.begin(); it != quantVec.end(); it++)
 	{
-		bool valid = true;
-		int mod = ROWS_PER_NOTE_SECTION / MEASURE_SUBDIV[i];
-		for(int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
+		if (*it <= 0)
 		{
-			if(j % mod != 0 && memcmp(section + j*width, zeroline.str(), width))
-			{
-				valid = false;
-			}
+			HudError("Bug: zero or negative quantization recorded in chart.");
+			continue;
 		}
-		if(valid) best = MEASURE_SUBDIV[i];
+		lcm = lcm * *it / gcd(lcm, *it);
+		if (lcm > ROWS_PER_NOTE_SECTION)
+		{
+			lcm = ROWS_PER_NOTE_SECTION;
+			break;
+		}
 	}
-	count = best;
-	pitch = (ROWS_PER_NOTE_SECTION * width) / best;
+
+	// Set whole and half step measures to be quarter notes by default
+	if (lcm < 3)
+	{
+		lcm = 4;
+	}
+	count = lcm;
+	pitch = (ROWS_PER_NOTE_SECTION * width) / lcm;
 }
 
 static void WriteSections(ExportData& data)
@@ -494,6 +524,8 @@ static void WriteSections(ExportData& data)
 		Vector<const Note*> holdVec(numCols, nullptr);
 		const Note** holds = holdVec.begin();
 
+		std::list<uint> quantVec(ROWS_PER_NOTE_SECTION);
+
 		const Note* it = chart->notes.begin();
 		const Note* end = chart->notes.end();
 
@@ -515,6 +547,7 @@ static void WriteSections(ExportData& data)
 					if(it->row == it->endrow)
 					{
 						section[pos] = GetNoteChar(it->type);
+						quantVec.push_front(it->quant);
 					}
 					else
 					{
@@ -526,6 +559,7 @@ static void WriteSections(ExportData& data)
 							{
 								int pos = ((int)hold->endrow - startRow) * numCols + (int)hold->col;
 								section[pos] = '3';
+								quantVec.push_front(it->quant);
 								--remainingHolds;
 							}
 						}
@@ -548,6 +582,7 @@ static void WriteSections(ExportData& data)
 							int pos = (hold->endrow - startRow) * numCols + hold->col;
 							section[pos] = '3';
 							holds[col] = nullptr;
+							quantVec.push_front(it->quant);
 							--remainingHolds;
 						}
 					}
@@ -557,13 +592,27 @@ static void WriteSections(ExportData& data)
 			// Write the current section to the file.
 			int count, pitch;
 			const char* m = section;
-			GetSectionCompression(m, numCols, count, pitch);
-			for(int k = 0; k < count; ++k, m += pitch)
+			quantVec.unique();
+			GetSectionCompression(m, numCols, quantVec, count, pitch);
+			quantVec.clear();
+			if (ROWS_PER_NOTE_SECTION % count == 0) 
 			{
-				data.file.write(m, numCols, 1);
-				data.file.write("\n", 1, 1);
+				for (int k = 0; k < count; ++k, m += pitch)
+				{
+					data.file.write(m, numCols, 1);
+					data.file.write("\n", 1, 1);
+				}
 			}
-
+			else
+			{
+				for (int k = 0; k < count; ++k, m += pitch)
+				{
+					data.file.write(m, numCols, 1);
+					data.file.write("\n", 1, 1);
+					pitch = ((int) round(192.0f / count * (k + 1)) - (int) round(192.0f / count * k)) * numCols;
+					HudWarning("Testing, start row %d, row %d, pitch %d", startRow, k, pitch/numCols);
+				}
+			}
 			// Write a comma if this is not the last section.
 			if(it != end || remainingHolds > 0) data.file.write(",\n", 2, 1);
 		}

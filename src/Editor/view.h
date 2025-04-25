@@ -63,6 +63,7 @@ struct View
 	virtual double offsetToTime(ChartOffset ofs) const = 0;
 
 	virtual SnapType getSnapType() const = 0;
+	virtual int getSnapQuant() = 0;
 	virtual int getCustomSnap() const = 0;
 	virtual bool isTimeBased() const = 0;
 	virtual bool hasReverseScroll() const = 0;

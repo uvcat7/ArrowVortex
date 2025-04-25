@@ -34,7 +34,7 @@ enum TweakMode { TWEAK_NONE, TWEAK_BPM, TWEAK_OFS };
 
 enum PlaceMode { PLACE_NONE, PLACE_NEW, PLACE_AFTER_REMOVE};
 
-struct PlacingNote { int player, startRow, endRow; PlaceMode mode; };
+struct PlacingNote { int player, startRow, endRow; PlaceMode mode; uint quant; };
 
 static int KeyToCol(Key::Code code)
 {
@@ -54,6 +54,7 @@ static Note PlacingNoteToNote(const PlacingNote& pnote, int col)
 	out.endrow = max(pnote.startRow, pnote.endRow);
 	out.player = pnote.player;
 	out.type = NOTE_STEP_OR_HOLD;
+	out.quant = pnote.quant;
 	return out;
 }
 
@@ -165,18 +166,20 @@ void onKeyPress(KeyPress& evt) override
 			}
 			NoteEdit edit;
 			auto note = gNotes->getNoteAt(row, col);
+			uint quant = gView->getSnapQuant();
+			HudNote("Quant is %d", quant);
 			if(note)
 			{
 				if(gMusic->isPaused())
 				{
-					myPlacingNotes[col] = {myCurPlayer, row, row, PLACE_AFTER_REMOVE};
+					myPlacingNotes[col] = {myCurPlayer, row, row, PLACE_AFTER_REMOVE, quant};
 				}
 				edit.rem.append(CompressNote(*note));
 				gNotes->modify(edit, false);
 			}
 			else
 			{
-				edit.add.append({row, row, (uint)col, (uint)myCurPlayer, NOTE_STEP_OR_HOLD});
+				edit.add.append({row, row, (uint)col, (uint)myCurPlayer, NOTE_STEP_OR_HOLD, quant});
 				if(evt.keyflags & Keyflag::SHIFT)
 				{
 					edit.add.begin()->type = NOTE_MINE;
@@ -184,7 +187,7 @@ void onKeyPress(KeyPress& evt) override
 				}
 				else if(gMusic->isPaused())
 				{
-					myPlacingNotes[col] = {myCurPlayer, row, row, PLACE_NEW};
+					myPlacingNotes[col] = {myCurPlayer, row, row, PLACE_NEW, quant};
 				}
 				else
 				{

@@ -374,7 +374,7 @@ struct ReadNoteData
 	Vector<NoteType> holdType;
 };
 
-static void ReadNoteRow(ReadNoteData& data, int row, char* p)
+static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 {
 	for(int col = 0; col < data.numCols; ++col, ++p)
 	{
@@ -384,11 +384,11 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p)
 		}
 		else if(*p == '1')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD});
+			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
 		}
 		else if(*p == '2' || *p == '4')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD});
+			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
 			data.holdType[col] = (*p == '2') ? NOTE_STEP_OR_HOLD : NOTE_ROLL;
 			data.holdPos[col] = data.notes->size();
 		}
@@ -405,15 +405,15 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p)
 		}
 		else if(*p == 'M')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_MINE});
+			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_MINE, (uint) quantization});
 		}
 		else if(*p == 'L')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_LIFT});
+			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_LIFT, (uint) quantization});
 		}
 		else if(*p == 'F')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_FAKE});
+			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_FAKE, (uint) quantization});
 		}
 	}
 }
@@ -493,29 +493,28 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 		if(numLines > 0)
 		{
 			int startRow = section * ROWS_PER_NOTE_SECTION;
-
-			// If numLines is a divisor of rows per section, we can expand with uniform padding.
 			char* line = measureText;
-			if(ROWS_PER_NOTE_SECTION % numLines == 0)
+			int row = startRow; 
+			int ofs = ROWS_PER_NOTE_SECTION / numLines;
+			if (ROWS_PER_NOTE_SECTION % numLines == 0)
 			{
-				int row = startRow, ofs = ROWS_PER_NOTE_SECTION / numLines;
-				for(int i = 0; i < numLines; ++i, line += numCols, row += ofs)
+				for (int i = 0; i < numLines; ++i, line += numCols, row += ofs)
 				{
-					if(memcmp(line, emptyline, numCols) != 0)
+					if (memcmp(line, emptyline, numCols) != 0)
 					{
-						ReadNoteRow(readNoteData, row, line);
+						ReadNoteRow(readNoteData, row, line, numLines);
 					}
 				}
 			}
-			else // If not, we have to approximate it by quantizing to 192 rows.
+			else
 			{
-				for(int i = 0; i < numLines; ++i, line += numCols)
+				for (int i = 0; i < numLines; ++i, line += numCols, row += ofs)
 				{
-					if(memcmp(line, emptyline, numCols) != 0)
+					if (memcmp(line, emptyline, numCols) != 0)
 					{
-						int row = startRow + i * ROWS_PER_NOTE_SECTION / numLines;
-						ReadNoteRow(readNoteData, row, line);
+						ReadNoteRow(readNoteData, row, line, numLines);
 					}
+					ofs = ((int)round(192.0f / numLines * (i + 1)) - (int)round(192.0f / numLines * i));
 				}
 			}
 		}

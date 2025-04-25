@@ -240,6 +240,18 @@ SnapType getSnapType() const
 	return mySnapType;
 }
 
+int getSnapQuant()
+{
+	if (mySnapType == ST_CUSTOM)
+	{
+		return myCustomSnap;
+	}
+	else
+	{
+		return sRowSnapTypes[mySnapType];
+	}
+}
+
 bool isTimeBased() const
 {
 	return myUseTimeBasedView;
