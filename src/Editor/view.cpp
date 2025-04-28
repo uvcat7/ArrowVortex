@@ -364,7 +364,7 @@ void setZoomLevel(double level)
 
 void setSpacingLevel(double level)
 {
-	level = min(max(level, 1.0), 16.0);
+	level = min(max(level, -2.0), 16.0);
 	if (mySpacingLevel != level)
 	{
 		mySpacingLevel = level;

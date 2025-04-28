@@ -38,7 +38,7 @@ void Dlg::myCreateWidgets()
 	WgSlider* spacing = myLayout.add<WgSlider>("Spacing");
 	spacing->value.bind(&mySpacingLevel);
 	spacing->onChange.bind(this, &Dlg::onAction, (int)ACT_SPACING);
-	spacing->setRange(1.0, 16.0);
+	spacing->setRange(-2.0, 16.0);
 	spacing->setTooltip("Note Spacing");
 }
 
