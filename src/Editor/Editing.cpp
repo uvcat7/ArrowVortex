@@ -397,6 +397,12 @@ void changeHoldsToRolls()
 	{
 		auto* desc = descs + (numRolls ? (numHolds ? 2 : 1) : 0);
 		gNotes->modify(edit, true, desc);
+		
+		// Reselect the notes.
+		if(gSelection->getType() == Selection::NOTES)
+		{
+			gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
+		}
 	}
 	else
 	{
@@ -404,7 +410,7 @@ void changeHoldsToRolls()
 	}
 }
 
-void changeHoldsToSteps()
+void changeHoldsToType(NoteType type)
 {
 	NoteEdit edit;
 	gSelection->getSelectedNotes(edit.add);
@@ -414,17 +420,27 @@ void changeHoldsToSteps()
 	{
 		if(n.endrow > n.row)
 		{
-			n.type = NOTE_STEP_OR_HOLD;
-			n.endrow = n.row;
+			n.type = type;
+			if(type != NOTE_ROLL) n.endrow = n.row;
 			++numHolds;
 		}
 	}
 	if(numHolds > 0)
 	{
-		static const NotesMan::EditDescription desc = {
-			"Converted %1 hold to step.", "Converted %1 holds to steps."
+		static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
+			{ "Converted %1 hold to step.", "Converted %1 holds to steps." },
+			{ "Converted %1 hold to mine.", "Converted %1 holds to mines." },
+			{ "Converted %1 hold to roll.", "Converted %1 holds to rolls." },
+			{ "Converted %1 hold to lift.", "Converted %1 holds to lifts." },
+			{ "Converted %1 hold to fake.", "Converted %1 holds to fakes." },
 		};
-		gNotes->modify(edit, false, &desc);
+		gNotes->modify(edit, false, &descs[type]);
+
+		// Reselect the notes.
+		if(gSelection->getType() == Selection::NOTES)
+		{
+			gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
+		}
 	}
 	else
 	{
@@ -432,32 +448,93 @@ void changeHoldsToSteps()
 	}
 }
 
-void changeNotesToMines()
+void changeNoteTypeToType(NoteType before, NoteType after, const NotesMan::EditDescription* desc)
 {
+	if(before == after || after == NOTE_ROLL)
+	{
+		HudWarning("Invalid conversion type.");
+		return;
+	}
+
 	NoteEdit edit;
 	gSelection->getSelectedNotes(edit.add);
 
 	int numNotes = 0;
 	for(auto& n : edit.add)
 	{
-		if(n.type != NOTE_MINE)
+		if(n.type == before)
 		{
-			n.type = NOTE_MINE;
+			n.type = after;
 			n.endrow = n.row;
 			++numNotes;
 		}
 	}
 	if(numNotes > 0)
 	{
-		static const NotesMan::EditDescription desc = {
-			"Converted %1 note to mine.", "Converted %1 notes to mines."
-		};
-		gNotes->modify(edit, false, &desc);
+		gNotes->modify(edit, false, desc);
+
+		// Reselect the notes.
+		if(gSelection->getType() == Selection::NOTES)
+		{
+			gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
+		}
 	}
 	else
 	{
 		HudNote("There are no notes selected.");
 	}
+}
+
+void changeNotesToType(NoteType type)
+{
+	static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
+		{ "Converted %1 step to step.", "Converted %1 steps to steps." },
+		{ "Converted %1 step to mine.", "Converted %1 steps to mines." },
+		{ "Converted %1 step to roll.", "Converted %1 steps to rolls." },
+		{ "Converted %1 step to lift.", "Converted %1 steps to lifts." },
+		{ "Converted %1 step to fake.", "Converted %1 steps to fakes." },
+	};
+
+	changeNoteTypeToType(NOTE_STEP_OR_HOLD, type, &descs[type]);
+}
+
+void changeMinesToType(NoteType type)
+{
+	static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
+		{ "Converted %1 mine to step.", "Converted %1 mines to steps." },
+		{ "Converted %1 mine to mine.", "Converted %1 mines to mines." },
+		{ "Converted %1 mine to roll.", "Converted %1 mines to rolls." },
+		{ "Converted %1 mine to lift.", "Converted %1 mines to lifts." },
+		{ "Converted %1 mine to fake.", "Converted %1 mines to fakes." },
+	};
+
+	changeNoteTypeToType(NOTE_MINE, type, &descs[type]);
+}
+
+void changeFakesToType(NoteType type)
+{
+	static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
+		{ "Converted %1 fake to step.", "Converted %1 fakes to steps." },
+		{ "Converted %1 fake to mine.", "Converted %1 fakes to mines." },
+		{ "Converted %1 fake to roll.", "Converted %1 fakes to rolls." },
+		{ "Converted %1 fake to lift.", "Converted %1 fakes to lifts." },
+		{ "Converted %1 fake to fake.", "Converted %1 fakes to fakes." },
+	};
+
+	changeNoteTypeToType(NOTE_FAKE, type, &descs[type]);
+}
+
+void changeLiftsToType(NoteType type)
+{
+	static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
+		{ "Converted %1 lift to step.", "Converted %1 lifts to steps." },
+		{ "Converted %1 lift to mine.", "Converted %1 lifts to mines." },
+		{ "Converted %1 lift to roll.", "Converted %1 lifts to rolls." },
+		{ "Converted %1 lift to lift.", "Converted %1 lifts to lifts." },
+		{ "Converted %1 lift to fake.", "Converted %1 lifts to fakes." },
+	};
+
+	changeNoteTypeToType(NOTE_LIFT, type, &descs[type]);
 }
 
 void changePlayerNumber()

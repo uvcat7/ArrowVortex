@@ -209,6 +209,10 @@ static String GetNoteName(const Note& note)
 		return "mine";
 	case NOTE_ROLL:
 		return "roll";
+	case NOTE_FAKE:
+		return "fake";
+	case NOTE_LIFT:
+		return "lift";
 	};
 	return "note";
 }
@@ -691,6 +695,16 @@ int select(SelectModifier mod, Filter filter)
 		return performSelection(mod, [&](const ExpandedNote* note)
 		{
 			return note->isWarped;
+		});
+	case SELECT_FAKES:
+		return performSelection(mod, [&](const ExpandedNote* note)
+		{
+			return note->type == NoteType::NOTE_FAKE;
+		});
+	case SELECT_LIFTS:
+		return performSelection(mod, [&](const ExpandedNote* note)
+		{
+			return note->type == NoteType::NOTE_LIFT;
 		});
 	};
 	return 0;
