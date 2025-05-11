@@ -352,14 +352,17 @@ void drawBeatLines()
 
 	bool zoomedIn = (gView->getZoomLevel() >= 4);
 	int viewH = gView->getHeight();
+	const int maxY = gView->getHeight() + 32;
+	const double speed = gTempo->beatToSpeed(gView->getCursorBeat());
+	int targetY = gView->getNotefieldCoords().y;
 	
 	// We keep track of the measure labels to render them afterwards.
 	struct MeasureLabel { int measure, y; };
 	Vector<MeasureLabel> labels(8);
 
 	// Determine the first row and last row that should show beat lines.
-	int drawBeginRow = max(0, gView->offsetToRow(myFirstVisibleTor));
-	int drawEndRow = min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) + 1;
+	int drawBeginRow = 0;// max(0, gView->offsetToRow(myFirstVisibleTor)); // TODO: Calculate Correct Start Row
+	int drawEndRow = gSimfile->getEndRow() + 1;// min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) + 1; // TODO: Calculate Correct End Row
 
 	auto& sigs = gTempo->getTimingData().sigs;
 	auto it = sigs.begin(), end = sigs.end();
@@ -393,22 +396,40 @@ void drawBeatLines()
 		{
 			// Measure line and measure label.
 			int y = drawPos.advance(row);
-			Draw::fill(&batch, {myX, y, myW, 1}, fullColor);
-			labels.push_back({measure, y});
+			int by = drawPos.advance(row + it->rowsPerMeasure * 4);
 
-			// Beat lines.
-			if(zoomedIn)
+			// Modify y to account for Tempo Speed
+			if(!gView->isTimeBased())
 			{
-				int beatRow = row + ROWS_PER_BEAT;
-				int measureEnd = row + it->rowsPerMeasure;
-				while(beatRow < measureEnd)
-				{
-					if (beatRow > drawEndRow)
-						break;
+				y = targetY + ((y - targetY) * speed);
+			}
 
-					int y = drawPos.advance(beatRow);
-					Draw::fill(&batch, {myX, y, myW, 1}, halfColor);
-					beatRow += ROWS_PER_BEAT;
+			// Don't show beatlines off the screen.
+			if(max(y, by) > -32 && min(y, by) < maxY)
+			{
+				Draw::fill(&batch, { myX, y, myW, 1 }, fullColor);
+				labels.push_back({ measure, y });
+
+				// Beat lines.
+				if(zoomedIn)
+				{
+					int beatRow = row + ROWS_PER_BEAT;
+					int measureEnd = row + it->rowsPerMeasure;
+					while(beatRow < measureEnd)
+					{
+						if(beatRow > drawEndRow)
+							break;
+
+						int y = drawPos.advance(beatRow);
+
+						if(!gView->isTimeBased())
+						{
+							y = targetY + ((y - targetY) * speed);
+						}
+
+						Draw::fill(&batch, { myX, y, myW, 1 }, halfColor);
+						beatRow += ROWS_PER_BEAT;
+					}
 				}
 			}
 
