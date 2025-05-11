@@ -619,7 +619,7 @@ void drawNotes()
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
 		// Notes 20 beats into the future are also not rendered in game.
-		if (isPreview && ((targetY > by != gView->hasReverseScroll()) && note.type != NOTE_MINE || note.row > currentrow + 20 * ROWS_PER_BEAT))
+		if (isPreview && note.type != NOTE_MINE && (note.row < currentrow || note.row > currentrow + 20 * ROWS_PER_BEAT))
 		{
 			continue;
 		}
