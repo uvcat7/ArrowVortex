@@ -19,6 +19,8 @@ namespace {
 
 typedef TimingData::Event Event;
 typedef TimingData::TimeSig TimeSig;
+typedef TimingData::ScrollRow ScrollRow;
+typedef TimingData::ScrollSpeed ScrollSpeed;
 
 // ================================================================================================
 // Timing segments merge.
@@ -250,7 +252,95 @@ static void CreateTimeSigs(Vector<TimeSig>& out, const TimeSignature* it, const 
 }
 
 // ================================================================================================
+// Scroll processing.
+
+static void CreateScrollRows(Vector<ScrollRow>& out, const Scroll* it, const Scroll* end)
+{
+	int row = 0;
+	double rowScroll = 0, ratio = 1;
+	if (it != end)
+	{
+		row = it->row;
+		rowScroll = (double)it->row;
+		ratio = it->ratio;
+		out.push_back({ row, rowScroll, ratio });
+
+		while (++it != end)
+		{
+			int passedRows = (it->row - row);
+			rowScroll += passedRows * ratio;
+			row = it->row;
+			ratio = it->ratio;
+			out.push_back({ row, rowScroll, ratio });
+
+			auto next = it + 1;
+			while (next != end && next->row <= row)
+			{
+				++it, ++next;
+			}
+		}
+	}
+	if (out.empty())
+	{
+		out.push_back({ 0, 0, 1 });
+	}
+}
+
+static void CreateScrollSpeeds(Vector<ScrollSpeed>& out, const Speed* it, const Speed* end)
+{
+	double previous = 1;
+	while (it != end)
+	{
+		auto toRow = round(it->delay * ROWS_PER_BEAT) / ROWS_PER_BEAT;
+
+		out.push_back({ it->row, previous, it->ratio, toRow, it->unit });
+		previous = it->ratio;
+		++it;
+	}
+	if(out.empty())
+	{
+		out.push_back({0, 0, 1, 0});
+	}
+}
+
+// ================================================================================================
 // Timing translation functions.
+
+static const ScrollRow* MostRecentScrollRow(const Vector<ScrollRow>& scrolls, int row)
+{
+	const ScrollRow* it = scrolls.begin(), * mid;
+	int count = scrolls.size(), step;
+	while (count > 1)
+	{
+		step = count >> 1;
+		mid = it + step;
+		if (mid->row <= row)
+		{
+			it = mid;
+			count -= step;
+		}
+		else count = step;
+	}
+	return it;
+}
+
+static const ScrollSpeed* MostRecentScrollSpeed(const Vector<ScrollSpeed>& speeds, int row)
+{
+	const ScrollSpeed* it = speeds.begin(), * mid;
+	int count = speeds.size(), step;
+	while (count > 1)
+	{
+		step = count >> 1;
+		mid = it + step;
+		if (mid->row <= row)
+		{
+			it = mid;
+			count -= step;
+		}
+		else count = step;
+	}
+	return it;
+}
 
 static const TimeSig* MostRecentTimeSig(const Vector<TimeSig>& sigs, int row)
 {
@@ -351,6 +441,26 @@ static double BeatToMeasure(const TimeSig* sig, double beat)
 	return sig->measure + (row - sig->row) / (double)sig->rowsPerMeasure;
 }
 
+static double RowToScroll(const ScrollRow* scroll, int row)
+{
+	return scroll->positionRow + (row - scroll->row) * scroll->ratio;
+}
+
+static double BeatToScroll(const ScrollRow* scroll, double beat)
+{
+	return scroll->positionRow + (beat * ROWS_PER_BEAT - scroll->row) * scroll->ratio;
+}
+
+static double BeatToSpeed(const ScrollSpeed* speed, double beat)
+{
+	if (speed->delay == 0 || speed->unit != 0) // TODO: Handle Time Based Speed segments.
+		return speed->end;
+
+	auto time = (beat - ((double)speed->row / ROWS_PER_BEAT)) / speed->delay;
+
+	return lerp(speed->start, speed->end, clamp(time, 0.0, 1.0));
+}
+
 }; // anonymous namespace
 
 // ================================================================================================
@@ -360,6 +470,8 @@ TimingData::TimingData()
 {
 	events.push_back({0, 0.0, 0.0, 0.0, BEATS_PER_ROW});
 	sigs.push_back({0, 0, ROWS_PER_BEAT * 4});
+	scrolls.push_back({0, 0, 1});
+	speeds.push_back({0, 1, 1, 0, 0});
 }
 
 void TimingData::update(const Tempo* tempo)
@@ -380,6 +492,16 @@ void TimingData::update(const Tempo* tempo)
 	sigs.clear();
 	CreateTimeSigs(sigs, segments->begin<TimeSignature>(), segments->end<TimeSignature>());
 	sigs.squeeze();
+
+	// Create a scroll offset list from the scroll ratios.
+	scrolls.clear();
+	CreateScrollRows(scrolls, segments->begin<Scroll>(), segments->end<Scroll>());
+	scrolls.squeeze();
+
+	// Create a scroll offset list from the scroll ratios.
+	speeds.clear();
+	CreateScrollSpeeds(speeds, segments->begin<Speed>(), segments->end<Speed>());
+	speeds.squeeze();
 }
 
 double TimingData::timeToBeat(double time) const
@@ -409,8 +531,23 @@ double TimingData::beatToMeasure(double beat) const
 	return BeatToMeasure(MostRecentTimeSig(sigs, row), beat);
 }
 
+double TimingData::rowToScroll(int row) const
+{
+	return RowToScroll(MostRecentScrollRow(scrolls, row), row);
+}
+
+double TimingData::beatToScroll(double beat) const
+{
+	return BeatToScroll(MostRecentScrollRow(scrolls, floor(beat * ROWS_PER_BEAT)), beat) / ROWS_PER_BEAT;
+}
+
+double TimingData::beatToSpeed(double beat) const
+{
+	return BeatToSpeed(MostRecentScrollSpeed(speeds, floor(beat * ROWS_PER_BEAT)), beat);
+}
+
 // ================================================================================================
-// TemoTimeTracker.
+// TempoTimeTracker.
 
 TempoTimeTracker::TempoTimeTracker()
 	: TempoTimeTracker(gTempo->getTimingData())
@@ -476,7 +613,7 @@ double TempoTimeTracker::lookAhead(int row) const
 }
 
 // ================================================================================================
-// TemoRowTracker.
+// TempoRowTracker.
 
 TempoRowTracker::TempoRowTracker()
 	: TempoRowTracker(gTempo->getTimingData())
