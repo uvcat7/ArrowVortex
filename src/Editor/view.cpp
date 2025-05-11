@@ -341,7 +341,7 @@ void tick()
 	}
 	else
 	{
-		myChartTopY = floor((double)myReceptorY - myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
+		myChartTopY = floor((double)myReceptorY - gTempo->beatToScroll(myCursorBeat) * ROWS_PER_BEAT * myPixPerRow);
 	}
 }
 

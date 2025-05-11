@@ -57,6 +57,10 @@ struct TempoMan
 	/// Returns the BPM at the given row.
 	virtual double getBpm(int row) const = 0;
 
+	virtual double rowToScroll(int row) const = 0;
+	virtual double beatToScroll(double beat) const = 0;
+	virtual double beatToSpeed(double beat) const = 0;
+
 	/// Editing functions.
 	virtual void modify(const SegmentEdit& edit) = 0;
 	virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;

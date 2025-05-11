@@ -67,7 +67,7 @@ struct DrawPosHelper
 		}
 		else
 		{
-			advanceFunc = RowBasedAvance;
+			advanceFunc = RowBasedAdvance;
 			getFunc = RowBasedGet;
 		}
 	}
@@ -80,14 +80,13 @@ struct DrawPosHelper
 	{
 		return getFunc(this, row, time);
 	}
-
-	static int RowBasedAvance(DrawPosHelper* dp, int row)
+	static int RowBasedAdvance(DrawPosHelper* dp, int row)
 	{
-		return (int)(dp->baseY + dp->deltaY * (double)row);
+		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
 	}
 	static int RowBasedGet(const DrawPosHelper* dp, int row, double time)
 	{
-		return (int)(dp->baseY + dp->deltaY * row);
+		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
 	}
 	static int TimeBasedAdvance(DrawPosHelper* dp, int row)
 	{
@@ -589,6 +588,9 @@ void drawNotes()
 	const int scale = gView->getNoteScale();
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
 	const int maxY = gView->getHeight() + 32;
+	const bool isPreview = !gMusic->isPaused() && gView->hasChartPreview();
+	const double speed = gTempo->beatToSpeed(gView->getCursorBeat());
+	const int currentrow = gView->getCursorRow();
 
 	auto noteskin = gNoteskin->get();
 
@@ -616,10 +618,17 @@ void drawNotes()
 		}
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
-		if (!gMusic->isPaused() && gView->hasChartPreview()
-			&& (targetY > by != gView->hasReverseScroll()) && note.type != NOTE_MINE)
+		// Notes 20 beats into the future are also not rendered in game.
+		if (isPreview && ((targetY > by != gView->hasReverseScroll()) && note.type != NOTE_MINE || note.row > currentrow + 20 * ROWS_PER_BEAT))
 		{
 			continue;
+		}
+
+		// Modify y to account for Tempo Speed
+		if(!gView->isTimeBased())
+		{
+			y = targetY + ((y - targetY) * speed);
+			by = targetY + ((by - targetY) * speed);
 		}
 
 		// Don't show notes off the screen
@@ -713,7 +722,7 @@ void drawGhostNote(const Note& n)
 
 	auto noteskin = gNoteskin->get();
 	int numCols = gStyle->getNumCols();
-	int y = gView->rowToY(n.row);
+	int y = gView->rowToY(gTempo->rowToScroll(n.row));
 
 	const int scale = gView->getNoteScale();
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
