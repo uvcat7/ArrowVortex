@@ -640,7 +640,7 @@ void drawNotes()
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
 		// Notes 20 beats into the future are also not rendered in game.
-		if (isPreview && note.type != NOTE_MINE && (note.row < currentrow || note.row > currentrow + 20 * ROWS_PER_BEAT))
+		if (isPreview && (note.type != NOTE_MINE && note.endrow <= currentrow || note.row > currentrow + 20 * ROWS_PER_BEAT))
 		{
 			continue;
 		}
@@ -670,8 +670,7 @@ void drawNotes()
 			int tailH = tail.height * signedScale / 512;
 
 			//If we are doing chart preview, only show the part of the tail past the targets, and don't show the arrow
-			if (!gMusic->isPaused() && gView->hasChartPreview() && 
-				((targetY > y && targetY <= by && !gView->hasReverseScroll()) || (targetY < y && targetY >= by && gView->hasReverseScroll())))
+			if (isPreview && currentrow >= note.row && currentrow <= note.endrow)
 			{
 				body.draw(&batch, x, targetY + bodyY, by + bodyY);
 				tail.draw(&batch, x, by - tailH, by + tailH);
