@@ -123,7 +123,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 	spinner->value.bind(&mySpeedRatio);
 	spinner->setPrecision(2, 6);
 	spinner->setStep(0.1);
-	spinner->setRange(0, 1000);
+	spinner->setRange(-1000, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_SPEED_SET);
 	spinner->setTooltip("Stretch ratio");
 
@@ -148,7 +148,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 	spinner->value.bind(&myScrollRatio);
 	spinner->setPrecision(2, 6);
 	spinner->setStep(0.1);
-	spinner->setRange(0, 1000);
+	spinner->setRange(-100000, 100000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_SCROLL_SET);
 	spinner->setTooltip("Scroll ratio");
 
@@ -243,14 +243,13 @@ void DialogAdjustTempoSM5::onAction(int id)
 		gTempo->addSegment(Combo(row, hit, miss));
 	} break;
 	case ACT_SPEED_SET: {
-		double ratio = max(0.0, mySpeedRatio);
+		double ratio = mySpeedRatio;
 		double delay = max(0.0, mySpeedDelay);
 		int unit = clamp(mySpeedUnit, 0, 1);
 		gTempo->addSegment(Speed(row, ratio, delay, unit));
 	} break;
 	case ACT_SCROLL_SET: {
-		double ratio = max(0.0, myScrollRatio);
-		gTempo->addSegment(Scroll(row, ratio));
+		gTempo->addSegment(Scroll(row, myScrollRatio));
 	} break;
 	case ACT_FAKE_SET: {
 		int rows = max(0, (int)(ROWS_PER_BEAT * myFakeBeats));
