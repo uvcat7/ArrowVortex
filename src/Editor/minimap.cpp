@@ -158,7 +158,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			if(note.endrow > note.row)
 			{
 				color32 color = (note.isRoll) ? rollcol : freezecol;
-				SetPixels(spd, colx[note.col], gTempo->rowToScroll(note.row), note.endrow, color);
+				SetPixels(spd, colx[note.col], note.row, note.endrow, color);
 			}
 			color32 color;
 			if(note.isSelected)
@@ -169,7 +169,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			{
 				color = (note.isMine) ? minecol : arrowcol[rowtype];
 			}
-			SetPixels(spd, colx[note.col], gTempo->rowToScroll(note.row), color);
+			SetPixels(spd, colx[note.col], note.row, color);
 		}
 	}
 }

@@ -341,7 +341,6 @@ void draw()
 	double dy = gView->getPixPerOfs();
 	int viewTop = gView->getRect().y;
 	int viewBtm = viewTop + gView->getHeight();
-	const double speed = gTempo->beatToSpeed(gView->getCursorBeat());
 
 	Renderer::resetColor();
 	Renderer::bindTexture(myBoxHl.texture.handle());
@@ -353,14 +352,7 @@ void draw()
 	auto batch = Renderer::batchTC();
 	for(const TempoBox& box : myBoxes)
 	{
-		int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row) : gTempo->rowToScroll(box.row)));
-
-		// Modify y to account for Tempo Speed
-		if (!timeBased)
-		{
-			y = coords.y + ((y - coords.y) * speed);
-		}
-
+		int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row) : (double)box.row));
 		if(y < viewTop - 16 || y > viewBtm + 16) continue;
 
 		int side = Segment::meta[box.type]->side;
@@ -382,14 +374,7 @@ void draw()
 	TextStyle textStyle;
 	for(const TempoBox& box : myBoxes)
 	{
-		int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row) : gTempo->rowToScroll(box.row)));
-
-		// Modify y to account for Tempo Speed
-		if (!timeBased)
-		{
-			y = coords.y + ((y - coords.y) * speed);
-		}
-
+		int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row) : (double)box.row));
 		if(y < viewTop - 16 || y > viewBtm + 16) continue;
 
 		int side = Segment::meta[box.type]->side;

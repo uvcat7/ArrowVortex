@@ -219,6 +219,9 @@
     <ClCompile Include="..\..\src\Editor\Notefield.cpp">
       <Filter>Editor\Interface</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Editor\NotefieldPreview.cpp">
+      <Filter>Editor\Interface</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\Editor\Sound.cpp">
       <Filter>Editor\Audio</Filter>
     </ClCompile>
@@ -519,6 +522,9 @@
       <Filter>Editor\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Editor\Notefield.h">
+      <Filter>Editor\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Editor\NotefieldPreview.h">
       <Filter>Editor\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Editor\Sound.h">

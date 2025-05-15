@@ -308,13 +308,13 @@ static void CreateScrollSpeeds(Vector<ScrollSpeed>& out, const Speed* it, const 
 
 static const ScrollRow* MostRecentScrollRow(const Vector<ScrollRow>& scrolls, int row)
 {
-	const ScrollRow* it = scrolls.begin(), * mid;
+	const ScrollRow* it = scrolls.begin(), *mid;
 	int count = scrolls.size(), step;
-	while (count > 1)
+	while(count > 1)
 	{
 		step = count >> 1;
 		mid = it + step;
-		if (mid->row <= row)
+		if(mid->row <= row)
 		{
 			it = mid;
 			count -= step;
@@ -326,13 +326,13 @@ static const ScrollRow* MostRecentScrollRow(const Vector<ScrollRow>& scrolls, in
 
 static const ScrollSpeed* MostRecentScrollSpeed(const Vector<ScrollSpeed>& speeds, int row)
 {
-	const ScrollSpeed* it = speeds.begin(), * mid;
+	const ScrollSpeed* it = speeds.begin(), *mid;
 	int count = speeds.size(), step;
-	while (count > 1)
+	while(count > 1)
 	{
 		step = count >> 1;
 		mid = it + step;
-		if (mid->row <= row)
+		if(mid->row <= row)
 		{
 			it = mid;
 			count -= step;
@@ -448,7 +448,8 @@ static double RowToScroll(const ScrollRow* scroll, int row)
 
 static double BeatToScroll(const ScrollRow* scroll, double beat)
 {
-	return scroll->positionRow + (beat * ROWS_PER_BEAT - scroll->row) * scroll->ratio;
+	double row = beat * ROWS_PER_BEAT;
+	return scroll->positionRow + (row - scroll->row) * scroll->ratio;
 }
 
 static double BeatToSpeed(const ScrollSpeed* speed, double beat)
@@ -498,7 +499,7 @@ void TimingData::update(const Tempo* tempo)
 	CreateScrollRows(scrolls, segments->begin<Scroll>(), segments->end<Scroll>());
 	scrolls.squeeze();
 
-	// Create a scroll offset list from the scroll ratios.
+	// Create a scroll speed list.
 	speeds.clear();
 	CreateScrollSpeeds(speeds, segments->begin<Speed>(), segments->end<Speed>());
 	speeds.squeeze();
@@ -538,12 +539,14 @@ double TimingData::rowToScroll(int row) const
 
 double TimingData::beatToScroll(double beat) const
 {
-	return BeatToScroll(MostRecentScrollRow(scrolls, floor(beat * ROWS_PER_BEAT)), beat) / ROWS_PER_BEAT;
+	int row = (int)floor(beat * ROWS_PER_BEAT); // floor matches games better?
+	return BeatToScroll(MostRecentScrollRow(scrolls, row), beat);
 }
 
 double TimingData::beatToSpeed(double beat) const
 {
-	return BeatToSpeed(MostRecentScrollSpeed(speeds, floor(beat * ROWS_PER_BEAT)), beat);
+	int row = (int)ceil(beat * ROWS_PER_BEAT);
+	return BeatToSpeed(MostRecentScrollSpeed(speeds, row), beat);
 }
 
 // ================================================================================================

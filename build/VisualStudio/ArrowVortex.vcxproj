@@ -371,6 +371,7 @@
     <ClCompile Include="..\..\src\Editor\Minimap.cpp" />
     <ClCompile Include="..\..\src\Editor\Music.cpp" />
     <ClCompile Include="..\..\src\Editor\Notefield.cpp" />
+    <ClCompile Include="..\..\src\Editor\NotefieldPreview.cpp" />
     <ClCompile Include="..\..\src\Editor\RatingEstimator.cpp" />
     <ClCompile Include="..\..\src\Editor\Selection.cpp" />
     <ClCompile Include="..\..\src\Editor\Shortcuts.cpp" />
@@ -473,6 +474,7 @@
     <ClInclude Include="..\..\src\Editor\Minimap.h" />
     <ClInclude Include="..\..\src\Editor\Music.h" />
     <ClInclude Include="..\..\src\Editor\Notefield.h" />
+    <ClInclude Include="..\..\src\Editor\NotefieldPreview.h" />
     <ClInclude Include="..\..\src\Editor\RatingEstimator.h" />
     <ClInclude Include="..\..\src\Editor\Selection.h" />
     <ClInclude Include="..\..\src\Editor\Shortcuts.h" />

@@ -30,6 +30,7 @@
 #include <Editor/Selection.h>
 #include <Editor/Editing.h>
 #include <Editor/Common.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/TextOverlay.h>
 #include <Editor/View.h>
 #include <Editor/Editor.h>
@@ -82,11 +83,11 @@ struct DrawPosHelper
 	}
 	static int RowBasedAdvance(DrawPosHelper* dp, int row)
 	{
-		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
+		return (int)(dp->baseY + dp->deltaY * (double)row);
 	}
 	static int RowBasedGet(const DrawPosHelper* dp, int row, double time)
 	{
-		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
+		return (int)(dp->baseY + dp->deltaY * row);
 	}
 	static int TimeBasedAdvance(DrawPosHelper* dp, int row)
 	{
@@ -275,6 +276,8 @@ void draw()
 	// Draw stuff.
 	drawBackground();
 
+	gNotefieldPreview->draw();
+
 	if(myShowBeatLines) drawBeatLines();
 	if(drawWaveform) gWaveform->drawPeaks();
 	if(gTempoBoxes->hasShowBoxes()) drawStopsAndWarps();
@@ -352,17 +355,14 @@ void drawBeatLines()
 
 	bool zoomedIn = (gView->getZoomLevel() >= 4);
 	int viewH = gView->getHeight();
-	const int maxY = gView->getHeight() + 32;
-	const double speed = gTempo->beatToSpeed(gView->getCursorBeat());
-	int targetY = gView->getNotefieldCoords().y;
-	
+
 	// We keep track of the measure labels to render them afterwards.
 	struct MeasureLabel { int measure, y; };
 	Vector<MeasureLabel> labels(8);
 
 	// Determine the first row and last row that should show beat lines.
-	int drawBeginRow = 0;// max(0, gView->offsetToRow(myFirstVisibleTor)); // TODO: Calculate Correct Start Row
-	int drawEndRow = gSimfile->getEndRow() + 1;// min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) + 1; // TODO: Calculate Correct End Row
+	int drawBeginRow = max(0, gView->offsetToRow(myFirstVisibleTor));
+	int drawEndRow = min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) + 1;
 
 	auto& sigs = gTempo->getTimingData().sigs;
 	auto it = sigs.begin(), end = sigs.end();
@@ -396,40 +396,22 @@ void drawBeatLines()
 		{
 			// Measure line and measure label.
 			int y = drawPos.advance(row);
-			int by = drawPos.advance(row + it->rowsPerMeasure * 4);
+			Draw::fill(&batch, { myX, y, myW, 1 }, fullColor);
+			labels.push_back({ measure, y });
 
-			// Modify y to account for Tempo Speed
-			if(!gView->isTimeBased())
+			// Beat lines.
+			if(zoomedIn)
 			{
-				y = targetY + ((y - targetY) * speed);
-			}
-
-			// Don't show beatlines off the screen.
-			if(max(y, by) > -32 && min(y, by) < maxY)
-			{
-				Draw::fill(&batch, { myX, y, myW, 1 }, fullColor);
-				labels.push_back({ measure, y });
-
-				// Beat lines.
-				if(zoomedIn)
+				int beatRow = row + ROWS_PER_BEAT;
+				int measureEnd = row + it->rowsPerMeasure;
+				while(beatRow < measureEnd)
 				{
-					int beatRow = row + ROWS_PER_BEAT;
-					int measureEnd = row + it->rowsPerMeasure;
-					while(beatRow < measureEnd)
-					{
-						if(beatRow > drawEndRow)
-							break;
+					if(beatRow > drawEndRow)
+						break;
 
-						int y = drawPos.advance(beatRow);
-
-						if(!gView->isTimeBased())
-						{
-							y = targetY + ((y - targetY) * speed);
-						}
-
-						Draw::fill(&batch, { myX, y, myW, 1 }, halfColor);
-						beatRow += ROWS_PER_BEAT;
-					}
+					int y = drawPos.advance(beatRow);
+					Draw::fill(&batch, { myX, y, myW, 1 }, halfColor);
+					beatRow += ROWS_PER_BEAT;
 				}
 			}
 
@@ -605,13 +587,11 @@ void drawSnapDiamonds()
 void drawNotes()
 {
 	const int numCols = gStyle->getNumCols();
-	const int centerX = gView->getRect().x + gView->getWidth() / 2;
 	const int scale = gView->getNoteScale();
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
 	const int maxY = gView->getHeight() + 32;
 	const bool isPreview = !gMusic->isPaused() && gView->hasChartPreview();
-	const double speed = gTempo->beatToSpeed(gView->getCursorBeat());
-	const int currentrow = gView->getCursorRow();
+	const int currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
 
 	auto noteskin = gNoteskin->get();
 
@@ -639,17 +619,9 @@ void drawNotes()
 		}
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
-		// Notes 20 beats into the future are also not rendered in game.
-		if (isPreview && (note.type != NOTE_MINE && note.endrow <= currentrow || note.row > currentrow + 20 * ROWS_PER_BEAT))
+		if (isPreview && note.type != NOTE_MINE && note.endrow < currentRow)
 		{
 			continue;
-		}
-
-		// Modify y to account for Tempo Speed
-		if(!gView->isTimeBased())
-		{
-			y = targetY + ((y - targetY) * speed);
-			by = targetY + ((by - targetY) * speed);
 		}
 
 		// Don't show notes off the screen
@@ -670,7 +642,7 @@ void drawNotes()
 			int tailH = tail.height * signedScale / 512;
 
 			//If we are doing chart preview, only show the part of the tail past the targets, and don't show the arrow
-			if (isPreview && currentrow >= note.row && currentrow <= note.endrow)
+			if (isPreview && currentRow >= note.row && currentRow <= note.endrow)
 			{
 				body.draw(&batch, x, targetY + bodyY, by + bodyY);
 				tail.draw(&batch, x, by - tailH, by + tailH);
@@ -742,7 +714,7 @@ void drawGhostNote(const Note& n)
 
 	auto noteskin = gNoteskin->get();
 	int numCols = gStyle->getNumCols();
-	int y = gView->rowToY(gTempo->rowToScroll(n.row));
+	int y = gView->rowToY(n.row);
 
 	const int scale = gView->getNoteScale();
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;

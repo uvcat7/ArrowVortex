@@ -8,6 +8,7 @@
 #include <Core/Draw.h>
 #include <Core/Gui.h>
 
+#include <System/Debug.h>
 #include <System/System.h>
 
 #include <Editor/Music.h>
@@ -72,9 +73,9 @@ double myCursorTime, myCursorBeat;
 double myPixPerSec, myPixPerRow;
 int myCursorRow;
 
-int myReceptorY, myReceptorX;
+int myReceptorY, myReceptorX, myPreviewOffset;
 int myZoomLevel, myMini;
-bool myIsDraggingReceptors;
+bool myIsDraggingReceptors, myIsDraggingReceptorsPreview;
 bool myUseTimeBasedView;
 bool myUseReverseScroll;
 bool myUseChartPreview;
@@ -94,6 +95,7 @@ ViewImpl()
 	, myCursorRow(0)
 	, myReceptorY(192)
 	, myReceptorX(0)
+	, myPreviewOffset(512)
 	, myZoomLevel(0)
 	, myMini(0)
 	, mySnapType(ST_NONE)
@@ -101,6 +103,7 @@ ViewImpl()
 	, myUseReverseScroll(false)
 	, myUseChartPreview(true)
 	, myIsDraggingReceptors(false)
+	, myIsDraggingReceptorsPreview(false)
 	, myPixPerSec(sPixPerSec[0])
 	, myPixPerRow(sPixPerBeat[0] * BEATS_PER_ROW)
 {
@@ -161,8 +164,14 @@ void onMouseScroll(MouseScroll& evt) override
 
 void onMousePress(MousePress& evt) override
 {
+	// Dragging the preview receptors.
+	if(evt.button == Mouse::LMB && isMouseOverReceptorsPreview(evt.x, evt.y) && evt.unhandled())
+	{
+		myIsDraggingReceptorsPreview = true;
+		evt.setHandled();
+	}
 	// Dragging the receptors.
-	if(evt.button == Mouse::LMB && isMouseOverReceptors(evt.x, evt.y) && evt.unhandled())
+	else if(evt.button == Mouse::LMB && isMouseOverReceptors(evt.x, evt.y) && evt.unhandled())
 	{
 		myIsDraggingReceptors = true;
 		evt.setHandled();
@@ -175,6 +184,11 @@ void onMouseRelease(MouseRelease& evt) override
 	if(evt.button == Mouse::LMB && myIsDraggingReceptors)
 	{
 		myIsDraggingReceptors = false;
+	}
+	// Finish receptor dragging.
+	else if(evt.button == Mouse::LMB && myIsDraggingReceptorsPreview)
+	{
+		myIsDraggingReceptorsPreview = false;
 	}
 }
 
@@ -298,10 +312,18 @@ void tick()
 		myReceptorX = gSystem->getMousePos().x - CenterX(myRect);
 		myReceptorY = gSystem->getMousePos().y - myRect.y;
 	}
+	// handle preview receptor dragging.
+	else if(myIsDraggingReceptorsPreview)
+	{
+		auto mx = gSystem->getMousePos().x - CenterX(myRect) - myReceptorX;
+		auto ofs = (mx << 8) / sZoomScales[myZoomLevel];
+		myPreviewOffset = ofs;
+	}
 
 	// Set cursor to arrows when hovering over/dragging the receptors.
 	vec2i mpos = gSystem->getMousePos();
-	if(myIsDraggingReceptors || isMouseOverReceptors(mpos.x, mpos.y))
+	if(myIsDraggingReceptors || isMouseOverReceptors(mpos.x, mpos.y)
+		|| myIsDraggingReceptorsPreview || isMouseOverReceptorsPreview(mpos.x, mpos.y))
 	{
 		gSystem->setCursor(Cursor::SIZE_ALL);
 	}
@@ -341,7 +363,7 @@ void tick()
 	}
 	else
 	{
-		myChartTopY = floor((double)myReceptorY - gTempo->beatToScroll(myCursorBeat) * ROWS_PER_BEAT * myPixPerRow);
+		myChartTopY = floor((double)myReceptorY - myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
 	}
 }
 
@@ -654,6 +676,11 @@ const recti& getRect() const
 	return myRect;
 }
 
+int getPreviewOffset() const
+{
+	return applyZoom(myPreviewOffset);
+}
+
 int applyZoom(int v) const
 {
 	int zoom = sZoomScales[myZoomLevel];
@@ -760,6 +787,17 @@ bool isMouseOverReceptors(int x, int y) const
 		auto c = getReceptorCoords();
 		int dy = applyZoom(gChart->isClosed() ? 8 : 32);
 		return (x >= c.xl && x < c.xr && abs(y - myReceptorY) <= dy);
+	}
+	return false;
+}
+
+bool isMouseOverReceptorsPreview(int x, int y) const
+{
+	if(!GuiMain::isCapturingMouse())
+	{
+		auto c = getReceptorCoords();
+		int dy = applyZoom(gChart->isClosed() ? 8 : 32);
+		return (x >= c.xl + getPreviewOffset() && x < c.xr + getPreviewOffset() && abs(y - myReceptorY) <= dy);
 	}
 	return false;
 }
