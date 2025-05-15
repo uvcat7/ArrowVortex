@@ -20,6 +20,7 @@
 
 #include <Editor/View.h>
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/TempoBoxes.h>
 #include <Editor/Waveform.h>
 #include <Editor/Editing.h>
@@ -226,6 +227,7 @@ void init()
 	Editing::create(settings);
 	View::create(settings);
 	Notefield::create();
+	NotefieldPreview::create();
 	TempoBoxes::create(settings);
 	Waveform::create(settings);
 	Statusbar::create(settings);
@@ -272,6 +274,7 @@ void shutdown()
 	Waveform::destroy();
 	TempoBoxes::destroy();
 	Notefield::destroy();
+	NotefieldPreview::destroy();
 	View::destroy();
 	Selection::destroy();
 	Music::destroy();

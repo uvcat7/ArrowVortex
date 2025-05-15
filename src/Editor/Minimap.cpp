@@ -168,7 +168,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			{
 				color = (note.isMine) ? minecol : arrowcol[rowtype];
 			}
-			SetPixels(spd, colx[note.col], gTempo->rowToScroll(note.row), color);
+			SetPixels(spd, colx[note.col], note.row, color);
 		}
 	}
 }
