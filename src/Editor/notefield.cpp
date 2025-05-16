@@ -396,8 +396,8 @@ void drawBeatLines()
 		{
 			// Measure line and measure label.
 			int y = drawPos.advance(row);
-			Draw::fill(&batch, { myX, y, myW, 1 }, fullColor);
-			labels.push_back({ measure, y });
+			Draw::fill(&batch, {myX, y, myW, 1}, fullColor);
+			labels.push_back({measure, y});
 
 			// Beat lines.
 			if(zoomedIn)
@@ -410,7 +410,7 @@ void drawBeatLines()
 						break;
 
 					int y = drawPos.advance(beatRow);
-					Draw::fill(&batch, { myX, y, myW, 1 }, halfColor);
+					Draw::fill(&batch, {myX, y, myW, 1}, halfColor);
 					beatRow += ROWS_PER_BEAT;
 				}
 			}
@@ -619,7 +619,7 @@ void drawNotes()
 		}
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
-		if (isPreview && note.type != NOTE_MINE && note.endrow < currentRow)
+		if(isPreview && note.type != NOTE_MINE && note.endrow < currentRow)
 		{
 			continue;
 		}
@@ -642,7 +642,7 @@ void drawNotes()
 			int tailH = tail.height * signedScale / 512;
 
 			//If we are doing chart preview, only show the part of the tail past the targets, and don't show the arrow
-			if (isPreview && currentRow >= note.row && currentRow <= note.endrow)
+			if(isPreview && currentRow >= note.row && currentRow <= note.endrow)
 			{
 				body.draw(&batch, x, targetY + bodyY, by + bodyY);
 				tail.draw(&batch, x, by - tailH, by + tailH);
