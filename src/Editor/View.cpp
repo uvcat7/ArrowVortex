@@ -7,7 +7,6 @@
 #include <Core/Draw.h>
 #include <Core/Gui.h>
 
-#include <System/Debug.h>
 #include <System/System.h>
 
 #include <Editor/Music.h>
