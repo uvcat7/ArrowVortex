@@ -22,6 +22,7 @@
 #include <Managers/SimfileMan.h>
 
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/Editing.h>
 #include <Editor/Minimap.h>
 #include <Editor/Selection.h>
@@ -94,7 +95,7 @@ ViewImpl()
 	, myCursorRow(0)
 	, myReceptorY(192)
 	, myReceptorX(0)
-	, myPreviewOffset(512)
+	, myPreviewOffset(640)
 	, myZoomLevel(0)
 	, myMini(0)
 	, mySnapType(ST_NONE)
@@ -675,6 +676,11 @@ const recti& getRect() const
 	return myRect;
 }
 
+void adjustForPreview(bool enabled)
+{
+	myReceptorX += applyZoom(enabled ? -320 : 320);
+}
+
 int getPreviewOffset() const
 {
 	return applyZoom(myPreviewOffset);
@@ -796,7 +802,7 @@ bool isMouseOverReceptorsPreview(int x, int y) const
 	{
 		auto c = getReceptorCoords();
 		int dy = applyZoom(gChart->isClosed() ? 8 : 32);
-		return (x >= c.xl + getPreviewOffset() && x < c.xr + getPreviewOffset() && abs(y - myReceptorY) <= dy);
+		return (x >= c.xl + getPreviewOffset() && x < c.xr + getPreviewOffset() && abs(y - gNotefieldPreview->getY()) <= dy);
 	}
 	return false;
 }
