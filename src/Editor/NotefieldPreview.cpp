@@ -18,7 +18,9 @@
 #include <Managers/StyleMan.h>
 #include <Managers/ChartMan.h>
 #include <Managers/NoteMan.h>
+#include <Managers/SimfileMan.h>
 
+#include <Editor/Menubar.h>
 #include <Editor/Music.h>
 #include <Editor/View.h>
 
@@ -30,13 +32,31 @@ typedef View::Coords Coords;
 
 struct DrawPosHelper
 {
-	DrawPosHelper()
+	typedef NotefieldPreview::DrawMode DrawMode;
+
+
+	DrawPosHelper(DrawMode mode, bool reverse = false)
 		: tracker(gTempo->getTimingData())
 	{
-		deltaY = -gView->getPixPerRow();
-		baseY = -floor(gTempo->beatToScroll(gView->getCursorBeat()) * deltaY);
-		advanceFunc = RowBasedAdvance;
-		getFunc = RowBasedGet;
+		int dir = reverse ? -1 : 1;
+		if(mode == DrawMode::CMOD) {
+			deltaY = -gView->getPixPerSec() * dir;
+			baseY = -floor(gView->getCursorTime() * deltaY);
+			advanceFunc = TimeBasedAdvance;
+			getFunc = TimeBasedGet;
+		}
+		else if(mode == DrawMode::XMOD) {
+			deltaY = -gView->getPixPerRow() * dir;
+			baseY = -floor(gView->getCursorBeat() * ROWS_PER_BEAT * deltaY);
+			advanceFunc = RowBasedAdvance;
+			getFunc = RowBasedGet;
+		}
+		else if(mode == DrawMode::XMOD_ALL) {
+			deltaY = -gView->getPixPerRow() * dir;
+			baseY = -floor(gTempo->beatToScroll(gView->getCursorBeat()) * deltaY);
+			advanceFunc = RowBasedAlteredAdvance;
+			getFunc = RowBasedAlteredGet;
+		}
 	}
 
 	inline int advance(int row)
@@ -49,9 +69,17 @@ struct DrawPosHelper
 	}
 	static int RowBasedAdvance(DrawPosHelper* dp, int row)
 	{
-		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
+		return (int)(dp->baseY + dp->deltaY * row);
 	}
 	static int RowBasedGet(const DrawPosHelper* dp, int row, double time)
+	{
+		return (int)(dp->baseY + dp->deltaY * row);
+	}
+	static int RowBasedAlteredAdvance(DrawPosHelper* dp, int row)
+	{
+		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
+	}
+	static int RowBasedAlteredGet(const DrawPosHelper* dp, int row, double time)
 	{
 		return (int)(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
 	}
@@ -83,9 +111,15 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 Texture myNoteLabelsTex;
 BatchSprite myNoteLabels[2];
 
-int myColX[SIM_MAX_COLUMNS], myX, myY, myW;
+int myColX[SIM_MAX_COLUMNS], myX, myY, myW, maxY;
+
+int scale, cols, currentRow;
+double speed;
 
 bool myEnabled;
+bool myShowBeatLines;
+bool myUseReverseScroll;
+DrawMode myDrawMode = XMOD_ALL;
 
 // ================================================================================================
 // NotefieldPreviewImpl :: constructor and destructor.
@@ -96,7 +130,9 @@ bool myEnabled;
 
 NotefieldPreviewImpl()
 {
-	myEnabled = true;
+	myEnabled = false;
+	myShowBeatLines = true;
+	myUseReverseScroll = false;
 	myNoteLabelsTex = Texture("assets/note labels.png", false);
 
 	BatchSprite::init(myNoteLabels, 2, 2, 1, 32, 32);
@@ -113,14 +149,23 @@ void updateNotefieldSize()
 	myW = coords.xr - coords.xl;
 	myX = coords.xl + gView->getPreviewOffset();
 	myY = coords.y;
+
+	maxY = gView->getHeight() + 32;
+
+	if (myUseReverseScroll) {
+		myY = maxY - 32 - myY;
+	}
 }
 
 void draw()
 {
 	if(!myEnabled || gChart->isClosed()) return;
 
-	int scale = gView->getNoteScale();
-
+	// Update common variables.
+	speed = myDrawMode == XMOD_ALL ? gTempo->beatToSpeed(gView->getCursorBeat()) : 1;
+	cols = gStyle->getNumCols();
+	scale = gView->getNoteScale();
+	currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
 	updateNotefieldSize();
 
 	BatchSprite::setScale(scale);
@@ -137,9 +182,8 @@ void draw()
 
 	recti view = gView->getRect();
 	Draw::fill({ myX, view.y, myW, view.h }, COLOR32(0, 0, 0, 128));
-	Draw::fill({ myX, view.y, 1, view.h }, COLOR32(255, 255, 255, 128));
-	Draw::fill({ myX+myW, view.y, 1, view.h }, COLOR32(255, 255, 255, 128));
 
+	if(myShowBeatLines) drawBeatLines();
 	drawReceptors();
 	drawNotes();
 	if(!gMusic->isPaused()) drawReceptorGlow();
@@ -148,10 +192,90 @@ void draw()
 // ================================================================================================
 // NotefieldPreviewImpl :: segments.
 
+void drawBeatLines()
+{
+	Renderer::resetColor();
+	Renderer::bindShader(Renderer::SH_COLOR);
+
+	bool zoomedIn = (gView->getZoomLevel() >= 4);
+
+	// Determine the first row and last row that should show beat lines.
+	int drawBeginRow = max(0, currentRow - ROWS_PER_BEAT * 4);
+	int drawEndRow = min(currentRow + ROWS_PER_BEAT * 20, gSimfile->getEndRow()) + 1;
+
+	auto& sigs = gTempo->getTimingData().sigs;
+	auto it = sigs.begin(), end = sigs.end();
+
+	// Skip over time signatures that are not drawn.
+	auto next = it + 1;
+	while(next != end && next->row <= drawBeginRow)
+	{
+		it = next, ++next;
+	}
+
+	// Skip over measures at the start of the time signature that are not drawn.
+	int measure = it->measure, row = it->row;
+	if(drawBeginRow > row + it->rowsPerMeasure)
+	{
+		int skip = (drawBeginRow - it->row - it->rowsPerMeasure) / it->rowsPerMeasure;
+		measure += skip;
+		row += skip * it->rowsPerMeasure;
+	}
+
+	// Start drawing measures and beat lines.
+	auto batch = Renderer::batchC();
+	color32 halfColor = ToColor32({ 1, 1, 1, 0.4f });
+	color32 fullColor = ToColor32({ 1, 1, 1, 0.7f });
+	DrawPosHelper drawPos = DrawPosHelper(myDrawMode, myUseReverseScroll);
+	while(it != end && row < drawEndRow)
+	{
+		int endRow = drawEndRow;
+		if(next != end) endRow = min(endRow, next->row);
+		while(row < endRow)
+		{
+			// Measure line and measure label.
+			int y = myY - drawPos.advance(row);
+
+			// Modify y to account for Tempo Speed
+			y = myY + ((y - myY) * speed);
+
+			// Don't show beatlines off the screen
+			if(y > -32 && y < maxY)
+				Draw::fill(&batch, { myX, y, myW, 1 }, fullColor);
+
+			// Beat lines.
+			if(zoomedIn)
+			{
+				int beatRow = row + ROWS_PER_BEAT;
+				int measureEnd = row + it->rowsPerMeasure;
+				while(beatRow < measureEnd)
+				{
+					if(beatRow > drawEndRow)
+						break;
+
+					int y = myY - drawPos.advance(beatRow);
+
+					// Modify y to account for Tempo Speed
+					y = myY + ((y - myY) * speed);
+
+					// Don't show beatlines off the screen
+					if(y > -32 && y < maxY)
+						Draw::fill(&batch, { myX, y, myW, 1 }, halfColor);
+
+					beatRow += ROWS_PER_BEAT;
+				}
+			}
+
+			++measure;
+			row += it->rowsPerMeasure;
+		}
+		it = next, ++next;
+	}
+	batch.flush();
+}
+
 void drawReceptors()
 {
-	const int cols = gStyle->getNumCols();
-
 	auto noteskin = gNoteskin->get();
 
 	Renderer::resetColor();
@@ -176,8 +300,6 @@ void drawReceptors()
 void drawReceptorGlow()
 {
 	auto noteskin = gNoteskin->get();
-	auto notes = gNotes->begin();
-	const int numCols = gStyle->getNumCols();
 	double time = gView->getCursorTime();
 	auto prevNotes = gNotes->getNotesBeforeTime(time);
 
@@ -187,7 +309,7 @@ void drawReceptorGlow()
 
 	// Draw the receptor glow based on the time elapsed since the previous note.
 	auto batch = Renderer::batchTC();
-	for(int c = 0; c < numCols; ++c)
+	for(int c = 0; c < cols; ++c)
 	{
 		auto note = prevNotes[c];
 		if(!note) continue;
@@ -205,12 +327,7 @@ void drawReceptorGlow()
 
 void drawNotes()
 {
-	const int numCols = gStyle->getNumCols();
-	const int scale = gView->getNoteScale();
-	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
-	const int maxY = gView->getHeight() + 32;
-	const int currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
-	const double speed = gTempo->beatToSpeed(gView->getCursorBeat());
+	const int signedScale = myUseReverseScroll ? -scale : scale;
 
 	auto noteskin = gNoteskin->get();
 
@@ -220,7 +337,7 @@ void drawNotes()
 
 	// Render arrows/holds/mines interleaved, so the z-order is correct.
 	auto batch = Renderer::batchT();
-	DrawPosHelper drawPos;
+	DrawPosHelper drawPos = DrawPosHelper(myDrawMode, myUseReverseScroll);
 	for(auto& note : *gNotes)
 	{
 		// Determine the y-position of the note.
@@ -229,7 +346,7 @@ void drawNotes()
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
 		// Notes 20 beats into the future are also not rendered in game.
-		if(note.type != NOTE_MINE && note.endrow < currentRow || note.row > currentRow + 20 * ROWS_PER_BEAT)
+		if((note.type != NOTE_MINE && note.type != NOTE_FAKE) && note.endrow < currentRow || note.row > currentRow + 20 * ROWS_PER_BEAT)
 		{
 			continue;
 		}
@@ -247,7 +364,7 @@ void drawNotes()
 		// Body and tail for holds.
 		if(note.endrow > note.row)
 		{
-			int index = note.isRoll * numCols + col;
+			int index = note.isRoll * cols + col;
 
 			auto& body = noteskin->holdBody[index];
 			auto& tail = noteskin->holdTail[index];
@@ -274,16 +391,16 @@ void drawNotes()
 		{
 		case NOTE_STEP_OR_HOLD:
 		case NOTE_ROLL: {
-			int index = (note.player * numCols + note.col) * NUM_ROW_TYPES + rowtype;
+			int index = (note.player * cols + note.col) * NUM_ROW_TYPES + rowtype;
 			noteskin->note[index].draw(&batch, x, y);
 			break; }
 		case NOTE_MINE: {
-			int index = note.player * numCols + note.col;
+			int index = note.player * cols + note.col;
 			noteskin->mine[index].draw(&batch, x, y);
 			break; }
 		case NOTE_LIFT:
 		case NOTE_FAKE: {
-			int index = (note.player * numCols + note.col) * NUM_ROW_TYPES + rowtype;
+			int index = (note.player * cols + note.col) * NUM_ROW_TYPES + rowtype;
 			noteskin->note[index].draw(&batch, x, y);
 			break; }
 		}
@@ -309,10 +426,54 @@ void drawNotes()
 // ================================================================================================
 // NotefieldPreviewImpl :: toggle/check functions.
 
+int NotefieldPreviewImpl::getY()
+{
+	return myY;
+}
+
+void setMode(DrawMode mode)
+{
+	myDrawMode = mode;
+	gMenubar->update(Menubar::PREVIEW_VIEW_MODE);
+}
+
+DrawMode getMode()
+{
+	return myDrawMode;
+}
+
 void NotefieldPreviewImpl::toggleEnabled()
 {
 	myEnabled = !myEnabled;
-	//gMenubar->update(Menubar::SHOW_NOTES);
+	gView->adjustForPreview(myEnabled);
+	gMenubar->update(Menubar::PREVIEW_ENABLED);
+}
+
+void NotefieldPreviewImpl::toggleShowBeatLines()
+{
+	myShowBeatLines = !myShowBeatLines;
+	gMenubar->update(Menubar::PREVIEW_SHOW_BEATLINES);
+}
+
+void NotefieldPreviewImpl::toggleReverseScroll()
+{
+	myUseReverseScroll = !myUseReverseScroll;
+	gMenubar->update(Menubar::PREVIEW_SHOW_REVERSE_SCROLL);
+}
+
+bool hasEnabled()
+{
+	return myEnabled;
+}
+
+bool hasReverseScroll()
+{
+	return myUseReverseScroll;
+}
+
+bool hasShowBeatLines()
+{
+	return myShowBeatLines;
 }
 
 };
