@@ -34,7 +34,6 @@ struct DrawPosHelper
 {
 	typedef NotefieldPreview::DrawMode DrawMode;
 
-
 	DrawPosHelper(DrawMode mode, bool reverse = false)
 		: tracker(gTempo->getTimingData())
 	{
@@ -329,8 +328,6 @@ void drawReceptorGlow()
 
 void drawNotes()
 {
-	const int signedScale = myUseReverseScroll ? -scale : scale;
-
 	auto noteskin = gNoteskin->get();
 
 	Renderer::resetColor();
@@ -366,6 +363,7 @@ void drawNotes()
 		// Body and tail for holds.
 		if(note.endrow > note.row)
 		{
+			int signedScale = by < y ? -scale : scale;
 			int index = note.isRoll * cols + col;
 
 			auto& body = noteskin->holdBody[index];
