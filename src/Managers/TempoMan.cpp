@@ -768,9 +768,9 @@ double beatToScroll(double beat) const
 	return myTimingData.beatToScroll(beat);
 }
 
-double beatToSpeed(double beat) const
+double positionToSpeed(double beat, double time) const
 {
-	return myTimingData.beatToSpeed(beat);
+	return myTimingData.positionToSpeed(beat, time);
 }
 
 // ================================================================================================
