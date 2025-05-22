@@ -294,7 +294,8 @@ static void CreateScrollSpeeds(Vector<ScrollSpeed>& out, const Speed* it, const 
 	{
 		int row = it->row;
 		double rowTime = tracker.advance(row);
-		out.push_back({ row, it->unit, previous, it->ratio, it->delay, rowTime });
+		double delay = it->unit == 0 ? (round(it->delay * ROWS_PER_BEAT) / ROWS_PER_BEAT) : it->delay;
+		out.push_back({row, it->unit, previous, it->ratio, delay, rowTime});
 		previous = it->ratio;
 		++it;
 	}
