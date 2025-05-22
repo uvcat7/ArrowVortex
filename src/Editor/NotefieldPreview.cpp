@@ -162,10 +162,12 @@ void draw()
 	if(!myEnabled || gChart->isClosed()) return;
 
 	// Update common variables.
-	speed = myDrawMode == XMOD_ALL ? gTempo->beatToSpeed(gView->getCursorBeat()) : 1;
+	auto beat = gView->getCursorBeat(), time = gView->getCursorTime();
+
+	speed = (myDrawMode == XMOD_ALL ? gTempo->positionToSpeed(beat, time) : 1);
 	cols = gStyle->getNumCols();
 	scale = gView->getNoteScale();
-	currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
+	currentRow = beat * ROWS_PER_BEAT;
 	updateNotefieldSize();
 
 	BatchSprite::setScale(scale);
@@ -174,7 +176,7 @@ void draw()
 	auto noteskin = gNoteskin->get();
 	if(noteskin)
 	{
-		for(int c = 0; c < gStyle->getNumCols(); ++c)
+		for(int c = 0; c < cols; ++c)
 		{
 			myColX[c] = gView->columnToX(c) + gView->getPreviewOffset();
 		}

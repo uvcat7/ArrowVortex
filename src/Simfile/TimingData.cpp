@@ -288,18 +288,19 @@ static void CreateScrollRows(Vector<ScrollRow>& out, const Scroll* it, const Scr
 
 static void CreateScrollSpeeds(Vector<ScrollSpeed>& out, const Speed* it, const Speed* end)
 {
+	TempoTimeTracker tracker;
 	double previous = 1;
-	while (it != end)
+	while(it != end)
 	{
-		auto toRow = round(it->delay * ROWS_PER_BEAT) / ROWS_PER_BEAT;
-
-		out.push_back({ it->row, previous, it->ratio, toRow, it->unit });
+		int row = it->row;
+		double rowTime = tracker.advance(row);
+		out.push_back({ row, it->unit, previous, it->ratio, it->delay, rowTime });
 		previous = it->ratio;
 		++it;
 	}
 	if(out.empty())
 	{
-		out.push_back({0, 0, 1, 0});
+		out.push_back({0, 0, 1, 1, 0, 0});
 	}
 }
 
@@ -452,14 +453,21 @@ static double BeatToScroll(const ScrollRow* scroll, double beat)
 	return scroll->positionRow + (row - scroll->row) * scroll->ratio;
 }
 
-static double BeatToSpeed(const ScrollSpeed* speed, double beat)
+static double PositionToSpeed(const ScrollSpeed* speed, double beat, double time)
 {
-	if (speed->delay == 0 || speed->unit != 0) // TODO: Handle Time Based Speed segments.
+	if (speed->delay == 0) {
 		return speed->end;
+	}
 
-	auto time = (beat - ((double)speed->row / ROWS_PER_BEAT)) / speed->delay;
+	double strength;
+	if(speed->unit == 1) {
+		strength = (time - ((double)speed->rowTime)) / speed->delay;
+	}
+	else {
+		strength = (beat - ((double)speed->row / ROWS_PER_BEAT)) / speed->delay;
+	}
 
-	return lerp(speed->start, speed->end, clamp(time, 0.0, 1.0));
+	return lerp(speed->start, speed->end, clamp(strength, 0.0, 1.0));
 }
 
 }; // anonymous namespace
@@ -543,10 +551,10 @@ double TimingData::beatToScroll(double beat) const
 	return BeatToScroll(MostRecentScrollRow(scrolls, row), beat);
 }
 
-double TimingData::beatToSpeed(double beat) const
+double TimingData::positionToSpeed(double beat, double time) const
 {
 	int row = (int)ceil(beat * ROWS_PER_BEAT);
-	return BeatToSpeed(MostRecentScrollSpeed(speeds, row), beat);
+	return PositionToSpeed(MostRecentScrollSpeed(speeds, row), beat, time);
 }
 
 // ================================================================================================
