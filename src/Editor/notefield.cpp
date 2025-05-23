@@ -591,7 +591,7 @@ void drawNotes()
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
 	const int maxY = gView->getHeight() + 32;
 	const bool isPreview = !gMusic->isPaused() && gView->hasChartPreview();
-	const int currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
+	const double currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
 
 	auto noteskin = gNoteskin->get();
 

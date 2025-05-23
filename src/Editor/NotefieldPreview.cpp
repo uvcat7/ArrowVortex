@@ -112,8 +112,8 @@ BatchSprite myNoteLabels[2];
 
 int myColX[SIM_MAX_COLUMNS], myX, myY, myW, maxY;
 
-int scale, cols, currentRow;
-double speed;
+int scale, cols;
+double speed, currentRow;
 
 bool myEnabled;
 bool myShowBeatLines;
@@ -201,8 +201,8 @@ void drawBeatLines()
 	bool zoomedIn = (gView->getZoomLevel() >= 4);
 
 	// Determine the first row and last row that should show beat lines.
-	int drawBeginRow = max(0, currentRow - ROWS_PER_BEAT * 4);
-	int drawEndRow = min(currentRow + ROWS_PER_BEAT * 20, gSimfile->getEndRow()) + 1;
+	int drawBeginRow = max(0, (int)currentRow - ROWS_PER_BEAT * 4);
+	int drawEndRow = min((int)currentRow + ROWS_PER_BEAT * 20, gSimfile->getEndRow()) + 1;
 
 	auto& sigs = gTempo->getTimingData().sigs;
 	auto it = sigs.begin(), end = sigs.end();
