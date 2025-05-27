@@ -355,7 +355,7 @@ void setTimeBased(bool enabled)
 void setZoomLevel(double level)
 {
 	level = min(max(level, -2.0), 16.0);
-	if (myZoomLevel != level)
+	if(myZoomLevel != level)
 	{
 		myZoomLevel = level;
 		updateScrollValues();
@@ -367,7 +367,7 @@ void setScaleLevel(double level)
 {
 
 	level = min(max(level, 1.0), 4.0);
-	if (myScaleLevel != level)
+	if(myScaleLevel != level)
 	{
 		myScaleLevel = level;
 		gEditor->reportChanges(VCM_ZOOM_CHANGED);
