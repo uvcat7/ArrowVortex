@@ -319,8 +319,8 @@ void tick()
 
 void updateScrollValues()
 {
-	myPixPerSec = round(21.077 * pow(1.538, myZoomLevel));
-	myPixPerRow = round(11.588 * pow(1.38, myZoomLevel)) * BEATS_PER_ROW;
+	myPixPerSec = round(21.077 * pow(1.518, myZoomLevel));
+	myPixPerRow = round(11.588 * pow(1.48, myZoomLevel)) * BEATS_PER_ROW;
 	if(myUseReverseScroll)
 	{
 		myPixPerSec = -myPixPerSec;
