@@ -244,15 +244,15 @@ void Action::perform(Type action)
 
 	CASE(ZOOM_RESET)
 		gView->setZoomLevel(8);
-		gView->setSpacingLevel(8);
+		gView->setScaleLevel(4);
 	CASE(ZOOM_IN)
 		gView->setZoomLevel(gView->getZoomLevel() + 0.25);
 	CASE(ZOOM_OUT)
 		gView->setZoomLevel(gView->getZoomLevel() - 0.25);
-	CASE(SPACING_INCREASE)
-		gView->setSpacingLevel(gView->getSpacingLevel() + 0.25);
-	CASE(SPACING_DECREASE)
-		gView->setSpacingLevel(gView->getSpacingLevel() - 0.25);
+	CASE(SCALE_INCREASE)
+		gView->setScaleLevel(gView->getScaleLevel() + 0.25);
+	CASE(SCALE_DECREASE)
+		gView->setScaleLevel(gView->getScaleLevel() - 0.25);
 
 	CASE(SNAP_NEXT)
 		gView->setSnapType(gView->getSnapType() + 1);

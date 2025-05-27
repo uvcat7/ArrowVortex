@@ -18,7 +18,7 @@ public:
 private:
 	void myCreateWidgets();
 
-	double myZoomLevel, mySpacingLevel;
+	double myZoomLevel, myScaleLevel;
 };
 
 }; // namespace Vortex

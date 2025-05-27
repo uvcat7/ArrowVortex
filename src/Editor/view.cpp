@@ -50,7 +50,7 @@ double myPixPerSec, myPixPerRow;
 int myCursorRow;
 
 int myReceptorY, myReceptorX;
-double myZoomLevel, mySpacingLevel;
+double myZoomLevel, myScaleLevel;
 bool myIsDraggingReceptors;
 bool myUseTimeBasedView;
 bool myUseReverseScroll;
@@ -71,8 +71,8 @@ ViewImpl()
 	, myCursorRow(0)
 	, myReceptorY(192)
 	, myReceptorX(0)
-	, myZoomLevel(4)
-	, mySpacingLevel(8)
+	, myZoomLevel(8)
+	, myScaleLevel(4)
 	, mySnapType(ST_NONE)
 	, myUseTimeBasedView(true)
 	, myUseReverseScroll(false)
@@ -189,9 +189,9 @@ double getZoomLevel() const
 	return myZoomLevel;
 }
 
-double getSpacingLevel() const
+double getScaleLevel() const
 {
-	return mySpacingLevel;
+	return myScaleLevel;
 }
 
 SnapType getSnapType() const
@@ -319,8 +319,8 @@ void tick()
 
 void updateScrollValues()
 {
-	myPixPerSec = round(21.077 * pow(1.518, mySpacingLevel));
-	myPixPerRow = round(11.588 * pow(1.38, mySpacingLevel)) * BEATS_PER_ROW;
+	myPixPerSec = round(21.077 * pow(1.538, myZoomLevel));
+	myPixPerRow = round(11.588 * pow(1.38, myZoomLevel)) * BEATS_PER_ROW;
 	if(myUseReverseScroll)
 	{
 		myPixPerSec = -myPixPerSec;
@@ -354,21 +354,22 @@ void setTimeBased(bool enabled)
 
 void setZoomLevel(double level)
 {
-	level = min(max(level, 1.0), 4.0);
-	if(myZoomLevel != level)
+	level = min(max(level, -2.0), 16.0);
+	if (myZoomLevel != level)
 	{
 		myZoomLevel = level;
+		updateScrollValues();
 		gEditor->reportChanges(VCM_ZOOM_CHANGED);
 	}
 }
 
-void setSpacingLevel(double level)
+void setScaleLevel(double level)
 {
-	level = min(max(level, -2.0), 16.0);
-	if (mySpacingLevel != level)
+
+	level = min(max(level, 1.0), 4.0);
+	if (myScaleLevel != level)
 	{
-		mySpacingLevel = level;
-		updateScrollValues();
+		myScaleLevel = level;
 		gEditor->reportChanges(VCM_ZOOM_CHANGED);
 	}
 }
@@ -632,12 +633,12 @@ const recti& getRect() const
 
 int applyZoom(int v) const
 {
-	return (v * (int)(64 * myZoomLevel)) >> 8;
+	return (v * (int)(64 * myScaleLevel)) >> 8;
 }
 
 int getNoteScale() const
 {
-	return 64 * myZoomLevel;
+	return 64 * myScaleLevel;
 }
 
 int snapRow(int row, SnapDir dir)

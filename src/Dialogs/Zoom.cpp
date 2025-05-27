@@ -12,7 +12,7 @@ namespace Vortex {
 enum Actions
 {
 	ACT_ZOOM,
-	ACT_SPACING,
+	ACT_SCALE,
 };
 
 Dlg::~Dlg()
@@ -27,25 +27,39 @@ Dlg::Dlg()
 
 void Dlg::myCreateWidgets()
 {
-	myLayout.row().col(64).col(80);
+	myLayout.row().col(64).col(70).col(70);
 
-	WgSlider* zoom = myLayout.add<WgSlider>("Zoom");
-	zoom->value.bind(&myZoomLevel);
-	zoom->onChange.bind(this, &Dlg::onAction, (int)ACT_ZOOM);
-	zoom->setRange(1.0, 4.0);
-	zoom->setTooltip("Zoom Level / Note Size");
+	WgSlider* slider = myLayout.add<WgSlider>("Zoom");
+	slider->value.bind(&myZoomLevel);
+	slider->onChange.bind(this, &Dlg::onAction, (int)ACT_ZOOM);
+	slider->setRange(1.0, 19.0);
+	slider->setTooltip("Zoom Level");
 
-	WgSlider* spacing = myLayout.add<WgSlider>("Spacing");
-	spacing->value.bind(&mySpacingLevel);
-	spacing->onChange.bind(this, &Dlg::onAction, (int)ACT_SPACING);
-	spacing->setRange(-2.0, 16.0);
-	spacing->setTooltip("Note Spacing");
+	WgSpinner* spinner = myLayout.add<WgSpinner>();
+	spinner->value.bind(&myZoomLevel);
+	spinner->setPrecision(2, 2);
+	spinner->setRange(1.0, 19.0);
+	spinner->setStep(1.0);
+	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_ZOOM);
+
+	slider = myLayout.add<WgSlider>("Scale");
+	slider->value.bind(&myScaleLevel);
+	slider->onChange.bind(this, &Dlg::onAction, (int)ACT_SCALE);
+	slider->setRange(1.0, 4.0);
+	slider->setTooltip("Note Scale");
+
+	spinner = myLayout.add<WgSpinner>();
+	spinner->value.bind(&myScaleLevel);
+	spinner->setPrecision(2, 2);
+	spinner->setRange(1.0, 4.0);
+	spinner->setStep(0.25);
+	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SCALE);
 }
 
 void Dlg::onTick()
 {
-	myZoomLevel = gView->getZoomLevel();
-	mySpacingLevel = gView->getSpacingLevel();
+	myZoomLevel = gView->getZoomLevel() + 3;
+	myScaleLevel = gView->getScaleLevel();
 	EditorDialog::onTick();
 }
 
@@ -54,10 +68,10 @@ void Dlg::onAction(int id)
 	switch (id)
 	{
 	case ACT_ZOOM: {
-		gView->setZoomLevel(myZoomLevel);
+		gView->setZoomLevel(myZoomLevel - 3);
 	} break;
-	case ACT_SPACING: {
-		gView->setSpacingLevel(mySpacingLevel);
+	case ACT_SCALE: {
+		gView->setScaleLevel(myScaleLevel);
 	} break;
 	}
 }

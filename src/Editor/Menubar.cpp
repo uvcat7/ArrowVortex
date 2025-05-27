@@ -278,8 +278,8 @@ void init(Item* menu)
 	sep(hViewZoom);
 	add(hViewZoom, ZOOM_IN, "Zoom in");
 	add(hViewZoom, ZOOM_OUT, "Zoom out");
-	add(hViewZoom, SPACING_INCREASE, "Spacing increase");
-	add(hViewZoom, SPACING_DECREASE, "Spacing decrease");
+	add(hViewZoom, SCALE_INCREASE, "Scale increase");
+	add(hViewZoom, SCALE_DECREASE, "Scale decrease");
 
 	// View > Snap menu.
 	Item* hViewSnap = newMenu();
