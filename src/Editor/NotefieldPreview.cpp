@@ -415,7 +415,7 @@ void drawNotes()
 		if(note.type == NOTE_LIFT || note.type == NOTE_FAKE)
 		{
 			int y = myY - drawPos.get(note.row, note.time);
-			if(y < -32 || y > maxY) continue;
+			if(y < -32 || y > maxY || note.row > currentRow + 20 * ROWS_PER_BEAT) continue;
 			int col = note.col, x = myColX[col];
 			myNoteLabels[note.type == NOTE_FAKE].draw(&batch, x, y);
 		}
