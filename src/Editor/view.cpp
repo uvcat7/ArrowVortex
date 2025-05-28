@@ -678,7 +678,7 @@ const recti& getRect() const
 
 void adjustForPreview(bool enabled)
 {
-	myReceptorX += applyZoom(enabled ? -320 : 320);
+	myReceptorX += applyZoom(enabled ? -myPreviewOffset : myPreviewOffset) / 2;
 }
 
 int getPreviewOffset() const
