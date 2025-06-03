@@ -20,6 +20,8 @@
 
 #include <Managers/StyleMan.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace Osu {
 namespace {

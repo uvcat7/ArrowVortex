@@ -122,31 +122,31 @@ BpmChange::BpmChange(int row, double bpm)
 }
 
 template <>
-static void Encode(WriteStream& out, const BpmChange& seg)
+void Encode(WriteStream& out, const BpmChange& seg)
 {
 	out.write(seg.bpm);
 }
 
 template <>
-static void Decode(ReadStream& in, BpmChange& seg)
+void Decode(ReadStream& in, BpmChange& seg)
 {
 	in.read(seg.bpm);
 }
 
 template <>
-static bool IsRedundant(const BpmChange& seg, const BpmChange* prev)
+bool IsRedundant(const BpmChange& seg, const BpmChange* prev)
 {
 	return (prev && prev->bpm == seg.bpm);
 }
 
 template <>
-static bool IsEquivalent(const BpmChange& seg, const BpmChange& other)
+bool IsEquivalent(const BpmChange& seg, const BpmChange& other)
 {
 	return (seg.bpm == other.bpm);
 }
 
 template <>
-static String GetDescription(const BpmChange& seg)
+String GetDescription(const BpmChange& seg)
 {
 	return Str::val(seg.bpm, 3, 3);
 }
@@ -176,31 +176,31 @@ Stop::Stop(int row, double seconds)
 }
 
 template <>
-static void Encode(WriteStream& out, const Stop& seg)
+void Encode(WriteStream& out, const Stop& seg)
 {
 	out.write(seg.seconds);
 }
 
 template <>
-static void Decode(ReadStream& in, Stop& seg)
+void Decode(ReadStream& in, Stop& seg)
 {
 	in.read(seg.seconds);
 }
 
 template <>
-static bool IsRedundant(const Stop& seg, const Stop* prev)
+bool IsRedundant(const Stop& seg, const Stop* prev)
 {
 	return (fabs(seg.seconds) < 0.0005);
 }
 
 template <>
-static bool IsEquivalent(const Stop& seg, const Stop& other)
+bool IsEquivalent(const Stop& seg, const Stop& other)
 {
 	return (seg.seconds == other.seconds);
 }
 
 template <>
-static String GetDescription(const Stop& seg)
+String GetDescription(const Stop& seg)
 {
 	return Str::val(seg.seconds, 3, 3);
 }
@@ -230,31 +230,31 @@ Delay::Delay(int row, double seconds)
 }
 
 template <>
-static void Encode(WriteStream& out, const Delay& seg)
+void Encode(WriteStream& out, const Delay& seg)
 {
 	out.write(seg.seconds);
 }
 
 template <>
-static void Decode(ReadStream& in, Delay& seg)
+void Decode(ReadStream& in, Delay& seg)
 {
 	in.read(seg.seconds);
 }
 
 template <>
-static bool IsRedundant(const Delay& seg, const Delay* prev)
+bool IsRedundant(const Delay& seg, const Delay* prev)
 {
 	return (fabs(seg.seconds) < 0.0005);
 }
 
 template <>
-static bool IsEquivalent(const Delay& seg, const Delay& other)
+bool IsEquivalent(const Delay& seg, const Delay& other)
 {
 	return (seg.seconds == other.seconds);
 }
 
 template <>
-static String GetDescription(const Delay& seg)
+String GetDescription(const Delay& seg)
 {
 	return Str::val(seg.seconds, 3, 3);
 }
@@ -284,31 +284,31 @@ Warp::Warp(int row, int numRows)
 }
 
 template <>
-static void Encode(WriteStream& out, const Warp& seg)
+void Encode(WriteStream& out, const Warp& seg)
 {
 	out.write(seg.numRows);
 }
 
 template <>
-static void Decode(ReadStream& in, Warp& seg)
+void Decode(ReadStream& in, Warp& seg)
 {
 	in.read(seg.numRows);
 }
 
 template <>
-static bool IsRedundant(const Warp& seg, const Warp* prev)
+bool IsRedundant(const Warp& seg, const Warp* prev)
 {
 	return (seg.numRows == 0);
 }
 
 template <>
-static bool IsEquivalent(const Warp& seg, const Warp& other)
+bool IsEquivalent(const Warp& seg, const Warp& other)
 {
 	return (seg.numRows == other.numRows);
 }
 
 template <>
-static String GetDescription(const Warp& seg)
+String GetDescription(const Warp& seg)
 {
 	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
 }
@@ -338,34 +338,34 @@ TimeSignature::TimeSignature(int row, int rowsPerMeasure, int beatNote)
 }
 
 template <>
-static void Encode(WriteStream& out, const TimeSignature& seg)
+void Encode(WriteStream& out, const TimeSignature& seg)
 {
 	out.write(seg.rowsPerMeasure);
 	out.write(seg.beatNote);
 }
 
 template <>
-static void Decode(ReadStream& in, TimeSignature& seg)
+void Decode(ReadStream& in, TimeSignature& seg)
 {
 	in.read(seg.rowsPerMeasure);
 	in.read(seg.beatNote);
 }
 
 template <>
-static String GetDescription(const TimeSignature& seg)
+String GetDescription(const TimeSignature& seg)
 {
 	int beatsPerMeasure = seg.rowsPerMeasure / ROWS_PER_BEAT;
 	return Str::fmt("%1/%2").arg(beatsPerMeasure).arg(seg.beatNote);
 }
 
 template <>
-static bool IsRedundant(const TimeSignature& seg, const TimeSignature* prev)
+bool IsRedundant(const TimeSignature& seg, const TimeSignature* prev)
 {
 	return (prev && prev->rowsPerMeasure == seg.rowsPerMeasure && prev->beatNote == seg.beatNote);
 }
 
 template <>
-static bool IsEquivalent(const TimeSignature& seg, const TimeSignature& other)
+bool IsEquivalent(const TimeSignature& seg, const TimeSignature& other)
 {
 	return (other.rowsPerMeasure == seg.rowsPerMeasure && other.beatNote == seg.beatNote);
 }
@@ -395,31 +395,31 @@ TickCount::TickCount(int row, int ticks)
 }
 
 template <>
-static void Encode(WriteStream& out, const TickCount& seg)
+void Encode(WriteStream& out, const TickCount& seg)
 {
 	out.write(seg.ticks);
 }
 
 template <>
-static void Decode(ReadStream& in, TickCount& seg)
+void Decode(ReadStream& in, TickCount& seg)
 {
 	in.read(seg.ticks);
 }
 
 template <>
-static String GetDescription(const TickCount& seg)
+String GetDescription(const TickCount& seg)
 {
 	return Str::val(seg.ticks);
 }
 
 template <>
-static bool IsRedundant(const TickCount& seg, const TickCount* prev)
+bool IsRedundant(const TickCount& seg, const TickCount* prev)
 {
 	return (prev && prev->ticks == seg.ticks);
 }
 
 template <>
-static bool IsEquivalent(const TickCount& seg, const TickCount& other)
+bool IsEquivalent(const TickCount& seg, const TickCount& other)
 {
 	return (other.ticks == seg.ticks);
 }
@@ -449,33 +449,33 @@ Combo::Combo(int row, int hit, int miss)
 }
 
 template <>
-static void Encode(WriteStream& out, const Combo& seg)
+void Encode(WriteStream& out, const Combo& seg)
 {
 	out.write(seg.hitCombo);
 	out.write(seg.missCombo);
 }
 
 template <>
-static void Decode(ReadStream& in, Combo& seg)
+void Decode(ReadStream& in, Combo& seg)
 {
 	in.read(seg.hitCombo);
 	in.read(seg.missCombo);
 }
 
 template <>
-static String GetDescription(const Combo& seg)
+String GetDescription(const Combo& seg)
 {
 	return Str::fmt("%1/%2").arg(seg.hitCombo).arg(seg.missCombo);
 }
 
 template <>
-static bool IsRedundant(const Combo& seg, const Combo* prev)
+bool IsRedundant(const Combo& seg, const Combo* prev)
 {
 	return (prev && prev->hitCombo == seg.hitCombo && prev->missCombo == seg.missCombo);
 }
 
 template <>
-static bool IsEquivalent(const Combo& seg, const Combo& other)
+bool IsEquivalent(const Combo& seg, const Combo& other)
 {
 	return (other.hitCombo == seg.hitCombo && other.missCombo == seg.missCombo);
 }
@@ -505,7 +505,7 @@ Speed::Speed(int row, double ratio, double delay, int unit)
 }
 
 template <>
-static void Encode(WriteStream& out, const Speed& seg)
+void Encode(WriteStream& out, const Speed& seg)
 {
 	out.write(seg.ratio);
 	out.write(seg.delay);
@@ -513,7 +513,7 @@ static void Encode(WriteStream& out, const Speed& seg)
 }
 
 template <>
-static void Decode(ReadStream& in, Speed& seg)
+void Decode(ReadStream& in, Speed& seg)
 {
 	in.read(seg.ratio);
 	in.read(seg.delay);
@@ -521,19 +521,19 @@ static void Decode(ReadStream& in, Speed& seg)
 }
 
 template <>
-static String GetDescription(const Speed& seg)
+String GetDescription(const Speed& seg)
 {
 	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'B' : 'T');
 }
 
 template <>
-static bool IsRedundant(const Speed& seg, const Speed* prev)
+bool IsRedundant(const Speed& seg, const Speed* prev)
 {
 	return (prev && prev->ratio == seg.ratio && prev->delay == seg.delay && prev->unit == seg.unit);
 }
 
 template <>
-static bool IsEquivalent(const Speed& seg, const Speed& other)
+bool IsEquivalent(const Speed& seg, const Speed& other)
 {
 	return (other.ratio == seg.ratio && other.delay == seg.delay && other.unit == seg.unit);
 }
@@ -563,31 +563,31 @@ Scroll::Scroll(int row, double ratio)
 }
 
 template <>
-static void Encode(WriteStream& out, const Scroll& seg)
+void Encode(WriteStream& out, const Scroll& seg)
 {
 	out.write(seg.ratio);
 }
 
 template <>
-static void Decode(ReadStream& in, Scroll& seg)
+void Decode(ReadStream& in, Scroll& seg)
 {
 	in.read(seg.ratio);
 }
 
 template <>
-static String GetDescription(const Scroll& seg)
+String GetDescription(const Scroll& seg)
 {
 	return Str::val(seg.ratio);
 }
 
 template <>
-static bool IsRedundant(const Scroll& seg, const Scroll* prev)
+bool IsRedundant(const Scroll& seg, const Scroll* prev)
 {
 	return (prev && prev->ratio == seg.ratio);
 }
 
 template <>
-static bool IsEquivalent(const Scroll& seg, const Scroll& other)
+bool IsEquivalent(const Scroll& seg, const Scroll& other)
 {
 	return (other.ratio == seg.ratio);
 }
@@ -617,31 +617,31 @@ Fake::Fake(int row, int numRows)
 }
 
 template <>
-static void Encode(WriteStream& out, const Fake& seg)
+void Encode(WriteStream& out, const Fake& seg)
 {
 	out.write(seg.numRows);
 }
 
 template <>
-static void Decode(ReadStream& in, Fake& seg)
+void Decode(ReadStream& in, Fake& seg)
 {
 	in.read(seg.numRows);
 }
 
 template <>
-static String GetDescription(const Fake& seg)
+String GetDescription(const Fake& seg)
 {
 	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
 }
 
 template <>
-static bool IsRedundant(const Fake& seg, const Fake* prev)
+bool IsRedundant(const Fake& seg, const Fake* prev)
 {
 	return (seg.numRows == 0);
 }
 
 template <>
-static bool IsEquivalent(const Fake& seg, const Fake& other)
+bool IsEquivalent(const Fake& seg, const Fake& other)
 {
 	return (other.numRows == seg.numRows);
 }
@@ -670,36 +670,36 @@ Label::Label(int row, String str)
 }
 
 template <>
-static void Encode(WriteStream& out, const Label& seg)
+void Encode(WriteStream& out, const Label& seg)
 {
 	out.writeStr(seg.str);
 }
 
 template <>
-static void Decode(ReadStream& in, Label& seg)
+void Decode(ReadStream& in, Label& seg)
 {
 	in.readStr(seg.str);
 }
 
 template <>
-static String GetDescription(const Label& seg)
+String GetDescription(const Label& seg)
 {
 	return seg.str;
 }
 
 template <>
-static bool IsRedundant(const Label& seg, const Label* prev)
+bool IsRedundant(const Label& seg, const Label* prev)
 {
 	return seg.str.empty();
 }
 
 template <>
-static bool IsEquivalent(const Label& seg, const Label& other)
+bool IsEquivalent(const Label& seg, const Label& other)
 {
 	return (other.str == seg.str);
 }
 
-static const SegmentMeta LabelMeta =
+const SegmentMeta LabelMeta =
 {
 	sizeof(Label),
 	"Label",

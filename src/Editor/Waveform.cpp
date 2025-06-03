@@ -15,7 +15,7 @@
 
 #include <Editor/Music.h>
 #include <Editor/View.h>
-#include <Editor/editor.h>
+#include <Editor/Editor.h>
 #include <Managers/TempoMan.h>
 #include <Editor/Menubar.h>
 #include <Editor/TextOverlay.h>

@@ -22,6 +22,7 @@
 #include <Editor/TempoBoxes.h>
 
 #include <algorithm>
+#include <limits>
 
 #define TEMPO_MAN ((TempoManImpl*)gTempo)
 
@@ -809,7 +810,7 @@ BpmRange getDisplayBpmRange() const
 
 BpmRange getBpmRange() const
 {
-	double low = DBL_MAX, high = 0;
+	double low = std::numeric_limits<double>().infinity(), high = 0;
 	if(myTempo)
 	{
 		auto it = myTempo->segments->begin<BpmChange>();

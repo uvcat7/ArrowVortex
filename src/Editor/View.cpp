@@ -28,6 +28,8 @@
 #include <Editor/Common.h>
 #include <Editor/Waveform.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace {
 

@@ -1,5 +1,6 @@
 #include <Editor/Editor.h>
 
+#include <algorithm>
 #include <map>
 
 #include <Core/Xmr.h>

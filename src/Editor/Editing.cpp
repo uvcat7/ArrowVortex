@@ -28,6 +28,8 @@
 
 #include <Core/Draw.h>
 
+#include <cmath>
+
 namespace Vortex {
 
 enum TweakMode { TWEAK_NONE, TWEAK_BPM, TWEAK_OFS };

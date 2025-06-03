@@ -9,8 +9,14 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <gl/gl.h>
+#include <GL/gl.h>
 #undef ERROR
+
+#if defined(__PTRDIFF_TYPE__)
+#define PTR_TO_64(X) ((long)(__PTRDIFF_TYPE__)(X))
+#else
+
+#endif
 
 namespace Vortex {
 namespace Debug {
@@ -69,9 +75,9 @@ void openConsole()
 
 	AllocConsole();
 
-	long hOut = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_WTEXT);
-	long hIn = _open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_WTEXT);
-	long hErr = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_WTEXT);
+	long hOut = _open_osfhandle(PTR_TO_64(GetStdHandle(STD_OUTPUT_HANDLE)), _O_WTEXT);
+	long hIn = _open_osfhandle(PTR_TO_64(GetStdHandle(STD_INPUT_HANDLE)), _O_WTEXT);
+	long hErr = _open_osfhandle(PTR_TO_64(GetStdHandle(STD_ERROR_HANDLE)), _O_WTEXT);
 
 	*stdout = *_fdopen(hOut, "w");
 	*stdin = *_fdopen(hIn, "r");

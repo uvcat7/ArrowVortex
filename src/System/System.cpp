@@ -24,7 +24,7 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
-#include <gl/gl.h>
+#include <GL/gl.h>
 #undef ERROR
 
 #include <stdio.h>
@@ -338,10 +338,10 @@ SystemImpl()
 	// Make sure the window is centered on the desktop.
 	mySize = {900, 900};
 	RECT wr;
-	wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
-	wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
-	wr.right = wr.left + max(mySize.x, 0);
-	wr.bottom = wr.top + max(mySize.y, 0);
+	wr.left = std::max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
+	wr.top = std::max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
+	wr.right = wr.left + std::max(mySize.x, 0);
+	wr.bottom = wr.top + std::max(mySize.y, 0);
 	AdjustWindowRectEx(&wr, myStyle, FALSE, myExStyle);
 	int flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
 	SetWindowPos(myHWND, nullptr, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top, flags);
@@ -422,7 +422,7 @@ void messageLoop()
 
 		// Tick function.
 		double curTime = Debug::getElapsedTime();
-		deltaTime = (float)min(max(0.00025, curTime - prevTime), 0.25);
+		deltaTime = (float) std::min(std::max(0.00025, curTime - prevTime), 0.25);
 		prevTime = curTime;
 
 		gEditor->tick();
@@ -494,7 +494,7 @@ LPCWSTR getCursorResource()
 	{
 		IDC_ARROW, IDC_HAND, IDC_IBEAM, IDC_SIZEALL, IDC_SIZEWE, IDC_SIZENS, IDC_SIZENESW, IDC_SIZENWSE,
 	};
-	return cursorMap[min(max(0, myCursor), Cursor::NUM_CURSORS - 1)];
+	return cursorMap[std::min(std::max(0, static_cast<int>(myCursor)), Cursor::NUM_CURSORS - 1)];
 }
 
 int getKeyFlags() const

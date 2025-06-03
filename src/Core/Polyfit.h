@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <Core/Core.h>
 #include <Core/Vector.h>
 
