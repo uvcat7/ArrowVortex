@@ -610,7 +610,6 @@ static void WriteSections(ExportData& data)
 					data.file.write(m, numCols, 1);
 					data.file.write("\n", 1, 1);
 					pitch = ((int) round(192.0f / count * (k + 1)) - (int) round(192.0f / count * k)) * numCols;
-					HudWarning("Testing, start row %d, row %d, pitch %d", startRow, k, pitch/numCols);
 				}
 			}
 			// Write a comma if this is not the last section.
