@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <cmath>
 
 #include <Core/WideString.h>
 #include <Core/Utils.h>

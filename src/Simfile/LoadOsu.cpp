@@ -2,6 +2,7 @@
 
 #include <map>
 #include <algorithm>
+#include <cmath>
 
 #include <Core/Vector.h>
 #include <Core/Utils.h>
