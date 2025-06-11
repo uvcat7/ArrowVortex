@@ -14,7 +14,7 @@
 
 #include <Editor/Common.h>
 #include <Editor/Shortcuts.h>
-#include <Editor/action.h>
+#include <Editor/Action.h>
 
 namespace Vortex {
 
