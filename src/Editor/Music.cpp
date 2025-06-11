@@ -92,11 +92,12 @@ MusicImpl()
 	myOggConversionThread = nullptr;
 
 	bool success;
+	String dummyTitle, dummyArtist;
 
-	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, String(), String());
+	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, dummyTitle, dummyArtist);
 	if(!success) HudError("%s", "Failed to load beat tick.\n");
 
-	success = myNoteTick.sound.load("assets/sound note tick.wav", false, String(), String());
+	success = myNoteTick.sound.load("assets/sound note tick.wav", false, dummyTitle, dummyArtist);
 	if(!success) HudError("%s", "Failed to load note tick.\n");
 }
 
