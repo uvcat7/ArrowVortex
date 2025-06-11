@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <set>
+#include <cmath>
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
