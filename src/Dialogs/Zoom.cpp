@@ -45,13 +45,13 @@ void Dlg::myCreateWidgets()
 	slider = myLayout.add<WgSlider>("Scale");
 	slider->value.bind(&myScaleLevel);
 	slider->onChange.bind(this, &Dlg::onAction, (int)ACT_SCALE);
-	slider->setRange(1.0, 4.0);
+	slider->setRange(1.0, 10.0);
 	slider->setTooltip("Note Scale");
 
 	spinner = myLayout.add<WgSpinner>();
 	spinner->value.bind(&myScaleLevel);
 	spinner->setPrecision(2, 2);
-	spinner->setRange(1.0, 4.0);
+	spinner->setRange(1.0, 10.0);
 	spinner->setStep(0.25);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SCALE);
 }

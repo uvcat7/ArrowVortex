@@ -371,7 +371,7 @@ void setZoomLevel(double level)
 void setScaleLevel(double level)
 {
 
-	level = min(max(level, 1.0), 4.0);
+	level = min(max(level, 1.0), 10.0);
 	if(myScaleLevel != level)
 	{
 		myScaleLevel = level;
