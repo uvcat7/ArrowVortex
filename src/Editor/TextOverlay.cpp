@@ -14,7 +14,7 @@
 
 #include <Editor/Common.h>
 #include <Editor/Shortcuts.h>
-#include <Editor/action.h>
+#include <Editor/Action.h>
 
 namespace Vortex {
 
@@ -28,7 +28,7 @@ struct ProgressMessage { int id; String text; };
 
 struct Shortcut { String a, b; bool isHeader; };
 
-static const int NUM_ICONS = 15;
+static const int NUM_ICONS = 16;
 
 static uchar donateLink[] =
 {
@@ -59,6 +59,7 @@ static const char* iconNames[NUM_ICONS] = {
 	"search",
 	"copy",
 	"play",
+	"arrow right",
 };
 
 }; // anonymous namespace
@@ -179,8 +180,8 @@ void LoadShortcuts()
 	addShortcut(Action::SPEED_DECREASE, "Decrease speed");
 
 	addShortcutHeader("Navigation");
-	addShortcut(Action::CURSOR_PREVIOUS_MEASURE, "Previous beat");
-	addShortcut(Action::CURSOR_NEXT_MEASURE, "Next beat");
+	addShortcut(Action::CURSOR_PREVIOUS_BEAT, "Previous beat");
+	addShortcut(Action::CURSOR_NEXT_BEAT, "Next beat");
 	addShortcut(Action::CURSOR_PREVIOUS_MEASURE, "Previous measure");
 	addShortcut(Action::CURSOR_NEXT_MEASURE, "Next measure");
 	addShortcut(Action::CURSOR_STREAM_START, "Start of stream");

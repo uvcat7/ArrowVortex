@@ -509,6 +509,23 @@
     <ClInclude Include="..\..\src\System\System.h" />
     <ClInclude Include="..\..\src\System\Thread.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\freetype\builds\windows\vs\freetype.vcxproj">
+      <Project>{78b079bd-9fc7-4b9e-b4a6-96da0f00248b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\libmad\build\vs\mad.vcxproj">
+      <Project>{4651e163-a4cc-332d-a5b4-c835a3332d4e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\libvorbis\build\vs\libogg.vcxproj">
+      <Project>{e6742fe5-58e3-413b-92b8-7c61090971b4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\libvorbis\build\vs\libvorbis.vcxproj">
+      <Project>{3a214e06-b95e-4d61-a291-1f8df2ec10fd}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\libvorbis\build\vs\libvorbisfile.vcxproj">
+      <Project>{cebde98b-a6aa-46e6-bc79-faaf823db9ec}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

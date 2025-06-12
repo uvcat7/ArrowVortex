@@ -188,7 +188,7 @@ void Action::perform(Type action)
 		gEditing->scaleNotes(3, 4);
 
 	CASE(SWITCH_TO_SYNC_MODE)
-		gSimfile->openChart(nullptr);
+		gSimfile->openChart(-1);
 
 	CASE(VOLUME_RESET)
 		gMusic->setVolume(100);

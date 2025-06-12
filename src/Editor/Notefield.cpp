@@ -29,7 +29,6 @@
 #include <Editor/Music.h>
 #include <Editor/Selection.h>
 #include <Editor/Editing.h>
-#include <Editor/Selection.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
 #include <Editor/View.h>
@@ -405,6 +404,9 @@ void drawBeatLines()
 				int measureEnd = row + it->rowsPerMeasure;
 				while(beatRow < measureEnd)
 				{
+					if (beatRow > drawEndRow)
+						break;
+
 					int y = drawPos.advance(beatRow);
 					Draw::fill(&batch, {myX, y, myW, 1}, halfColor);
 					beatRow += ROWS_PER_BEAT;

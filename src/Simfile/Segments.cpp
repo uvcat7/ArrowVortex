@@ -190,7 +190,7 @@ static void Decode(ReadStream& in, Stop& seg)
 template <>
 static bool IsRedundant(const Stop& seg, const Stop* prev)
 {
-	return (fabs(seg.seconds) < 0.0005);
+	return (fabs(seg.seconds) < 0.0005) || (prev && prev->row == seg.row);
 }
 
 template <>
@@ -244,7 +244,7 @@ static void Decode(ReadStream& in, Delay& seg)
 template <>
 static bool IsRedundant(const Delay& seg, const Delay* prev)
 {
-	return (fabs(seg.seconds) < 0.0005);
+	return (fabs(seg.seconds) < 0.0005) || (prev && prev->row == seg.row);
 }
 
 template <>
@@ -298,7 +298,7 @@ static void Decode(ReadStream& in, Warp& seg)
 template <>
 static bool IsRedundant(const Warp& seg, const Warp* prev)
 {
-	return (seg.numRows == 0);
+	return (seg.numRows == 0) || (prev && prev->row == seg.row);
 }
 
 template <>
@@ -328,7 +328,7 @@ static const SegmentMeta WarpMeta =
 // TimeSignature.
 
 TimeSignature::TimeSignature()
-	: rowsPerMeasure(4), beatNote(4)
+	: rowsPerMeasure(192), beatNote(4)
 {
 }
 
@@ -523,7 +523,7 @@ static void Decode(ReadStream& in, Speed& seg)
 template <>
 static String GetDescription(const Speed& seg)
 {
-	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'B' : 'T');
+	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'T' : 'B');
 }
 
 template <>
@@ -637,7 +637,7 @@ static String GetDescription(const Fake& seg)
 template <>
 static bool IsRedundant(const Fake& seg, const Fake* prev)
 {
-	return (seg.numRows == 0);
+	return (seg.numRows == 0) || (prev && prev->row == seg.row);
 }
 
 template <>
@@ -690,7 +690,7 @@ static String GetDescription(const Label& seg)
 template <>
 static bool IsRedundant(const Label& seg, const Label* prev)
 {
-	return seg.str.empty();
+	return seg.str.empty() || (prev && prev->row == seg.row);
 }
 
 template <>
