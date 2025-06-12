@@ -138,6 +138,12 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 	myCursor.y = clamp(myCursor.y, 0, len);
 }
 
+void WgLineEdit::onKeyRelease(KeyRelease& evt)
+{
+	if (!isCapturingText()) return;
+	evt.handled = true;
+}
+
 void WgLineEdit::onMousePress(MousePress& evt)
 {
 	if(isMouseOver())
@@ -539,6 +545,7 @@ void WgSpinner::setPrecision(int minDecimalPlaces, int maxDecimalPlaces)
 {
 	myMinDecimalPlaces = minDecimalPlaces;
 	myMaxDecimalPlaces = maxDecimalPlaces;
+	myUpdateText();
 }
 
 void WgSpinner::myUpdateValue(double v)

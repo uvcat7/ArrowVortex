@@ -70,6 +70,7 @@ PlacingNote myPlacingNotes[SIM_MAX_COLUMNS];
 bool myUseJumpToNextNote;
 bool myUseUndoRedoJump;
 bool myUseTimeBasedCopy;
+VisualSyncAnchor myVisualSyncAnchor;
 
 // ================================================================================================
 // EditingImpl :: constructor and destructor.
@@ -89,6 +90,7 @@ EditingImpl()
 	myUseJumpToNextNote = false;
 	myUseUndoRedoJump = true;
 	myUseTimeBasedCopy = false;
+	myVisualSyncAnchor = VisualSyncAnchor::CURSOR;
 }
 
 // ================================================================================================
@@ -152,15 +154,17 @@ void onKeyPress(KeyPress& evt) override
 	// Placing notes.
 	if(gChart->isOpen() && kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 && !evt.repeated)
 	{
-		noteKeysHeld++;
-		if (noteKeysHeld > 10) noteKeysHeld = 0;
-
 		int col = KeyToCol(kc);
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
-		gView->setCursorRow(row);
 		if(evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
 		if(col >= 0 && col < gStyle->getNumCols())
 		{
+			noteKeysHeld++;
+			if (noteKeysHeld > 10) noteKeysHeld = 0;
+			if (gMusic->isPaused())
+			{
+				gView->setCursorRow(row);
+			}
 			NoteEdit edit;
 			auto note = gNotes->getNoteAt(row, col);
 			if(note)
@@ -253,22 +257,23 @@ void turnIntoTriplets()
 
 void onKeyRelease(KeyRelease& evt) override
 {
+	if (evt.handled) return;
 	if(gChart->isOpen() && evt.key >= Key::DIGIT_0 && evt.key <= Key::DIGIT_9)
 	{
 		// Finish placing notes.
-		noteKeysHeld--;
-		if (noteKeysHeld < 0) noteKeysHeld = 0;
 		int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
 		int col = KeyToCol(evt.key);
 		if(evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
 		if(col >= 0 && col < gStyle->getNumCols())
 		{
+			noteKeysHeld--;
+			if (noteKeysHeld < 0) noteKeysHeld = 0;
 			finishNotePlacement(col);
-		}
-		// Don't advance when we're stepping jumps
-		if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
-		{
-			gView->setCursorRow(gView->snapRow(gView->getCursorRow(), gView->hasReverseScroll() ? View::SNAP_UP : View::SNAP_DOWN));
+			// Don't advance when we're stepping jumps
+			if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
+			{
+				gView->setCursorRow(gView->snapRow(gView->getCursorRow(), gView->hasReverseScroll() ? View::SNAP_UP : View::SNAP_DOWN));
+			}
 		}
 	}
 }
@@ -343,6 +348,7 @@ void finishNotePlacement(int col)
 		NoteEdit edit;
 		edit.add.append(note);
 		gNotes->modify(edit, false);
+
 	}
 	pnote.mode = PLACE_NONE;
 }
@@ -671,6 +677,49 @@ void insertRows(int row, int numRows, bool curChartOnly)
 	}
 }
 
+int getAnchorRow() {
+	Vortex::vec2i mouse_pos = gSystem->getMousePos();
+	Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+
+	switch (this->myVisualSyncAnchor) {
+	case VisualSyncAnchor::RECEPTORS:
+		return gView->getCursorRow();
+	case VisualSyncAnchor::CURSOR:
+		return gView->snapRow(gView->offsetToRow(chart_offset), Vortex::View::SnapDir::SNAP_CLOSEST);
+	default:
+		HudError("Unknown anchor row type");
+		return -1;
+	}
+}
+
+void injectBoundingBpmChange() {
+	if (gSimfile == nullptr || !gView->isTimeBased()) {
+		return;
+	}
+
+	int anchor_row = this->getAnchorRow();
+
+	gTempo->injectBoundingBpmChange(anchor_row);
+}
+
+void shiftAnchorRowToMousePosition(bool is_destructive) {
+	if (gSimfile == nullptr || !gView->isTimeBased()) {
+		return;
+	}
+	Vortex::vec2i mouse_pos = gSystem->getMousePos();
+	Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+
+	double target_time = gView->offsetToTime(chart_offset);
+	int anchor_row = this->getAnchorRow();
+
+	if (is_destructive) {
+		gTempo->destructiveShiftRowToTime(anchor_row, target_time);
+	}
+	else {
+		gTempo->nonDestructiveShiftRowToTime(anchor_row, target_time);
+	}
+}
+
 /*
 void streamToTriplets()
 {
@@ -964,6 +1013,23 @@ void toggleTimeBasedCopy()
 bool hasTimeBasedCopy()
 {
 	return myUseTimeBasedCopy;
+}
+
+void setVisualSyncAnchor(VisualSyncAnchor anchor) {
+	myVisualSyncAnchor = anchor;
+	switch (myVisualSyncAnchor) {
+	case VisualSyncAnchor::RECEPTORS:
+		HudInfo("Visual sync will use current row");
+		break;
+	case VisualSyncAnchor::CURSOR:
+		HudInfo("Visual sync will use mouse cursor's closest row of selected snap");
+		break;
+	}
+	gMenubar->update(Menubar::VISUAL_SYNC_ANCHOR);
+}
+
+VisualSyncAnchor getVisualSyncMode() {
+	return myVisualSyncAnchor;
 }
 
 }; // EditingImpl

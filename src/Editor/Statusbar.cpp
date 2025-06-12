@@ -124,7 +124,7 @@ void draw()
 	if(myShowBeat)
 	{
 		double beat = gView->getCursorBeat();
-		info.push_back(Str::fmt("{tc:888}Beat:{tc} %1").arg(beat, 2, 2));
+		info.push_back(Str::fmt("{tc:888}Beat:{tc} %1").arg(beat, 3, 3));
 	}
 
 	if(myShowMeasure)

@@ -401,3 +401,6 @@ bin/settings/recent files.txt
 bin/settings/settings.txt
 bin/ArrowVortex.exe
 build/VisualStudio/ArrowVortex.vcxproj
+/bin/ArrowVortex.exe
+/bin/settings/recent files.txt
+/bin/settings/settings.txt

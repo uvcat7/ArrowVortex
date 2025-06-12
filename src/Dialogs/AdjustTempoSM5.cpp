@@ -64,6 +64,8 @@ void Dlg::myCreateWidgets()
 	WgSpinner* spinner = myLayout.add<WgSpinner>("Delay");
 	spinner->value.bind(&myDelay);
 	spinner->setPrecision(3, 3);
+	spinner->setStep(0.001);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_DELAY_SET);
 	spinner->setTooltip("Stop length at the current beat, in seconds");
 
@@ -71,7 +73,8 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Warp");
 	spinner->value.bind(&myWarp);
 	spinner->setPrecision(3, 3);
-	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_DELAY_SET);
+	spinner->setRange(0, 1000);
+	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_WARP_SET);
 	spinner->setTooltip("Warp length at the current beat, in beats");
 
 	myLayout.row().col(84).col(75).col(75);
@@ -79,12 +82,14 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Time sig.");
 	spinner->value.bind(&myTimeSigBpm);
 	spinner->setPrecision(0, 0);
+	spinner->setRange(1, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_TIME_SIG_SET);
 	spinner->setTooltip("Beats per measure");
 
 	spinner = myLayout.add<WgSpinner>();
 	spinner->value.bind(&myTimeSigNote);
 	spinner->setPrecision(0, 0);
+	spinner->setRange(1, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_TIME_SIG_SET);
 	spinner->setTooltip("Beat note type");
 
@@ -93,6 +98,7 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Ticks");
 	spinner->value.bind(&myTickCount);
 	spinner->setPrecision(0, 0);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_TICK_COUNT_SET);
 	spinner->setTooltip("Hold combo ticks per beat");
 
@@ -101,12 +107,14 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Combo");
 	spinner->value.bind(&myComboHit);
 	spinner->setPrecision(0, 0);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_COMBO_SET);
 	spinner->setTooltip("Combo hit multiplier");
 
 	spinner = myLayout.add<WgSpinner>();
 	spinner->value.bind(&myComboMiss);
 	spinner->setPrecision(0, 0);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_COMBO_SET);
 	spinner->setTooltip("Combo miss multiplier");
 
@@ -115,12 +123,16 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Speed");
 	spinner->value.bind(&mySpeedRatio);
 	spinner->setPrecision(2, 2);
+	spinner->setStep(0.1);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SPEED_SET);
 	spinner->setTooltip("Stretch ratio");
 
 	spinner = myLayout.add<WgSpinner>();
 	spinner->value.bind(&mySpeedDelay);
 	spinner->setPrecision(2, 2);
+	spinner->setStep(0.1);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SPEED_SET);
 	spinner->setTooltip("Delay time");
 
@@ -136,18 +148,21 @@ void Dlg::myCreateWidgets()
 	spinner = myLayout.add<WgSpinner>("Scroll");
 	spinner->value.bind(&myScrollRatio);
 	spinner->setPrecision(2, 2);
+	spinner->setStep(0.1);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SCROLL_SET);
 	spinner->setTooltip("Scroll ratio");
 
 	spinner = myLayout.add<WgSpinner>("Fakes");
 	spinner->value.bind(&myFakeBeats);
 	spinner->setPrecision(3, 3);
+	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_FAKE_SET);
 	spinner->setTooltip("Fake region, in beats");
 
 	WgLineEdit* text = myLayout.add<WgLineEdit>("Label");
 	text->text.bind(&myLabelText);
-	text->setMaxLength(32);
+	text->setMaxLength(1000);
 	text->onChange.bind(this, &Dlg::onAction, (int)ACT_LABEL_SET);
 	text->setTooltip("Label text");
 }
@@ -229,13 +244,13 @@ void Dlg::onAction(int id)
 		gTempo->addSegment(Combo(row, hit, miss));
 	} break;
 	case ACT_SPEED_SET: {
-		double ratio = max(0.01, mySpeedRatio);
+		double ratio = max(0.0, mySpeedRatio);
 		double delay = max(0.0, mySpeedDelay);
 		int unit = clamp(mySpeedUnit, 0, 1);
 		gTempo->addSegment(Speed(row, ratio, delay, unit));
 	} break;
 	case ACT_SCROLL_SET: {
-		double ratio = max(0.01, myScrollRatio);
+		double ratio = max(0.0, myScrollRatio);
 		gTempo->addSegment(Scroll(row, ratio));
 	} break;
 	case ACT_FAKE_SET: {

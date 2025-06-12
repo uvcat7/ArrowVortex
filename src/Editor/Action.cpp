@@ -20,6 +20,7 @@
 #include <Managers/NoteskinMan.h>
 #include <Managers/StyleMan.h>
 #include <Managers/SimfileMan.h>
+#include <Managers/TempoMan.h>
 
 #include <Dialogs/Dialog.h>
 
@@ -93,6 +94,17 @@ void Action::perform(Type action)
 		gEditing->toggleUndoRedoJump();
 	CASE(TOGGLE_TIME_BASED_COPY)
 		gEditing->toggleTimeBasedCopy();
+
+	CASE(SET_VISUAL_SYNC_CURSOR_ANCHOR)
+		gEditing->setVisualSyncAnchor(Editing::VisualSyncAnchor::CURSOR);
+	CASE(SET_VISUAL_SYNC_RECEPTOR_ANCHOR)
+		gEditing->setVisualSyncAnchor(Editing::VisualSyncAnchor::RECEPTORS);
+	CASE(INJECT_BOUNDING_BPM_CHANGE)
+		gEditing->injectBoundingBpmChange();
+	CASE(SHIFT_ROW_NONDESTRUCTIVE)
+		gEditing->shiftAnchorRowToMousePosition(false);
+	CASE(SHIFT_ROW_DESTRUCTIVE)
+		gEditing->shiftAnchorRowToMousePosition(true);
 
 	CASE(SELECT_REGION)
 		gSelection->selectRegion();
@@ -178,7 +190,7 @@ void Action::perform(Type action)
 		gEditing->scaleNotes(3, 4);
 
 	CASE(SWITCH_TO_SYNC_MODE)
-		gSimfile->openChart(nullptr);
+		gSimfile->openChart(-1);
 
 	CASE(VOLUME_RESET)
 		gMusic->setVolume(100);
@@ -313,7 +325,6 @@ void Action::perform(Type action)
 		gTextOverlay->show(TextOverlay::ABOUT);
 	CASE(SHOW_DONATE)
 		gTextOverlay->show(TextOverlay::DONATE);
-
 	}};
 
 	if(action >= FILE_OPEN_RECENT_BEGIN && action < FILE_OPEN_RECENT_END)
