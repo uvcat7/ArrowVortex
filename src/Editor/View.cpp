@@ -1,6 +1,7 @@
 #include <Editor/View.h>
 
 #include <algorithm>
+#include <cmath>
 
 #include <Core/String.h>
 #include <Core/Utils.h>

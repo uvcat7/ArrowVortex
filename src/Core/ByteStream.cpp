@@ -55,94 +55,11 @@ void WriteStream::write(const void* in, int bytes)
 	}
 }
 
-void WriteStream::write8(const void* val)
-{
-	if(mySize < myCap)
-	{
-		myBuf[mySize] = *(const uint8_t*)val;
-		++mySize;
-	}
-	else if(!myExtern)
-	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		myBuf[mySize] = *(const uint8_t*)val;
-		++mySize;
-	}
-	else
-	{
-		mySuccess = false;
-	}
-}
-
-void WriteStream::write16(const void* val)
-{
-	int newSize = mySize + sizeof(uint16_t);
-	if(newSize <= myCap)
-	{
-		*(uint16_t*)(myBuf + mySize) = *(const uint16_t*)val;
-		mySize = newSize;
-	}
-	else if(!myExtern)
-	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		*(uint16_t*)(myBuf + mySize) = *(const uint16_t*)val;
-		mySize = newSize;
-	}
-	else
-	{
-		mySuccess = false;
-	}
-}
-
-void WriteStream::write32(const void* val)
-{
-	int newSize = mySize + sizeof(uint32_t);
-	if(newSize <= myCap)
-	{
-		*(uint32_t*)(myBuf + mySize) = *(const uint32_t*)val;
-		mySize = newSize;
-	}
-	else if(!myExtern)
-	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		*(uint32_t*)(myBuf + mySize) = *(const uint32_t*)val;
-		mySize = newSize;
-	}
-	else
-	{
-		mySuccess = false;
-	}
-}
-
-void WriteStream::write64(const void* val)
-{
-	int newSize = mySize + sizeof(uint64_t);
-	if(newSize <= myCap)
-	{
-		*(uint64_t*)(myBuf + mySize) = *(const uint64_t*)val;
-		mySize = newSize;
-	}
-	else if(!myExtern)
-	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		*(uint64_t*)(myBuf + mySize) = *(const uint64_t*)val;
-		mySize = newSize;
-	}
-	else
-	{
-		mySuccess = false;
-	}
-}
-
 void WriteStream::writeNum(uint num)
 {
 	if(num < 0x80)
 	{
-		write8(&num);
+		write(&num, 1);
 	}
 	else
 	{
@@ -201,70 +118,6 @@ void ReadStream::read(void* out, int bytes)
 	}
 	else
 	{
-		myPos = myEnd;
-		mySuccess = false;
-	}
-}
-
-void ReadStream::read8(void* out)
-{
-	if(myPos != myEnd)
-	{
-		*(uint8_t*)out = *myPos;
-		++myPos;
-	}
-	else
-	{
-		*(uint8_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
-	}
-}
-
-void ReadStream::read16(void* out)
-{
-	auto newPos = myPos + sizeof(uint16_t);
-	if(newPos <= myEnd)
-	{
-		*(uint16_t*)out = *(const uint16_t*)myPos;
-		myPos = newPos;
-	}
-	else
-	{
-		*(uint16_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
-	}
-}
-
-
-void ReadStream::read32(void* out)
-{
-	auto newPos = myPos + sizeof(uint32_t);
-	if(newPos <= myEnd)
-	{
-		*(uint32_t*)out = *(const uint32_t*)myPos;
-		myPos = newPos;
-	}
-	else
-	{
-		*(uint32_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
-	}
-}
-
-void ReadStream::read64(void* out)
-{
-	auto newPos = myPos + sizeof(uint64_t);
-	if(newPos <= myEnd)
-	{
-		*(uint64_t*)out = *(const uint64_t*)myPos;
-		myPos = newPos;
-	}
-	else
-	{
-		*(uint64_t*)out = 0;
 		myPos = myEnd;
 		mySuccess = false;
 	}

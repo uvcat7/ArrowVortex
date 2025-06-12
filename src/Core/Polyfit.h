@@ -3,7 +3,8 @@
 #include <Core/Core.h>
 #include <Core/Vector.h>
 
-#include <math.h>
+#include <algorithm>
+#include <cmath>
 
 namespace mathalgo {
 
