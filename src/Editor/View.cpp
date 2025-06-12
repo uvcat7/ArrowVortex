@@ -181,6 +181,11 @@ void onKeyPress(KeyPress& evt) override
 	}
 }
 
+void onKeyRelease(KeyRelease& evt) override
+{
+	if (evt.handled) return;
+}
+
 // ================================================================================================
 // ViewImpl :: member functions.
 
