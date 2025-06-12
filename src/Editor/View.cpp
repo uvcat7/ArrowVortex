@@ -96,6 +96,12 @@ void loadSettings(XmrNode& settings)
 		view->get("useTimeBasedView", &myUseTimeBasedView);
 		view->get("useReverseScroll", &myUseReverseScroll);
 		view->get("useChartPreview" , &myUseChartPreview);
+
+		// if myUseReverseScroll is set, the receptor Y position must be inverted.
+		if (myUseReverseScroll)
+		{
+			myReceptorY = myRect.h - myReceptorY;
+		}
 	}
 
 	updateScrollValues();
