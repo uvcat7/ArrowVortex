@@ -2,15 +2,12 @@
 
 #include <Core/WideString.h>
 
+#include <System/OpenGL.h>
+
 #include <io.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <time.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <gl/gl.h>
-#undef ERROR
 
 namespace Vortex {
 namespace Debug {

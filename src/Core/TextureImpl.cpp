@@ -8,13 +8,10 @@
 #include <Core/Utils.h>
 
 #include <System/Debug.h>
+#include <System/OpenGL.h>
 
 #include <set>
 #include <map>
-
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#include "gl/gl.h"
 
 namespace Vortex {
 namespace {

@@ -19,12 +19,10 @@
 
 #define UNICODE
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <System/OpenGL.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
-#include <gl/gl.h>
 #undef ERROR
 
 #include <stdio.h>
