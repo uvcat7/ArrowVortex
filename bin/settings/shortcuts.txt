@@ -75,6 +75,8 @@ SNAP_PREVIOUS = left
 ZOOM_RESET =
 ZOOM_IN    = numpad add, ctrl + scroll up
 ZOOM_OUT   = numpad subtract, ctrl + scroll down
+SCALE_INCREASE    = ctrl + numpad add, ctrl + alt + scroll up
+SCALE_DECREASE    = ctrl + numpad subtract, ctrl + alt + scroll down
 
 CURSOR_UP               = up
 CURSOR_DOWN             = down

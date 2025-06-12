@@ -31,29 +31,6 @@
 namespace Vortex {
 namespace {
 
-static const int NUM_ZOOM_LEVELS = 13;
-static const int NUM_MINI_LEVELS = 5;
-
-static const double sPixPerSec[NUM_ZOOM_LEVELS] =
-{
-	32, 48, 64, 96, 128, 244, 340, 478, 620, 800, 1200, 2400, 4800
-};
-
-static const double sPixPerBeat[NUM_ZOOM_LEVELS] =
-{
-	64/4.0, 64/3.0, 0.5*64, 0.75*64, 64, 1.5*64, 2*64, 2.5*64, 3*64, 4*64, 6*64, 8*64, 12*64
-};
-
-static const int sZoomScales[NUM_ZOOM_LEVELS] =
-{
-	64, 96, 128, 192, 256, 256, 256, 256, 256, 256, 256, 256, 256
-};
-
-static const int sMiniScales[NUM_MINI_LEVELS] =
-{
-	256, 192, 128, 96, 64
-};
-
 static const int sRowSnapTypes[NUM_SNAP_TYPES] =
 {
 	1, 48, 24, 16, 12, 10, 8, 6, 4, 3, 2, 1
@@ -73,7 +50,7 @@ double myPixPerSec, myPixPerRow;
 int myCursorRow;
 
 int myReceptorY, myReceptorX;
-int myZoomLevel, myMini;
+double myZoomLevel, myScaleLevel;
 bool myIsDraggingReceptors;
 bool myUseTimeBasedView;
 bool myUseReverseScroll;
@@ -94,15 +71,15 @@ ViewImpl()
 	, myCursorRow(0)
 	, myReceptorY(192)
 	, myReceptorX(0)
-	, myZoomLevel(0)
-	, myMini(0)
+	, myZoomLevel(8)
+	, myScaleLevel(4)
 	, mySnapType(ST_NONE)
 	, myUseTimeBasedView(true)
 	, myUseReverseScroll(false)
 	, myUseChartPreview(true)
 	, myIsDraggingReceptors(false)
-	, myPixPerSec(sPixPerSec[0])
-	, myPixPerRow(sPixPerBeat[0] * BEATS_PER_ROW)
+	, myPixPerSec(32)
+	, myPixPerRow(16 * BEATS_PER_ROW)
 {
 	vec2i windowSize = gSystem->getWindowSize();
 	myRect = {0, 0, windowSize.x, windowSize.y};
@@ -204,22 +181,17 @@ void onKeyPress(KeyPress& evt) override
 	}
 }
 
-void onKeyRelease(KeyRelease& evt) override
-{
-	if (evt.handled) return;
-}
-
 // ================================================================================================
 // ViewImpl :: member functions.
 
-int getZoomLevel() const
+double getZoomLevel() const
 {
 	return myZoomLevel;
 }
 
-int getMiniLevel() const
+double getScaleLevel() const
 {
-	return myMini;
+	return myScaleLevel;
 }
 
 SnapType getSnapType() const
@@ -347,8 +319,8 @@ void tick()
 
 void updateScrollValues()
 {
-	myPixPerSec = sPixPerSec[myZoomLevel];
-	myPixPerRow = sPixPerBeat[myZoomLevel] * BEATS_PER_ROW;
+	myPixPerSec = round(21.077 * pow(1.518, myZoomLevel));
+	myPixPerRow = round(11.588 * pow(1.48, myZoomLevel)) * BEATS_PER_ROW;
 	if(myUseReverseScroll)
 	{
 		myPixPerSec = -myPixPerSec;
@@ -380,9 +352,9 @@ void setTimeBased(bool enabled)
 	}
 }
 
-void setZoomLevel(int level)
+void setZoomLevel(double level)
 {
-	level = min(max(level, 0), NUM_ZOOM_LEVELS - 1);
+	level = min(max(level, -2.0), 16.0);
 	if(myZoomLevel != level)
 	{
 		myZoomLevel = level;
@@ -391,10 +363,15 @@ void setZoomLevel(int level)
 	}
 }
 
-void setMiniLevel(int level)
+void setScaleLevel(double level)
 {
-	myMini = min(max(level, 0), NUM_MINI_LEVELS - 1);
-	gMenubar->update(Menubar::VIEW_MINI);
+
+	level = min(max(level, 1.0), 4.0);
+	if(myScaleLevel != level)
+	{
+		myScaleLevel = level;
+		gEditor->reportChanges(VCM_ZOOM_CHANGED);
+	}
 }
 
 void setSnapType(int type)
@@ -656,16 +633,12 @@ const recti& getRect() const
 
 int applyZoom(int v) const
 {
-	int zoom = sZoomScales[myZoomLevel];
-	int mini = sMiniScales[myMini];
-	return (v * min(zoom, mini)) >> 8;
+	return (v * (int)(64 * myScaleLevel)) >> 8;
 }
 
 int getNoteScale() const
 {
-	int zoom = sZoomScales[myZoomLevel];
-	int mini = sMiniScales[myMini];
-	return min(zoom, mini);
+	return 64 * myScaleLevel;
 }
 
 int snapRow(int row, SnapDir dir)

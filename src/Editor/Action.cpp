@@ -70,6 +70,8 @@ void Action::perform(Type action)
 		gEditor->openDialog(DIALOG_TEMPO_BREAKDOWN);
 	CASE(OPEN_DIALOG_WAVEFORM_SETTINGS)
 		gEditor->openDialog(DIALOG_WAVEFORM_SETTINGS);
+	CASE(OPEN_DIALOG_ZOOM)
+		gEditor->openDialog(DIALOG_ZOOM);
 
 	CASE(EDIT_UNDO)
 		gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
@@ -253,22 +255,16 @@ void Action::perform(Type action)
 		gView->setTimeBased(false);
 
 	CASE(ZOOM_RESET)
-		gView->setZoomLevel(0);
+		gView->setZoomLevel(8);
+		gView->setScaleLevel(4);
 	CASE(ZOOM_IN)
-		gView->setZoomLevel(gView->getZoomLevel() + 1);
+		gView->setZoomLevel(gView->getZoomLevel() + 0.25);
 	CASE(ZOOM_OUT)
-		gView->setZoomLevel(gView->getZoomLevel() - 1);
-
-	CASE(SET_MINI_0)
-		gView->setMiniLevel(0);
-	CASE(SET_MINI_1)
-		gView->setMiniLevel(1);
-	CASE(SET_MINI_2)
-		gView->setMiniLevel(2);
-	CASE(SET_MINI_3)
-		gView->setMiniLevel(3);
-	CASE(SET_MINI_4)
-		gView->setMiniLevel(4);
+		gView->setZoomLevel(gView->getZoomLevel() - 0.25);
+	CASE(SCALE_INCREASE)
+		gView->setScaleLevel(gView->getScaleLevel() + 0.25);
+	CASE(SCALE_DECREASE)
+		gView->setScaleLevel(gView->getScaleLevel() - 0.25);
 
 	CASE(SNAP_NEXT)
 		gView->setSnapType(gView->getSnapType() + 1);
