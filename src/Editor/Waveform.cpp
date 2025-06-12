@@ -440,7 +440,17 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	int64_t srcFrames = filtered ? myFilter->samplesL.size() : music.getNumFrames();
 	int64_t samplePos = max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
 	int sampleCount = (int)min(srcFrames - samplePos, (int64_t)samplesPerBlock);
-	if(music.getNumFrames() < samplePos) sampleCount = 0;
+
+	if (samplePos >= srcFrames || sampleCount <= 0)
+	{
+		// A crash could occur if we try to access out-of-bounds memory.
+		// Fill the edges with zeroes to avoid this issue.
+		for (int y = 0; y < h; ++y)
+		{
+			edges[y] = {0, 0, 0};
+		}
+		return;
+	}
 
 	int sampleSkip = max(1, (int)(samplesPerPixel / 200.0));
 	int wh = w / 2 - 1;
@@ -494,13 +504,12 @@ void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int bloc
 	{
 		memset(texBuf, 0, w * h);
 
+		// Process edges
 		sampleEdges(edgeBuf, w, h, channel, blockId, filtered);
-		switch(myLuminance)
 		{
 			case LL_UNIFORM:   edgeLumUniform(edgeBuf, h); break;
 			case LL_AMPLITUDE: edgeLumAmplitude(edgeBuf, w, h); break;
 		}
-		switch(myWaveShape)
 		{
 			case WS_RECTIFIED: edgeShapeRectified(texBuf, edgeBuf, w, h); break;
 			case WS_SIGNED:    edgeShapeSigned(texBuf, edgeBuf, w, h); break;
