@@ -506,22 +506,32 @@ void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int bloc
 
 		// Process edges
 		sampleEdges(edgeBuf, w, h, channel, blockId, filtered);
-		{
-			case LL_UNIFORM:   edgeLumUniform(edgeBuf, h); break;
-			case LL_AMPLITUDE: edgeLumAmplitude(edgeBuf, w, h); break;
+
+		// Apply luminance
+		if (myLuminance == LL_UNIFORM) {
+			edgeLumUniform(edgeBuf, h);
 		}
-		{
-			case WS_RECTIFIED: edgeShapeRectified(texBuf, edgeBuf, w, h); break;
-			case WS_SIGNED:    edgeShapeSigned(texBuf, edgeBuf, w, h); break;
-		};
-		switch(myAntiAliasing)
-		{
-			case 1: antiAlias2x(texBuf, w, h); break;
-			case 2: antiAlias3x(texBuf, w, h); break;
-			case 3: antiAlias4x(texBuf, w, h); break;
-		};
-		if(!textures[channel].handle())
-		{
+		else if (myLuminance == LL_AMPLITUDE) {
+			edgeLumAmplitude(edgeBuf, w, h);
+		}
+
+		// Apply wave shape
+		if (myWaveShape == WS_RECTIFIED) {
+			edgeShapeRectified(texBuf, edgeBuf, w, h);
+		}
+		else if (myWaveShape == WS_SIGNED) {
+			edgeShapeSigned(texBuf, edgeBuf, w, h);
+		}
+
+		// Apply anti-aliasing
+		switch (myAntiAliasing) {
+		case 1: antiAlias2x(texBuf, w, h); break;
+		case 2: antiAlias3x(texBuf, w, h); break;
+		case 3: antiAlias4x(texBuf, w, h); break;
+		}
+
+		// Create or update texture
+		if (!textures[channel].handle()) {
 			textures[channel] = Texture(TEX_W, TEX_H, Texture::ALPHA);
 		}
 		textures[channel].modify(0, 0, myBlockW, TEX_H, texBuf);
