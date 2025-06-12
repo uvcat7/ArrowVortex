@@ -107,6 +107,8 @@ void saveSettings(XmrNode& settings)
 	if(!view) view = settings.addChild("view");
 
 	view->addAttrib("useTimeBasedView", myUseTimeBasedView);
+	view->addAttrib("useReverseScroll", myUseReverseScroll);
+	view->addAttrib("useChartPreview", myUseChartPreview);
 }
 
 // ================================================================================================
