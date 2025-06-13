@@ -75,6 +75,8 @@ SNAP_PREVIOUS = left
 ZOOM_RESET =
 ZOOM_IN    = numpad add, ctrl + scroll up
 ZOOM_OUT   = numpad subtract, ctrl + scroll down
+SCALE_INCREASE    = ctrl + numpad add, ctrl + alt + scroll up
+SCALE_DECREASE    = ctrl + numpad subtract, ctrl + alt + scroll down
 
 CURSOR_UP               = up
 CURSOR_DOWN             = down
@@ -101,3 +103,9 @@ SHOW_SHORTCUTS   = F1
 SHOW_MESSAGE_LOG = F2
 SHOW_DEBUG_LOG   =
 SHOW_ABOUT       =
+
+SET_VISUAL_SYNC_CURSOR_ANCHOR =
+SET_VISUAL_SYNC_RECEPTOR_ANCHOR = 
+INJECT_BOUNDING_BPM_CHANGE = ctrl + b
+SHIFT_ROW_NONDESTRUCTIVE = b
+SHIFT_ROW_DESTRUCTIVE = alt + b

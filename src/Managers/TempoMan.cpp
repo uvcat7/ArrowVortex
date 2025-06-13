@@ -869,6 +869,161 @@ const SegmentGroup* getSegments() const
 	return nullptr;
 }
 
+// ================================================================================================
+// TempoManImpl :: visual sync
+
+void injectBoundingBpmChange(const int target_row) {
+	if (target_row <= 0) {
+		return;
+	}
+
+	const BpmChange cur_bpm = this->myTempo->segments->getRecent<BpmChange>(target_row);
+
+	if (cur_bpm.row == target_row) {
+		return;
+	}
+
+	SegmentEdit edit;
+	edit.add.append(BpmChange(target_row, cur_bpm.bpm));
+
+	modify(edit);
+}
+
+void destructiveShiftRowToTime(const int target_row, const double target_time) {
+	if (target_row <= 0) {
+		this->setOffset(-target_time);
+		return;
+	}
+
+	const BpmChange prev_bpm_change = this->myTempo->segments->getRecent<BpmChange>(target_row - 1);
+	const int prev_bpm_row = prev_bpm_change.row;
+	const double prev_bpm_time = rowToTime(prev_bpm_row);
+	const double beat_delta = (target_row - prev_bpm_row) / 48.0;
+	const double new_bpm = 60 * beat_delta / (target_time - prev_bpm_time);
+
+	SegmentEdit edit;
+	edit.add.append(BpmChange(prev_bpm_change.row, new_bpm));
+
+	modify(edit);
+}
+
+void nonDestructiveShiftRowToTime(const int target_row, const double target_time) {
+	if (target_row <= 0) {
+		this->setOffset(-target_time);
+		return;
+	}
+	
+	BpmChange prev_bpm_change;
+	BpmChange central_bpm_change;
+	BpmChange next_bpm_change;
+	bool has_central = false;
+	bool has_next = false;
+	
+	{
+		auto it = this->myTempo->segments->begin<BpmChange>();
+		decltype(it) end = this->myTempo->segments->end<BpmChange>();
+
+		for (; it != end; ++it) {
+			if (it->row < target_row) {
+				prev_bpm_change = *it;
+			}
+			else if (it->row == target_row) {
+				central_bpm_change = *it;
+				has_central = true;
+			}
+			else {
+				next_bpm_change = *it;
+				has_next = true;
+				break;
+			}
+		}
+	}
+
+	const double target_row_time = rowToTime(target_row);
+	// 4th moves require special care
+	const bool is_beat_move = target_row % 48 == 0;
+
+	const int changed_left_beat_number = (target_row - 1) / 48;
+	const int changed_left_beat_start_row = 48 * changed_left_beat_number;
+	const int changed_right_beat_number = target_row / 48;
+	const int changed_right_beat_start_row = 48 * changed_right_beat_number;
+	const int changed_right_beat_end_row = changed_right_beat_start_row + 48;
+
+	// Beat boundaries form implicit BPM changes if unspecified
+	if (!has_central) {
+		central_bpm_change = prev_bpm_change;
+		central_bpm_change.row = target_row;
+	}
+	if (!has_next) {
+		next_bpm_change = BpmChange(changed_right_beat_end_row, has_central ? central_bpm_change.bpm : prev_bpm_change.bpm);
+	}
+
+	const bool is_left_bound_by_beat_boundary = prev_bpm_change.row < changed_left_beat_start_row;
+	const int left_boundary_row = is_left_bound_by_beat_boundary ? changed_left_beat_start_row : prev_bpm_change.row;
+	const double left_boundary_time = rowToTime(left_boundary_row);
+
+	const bool is_right_bound_by_beat_boundary = !has_next || next_bpm_change.row > changed_right_beat_end_row;
+	const int right_boundary_row = is_right_bound_by_beat_boundary ? changed_right_beat_end_row : next_bpm_change.row;
+	const double right_boundary_time = rowToTime(right_boundary_row);
+
+	if (left_boundary_time > target_time) {
+		const bool is_previous_beat_affected = target_row % 48 == 0;
+		HudError(
+			"%s",
+			is_left_bound_by_beat_boundary ?
+				is_previous_beat_affected ?
+				"Cannot move this row before previous beat" :
+				"Cannot move this row before current beat" :
+			"Cannot move this row past previous BPM change"
+		);
+		return;
+	}
+
+	if (!is_right_bound_by_beat_boundary && target_time >= right_boundary_time) {
+		HudError("%s", "Cannot move row past next BPM change");
+		return;
+	}
+	
+	const double left_beat_delta = (target_row - left_boundary_row) / 48.0;
+	const double right_beat_delta = (right_boundary_row - target_row) / 48.0;
+	const double left_bpm = 60 * left_beat_delta / (target_time - left_boundary_time);
+	const double right_bpm = 60 * right_beat_delta / (right_boundary_time - target_time);
+
+	SegmentEdit edit;
+	if (has_central) {
+		edit.rem.append(central_bpm_change);
+	}
+
+	edit.add.append(BpmChange(left_boundary_row, left_bpm));
+
+	if (right_boundary_row != target_row) {
+		edit.add.append(BpmChange(target_row, right_bpm));
+	}
+	else {
+		edit.rem.append(next_bpm_change);
+		edit.add.append(BpmChange(target_row, central_bpm_change.bpm));
+	}
+	// If we're editing a beat for the first time, we should copy BPM over
+	if (is_right_bound_by_beat_boundary) {
+		const BpmChange right_boundary_bpm_change(right_boundary_row, central_bpm_change.bpm);
+		edit.add.append(right_boundary_bpm_change);
+	}
+
+	gHistory->startChain();
+	modify(edit);
+	if (has_central) {
+		if (is_beat_move) {
+			gHistory->finishChain("Moved beat");
+		}
+		else {
+			gHistory->finishChain("Moved sub-beat");
+		}
+	}
+	else {
+		gHistory->finishChain("Placed sub-beat");
+	}
+}
+
 }; // TempoManImpl
 
 // ================================================================================================

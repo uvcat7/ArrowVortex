@@ -14,7 +14,7 @@
 
 #include <Editor/Common.h>
 #include <Editor/Shortcuts.h>
-#include <Editor/action.h>
+#include <Editor/Action.h>
 
 namespace Vortex {
 
@@ -138,6 +138,8 @@ void LoadShortcuts()
 	addShortcut(Action::CURSOR_DOWN, "Move cursor down");
 	addShortcut(Action::ZOOM_IN, "Zoom in");
 	addShortcut(Action::ZOOM_OUT, "Zoom out");
+	addShortcut(Action::SCALE_INCREASE, "Scale Increase");
+	addShortcut(Action::SCALE_DECREASE, "Scale Decrease");
 	
 	addShortcutHeader("File");
 	addShortcut(Action::FILE_OPEN, "Open");
@@ -161,6 +163,13 @@ void LoadShortcuts()
 	addShortcut(Action::SELECT_REGION_BEFORE_CURSOR, "Select region before cursor");
 	addShortcut(Action::SELECT_REGION_AFTER_CURSOR, "Select region after cursor");
 
+	addShortcutHeader("Visual sync");
+	addShortcut(Action::SET_VISUAL_SYNC_CURSOR_ANCHOR, "Set to target nearby row of snap");
+	addShortcut(Action::SET_VISUAL_SYNC_RECEPTOR_ANCHOR, "Set to target receptor's row");
+	addShortcut(Action::SHIFT_ROW_NONDESTRUCTIVE, "Shift to cursor, non-destructive");
+	addShortcut(Action::SHIFT_ROW_DESTRUCTIVE, "Shift to cursor, destructive");
+	addShortcut(Action::INJECT_BOUNDING_BPM_CHANGE, "Add bounding BPM change");
+
 	addShortcutHeader("Chart");
 	addShortcut(Action::CHART_PREVIOUS, "Previous chart");
 	addShortcut(Action::CHART_NEXT, "Next chart");
@@ -182,7 +191,7 @@ void LoadShortcuts()
 	addShortcut(Action::CURSOR_SELECTION_START, "Start of selection");
 	addShortcut(Action::CURSOR_SELECTION_END, "End of selection");
 	addShortcut(Action::CURSOR_CHART_START, "Start of chart");
-	addShortcut(Action::CURSOR_CHART_END, "End of chart");
+	addShortcut(Action::CURSOR_CHART_END, "End of chart");	
 }
 
 // ================================================================================================

@@ -351,6 +351,9 @@
     <ClCompile Include="..\..\src\Managers\MetadataMan.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Dialogs\Zoom.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Core\Core.h">
@@ -646,6 +649,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Managers\MetadataMan.h">
       <Filter>Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Dialogs\Zoom.h">
+      <Filter>Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -27,8 +27,8 @@ struct View
 
 	virtual void setTimeBased(bool enabled) = 0;
 
-	virtual void setZoomLevel(int level) = 0;
-	virtual void setMiniLevel(int level) = 0;
+	virtual void setZoomLevel(double level) = 0;
+	virtual void setScaleLevel(double level) = 0;
 
 	virtual void setCursorTime(double time) = 0;
 	virtual void setCursorRow(int row) = 0;
@@ -44,8 +44,8 @@ struct View
 	virtual void adjustForPreview(bool enabled) = 0;
 	virtual int getPreviewOffset() const = 0;
 
-	virtual int getZoomLevel() const = 0;
-	virtual int getMiniLevel() const = 0;
+	virtual double getZoomLevel() const = 0;
+	virtual double getScaleLevel() const = 0;
 	virtual int applyZoom(int v) const = 0;
 
 	virtual Coords getReceptorCoords() const = 0;
