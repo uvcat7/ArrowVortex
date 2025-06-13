@@ -369,6 +369,8 @@ void init(Item* menu)
 	add(myStatusMenu, TOGGLE_STATUS_MEASURE, "Show measure");
 	add(myStatusMenu, TOGGLE_STATUS_TIME, "Show time");
 	add(myStatusMenu, TOGGLE_STATUS_TIMING_MODE, "Show timing mode");
+	add(myStatusMenu, TOGGLE_STATUS_SCROLL, "Show scroll mod");
+	add(myStatusMenu, TOGGLE_STATUS_SPEED, "Show speed mod");
 
 	// View menu.
 	myViewMenu = newMenu();
@@ -581,6 +583,14 @@ void registerUpdateFunctions()
 	myUpdateFunctions[STATUSBAR_TIMING_MODE] = []
 	{
 		MENU->myStatusMenu->setChecked(TOGGLE_STATUS_TIMING_MODE, gStatusbar->hasTimingMode());
+	};
+	myUpdateFunctions[STATUSBAR_SCROLL] = []
+	{
+		MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SCROLL, gStatusbar->hasScroll());
+	};
+	myUpdateFunctions[STATUSBAR_SPEED] = []
+	{
+		MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SPEED, gStatusbar->hasSpeed());
 	};
 }
 
