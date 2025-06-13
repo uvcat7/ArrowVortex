@@ -10,6 +10,7 @@
 #include <Core/Utils.h>
 #include <Core/ImageLoader.h>
 #include <Core/QuadBatch.h>
+#include <Core/Xmr.h>
 
 #include <Simfile/TimingData.h>
 
@@ -135,6 +136,48 @@ NotefieldPreviewImpl()
 	myNoteLabelsTex = Texture("assets/note labels.png", false);
 
 	BatchSprite::init(myNoteLabels, 2, 2, 1, 32, 32);
+}
+
+// ================================================================================================
+// NotefieldPreviewImpl :: load / save settings.
+
+static const char* ToString(DrawMode mode)
+{
+	if(mode == XMOD_ALL) return "all";
+	if(mode == XMOD) return "xmod";
+	return "cmod";
+}
+
+static DrawMode ToMode(StringRef str)
+{
+	if(str == "all") return XMOD_ALL;
+	if(str == "xmod") return XMOD;
+	return CMOD;
+}
+
+void loadSettings(XmrNode& settings)
+{
+	XmrNode* preview = settings.child("preview");
+	if(preview)
+	{
+		preview->get("enabled", &myEnabled);
+		preview->get("beatlines", &myShowBeatLines);
+		preview->get("reverse", &myUseReverseScroll);
+
+		const char* mode = preview->get("mode");
+		if(mode) myDrawMode = ToMode(mode);
+	}
+}
+
+void saveSettings(XmrNode& settings)
+{
+	XmrNode* preview = settings.child("preview");
+	if(!preview) preview = settings.addChild("preview");
+
+	preview->addAttrib("enabled", myEnabled);
+	preview->addAttrib("beatlines", myShowBeatLines);
+	preview->addAttrib("reverse", myUseReverseScroll);
+	preview->addAttrib("mode", ToString(myDrawMode));
 }
 
 // ================================================================================================
@@ -483,9 +526,10 @@ bool hasShowBeatLines()
 
 NotefieldPreview* gNotefieldPreview = nullptr;
 
-void NotefieldPreview::create()
+void NotefieldPreview::create(XmrNode& settings)
 {
 	gNotefieldPreview = new NotefieldPreviewImpl;
+	((NotefieldPreviewImpl*)gNotefieldPreview)->loadSettings(settings);
 }
 
 void NotefieldPreview::destroy()

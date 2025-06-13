@@ -8,8 +8,10 @@ struct NotefieldPreview
 {
 	enum DrawMode { CMOD, XMOD, XMOD_ALL };
 
-	static void create();
+	static void create(XmrNode& settings);
 	static void destroy();
+
+	virtual void saveSettings(XmrNode& settings) = 0;
 
 	virtual void draw() = 0;
 
