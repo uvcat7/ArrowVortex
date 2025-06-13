@@ -328,6 +328,10 @@ void Action::perform(Type action)
 		gStatusbar->toggleTime();
 	CASE(TOGGLE_STATUS_TIMING_MODE)
 		gStatusbar->toggleTimingMode();
+	CASE(TOGGLE_STATUS_SCROLL)
+		gStatusbar->toggleScroll();
+	CASE(TOGGLE_STATUS_SPEED)
+		gStatusbar->toggleSpeed();
 
 	CASE(SHOW_SHORTCUTS)
 		gTextOverlay->show(TextOverlay::SHORTCUTS);
