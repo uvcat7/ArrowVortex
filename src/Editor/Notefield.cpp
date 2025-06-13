@@ -550,7 +550,6 @@ void drawReceptorGlow()
 	{
 		auto note = prevNotes[c];
 		if(!note) continue;
-		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
 
 		double lum = 1.5 - (time - note->endtime) * 6.0;
 		uchar alpha = (uchar)clamp((int)(lum * 255.0), 0, 255);

@@ -23,8 +23,12 @@ struct BatchSprite
 	void draw(QuadBatchT* batch, int x, int y);
 	void draw(QuadBatchT* batch, int x, int y, int y2);
 
+	void draw(QuadBatchTC* batch, int x, int y);
 	void draw(QuadBatchTC* batch, int x, int y, uchar alpha);
 	void draw(QuadBatchTC* batch, int x, int y, color32 color);
+	void draw(QuadBatchTC* batch, int x, int y, int y2);
+	void draw(QuadBatchTC* batch, int x, int y, int y2, uchar alpha);
+	void draw(QuadBatchTC* batch, int x, int y, int y2, color32 color);
 
 	void draw(QuadBatchTC* batch, float x, float y, float rotation, float scale = 1.f, uint color = 0xFFFFFFFF);
 

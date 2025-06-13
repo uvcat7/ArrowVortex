@@ -45,6 +45,9 @@ struct ExpandedNote
 	/// 1 indicates a warped note, 0 indicates a regular note.
 	uint isWarped : 1;
 
+	/// 1 indicates a faked note, 0 indicates a regular note.
+	uint isFake : 1;
+
 	/// 1 indicates selected, 0 indicates not selected.
 	uint isSelected : 1;
 

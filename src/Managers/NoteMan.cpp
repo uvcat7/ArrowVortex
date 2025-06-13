@@ -96,6 +96,7 @@ void myUpdateNotes()
 
 	myUpdateNoteTimes();
 	myUpdateWarpedNotes();
+	myUpdateFakedNotes();
 	myUpdateNoteStats();
 }
 
@@ -143,6 +144,25 @@ void myUpdateWarpedNotes()
 	for(; note != noteEnd; ++note)
 	{
 		note->isWarped = 0;
+	}
+}
+
+void myUpdateFakedNotes()
+{
+	auto note = myNotes.begin(), noteEnd = myNotes.end();
+	auto& events = gTempo->getTimingData().fakes;
+	auto it = events.begin(), end = events.end();
+
+	for (; it != end; ++it)
+	{
+		for (; note != noteEnd; ++note)
+		{
+			note->isFake = note->type == NOTE_FAKE || note->row >= it->row && note->row <= it->row + it->length;
+		}
+	}
+	for (; note != noteEnd; ++note)
+	{
+		note->isFake = note->type == NOTE_FAKE;
 	}
 }
 
@@ -194,6 +214,7 @@ void updateTempo()
 {
 	myUpdateNoteTimes();
 	myUpdateWarpedNotes();
+	myUpdateFakedNotes();
 }
 
 // ================================================================================================
@@ -883,6 +904,7 @@ Vector<const ExpandedNote*> getNotesBeforeTime(double time) const
 	for(auto& n : myNotes)
 	{
 		if(n.time > time) break;
+		if(n.isMine | n.isWarped | n.isFake) continue;
 		cols[n.col] = &n;
 	}
 	return out;

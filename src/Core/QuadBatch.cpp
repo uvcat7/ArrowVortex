@@ -84,6 +84,11 @@ void BatchSprite::draw(QuadBatchT* out, int x, int y, int y2)
 	memcpy(out->uvs, uvs, sizeof(float) * 8);
 }
 
+void BatchSprite::draw(QuadBatchTC* out, int x, int y)
+{
+	draw(out, x, y, (color32)COLOR32(255, 255, 255, 255));
+}
+
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, uchar alpha)
 {
 	draw(out, x, y, (color32)COLOR32(255, 255, 255, alpha));
@@ -96,6 +101,28 @@ void BatchSprite::draw(QuadBatchTC* out, int x, int y, color32 col)
 
 	int vp[8] = {x - w, y - h, x + w, y - h, x - w, y + h, x + w, y + h};
 	uint vc[4] = {col, col, col, col};
+
+	out->push();
+	memcpy(out->pos, vp, sizeof(int) * 8);
+	memcpy(out->uvs, uvs, sizeof(float) * 8);
+	memcpy(out->col, vc, sizeof(color32) * 4);
+}
+
+void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2)
+{
+	draw(out, x, y, y2, (color32)COLOR32(255, 255, 255, 255));
+}
+
+void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2, uchar alpha)
+{
+	draw(out, x, y, y2, (color32)COLOR32(255, 255, 255, alpha));
+}
+
+void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2, color32 col)
+{
+	int w = width * DrawScale / 512;
+	int vp[8] = { x - w, y, x + w, y, x - w, y2, x + w, y2 };
+	uint vc[4] = { col, col, col, col };
 
 	out->push();
 	memcpy(out->pos, vp, sizeof(int) * 8);

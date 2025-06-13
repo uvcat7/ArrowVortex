@@ -301,7 +301,7 @@ void tick()
 	else if(myIsDraggingReceptorsPreview)
 	{
 		auto mx = gSystem->getMousePos().x - CenterX(myRect) - myReceptorX;
-		auto ofs = (mx << 8) / sZoomScales[myZoomLevel];
+		auto ofs = (mx << 8) / (int)(64 * myScaleLevel);
 		myPreviewOffset = ofs;
 	}
 

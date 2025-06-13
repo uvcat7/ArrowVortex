@@ -21,6 +21,7 @@ typedef TimingData::Event Event;
 typedef TimingData::TimeSig TimeSig;
 typedef TimingData::ScrollRow ScrollRow;
 typedef TimingData::ScrollSpeed ScrollSpeed;
+typedef TimingData::ScrollFake ScrollFake;
 
 // ================================================================================================
 // Timing segments merge.
@@ -305,6 +306,15 @@ static void CreateScrollSpeeds(Vector<ScrollSpeed>& out, const Speed* it, const 
 	}
 }
 
+static void CreateScrollFakes(Vector<ScrollFake>& out, const Fake* it, const Fake* end)
+{
+	while (it != end)
+	{
+		out.push_back({ it->row, it->numRows });
+		++it;
+	}
+}
+
 // ================================================================================================
 // Timing translation functions.
 
@@ -512,6 +522,11 @@ void TimingData::update(const Tempo* tempo)
 	speeds.clear();
 	CreateScrollSpeeds(speeds, segments->begin<Speed>(), segments->end<Speed>());
 	speeds.squeeze();
+
+	// Create a scroll fake region list.
+	fakes.clear();
+	CreateScrollFakes(fakes, segments->begin<Fake>(), segments->end<Fake>());
+	fakes.squeeze();
 }
 
 double TimingData::timeToBeat(double time) const

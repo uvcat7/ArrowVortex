@@ -29,6 +29,10 @@ struct TimingData
 		int unit;
 		double start, end, delay, rowTime;
 	};
+	struct ScrollFake
+	{
+		int row, length;
+	};
 
 	TimingData();
 
@@ -62,6 +66,7 @@ struct TimingData
 	Vector<TimeSig> sigs;
 	Vector<ScrollRow> scrolls;
 	Vector<ScrollSpeed> speeds;
+	Vector<ScrollFake> fakes;
 };
 
 // ================================================================================================
