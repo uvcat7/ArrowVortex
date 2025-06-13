@@ -435,6 +435,18 @@ void drawBeatLines()
 // ================================================================================================
 // NotefieldImpl :: segments.
 
+bool validSegmentRegion(int& t, int& b, int& viewTop, int viewBtm)
+{
+	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm);
+	if(draw)
+	{
+		t = clamp(t, viewTop, viewBtm);
+		b = clamp(b, viewTop, viewBtm);
+		return true;
+	}
+	return false;
+}
+
 void drawStopsAndWarps()
 {
 	Renderer::resetColor();
@@ -455,7 +467,7 @@ void drawStopsAndWarps()
 			{
 				int t = (int)(oy + dy * it->time);
 				int b = (int)(oy + dy * it->rowTime);
-				if(t < viewBtm && b > viewTop)
+				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
 					color32 col = COLOR32(26, 128, 128, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
@@ -465,7 +477,7 @@ void drawStopsAndWarps()
 			{
 				int t = (int)(oy + dy * it->rowTime);
 				int b = (int)(oy + dy * it->endTime);
-				if(t < viewBtm && b > viewTop)
+				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
 					color32 col = COLOR32(128, 128, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
@@ -481,7 +493,7 @@ void drawStopsAndWarps()
 			{
 				int t = (int)(oy + dy * it->row);
 				int b = (int)(oy + dy * (it + 1)->row);
-				if(t < viewBtm && b > viewTop)
+				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
 					color32 col = COLOR32(128, 26, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
