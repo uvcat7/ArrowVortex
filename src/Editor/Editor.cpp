@@ -221,7 +221,7 @@ void init()
 	Editing::create(settings);
 	View::create(settings);
 	Notefield::create();
-	NotefieldPreview::create();
+	NotefieldPreview::create(settings);
 	TempoBoxes::create(settings);
 	Waveform::create(settings);
 	Statusbar::create(settings);
@@ -252,6 +252,7 @@ void shutdown()
 	gStatusbar->saveSettings(settings);
 	gEditing->saveSettings(settings);
 	gWaveform->saveSettings(settings);
+	gNotefieldPreview->saveSettings(settings);
 	gTempoBoxes->saveSettings(settings);
 	gView->saveSettings(settings);
 	gMusic->saveSettings(settings);
