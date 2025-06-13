@@ -215,7 +215,7 @@ void renderDensity(SetPixelData& spd, const int* colx)
 			for(; it != end && it->time < sec; ++it);
 			for(; it != end && it->time < sec + secPerPix; ++it)
 			{
-				if(it->isMine || it->isWarped) continue;
+				if(it->isMine || it->isWarped || it->isFake) continue;
 				double pre = (it > first) ? (it - 1)->time : (it->time - 1.0);
 				double post = (it < last) ? (it + 1)->time : (it->time + 1.0);
 				if(post > pre) density = max(density, 2.0 / (post - pre));
@@ -234,7 +234,7 @@ void renderDensity(SetPixelData& spd, const int* colx)
 			for(; it != end && it->row < row; ++it);
 			for(; it != end && it->row < row + rowPerPix; ++it)
 			{
-				if(it->isMine || it->isWarped) continue;
+				if(it->isMine || it->isWarped || it->isFake) continue;
 				double pre = (it > first) ? (it - 1)->time : (it->time - 1.0);
 				double post = (it < last) ? (it + 1)->time : (it->time + 1.0);
 				if(post > pre) density = max(density, 2.0 / (post - pre));

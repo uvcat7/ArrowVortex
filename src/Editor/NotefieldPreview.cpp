@@ -194,7 +194,7 @@ void updateNotefieldSize()
 
 	maxY = gView->getHeight() + 32;
 
-	if (myUseReverseScroll) {
+	if(myUseReverseScroll) {
 		myY = maxY - 32 - myY;
 	}
 }
@@ -357,8 +357,6 @@ void drawReceptorGlow()
 	{
 		auto note = prevNotes[c];
 		if(!note) continue;
-		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
-
 		double lum = 1.5 - (time - note->endtime) * 6.0;
 		uchar alpha = (uchar)clamp((int)(lum * 255.0), 0, 255);
 		if(alpha > 0)
@@ -378,17 +376,17 @@ void drawNotes()
 	Renderer::bindTexture(noteskin->noteTex.handle());
 
 	// Render arrows/holds/mines interleaved, so the z-order is correct.
-	auto batch = Renderer::batchT();
+	auto batch = Renderer::batchTC();
 	DrawPosHelper drawPos = DrawPosHelper(myDrawMode, myUseReverseScroll);
 	for(auto& note : *gNotes)
 	{
 		// Determine the y-position of the note.
-		int y = myY - drawPos.get(note.row, note.time), 
+		int y = myY - drawPos.get(note.row, note.time),
 			by = myY - (note.row == note.endrow ? y : drawPos.get(note.endrow, note.endtime));
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
 		// Notes 20 beats into the future are also not rendered in game.
-		if((note.type != NOTE_MINE && note.type != NOTE_FAKE) && note.endrow < currentRow || note.row > currentRow + 20 * ROWS_PER_BEAT)
+		if(!(note.isMine | note.isFake) && note.endrow < currentRow || note.row > currentRow + 20 * ROWS_PER_BEAT)
 		{
 			continue;
 		}
@@ -433,34 +431,35 @@ void drawNotes()
 		switch(note.type)
 		{
 		case NOTE_STEP_OR_HOLD:
-		case NOTE_ROLL: {
-			int index = (note.player * cols + note.col) * NUM_ROW_TYPES + rowtype;
-			noteskin->note[index].draw(&batch, x, y);
-			break; }
-		case NOTE_MINE: {
-			int index = note.player * cols + note.col;
-			noteskin->mine[index].draw(&batch, x, y);
-			break; }
+		case NOTE_ROLL:
 		case NOTE_LIFT:
 		case NOTE_FAKE: {
 			int index = (note.player * cols + note.col) * NUM_ROW_TYPES + rowtype;
-			noteskin->note[index].draw(&batch, x, y);
-			break; }
+			uchar alpha = note.isFake ? 128 : 255;
+			noteskin->note[index].draw(&batch, x, y, alpha);
+			break;
+		}
+		case NOTE_MINE: {
+			int index = note.player * cols + note.col;
+			noteskin->mine[index].draw(&batch, x, y);
+			break;
+		}
 		}
 	}
 	batch.flush();
 
 	// Draw indicator sprites for fake notes and lift notes.
 	Renderer::bindTexture(myNoteLabelsTex.handle());
-	batch = Renderer::batchT();
+	batch = Renderer::batchTC();
 	for(auto& note : *gNotes)
 	{
-		if(note.type == NOTE_LIFT || note.type == NOTE_FAKE)
+		if(note.type == NOTE_LIFT)
 		{
 			int y = myY - drawPos.get(note.row, note.time);
+			y = myY + ((y - myY) * speed);
 			if(y < -32 || y > maxY || note.row > currentRow + 20 * ROWS_PER_BEAT) continue;
 			int col = note.col, x = myColX[col];
-			myNoteLabels[note.type == NOTE_FAKE].draw(&batch, x, y);
+			myNoteLabels[0].draw(&batch, x, y);
 		}
 	}
 	batch.flush();
