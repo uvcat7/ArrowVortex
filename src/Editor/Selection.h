@@ -7,6 +7,8 @@
 
 #include <Editor/Common.h>
 
+#include <vector>
+
 namespace Vortex {
 
 struct SelectionRegion { int beginRow, endRow; };
@@ -29,7 +31,7 @@ struct Selection : public InputHandler
 	virtual int selectNotes(NotesMan::Filter filter) = 0;
 	virtual int selectNotes(RowType rowType) = 0;
 	virtual int selectNotes(SelectModifier t, RowCol begin, RowCol end) = 0;
-	virtual int selectNotes(SelectModifier t, const Vector<RowCol>& indices) = 0;
+	virtual int selectNotes(SelectModifier t, const std::vector<RowCol>& indices) = 0;
 	virtual int getSelectedNotes(NoteList& out) = 0;
 
 	// Region selection.

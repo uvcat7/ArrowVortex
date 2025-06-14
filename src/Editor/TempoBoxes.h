@@ -3,6 +3,8 @@
 #include <Simfile/Tempo.h>
 #include <Simfile/Segments.h>
 
+#include <vector>
+
 namespace Vortex {
 
 struct TempoBox
@@ -43,7 +45,7 @@ struct TempoBoxes
 	virtual void tick() = 0;
 	virtual void draw() = 0;
 
-	virtual const Vector<TempoBox>& getBoxes() = 0;
+	virtual const std::vector<TempoBox>& getBoxes() = 0;
 };
 
 extern TempoBoxes* gTempoBoxes;

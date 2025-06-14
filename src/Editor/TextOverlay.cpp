@@ -16,6 +16,9 @@
 #include <Editor/Shortcuts.h>
 #include <Editor/Action.h>
 
+#include <algorithm>
+#include <vector>
+
 namespace Vortex {
 
 namespace {
@@ -59,10 +62,10 @@ static const char* iconNames[NUM_ICONS] = {
 
 struct TextOverlayImpl : public TextOverlay {
 
-Vector<HudEntry> hudEntries_;
-Vector<InfoBox*> infoBoxes_;
-Vector<String> logEntries_;
-Vector<Shortcut> displayShortcuts_;
+std::vector<HudEntry> hudEntries_;
+std::vector<InfoBox*> infoBoxes_;
+std::vector<String> logEntries_;
+std::vector<Shortcut> displayShortcuts_;
 String debugLog_;
 
 int textOverlayScrollPos_, textOverlayScrollEnd_, textOverlayPageSize_;
@@ -96,14 +99,14 @@ TextOverlayImpl()
 
 void addShortcutHeader(const char* name)
 {
-	Shortcut& shortcut = displayShortcuts_.append();
+	Shortcut& shortcut = displayShortcuts_.emplace_back();
 	shortcut.isHeader = true;
 	shortcut.a = name;
 }
 
 void addShortcut(const char* name, const char* keys)
 {
-	Shortcut& shortcut = displayShortcuts_.append();
+	Shortcut& shortcut = displayShortcuts_.emplace_back();
 	shortcut.isHeader = false;
 	shortcut.a = name;
 	shortcut.b = keys;
@@ -237,7 +240,7 @@ void onKeyPress(KeyPress& evt) override
 {
 	if(textOverlayMode_ == MESSAGE_LOG && evt.key == Key::DELETE && !evt.handled)
 	{
-		logEntries_.release();
+		logEntries_.clear();
 		evt.handled = true;
 	}
 	if(textOverlayMode_ != HUD && evt.key == Key::ESCAPE && !evt.handled)
@@ -392,7 +395,7 @@ void addInfoBox(InfoBox* box)
 
 void removeInfoBox(InfoBox* box)
 {
-	infoBoxes_.erase_values(box);
+	std::erase(infoBoxes_, box);
 }
 
 // ================================================================================================
@@ -414,7 +417,7 @@ void tickHud()
 		float delta = clamp(deltaTime.count() * fade, 0.0, 1.0);
 
 		hudEntries_[i].timeLeft -= delta;
-		if(hudEntries_[i].timeLeft <= -0.5f) hudEntries_.erase(i);
+		if(hudEntries_[i].timeLeft <= -0.5f) hudEntries_.erase(hudEntries_.begin() + i);
 	}
 }
 
@@ -454,7 +457,7 @@ void drawHud()
 	}
 
 	// Speed up the message removal if we have too many.
-	if(y > view.y) hudEntries_.erase(0);
+	if(y > view.y) hudEntries_.erase(hudEntries_.begin());
 }
 
 // ================================================================================================

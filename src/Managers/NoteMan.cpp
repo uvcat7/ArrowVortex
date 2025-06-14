@@ -4,7 +4,6 @@
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
-#include <Core/VectorUtils.h>
 
 #include <Managers/TempoMan.h>
 #include <Managers/MetadataMan.h>
@@ -654,6 +653,17 @@ int select(SelectModifier mod, const Vector<RowCol>& indices)
 	});
 }
 
+int select(SelectModifier mod, const std::vector<RowCol>& indices)
+{
+	auto it = indices.begin(), end = indices.end();
+	return performSelection(mod, [&](const ExpandedNote* note)
+	{
+		while(it != end && LessThanRowCol(*it, *note)) ++it;
+		if(it == end) return false;
+		return !LessThanRowCol(*note, *it);
+	});
+}
+
 int select(SelectModifier mod, const Note* notes, int numNotes)
 {
 	auto it = notes, end = notes + numNotes;
@@ -807,7 +817,7 @@ void copyToClipboard(bool timeBased)
 
 void pasteFromClipboard(bool insert)
 {
-	Vector<uchar> buffer = GetClipboardData(clipboardTag);
+	std::vector<uchar> buffer = GetClipboardData(clipboardTag);
 	ReadStream stream(buffer.data(), buffer.size());
 
 	// Check if the note data is time-based.

@@ -22,7 +22,7 @@ static const uint a85div[5] = {85 * 85 * 85 * 85, 85 * 85 * 85, 85 * 85, 85, 1};
 static void Ascii85enc(String& out, const uchar* in, int size)
 {
 	// Convert to 32-bit integers (big endian) and pad with zeroes.
-	Vector<uint> blocks((size + 3) / 4, 0);
+	std::vector<uint> blocks((size + 3) / 4, 0);
 	for(int i = 0; i < size; ++i)
 	{
 		blocks[i / 4] += in[i] << a85shift[i & 3];
@@ -46,7 +46,7 @@ static void Ascii85enc(String& out, const uchar* in, int size)
 	Str::truncate(out, out.len() - padding);
 }
 
-static void Ascii85dec(Vector<uchar>& out, const char* in)
+static void Ascii85dec(std::vector<uchar>& out, const char* in)
 {
 	// Convert from base 85 to 32-bit integers.
 	int padding = 0;
@@ -92,9 +92,9 @@ void SetClipboardData(StringRef tag, const uchar* data, int size)
 	gSystem->setClipboardText(text);
 }
 
-Vector<uchar> GetClipboardData(StringRef tag)
+std::vector<uchar> GetClipboardData(StringRef tag)
 {
-	Vector<uchar> buffer;
+	std::vector<uchar> buffer;
 	String text = gSystem->getClipboardText();
 	String prefix = "ArrowVortex:" + tag + ":";
 	if(Str::startsWith(text, prefix.str()))

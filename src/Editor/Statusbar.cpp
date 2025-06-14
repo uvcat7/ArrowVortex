@@ -20,6 +20,9 @@
 #include <Managers/ChartMan.h>
 #include <Managers/TempoMan.h>
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -93,7 +96,7 @@ void saveSettings(XmrNode& settings)
 
 void draw()
 {
-	Vector<String> info;
+	std::vector<String> info;
 
 	TextStyle textStyle;
 	textStyle.textFlags = Text::MARKUP;
@@ -155,8 +158,8 @@ void draw()
 
 	if(info.size())
 	{
-		String str = Str::join(info, " ");
-		Text::arrange(Text::MC, textStyle, str.str());
+		auto str = fmt::format("{}", fmt::join(info, " "));
+		Text::arrange(Text::MC, textStyle, str.c_str());
 
 		recti view = gView->getRect();
 		view = {view.x + 128, view.y + view.h - 32, view.w - 256 - 32, 24};

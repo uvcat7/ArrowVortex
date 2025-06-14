@@ -14,6 +14,7 @@
 
 #include <math.h>
 #include <random>
+#include <vector>
 
 namespace Vortex {
 namespace {
@@ -68,11 +69,11 @@ struct StreamPlanner
 
 	FootPlanner feet[2];
 
-	Vector<float> weights;
-	Vector<float> stepDists;
-	Vector<vec2i> pad;
-	Vector<int> histograms[2];
-	Vector<int> history[2];
+	std::vector<float> weights;
+	std::vector<float> stepDists;
+	std::vector<vec2i> pad;
+	std::vector<int> histograms[2];
+	std::vector<int> history[2];
 
 	int numCols;
 	int nextFoot;

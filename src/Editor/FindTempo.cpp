@@ -1,6 +1,5 @@
 ﻿#include <Core/Polyfit.h>
 #include <Core/Core.h>
-#include <Core/Vector.h>
 #include <Core/AlignedMemory.h>
 
 #include <System/Thread.h>
@@ -14,6 +13,7 @@
 #include <algorithm>
 #include <functional>
 #include <atomic>
+#include <vector>
 
 #define MarkProgress(number, text) { if(*data->terminate) {return;} data->progress = number; }
 
@@ -31,7 +31,7 @@ static const int MaxThreads = 8;
 // ================================================================================================
 // Helper structs.
 
-typedef Vector<TempoResult> TempoResults;
+typedef std::vector<TempoResult> TempoResults;
 
 struct TempoSort {
 	bool operator()(const TempoResult& a, const TempoResult& b) {
@@ -343,7 +343,7 @@ static void RemoveDuplicates(TempoResults& tempo)
 			real v = tempo[j].bpm;
 			if(std::min(std::min(abs(v - bpm), abs(v - doubled)), abs(v - halved)) < 0.1)
 			{
-				tempo.erase(j);
+				tempo.erase(tempo.begin() + j);
 			}
 		}
 	}
@@ -587,7 +587,7 @@ public:
 	bool hasSamples() { return (data_.samples != nullptr); }
 	const char* getProgress() const { return sProgressText[data_.progress]; }
 	bool hasResult() const { return isDone(); }
-	const Vector<TempoResult>& getResult() const { return data_.result; }
+	const std::vector<TempoResult>& getResult() const { return data_.result; }
 
 private:
 	SerializedTempo data_;
@@ -630,11 +630,11 @@ void TempoDetectorImp::exec()
 	SerializedTempo* data = &data_;
 
 	// Run the aubio onset tracker to find note onsets.
-	Vector<Onset> onsets;
+	std::vector<Onset> onsets;
 	FindOnsets(data->samples, data->samplerate, data->numFrames, 1, onsets);
 	MarkProgress(1, "Find onsets");
 
-	for(int i = 0; i < std::min(onsets.size(), 100); ++i)
+	for(int i = 0; i < std::min(onsets.size(), size_t(100)); ++i)
 	{
 		int a = std::max(0, onsets[i].pos - 100);
 		int b = std::min(data->numFrames, onsets[i].pos + 100);

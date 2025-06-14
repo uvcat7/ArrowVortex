@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 
 #include <Simfile/Common.h>
 
@@ -135,7 +135,7 @@ bool HasClipboardData(StringRef tag);
 void SetClipboardData(StringRef tag, const uchar* data, int size);
 
 // Reads a string from the clipboard and decodes it using ascii85.
-Vector<uchar> GetClipboardData(StringRef tag);
+std::vector<uchar> GetClipboardData(StringRef tag);
 
 // Returns a text representation of the given snap type.
 const char* ToString(SnapType st);

@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <algorithm>
+#include <vector>
 
 #include <Core/Utils.h>
 #include <Core/Draw.h>
@@ -41,8 +42,8 @@ struct WaveFilter {
 Waveform::FilterType type;
 double strength;
 
-Vector<short> samplesL;
-Vector<short> samplesR;
+std::vector<short> samplesL;
+std::vector<short> samplesR;
 
 static void lowPassFilter(const short* src, short* dst,
 	int numFrames, int samplerate, double strength)
@@ -72,8 +73,8 @@ void update()
 		filter = lowPassFilter;
 	}
 
-	samplesL.release();
-	samplesR.release();
+	samplesL.clear();
+	samplesR.clear();
 
 	auto& music = gMusic->getSamples();
 	if(music.isCompleted())
@@ -84,8 +85,8 @@ void update()
 		samplesL.resize(numFrames, 0);
 		samplesR.resize(numFrames, 0);
 
-		filter(music.samplesL(), samplesL.begin(), numFrames, samplerate, strength);
-		filter(music.samplesR(), samplesR.begin(), numFrames, samplerate, strength);
+		filter(music.samplesL(), samplesL.data(), numFrames, samplerate, strength);
+		filter(music.samplesR(), samplesR.data(), numFrames, samplerate, strength);
 	}
 }
 
@@ -96,10 +97,10 @@ void update()
 
 struct WaveformImpl : public Waveform {
 
-Vector<WaveBlock*> waveformBlocks_;
+std::vector<WaveBlock*> waveformBlocks_;
 
 WaveFilter* waveformFilter_;
-Vector<uchar> waveformTextureBuffer_;
+std::vector<uchar> waveformTextureBuffer_;
 
 int waveformBlockWidth_, waveformSpacing_;
 
@@ -380,7 +381,7 @@ void antiAlias2x(uchar* dst, int w, int h)
 	int newW = w / 2, newH = h / 2;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = waveformTextureBuffer_.begin() + (y * 2) * w;
+		uchar* line = waveformTextureBuffer_.data() + (y * 2) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
 			uchar* a = line + (x * 2), *b = a + w;
@@ -397,7 +398,7 @@ void antiAlias3x(uchar* dst, int w, int h)
 	int newW = w / 3, newH = h / 3;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = waveformTextureBuffer_.begin() + (y * 3) * w;
+		uchar* line = waveformTextureBuffer_.data() + (y * 3) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
 			uchar* a = line + (x * 3);
@@ -416,7 +417,7 @@ void antiAlias4x(uchar* dst, int w, int h)
 	int newW = w / 4, newH = h / 4;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = waveformTextureBuffer_.begin() + (y * 4) * w;
+		uchar* line = waveformTextureBuffer_.data() + (y * 4) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
 			uchar* a = line + (x * 4), *b = a + w;
@@ -463,7 +464,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	const short* in = nullptr;
 	if(filtered)
 	{
-		in = ((channel == 0) ? waveformFilter_->samplesL.begin() : waveformFilter_->samplesR.begin());
+		in = ((channel == 0) ? waveformFilter_->samplesL.data() : waveformFilter_->samplesR.data());
 	}
 	else
 	{
@@ -549,24 +550,24 @@ void renderBlock(WaveBlock* block)
 	int h = TEX_H * (waveformAntiAliasingMode_ + 1);
 	waveformTextureBuffer_.resize(w * h);
 
-	Vector<WaveEdge> edges;
+	std::vector<WaveEdge> edges;
 	edges.resize(h);
 
 	if(waveformFilter_)
 	{
 		if(waveformOverlayFilter_)
 		{
-			renderWaveform(block->tex + 0, edges.begin(), w, h, block->id, false);
-			renderWaveform(block->tex + 2, edges.begin(), w, h, block->id, true);
+			renderWaveform(block->tex + 0, edges.data(), w, h, block->id, false);
+			renderWaveform(block->tex + 2, edges.data(), w, h, block->id, true);
 		}
 		else
 		{
-			renderWaveform(block->tex, edges.begin(), w, h, block->id, true);
+			renderWaveform(block->tex, edges.data(), w, h, block->id, true);
 		}
 	}
 	else
 	{
-		renderWaveform(block->tex, edges.begin(), w, h, block->id, false);
+		renderWaveform(block->tex, edges.data(), w, h, block->id, false);
 	}
 }
 

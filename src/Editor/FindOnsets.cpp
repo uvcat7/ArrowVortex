@@ -2,12 +2,13 @@
 #include <Editor/Aubio.h>
 
 #include <Core/Utils.h>
-#include <Core/Vector.h>
 #include <Core/AlignedMemory.h>
 
 #include <System/Thread.h>
 
 #include <math.h>
+#include <cstring>
+#include <vector>
 
 // double to float conversion.
 #pragma warning(disable: 4244)
@@ -1039,7 +1040,7 @@ static uint_t aubio_onset_get_last(aubio_onset_t *o)
 // ================================================================================================
 // Main function.
 
-void FindOnsets(const float* samples, int samplerate, int numFrames, int numThreads, Vector<Onset>& out)
+void FindOnsets(const float* samples, int samplerate, int numFrames, int numThreads, std::vector<Onset>& out)
 {
 	static const int windowlen = 256;
 	static const int bufsize = windowlen * 4;
@@ -1052,7 +1053,7 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 			CriticalSection lock;
 			const float* samples;
 			int numFrames, numThreads, samplerate;
-			Vector<Onset> onsets;
+			std::vector<Onset> onsets;
 
 			OnsetThreads(const float* inSamples, int inFrames, int inThreads, int inSamplerate)
 			{

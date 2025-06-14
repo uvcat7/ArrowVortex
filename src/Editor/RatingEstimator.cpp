@@ -1,7 +1,5 @@
 ﻿#include <Editor/RatingEstimator.h>
 
-#include <Core/Vector.h>
-
 #include <System/File.h>
 
 #include <Managers/ChartMan.h>
@@ -11,6 +9,7 @@
 #include <Simfile/TimingData.h>
 
 #include <algorithm>
+#include <vector>
 
 namespace Vortex {
 
@@ -24,7 +23,7 @@ enum Constants
 RatingEstimator::RatingEstimator(const char* databaseFile)
 {
 	bool success;
-	Vector<double> values;
+	std::vector<double> values;
 	for(auto& line : File::getLines(databaseFile, &success))
 	{
 		if(line.len() && line[0] == '#') continue;
@@ -41,9 +40,9 @@ RatingEstimator::~RatingEstimator()
 	delete[] myWeights;
 }
 
-static Vector<double> CalcDensities()
+static std::vector<double> CalcDensities()
 {
-	Vector<double> stamps, out;
+	std::vector<double> stamps, out;
 	TempoTimeTracker tracker(gTempo->getTimingData());
 	for(auto& n : *gNotes)
 	{
@@ -54,7 +53,7 @@ static Vector<double> CalcDensities()
 	}
 
 	// List densities per second of song.
-	Vector<double> densities;
+	std::vector<double> densities;
 	if(stamps.size())
 	{
 		double timeWindow = 1.0;
@@ -104,7 +103,7 @@ inline int getDensityBin(double density)
 
 double RatingEstimator::estimateRating()
 {
-	Vector<double> densities = CalcDensities();
+	std::vector<double> densities = CalcDensities();
 
 	double maxRating = 1.0;
 	for(int i = 0; i < HM_NUM_SLICES; ++i)

@@ -1,7 +1,6 @@
 #include <Editor/TempoBoxes.h>
 
 #include <Core/Utils.h>
-#include <Core/Vector.h>
 #include <Core/StringUtils.h>
 #include <Core/QuadBatch.h>
 #include <Core/Texture.h>
@@ -25,6 +24,7 @@
 #include <System/System.h>
 
 #include <algorithm>
+#include <vector>
 
 namespace Vortex {
 
@@ -33,7 +33,7 @@ namespace Vortex {
 
 struct TempoBoxesImpl : public TempoBoxes {
 
-Vector<TempoBox> myBoxes;
+std::vector<TempoBox> myBoxes;
 int myMouseOverBox;
 TileBar myBoxBar;
 TileBar myBoxHl;
@@ -242,29 +242,29 @@ int performSelection(SelectModifier mod, Predicate pred)
 	auto end = myBoxes.end();
 	if(mod == SELECT_SET)
 	{
-		for(; box != end; ++box)
+		for(auto&& box : myBoxes)
 		{
 			uint set = pred(box);
 			numSelected += set;
-			box->isSelected = set;
+			box.isSelected = set;
 		}
 	}
 	else if(mod == SELECT_ADD)
 	{
-		for(; box != end; ++box)
+		for(auto&& box : myBoxes)
 		{
 			uint set = pred(box);
-			numSelected += set & (box->isSelected ^ 1);
-			box->isSelected |= set;
+			numSelected += set & (box.isSelected ^ 1);
+			box.isSelected |= set;
 		}
 	}
 	else if(mod == SELECT_SUB)
 	{
-		for(; box != end; ++box)
+		for(auto&& box : myBoxes)
 		{
 			uint set = pred(box);
-			numSelected += set & box->isSelected;
-			box->isSelected &= set ^ 1;
+			numSelected += set & box.isSelected;
+			box.isSelected &= set ^ 1;
 		}
 	}
 	gSelection->setType(Selection::TEMPO);
@@ -275,11 +275,11 @@ int selectRows(SelectModifier mod, int begin, int end, int xl, int xr)
 {
 	auto coords = gView->getNotefieldCoords();
 	const int baseX[2] = {coords.xl, coords.xr};
-	return performSelection(mod, [&](const TempoBox* box)
+	return performSelection(mod, [&](const TempoBox& box)
 	{
-		int side = Segment::meta[box->type]->side;
-		int x1 = baseX[side] + box->x + 8;
-		int x2 = x1 + box->width - 16, row = box->row;
+		int side = Segment::meta[box.type]->side;
+		int x1 = baseX[side] + box.x + 8;
+		int x2 = x1 + box.width - 16, row = box.row;
 		return (x2 >= xl && x1 <= xr && row >= begin && row <= end);
 	});
 }
@@ -289,12 +289,12 @@ int selectTime(SelectModifier mod, double begin, double end, int xl, int xr)
 	auto coords = gView->getNotefieldCoords();
 	const int baseX[2] = {coords.xl, coords.xr};
 	TempoTimeTracker tracker;
-	return performSelection(mod, [&](const TempoBox* box)
+	return performSelection(mod, [&](const TempoBox& box)
 	{
-		int side = Segment::meta[box->type]->side;
-		int x1 = baseX[side] + box->x + 8;
-		int x2 = x1 + box->width - 16;
-		double time = tracker.advance(box->row);
+		int side = Segment::meta[box.type]->side;
+		int x1 = baseX[side] + box.x + 8;
+		int x2 = x1 + box.width - 16;
+		double time = tracker.advance(box.row);
 		return (x2 >= xl && x1 <= xr && time >= begin && time <= end);
 	});
 }
@@ -439,7 +439,7 @@ void drawBoxHelp(const TempoBox& box)
 	Text::draw(vec2i{x, y + 10});
 }
 
-const Vector<TempoBox>& getBoxes()
+const std::vector<TempoBox>& getBoxes()
 {
 	return myBoxes;
 }

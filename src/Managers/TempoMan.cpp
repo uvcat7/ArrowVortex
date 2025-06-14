@@ -605,8 +605,8 @@ void pasteFromClipboard(bool insert)
 	SegmentEdit clipboard;
 
 	// Decode the clipboard data.	
-	Vector<uchar> data = GetClipboardData(clipboardTag);
-	ReadStream stream(data.begin(), data.size());
+	std::vector<uchar> data = GetClipboardData(clipboardTag);
+	ReadStream stream(data.data(), data.size());
 	clipboard.add.decode(stream);
 	if(stream.success() == false || stream.bytesleft() > 0)
 	{

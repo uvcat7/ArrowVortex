@@ -174,7 +174,7 @@ Simfile* mySimfile;
 EntryList myChain;
 int myOpenChains;
 
-Vector<Callback> myCallbacks;
+std::vector<Callback> myCallbacks;
 
 // ================================================================================================
 // HistoryImpl :: constructor and destructor.

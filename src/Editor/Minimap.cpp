@@ -297,7 +297,7 @@ void onChanges(int changes)
 
 	if((changes & bits) == 0) return;
 
-	Vector<uint> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
+	std::vector<uint> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
 
 	// The height of the chart region is based on the time elapsed between the first and last row.
 	double timeStart = gTempo->rowToTime(0);

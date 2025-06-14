@@ -2,6 +2,8 @@
 
 #include <Simfile/Notes.h>
 
+#include <vector>
+
 namespace Vortex {
 
 /// Manages the note data of the active chart.
@@ -42,7 +44,8 @@ struct NotesMan
 	virtual int selectQuant(int rowType) = 0;
 	virtual int selectRows(SelectModifier mod, int beginCol, int endCol, int beginRow, int endRow) = 0;
 	virtual int selectTime(SelectModifier mod, int beginCol, int endCol, double beginTime, double endTime) = 0;
-	virtual int select(SelectModifier mod, const Vector<RowCol>& indices) = 0;
+	virtual int select(SelectModifier mod, const Vector<RowCol>& indices) = 0; // TODO
+	virtual int select(SelectModifier mod, const std::vector<RowCol>& indices) = 0;
 	virtual int select(SelectModifier mod, const Note* notes, int numNotes) = 0;
 	virtual int select(SelectModifier mod, Filter filter) = 0;
 	virtual bool noneSelected() const = 0;

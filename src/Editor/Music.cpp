@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <math.h>
 #include <chrono>
+#include <vector>
 
-#include <Core/Vector.h>
 #include <Core/Reference.h>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
@@ -34,7 +34,7 @@ namespace Vortex {
 struct TickData
 {
 	Sound sound;
-	Vector<int> frames;
+	std::vector<int> frames;
 	bool enabled;
 };
 
@@ -61,7 +61,7 @@ bool myIsPaused, myIsMuted;
 LoadState myLoadState;
 Reference<InfoBoxWithProgress> myInfoBox;
 
-Vector<short> myMixBuffer;
+std::vector<short> myMixBuffer;
 
 OggConversionThread* myOggConversionThread;
 
@@ -316,7 +316,7 @@ void writeFrames(short* buffer, int frames) override
 		// Source and target samplerate are different, mix to temporary buffer.
 		int64_t srcPos = (int64_t)(myPlayPosition);
 		int tmpFrames = frames * myMusicSpeed / 100;
-		myMixBuffer.grow(tmpFrames * 2);
+		myMixBuffer.resize(tmpFrames * 2);
 		WriteSourceFrames(myMixBuffer.data(), tmpFrames, srcPos);
 
 		// Interpolate to the target samplerate.

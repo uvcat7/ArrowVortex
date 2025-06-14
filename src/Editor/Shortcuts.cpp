@@ -1,7 +1,6 @@
 ﻿#include <Editor/Shortcuts.h>
 
 #include <Core/Xmr.h>
-#include <Core/Vector.h>
 #include <Core/StringUtils.h>
 
 #include <System/Debug.h>
@@ -9,6 +8,7 @@
 #include <Editor/Common.h>
 
 #include <algorithm>
+#include <vector>
 
 namespace Vortex {
 namespace {
@@ -366,7 +366,7 @@ struct ShortcutEntry
 	bool scrollUp;
 };
 
-Vector<ShortcutEntry> shortcutMappings_;
+std::vector<ShortcutEntry> shortcutMappings_;
 
 // ================================================================================================
 // ShortcutsImpl :: constructor and destructor.

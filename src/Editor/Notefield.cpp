@@ -2,11 +2,11 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <vector>
 
 #include <Core/Draw.h>
 #include <Core/Gui.h>
 #include <Core/Reference.h>
-#include <Core/Vector.h>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
 #include <Core/QuadBatch.h>
@@ -356,7 +356,7 @@ void drawBeatLines()
 	
 	// We keep track of the measure labels to render them afterwards.
 	struct MeasureLabel { int measure, y; };
-	Vector<MeasureLabel> labels(8);
+	std::vector<MeasureLabel> labels(8);
 
 	// Determine the first row and last row that should show beat lines.
 	int drawBeginRow = max(0, gView->offsetToRow(myFirstVisibleTor));

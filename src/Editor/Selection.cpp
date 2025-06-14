@@ -15,6 +15,8 @@
 #include <Managers/TempoMan.h>
 #include <Managers/StyleMan.h>
 
+#include <vector>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -181,7 +183,7 @@ bool selectNotes(SelectModifier mod, double torT, double torB, int xl, int xr)
 		}
 		if(closest)
 		{
-			selectNotes(mod, Vector<RowCol>(1, {closest->row, closest->col}));
+			selectNotes(mod, std::vector<RowCol>(1, {closest->row, closest->col}));
 			return true;
 		}
 		else
@@ -376,7 +378,7 @@ int selectNotes(SelectModifier mod, RowCol begin, RowCol end)
 	return numSelected;
 }
 
-int selectNotes(SelectModifier mod, const Vector<RowCol>& indices)
+int selectNotes(SelectModifier mod, const std::vector<RowCol>& indices)
 {
 	int numSelected = gNotes->select(mod, indices);
 	showSelectionResult(mod, numSelected);
