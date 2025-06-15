@@ -8,12 +8,15 @@
 #include <Managers/NoteskinMan.h>
 #include <Managers/ChartMan.h>
 
+#include <algorithm>
+#include <vector>
+
 namespace Vortex {
 namespace {
 
-static Vector<vec2i> ReadColumnPairs(const XmrNode* node, const char* attrib, int numCols)
+static std::vector<vec2i> ReadColumnPairs(const XmrNode* node, const char* attrib, int numCols)
 {
-	Vector<vec2i> out;
+	std::vector<vec2i> out;
 	XmrAttrib* pairs = node->attrib(attrib);
 	if(pairs)
 	{
@@ -33,7 +36,7 @@ static Vector<vec2i> ReadColumnPairs(const XmrNode* node, const char* attrib, in
 	return out;
 }
 
-static void ApplyMirror(Vector<int>& cols, const Vector<vec2i>& mirrors)
+static void ApplyMirror(std::vector<int>& cols, const std::vector<vec2i>& mirrors)
 {
 	for(auto& mirror : mirrors)
 	{
@@ -54,7 +57,7 @@ static void ApplyMirror(Vector<int>& cols, const Vector<vec2i>& mirrors)
 static int* CreateMirrorTable(const XmrNode* node, const char* attrib, int numCols)
 {
 	int* out = nullptr;
-	Vector<vec2i> pairs = ReadColumnPairs(node, attrib, numCols);
+	std::vector<vec2i> pairs = ReadColumnPairs(node, attrib, numCols);
 	if(pairs.size())
 	{
 		out = new int[numCols];
@@ -205,7 +208,7 @@ Style* CreateStyle(const XmrNode* node)
 	{
 		int width = 0;
 		int height = 0;
-		Vector<vec2i> pos(numCols, {0, 0});
+		std::vector<vec2i> pos(numCols, {0, 0});
 		ForXmrAttribsNamed(row, padNode, "row")
 		{
 			const char* buttons = row->values[0];
@@ -252,7 +255,7 @@ Style* CreateStyle(const XmrNode* node)
 
 struct StyleManImpl : public StyleMan {
 
-Vector<Style*> myStyles;
+std::vector<Style*> myStyles;
 int myNumDefaultStyles;
 Style* myActiveStyle;
 

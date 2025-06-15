@@ -2,6 +2,8 @@
 
 #include <Simfile/Chart.h>
 
+#include <vector>
+
 namespace Vortex {
 
 /// Manages the active chart.
@@ -44,7 +46,7 @@ struct ChartMan
 	struct BreakdownItem { int row, endrow; String text; };
 
 	/// Returns a text representation of the 16th stream breakdown of the current chart.
-	virtual Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures = nullptr) const = 0;
+	virtual std::vector<BreakdownItem> getStreamBreakdown(int* totalMeasures = nullptr) const = 0;
 
 	/// Returns an estimate block rating based on analyzing the current chart.
 	virtual double getEstimatedMeter() const = 0;

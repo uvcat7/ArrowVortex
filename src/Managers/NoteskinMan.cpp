@@ -2,7 +2,6 @@
 
 #include <Core/QuadBatch.h>
 #include <Core/StringUtils.h>
-#include <Core/Vector.h>
 #include <Core/Utils.h>
 #include <Core/Xmr.h>
 
@@ -15,6 +14,9 @@
 
 #include <Managers/StyleMan.h>
 
+#include <algorithm>
+#include <vector>
+
 namespace Vortex {
 namespace {
 
@@ -22,7 +24,7 @@ struct SkinType
 {
 	String name;
 	bool supportsAll;
-	Vector<const Style*> supportedStyles;
+	std::vector<const Style*> supportedStyles;
 };
 
 struct NoteskinImpl : public Noteskin
@@ -99,7 +101,7 @@ int GetMirrorType(const char* mirror)
 }
 
 static void ParseSprite(XmrNode* node, int numCols, int players, bool hasRows, const char* name,
-	Vector<SpriteTransform>& spr)
+	std::vector<SpriteTransform>& spr)
 {
 	ForXmrNodesNamed(n, node, name)
 	{
@@ -308,15 +310,15 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type)
 	// Read the XMR document.
 	SpriteTransform st;
 
-	Vector<SpriteTransform> note(numCols * NUM_ROW_TYPES * numPlayers, st);
-	Vector<SpriteTransform> mine(numCols * numPlayers, st);
-	Vector<SpriteTransform> holdBody(numCols, st);
-	Vector<SpriteTransform> holdTail(numCols, st);
-	Vector<SpriteTransform> rollBody(numCols, st);
-	Vector<SpriteTransform> rollTail(numCols, st);
-	Vector<SpriteTransform> receptorOn(numCols, st);
-	Vector<SpriteTransform> receptorOff(numCols, st);
-	Vector<SpriteTransform> receptorGlow(numCols, st);
+	std::vector<SpriteTransform> note(numCols * NUM_ROW_TYPES * numPlayers, st);
+	std::vector<SpriteTransform> mine(numCols * numPlayers, st);
+	std::vector<SpriteTransform> holdBody(numCols, st);
+	std::vector<SpriteTransform> holdTail(numCols, st);
+	std::vector<SpriteTransform> rollBody(numCols, st);
+	std::vector<SpriteTransform> rollTail(numCols, st);
+	std::vector<SpriteTransform> receptorOn(numCols, st);
+	std::vector<SpriteTransform> receptorOff(numCols, st);
+	std::vector<SpriteTransform> receptorGlow(numCols, st);
 
 	ParseSprite(node, numCols, numPlayers, true, "Note", note);
 	ParseSprite(node, numCols, numPlayers, false, "Mine", mine);
@@ -399,9 +401,9 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type)
 
 struct NoteskinManImpl : public NoteskinMan {
 
-Vector<int> myPriorities;
-Vector<SkinType> myTypes;
-Vector<NoteskinImpl*> mySkins;
+std::vector<int> myPriorities;
+std::vector<SkinType> myTypes;
+std::vector<NoteskinImpl*> mySkins;
 NoteskinImpl* myActiveSkin;
 const Style* myActiveStyle;
 SkinType myFallback;
@@ -478,7 +480,7 @@ NoteskinManImpl()
 void loadSettings(XmrNode& settings)
 {
 	// Read the noteskin preferences from the settings.
-	Vector<String> prefs;
+	std::vector<String> prefs;
 	XmrNode* view = settings.child("view");
 	if(view)
 	{
@@ -520,9 +522,9 @@ void saveSettings(XmrNode& settings)
 	if(!view) view = settings.addChild("view");
 	
 	// Save the noteskin preferences.
-	Vector<const char*> prefs;
+	std::vector<const char*> prefs;
 	for(int i : myPriorities) prefs.push_back(myTypes[i].name.str());
-	view->addAttrib("noteskinPrefs", prefs.data(), min(prefs.size(), 5));
+	view->addAttrib("noteskinPrefs", prefs.data(), min(prefs.size(), size_t(5)));
 }
 
 // ================================================================================================
@@ -532,7 +534,7 @@ static bool Supports(const SkinType& type, const Style* style)
 {
 	if(type.supportsAll) return true;
 
-	return type.supportedStyles.find(style) != type.supportedStyles.size();
+	return std::find(type.supportedStyles.begin(), type.supportedStyles.end(), style) != type.supportedStyles.end();
 }
 
 void update(Chart* chart)
@@ -547,7 +549,7 @@ void update(Chart* chart)
 	// Find the noteskin for the style.
 	if(style)
 	{
-		mySkins.grow(style->index + 1, nullptr);
+		mySkins.resize(style->index + 1, nullptr);
 		skin = mySkins[style->index];
 
 		// Create a new noteskin if the style does not have one.
@@ -605,8 +607,8 @@ bool isSupported(int type) const
 
 void giveTopPriority(int type)
 {
-	myPriorities.erase_values(type);
-	myPriorities.insert(0, type, 1);
+	std::erase(myPriorities, type);
+	myPriorities.insert(myPriorities.begin(), type);
 }
 
 void setType(int type)

@@ -1,6 +1,10 @@
 #include <Managers/NoteMan.h>
 
 #include <algorithm>
+#include <vector>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
@@ -32,7 +36,7 @@ struct NotesManImpl : public NotesMan {
 // ================================================================================================
 // NotesManImpl :: member data.
 
-Vector<ExpandedNote> myNotes;
+std::vector<ExpandedNote> myNotes;
 
 int myNumSteps, myNumJumps;
 int myNumHolds, myNumRolls;
@@ -196,7 +200,7 @@ void update(Simfile* simfile, Chart* chart)
 	}
 	else
 	{
-		myNotes.release();
+		myNotes.clear();
 		myUpdateNoteStats();
 	}
 
@@ -368,7 +372,7 @@ static String ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool und
 		}
 		else
 		{
-			Vector<String> info;
+			std::vector<String> info;
 
 			if(add.size() == 1)
 			{
@@ -388,7 +392,7 @@ static String ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool und
 				info.push_back(Str::fmt("Removed %1 notes").arg(rem.size()));
 			}
 
-			msg = Str::join(info, ", ");
+			msg = String(fmt::format("{}", fmt::join(info, ", ")).c_str());
 		}
 
 		if(undo)
@@ -550,33 +554,86 @@ template <typename Predicate>
 int performSelection(SelectModifier mod, Predicate pred)
 {
 	int numSelected = 0;
-	auto note = myNotes.begin();
-	auto end = myNotes.end();
 	if(mod == SELECT_SET)
 	{
-		for(; note != end; ++note)
+		for(auto&& note : myNotes)
 		{
 			uint set = pred(note);
 			numSelected += set;
-			note->isSelected = set;
+			note.isSelected = set;
 		}
 	}
 	else if(mod == SELECT_ADD)
 	{
-		for(; note != end; ++note)
+		for(auto&& note : myNotes)
 		{
 			uint set = pred(note);
-			numSelected += set & (note->isSelected ^ 1);
-			note->isSelected |= set;
+			numSelected += set & (note.isSelected ^ 1);
+			note.isSelected |= set;
 		}
 	}
 	else if(mod == SELECT_SUB)
 	{
-		for(; note != end; ++note)
+		for(auto&& note : myNotes)
 		{
 			uint set = pred(note);
-			numSelected += set & note->isSelected;
-			note->isSelected &= set ^ 1;
+			numSelected += set & note.isSelected;
+			note.isSelected &= set ^ 1;
+		}
+	}
+	gSelection->setType(Selection::NOTES);
+	return numSelected;
+}
+
+template <typename Predicate>
+int performSelectionWindow(SelectModifier mod, Predicate pred)
+{
+	int numSelected = 0;
+	ExpandedNote* notePrev = nullptr;
+	ExpandedNote* noteNext = nullptr;
+	if(mod == SELECT_SET)
+	{
+		for(int i = 0; i < myNotes.size();)
+		{
+			if(i == myNotes.size() - 1) {
+				noteNext = nullptr;
+			} else {
+				noteNext = &myNotes[i + 1];
+			}
+			uint set = pred(notePrev, myNotes[i], noteNext);
+			numSelected += set;
+			myNotes[i].isSelected = set;
+			notePrev = &myNotes[i++];
+		}
+	}
+	else if(mod == SELECT_ADD)
+	{
+		for(int i = 0; i < myNotes.size();)
+		{
+			if(i == myNotes.size() - 1) {
+				noteNext = nullptr;
+			} else {
+				noteNext = &myNotes[i + 1];
+			}
+			uint set = pred(notePrev, myNotes[i], noteNext);
+			numSelected += set & (myNotes[i].isSelected ^ 1);
+			myNotes[i].isSelected |= set;
+			notePrev = &myNotes[i++];
+		}
+	}
+	else if(mod == SELECT_SUB)
+	{
+		for(int i = 0; i < myNotes.size();)
+		{
+			if(i == myNotes.size() - 1) {
+				noteNext = nullptr;
+			} else {
+				noteNext = &myNotes[i + 1];
+			}
+			uint set = pred(notePrev, myNotes[i], noteNext);
+			numSelected += set & myNotes[i].isSelected;
+			myNotes[i].isSelected &= set ^ 1;
+			notePrev = &myNotes[i++];
 		}
 	}
 	gSelection->setType(Selection::NOTES);
@@ -625,103 +682,102 @@ int selectQuant(int rowType)
 
 int selectRows(SelectModifier mod, int firstCol, int lastCol, int firstRow, int lastRow)
 {
-	return performSelection(mod, [&](const ExpandedNote* note)
+	return performSelection(mod, [&](const ExpandedNote& note)
 	{
-		return (note->col >= firstCol && note->col < lastCol &&
-		        note->row >= firstRow && note->row < lastRow);
+		return (note.col >= firstCol && note.col < lastCol &&
+		        note.row >= firstRow && note.row < lastRow);
 	});
 }
 
 int selectTime(SelectModifier mod, int firstCol, int lastCol, double firstTime, double lastTime)
 {
 	gSelection->setType(Selection::NOTES);
-	return performSelection(mod, [&](const ExpandedNote* note)
+	return performSelection(mod, [&](const ExpandedNote& note)
 	{
-		return (note->col >= firstCol && note->col < lastCol &&
-		        note->time >= firstTime && note->time <= lastTime);
+		return (note.col >= firstCol && note.col < lastCol &&
+		        note.time >= firstTime && note.time <= lastTime);
 	});
 }
 
+[[deprecated]]
 int select(SelectModifier mod, const Vector<RowCol>& indices)
 {
 	auto it = indices.begin(), end = indices.end();
-	return performSelection(mod, [&](const ExpandedNote* note)
+	return performSelection(mod, [&](const ExpandedNote& note)
 	{
-		while(it != end && LessThanRowCol(*it, *note)) ++it;
+		while(it != end && LessThanRowCol(*it, note)) ++it;
 		if(it == end) return false;
-		return !LessThanRowCol(*note, *it);
+		return !LessThanRowCol(note, *it);
 	});
 }
 
 int select(SelectModifier mod, const std::vector<RowCol>& indices)
 {
 	auto it = indices.begin(), end = indices.end();
-	return performSelection(mod, [&](const ExpandedNote* note)
+	return performSelection(mod, [&](const ExpandedNote& note)
 	{
-		while(it != end && LessThanRowCol(*it, *note)) ++it;
+		while(it != end && LessThanRowCol(*it, note)) ++it;
 		if(it == end) return false;
-		return !LessThanRowCol(*note, *it);
+		return !LessThanRowCol(note, *it);
 	});
 }
 
 int select(SelectModifier mod, const Note* notes, int numNotes)
 {
 	auto it = notes, end = notes + numNotes;
-	return performSelection(mod, [&](const ExpandedNote* note)
+	return performSelection(mod, [&](const ExpandedNote& note)
 	{
-		while(it != end && LessThanRowCol(*it, *note)) ++it;
+		while(it != end && LessThanRowCol(*it, note)) ++it;
 		if(it == end) return false;
-		return !LessThanRowCol(*note, *it);
+		return !LessThanRowCol(note, *it);
 	});
 }
 
 int select(SelectModifier mod, Filter filter)
 {
-	auto first = myNotes.begin();
-	auto last = myNotes.end() - 1;
 	switch(filter)
 	{
 	case SELECT_STEPS:
-		return performSelection(mod, [&](const ExpandedNote* note)
+		return performSelection(mod, [&](const ExpandedNote& note)
 		{
-			return !note->isMine;
+			return !note.isMine;
 		});
 	case SELECT_JUMPS:
-		return performSelection(mod, [&](const ExpandedNote* note)
+		return performSelectionWindow(mod, [&](const ExpandedNote* notePrev, const ExpandedNote& note, const ExpandedNote* noteNext)
 		{
-			if(note->isMine)
+			if(note.isMine)
 			{
 				return false;
 			}
-			else if(note > first && note[-1].row == note->row)
+			else if(notePrev && notePrev->row == note.row)
 			{
 				return true;
 			}
-			else if(note < last && note[+1].row == note->row)
+			else if(noteNext && noteNext->row == note.row)
 			{
 				return true;
 			}
 			return false;
 		});
 	case SELECT_MINES:
-		return performSelection(mod, [&](const ExpandedNote* note)
+		return performSelection(mod, [&](const ExpandedNote& note)
 		{
-			return note->isMine;
+			return note.isMine;
 		});
 	case SELECT_HOLDS:
-		return performSelection(mod, [&](const ExpandedNote* note)
+		return performSelection(mod, [&](const ExpandedNote& note)
 		{
-			return note->endrow != note->row && !note->isRoll;
+			return note.endrow != note.row && !note.isRoll;
 		});
 	case SELECT_ROLLS:
-		return performSelection(mod, [&](const ExpandedNote* note)
+		return performSelection(mod, [&](const ExpandedNote& note)
 		{
-			return note->endrow != note->row && note->isRoll;
+			return note.endrow != note.row && note.isRoll;
 		});
 	case SELECT_WARPS:
-		return performSelection(mod, [&](const ExpandedNote* note)
+		return performSelection(mod, [&](const ExpandedNote& note)
 		{
-			return note->isWarped;
+			return note.isWarped;
 		});
 	case SELECT_FAKES:
 		return performSelection(mod, [&](const ExpandedNote* note)
@@ -774,7 +830,6 @@ void modify(const NoteEdit& edit, bool clearRegion, const EditDescription* desc)
 void removeSelectedNotes()
 {
 	NoteEdit edit;
-	Vector<RowCol> indices;
 	forAllSelectedNotes([&](const ExpandedNote& note)
 	{
 		edit.rem.append(CompressNote(note));
@@ -888,12 +943,12 @@ int getNumWarps() const
 
 const ExpandedNote* begin() const
 {
-	return myNotes.begin();
+	return &myNotes.front();
 }
 
 const ExpandedNote* end() const
 {
-	return myNotes.end();
+	return &myNotes.back();
 }
 
 const ExpandedNote* getNoteAt(int row, int col) const
@@ -903,7 +958,7 @@ const ExpandedNote* getNoteAt(int row, int col) const
 	{
 		return CompareRowCol(a, b) < 0;
 	});
-	return (it != myNotes.end() && CompareRowCol(*it, key) == 0) ? it : nullptr;
+	return (it != myNotes.end() && CompareRowCol(*it, key) == 0) ? &(*it) : nullptr;
 }
 
 const ExpandedNote* getNoteIntersecting(int row, int col) const
@@ -912,14 +967,14 @@ const ExpandedNote* getNoteIntersecting(int row, int col) const
 	for(; it != end && it->endrow < row; ++it);
 	for(; it != end && it->row <= row; ++it)
 	{
-		if(it->col == col && it->endrow >= row) return it;
+		if(it->col == col && it->endrow >= row) return &(*it);
 	}
 	return nullptr;
 }
 
-Vector<const ExpandedNote*> getNotesBeforeTime(double time) const
+std::vector<const ExpandedNote*> getNotesBeforeTime(double time) const
 {
-	Vector<const ExpandedNote*> out(gStyle->getNumCols(), nullptr);
+	std::vector<const ExpandedNote*> out(gStyle->getNumCols(), nullptr);
 	auto cols = out.begin();
 	for(auto& n : myNotes)
 	{

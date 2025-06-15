@@ -12,6 +12,8 @@
 #include <Managers/SimfileMan.h>
 #include <Managers/NoteMan.h>
 
+#include <vector>
+
 namespace Vortex {
 
 #define CHART_MAN ((ChartManImpl*)gChart)
@@ -220,9 +222,9 @@ const Chart* get() const
 
 struct StreamItem { int row, endrow; bool isBreak; };
 
-static Vector<BreakdownItem> ToBreakdown(const Vector<StreamItem>& items)
+static std::vector<BreakdownItem> ToBreakdown(const std::vector<StreamItem>& items)
 {
-	Vector<BreakdownItem> out;
+	std::vector<BreakdownItem> out;
 	BreakdownItem item = {-1, -1};
 	for(auto& it : items)
 	{
@@ -250,7 +252,7 @@ static Vector<BreakdownItem> ToBreakdown(const Vector<StreamItem>& items)
 	return out;
 }
 
-static void MergeItems(Vector<StreamItem>& items)
+static void MergeItems(std::vector<StreamItem>& items)
 {
 	// Merge successive streams and breaks into a single item. 
 	for(int i = items.size() - 1; i > 0; --i)
@@ -258,34 +260,34 @@ static void MergeItems(Vector<StreamItem>& items)
 		if(items[i].isBreak == items[i - 1].isBreak)
 		{
 			items[i - 1].endrow = items[i].endrow;
-			items.erase(i);
+			items.erase(items.begin() + i);
 		}
 	}
 
 	// Remove breaks at the front and back of the list.
 	if(items.size() && items.back().isBreak) items.pop_back();
-	if(items.size() && items[0].isBreak) items.erase(0);
+	if(items.size() && items[0].isBreak) items.erase(items.begin());
 }
 
-static void RemoveItems(Vector<StreamItem>& items, int minRows, bool breaks)
+static void RemoveItems(std::vector<StreamItem>& items, int minRows, bool breaks)
 {
 	for(int i = items.size() - 1; i >= 0; --i)
 	{
 		if((items[i].endrow - items[i].row) < minRows && items[i].isBreak == breaks)
 		{
-			items.erase(i);
+			items.erase(items.begin() + i);
 		}
 	}
 	MergeItems(items);
 }
 
-Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures) const
+std::vector<BreakdownItem> getStreamBreakdown(int* totalMeasures) const
 {
 	int dummy;
 	if(!totalMeasures) totalMeasures = &dummy;
 
 	*totalMeasures = 0;
-	Vector<BreakdownItem> out;
+	std::vector<BreakdownItem> out;
 	if(gNotes->empty()) return out;
 
 	// Skip mines at the start and end.
@@ -296,7 +298,7 @@ Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures) const
 	if(last == first) return out;
 
 	// Build a list of streams and breaks.
-	Vector<StreamItem> items;
+	std::vector<StreamItem> items;
 	const ExpandedNote* prevStreamEnd = nullptr, *streamBegin = nullptr;
 	for(const ExpandedNote* n = first, *next; n != last; n = next)
 	{

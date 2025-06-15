@@ -4,7 +4,6 @@
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
-#include <Core/VectorUtils.h>
 #include <Core/ByteStream.h>
 
 #include <Simfile/SegmentList.h>

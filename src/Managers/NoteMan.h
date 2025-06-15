@@ -44,7 +44,7 @@ struct NotesMan
 	virtual int selectQuant(int rowType) = 0;
 	virtual int selectRows(SelectModifier mod, int beginCol, int endCol, int beginRow, int endRow) = 0;
 	virtual int selectTime(SelectModifier mod, int beginCol, int endCol, double beginTime, double endTime) = 0;
-	virtual int select(SelectModifier mod, const Vector<RowCol>& indices) = 0; // TODO
+	[[deprecated]] virtual int select(SelectModifier mod, const Vector<RowCol>& indices) = 0;
 	virtual int select(SelectModifier mod, const std::vector<RowCol>& indices) = 0;
 	virtual int select(SelectModifier mod, const Note* notes, int numNotes) = 0;
 	virtual int select(SelectModifier mod, Filter filter) = 0;
@@ -83,7 +83,7 @@ struct NotesMan
 	virtual const ExpandedNote* getNoteIntersecting(int row, int col) const = 0;
 
 	/// Returns the indices of all notes preceding the given time for each column.
-	virtual Vector<const ExpandedNote*> getNotesBeforeTime(double time) const = 0;
+	virtual std::vector<const ExpandedNote*> getNotesBeforeTime(double time) const = 0;
 };
 
 extern NotesMan* gNotes;
