@@ -14,6 +14,8 @@
 
 #include <Editor/Common.h>
 
+#include <vector>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -137,7 +139,7 @@ static int GetChartListH()
 
 struct DialogChartList::ChartList : public WgScrollRegion {
 
-Vector<ChartButton*> myButtons;
+std::vector<ChartButton*> myButtons;
 TileRect2 myButtonTex;
 
 ~ChartList()

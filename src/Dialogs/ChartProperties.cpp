@@ -15,6 +15,8 @@
 #include <Editor/Common.h>
 #include <Managers/ChartMan.h>
 
+#include <vector>
+
 namespace Vortex {
 
 enum Result
@@ -297,7 +299,7 @@ public:
 	
 private:
 	DialogChartProperties* myDialog;
-	Vector<WgButton*> myButtons;
+	std::vector<WgButton*> myButtons;
 };
 
 DialogChartProperties::BreakdownWidget::~BreakdownWidget()

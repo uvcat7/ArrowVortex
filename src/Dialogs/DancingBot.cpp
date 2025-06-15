@@ -470,7 +470,7 @@ void DialogDancingBot::onChanges(int changes)
 		auto style = gStyle->get();
 		if(style == nullptr || style->padWidth == 0 || style->padHeight == 0)
 		{
-			myPadLayout.release();
+			myPadLayout.clear();
 		}
 		else
 		{
@@ -520,7 +520,7 @@ vec2i DialogDancingBot::myGetDrawPos(vec2i colRow)
 
 void DialogDancingBot::myAssignFeetToNotes()
 {
-	myFeetBits.release();
+	myFeetBits.clear();
 	int numNotes = gNotes->end() - gNotes->begin();
 	auto style = gStyle->get();
 	if(numNotes > 0 && style && style->padWidth > 0)

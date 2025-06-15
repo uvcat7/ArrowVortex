@@ -4,8 +4,9 @@
 
 #include <Core/QuadBatch.h>
 #include <Core/Draw.h>
-#include <Core/Vector.h>
 #include <Core/WidgetsLayout.h>
+
+#include <vector>
 
 namespace Vortex {
 
@@ -32,8 +33,8 @@ private:
 	void myAssignFeetToNotes();
 	void myGetFeetPositions(vec3f* out, int player);
 
-	Vector<int> myPadLayout;
-	Vector<uint> myFeetBits;
+	std::vector<int> myPadLayout;
+	std::vector<uint> myFeetBits;
 	BatchSprite myPadSpr[6];
 	BatchSprite myFeetSpr[2];
 	Texture myPadTex, myFeetTex;
