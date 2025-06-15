@@ -600,7 +600,7 @@ void updateBlockW()
 {
 	int width = myBlockW;
 
-	myBlockW = gView->applyZoom(256);
+	myBlockW = min(TEX_W, gView->applyZoom(256));
 	mySpacing = gView->applyZoom(24);
 
 	if(myBlockW != width) clearBlocks();
