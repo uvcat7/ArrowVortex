@@ -693,7 +693,7 @@ int getAnchorRow() {
 }
 
 void injectBoundingBpmChange() {
-	if (gSimfile == nullptr || !gView->isTimeBased()) {
+	if (gSimfile->isClosed() || !gView->isTimeBased()) {
 		return;
 	}
 
@@ -703,7 +703,7 @@ void injectBoundingBpmChange() {
 }
 
 void shiftAnchorRowToMousePosition(bool is_destructive) {
-	if (gSimfile == nullptr || !gView->isTimeBased()) {
+	if (gSimfile->isClosed() || !gView->isTimeBased()) {
 		return;
 	}
 	Vortex::vec2i mouse_pos = gSystem->getMousePos();
