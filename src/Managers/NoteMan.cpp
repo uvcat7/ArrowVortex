@@ -774,7 +774,7 @@ void copyToClipboard(bool timeBased)
 	}
 }
 
-void pasteFromClipboard()
+void pasteFromClipboard(bool insert)
 {
 	Vector<uchar> buffer = GetClipboardData(clipboardTag);
 	ReadStream stream(buffer.data(), buffer.size());
@@ -808,8 +808,8 @@ void pasteFromClipboard()
 
 	// Perform the changes.
 	static const NotesMan::EditDescription desc = {"Pasted %1 note", "Pasted %1 notes"};
-	gNotes->modify(edit, true, &desc);
-	gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
+	modify(edit, !insert, &desc);
+	select(SELECT_SET, edit.add.begin(), edit.add.size());
 }
 
 // ================================================================================================

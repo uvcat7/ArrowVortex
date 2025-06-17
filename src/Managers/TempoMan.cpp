@@ -143,11 +143,11 @@ void myFinishEdit(Tempo* tempo)
 // ================================================================================================
 // TempoManImpl :: apply segments.
 
-void myQueueSegments(const SegmentEdit& edit)
+void myQueueSegments(const SegmentEdit& edit, bool clearRegion)
 {
 	stopTweaking(false);
 	SegmentEditResult result;
-	myTempo->segments->prepareEdit(edit, result);
+	myTempo->segments->prepareEdit(edit, result, clearRegion);
 	if(result.add.numSegments() + result.rem.numSegments() > 0)
 	{
 		WriteStream stream;
@@ -259,7 +259,7 @@ void myWriteInsertRows(WriteStream& stream, Tempo* tempo, int startRow, int numR
 				}
 			}
 		}
-		segs->prepareEdit(edit, result);
+		segs->prepareEdit(edit, result, true);
 	}
 	stream.write(tempo);
 	result.rem.encode(stream);
@@ -471,8 +471,13 @@ static double ClampAndRound(double val, double min, double max)
 
 void modify(const SegmentEdit& edit)
 {
+	modify(edit, true);
+}
+
+void modify(const SegmentEdit& edit, bool clearRegion)
+{
 	stopTweaking(false);
-	myQueueSegments(edit);
+	myQueueSegments(edit, clearRegion);
 }
 
 void removeSelectedSegments()
@@ -591,7 +596,7 @@ void copyToClipboard()
 	}
 }
 
-void pasteFromClipboard()
+void pasteFromClipboard(bool insert)
 {
 	SegmentEdit clipboard;
 
@@ -616,7 +621,7 @@ void pasteFromClipboard()
 	}
 
 	// Add the pasted segments to the current tempo.
-	modify(clipboard);
+	modify(clipboard, !insert);
 }
 
 // ================================================================================================

@@ -52,7 +52,7 @@ struct NotesMan
 
 	// Clipboard functions.
 	virtual void copyToClipboard(bool timeBased) = 0;
-	virtual void pasteFromClipboard() = 0;
+	virtual void pasteFromClipboard(bool insert) = 0;
 
 	// Statistics functions.
 	virtual int getNumSteps() const = 0; ///< Includes jumps/holds/rolls.

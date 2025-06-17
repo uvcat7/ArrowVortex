@@ -59,9 +59,10 @@ struct TempoMan
 
 	/// Editing functions.
 	virtual void modify(const SegmentEdit& edit) = 0;
+	virtual void modify(const SegmentEdit& edit, bool clearRegion) = 0;
 	virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;
 	virtual void removeSelectedSegments() = 0;
-	virtual void pasteFromClipboard() = 0;
+	virtual void pasteFromClipboard(bool insert) = 0;
 	virtual void copyToClipboard() = 0;
 
 	/// Sets the global music offset.

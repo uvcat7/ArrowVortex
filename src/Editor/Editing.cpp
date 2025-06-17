@@ -139,7 +139,7 @@ void onKeyPress(KeyPress& evt) override
 		}
 		else if(kc == Key::V)
 		{
-			pasteFromClipboard();
+			pasteFromClipboard(evt.keyflags & Keyflag::SHIFT);
 			evt.handled = true;
 		}
 	}
@@ -957,15 +957,15 @@ void copySelectionToClipboard(bool remove)
 	}
 }
 
-void pasteFromClipboard()
+void pasteFromClipboard(bool insert)
 {
 	if(gChart->isOpen() && HasClipboardData(NotesMan::clipboardTag))
 	{
-		gNotes->pasteFromClipboard();
+		gNotes->pasteFromClipboard(insert);
 	}
 	else if(HasClipboardData(TempoMan::clipboardTag))
 	{
-		gTempo->pasteFromClipboard();
+		gTempo->pasteFromClipboard(insert);
 	}
 }
 
