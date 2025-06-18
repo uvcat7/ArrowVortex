@@ -140,7 +140,7 @@ static bool SegmentsIntersect(int l1, int r1, int l2, int r2)
 
 void selectTempoBoxes(SelectModifier mod, double t, double b, int l, int r)
 {
-	if(gView->getZoomLevel() >= 4)
+	if(gView->getScaleLevel() >= 2)
 	{
 		if(gView->isTimeBased())
 		{

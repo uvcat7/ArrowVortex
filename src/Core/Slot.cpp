@@ -1,4 +1,4 @@
-#include <Core/slot.h>
+#include <Core/Slot.h>
 
 #include <math.h>
 
