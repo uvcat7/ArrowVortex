@@ -198,6 +198,19 @@ int selectAll()
 	return myBoxes.size();
 }
 
+int selectType(Segment::Type type)
+{
+	for (auto& box : myBoxes)
+	{
+		box.isSelected = (box.type == type ? 1 : 0);
+	}
+	if (myBoxes.size())
+	{
+		gSelection->setType(Selection::TEMPO);
+	}
+	return myBoxes.size();
+}
+
 int selectSegments(const Tempo* tempo)
 {
 	int numSelected = 0;

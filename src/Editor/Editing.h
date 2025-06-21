@@ -35,8 +35,11 @@ struct Editing : public InputHandler
 
 	virtual void deleteSelection() = 0;
 	
-	virtual void changeHoldsToSteps() = 0;
-	virtual void changeNotesToMines() = 0;
+	virtual void changeNotesToType(NoteType type) = 0;
+	virtual void changeMinesToType(NoteType type) = 0;
+	virtual void changeFakesToType(NoteType type) = 0;
+	virtual void changeLiftsToType(NoteType type) = 0;
+	virtual void changeHoldsToType(NoteType type) = 0;
 	virtual void changeHoldsToRolls() = 0;
 	virtual void changePlayerNumber() = 0;
 

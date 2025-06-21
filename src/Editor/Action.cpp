@@ -116,6 +116,10 @@ void Action::perform(Type action)
 		gSelection->selectNotes(NotesMan::SELECT_HOLDS);
 	CASE(SELECT_ALL_ROLLS)
 		gSelection->selectNotes(NotesMan::SELECT_ROLLS);
+	CASE(SELECT_ALL_FAKES)
+		gSelection->selectNotes(NotesMan::SELECT_FAKES);
+	CASE(SELECT_ALL_LIFTS)
+		gSelection->selectNotes(NotesMan::SELECT_LIFTS);
 	CASE(SELECT_REGION_BEFORE_CURSOR)
 		gSelection->selectRegion(0, gView->getCursorRow());
 	CASE(SELECT_REGION_AFTER_CURSOR)
@@ -140,6 +144,29 @@ void Action::perform(Type action)
 	CASE(SELECT_QUANT_192)
 		gSelection->selectNotes(RT_192TH);
 
+	CASE(SELECT_TEMPO_BPM)
+		gTempoBoxes->selectType(Segment::BPM);
+	CASE(SELECT_TEMPO_STOP)
+		gTempoBoxes->selectType(Segment::STOP);
+	CASE(SELECT_TEMPO_DELAY)
+		gTempoBoxes->selectType(Segment::DELAY);
+	CASE(SELECT_TEMPO_WARP)
+		gTempoBoxes->selectType(Segment::WARP);
+	CASE(SELECT_TEMPO_TIME_SIG)
+		gTempoBoxes->selectType(Segment::TIME_SIG);
+	CASE(SELECT_TEMPO_TICK_COUNT)
+		gTempoBoxes->selectType(Segment::TICK_COUNT);
+	CASE(SELECT_TEMPO_COMBO)
+		gTempoBoxes->selectType(Segment::COMBO);
+	CASE(SELECT_TEMPO_SPEED)
+		gTempoBoxes->selectType(Segment::SPEED);
+	CASE(SELECT_TEMPO_SCROLL)
+		gTempoBoxes->selectType(Segment::SCROLL);
+	CASE(SELECT_TEMPO_FAKE)
+		gTempoBoxes->selectType(Segment::FAKE);
+	CASE(SELECT_TEMPO_LABEL)
+		gTempoBoxes->selectType(Segment::LABEL);
+
 	CASE(CHART_PREVIOUS)
 		gSimfile->previousChart();
 	CASE(CHART_NEXT)
@@ -157,14 +184,30 @@ void Action::perform(Type action)
 	CASE(CHART_CONVERT_ROUTINE_TO_COUPLES)
 		gEditing->convertRoutineToCouples();
 
-	CASE(CHANGE_HOLDS_TO_STEPS)
-		gEditing->changeHoldsToSteps();
 	CASE(CHANGE_NOTES_TO_MINES)
-		gEditing->changeNotesToMines();
+		gEditing->changeNotesToType(NoteType::NOTE_MINE);
+	CASE(CHANGE_NOTES_TO_FAKES)
+		gEditing->changeNotesToType(NoteType::NOTE_FAKE);
+	CASE(CHANGE_NOTES_TO_LIFTS)
+		gEditing->changeNotesToType(NoteType::NOTE_LIFT);
+	CASE(CHANGE_MINES_TO_NOTES)
+		gEditing->changeMinesToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_MINES_TO_FAKES)
+		gEditing->changeMinesToType(NoteType::NOTE_FAKE);
+	CASE(CHANGE_MINES_TO_LIFTS)
+		gEditing->changeMinesToType(NoteType::NOTE_LIFT);
+	CASE(CHANGE_FAKES_TO_NOTES)
+		gEditing->changeFakesToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_LIFTS_TO_NOTES)
+		gEditing->changeLiftsToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_HOLDS_TO_STEPS)
+		gEditing->changeHoldsToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_HOLDS_TO_MINES)
+		gEditing->changeHoldsToType(NoteType::NOTE_MINE);
 	CASE(CHANGE_BETWEEN_HOLDS_AND_ROLLS)
 		gEditing->changeHoldsToRolls();
 	CASE(CHANGE_BETWEEN_PLAYER_NUMBERS)
-		gEditing->changePlayerNumber();	
+		gEditing->changePlayerNumber();
 
 	CASE(MIRROR_NOTES_VERTICALLY)
 		gEditing->mirrorNotes(Editing::MIRROR_V);
