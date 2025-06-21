@@ -211,11 +211,16 @@ void clearBlocks()
 	}
 }
 
-void overlayFilter(bool enabled)
+void setOverlayFilter(bool enabled)
 {
 	myOverlayFilter = enabled;
 
 	clearBlocks();
+}
+
+bool getOverlayFilter()
+{
+	return myOverlayFilter;
 }
 
 void enableFilter(FilterType type, double strength)

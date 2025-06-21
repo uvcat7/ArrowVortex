@@ -20,6 +20,7 @@ Dlg::Dlg()
 	myLuminance = gWaveform->getLuminance();
 	myWaveShape = gWaveform->getWaveShape();
 	myAntiAliasing = gWaveform->getAntiAliasing();
+	myOverlayFilter = gWaveform->getOverlayFilter();
 
 	myFilterType = Waveform::FT_HIGH_PASS;
 	myFilterStrength = 0.75f;
@@ -146,7 +147,7 @@ void Dlg::myUpdateSettings()
 
 void Dlg::myToggleOverlayFilter()
 {
-	gWaveform->overlayFilter(myOverlayFilter);
+	gWaveform->setOverlayFilter(myOverlayFilter);
 }
 
 void Dlg::myEnableFilter()
