@@ -1,0 +1,44 @@
+name: Windows Build
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  windows:
+    name: "Build Windows x64"
+    runs-on: windows-2022
+    defaults:
+      run:
+        working-directory: ${{github.workspace}}/main
+    steps:
+      - name: Get AV
+        uses: actions/checkout@v3
+        with:
+          path: main
+      - name: Get MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Obtain oggenc2.exe
+        run: >
+          curl https://www.rarewares.org/files/ogg/oggenc2.88-1.3.7-x64.zip --output oggenc.zip &&
+          unzip oggenc.zip -d .
+      - name: Build AV
+        run: msbuild build\VisualStudio\ArrowVortex.vcxproj /p:Configuration=Release /p:Platform=x64         
+      - name: Collect into a zip
+        run: |
+          mkdir AV
+          cd AV
+          cp -r ../bin/assets .
+          cp -r ../bin/noteskins .
+          cp -r ../bin/settings .
+          cp ../bin/ArrowVortex.exe .
+          cp ../oggenc2.exe .
+          cd ..
+          7z.exe a -tzip av.zip AV
+      - name: Upload to Delta VPS
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DROPLET_SSH }}" > ~/.ssh/arrow_vortex
+          chmod 400 ~/.ssh/arrow_vortex
+          echo "arrowvortex@167.71.33.176:~/av/ArrowVortex-$(date +'%Y-%m-%d %H-%M-%S').zip" > DROPLET_PATH
+          scp -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i ~/.ssh/arrow_vortex av.zip $(cat DROPLET_PATH)
