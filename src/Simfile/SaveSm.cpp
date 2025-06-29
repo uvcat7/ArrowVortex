@@ -494,10 +494,41 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 	// Set whole and half step measures to be quarter notes by default
 	if (lcm < 3)
 	{
-		lcm = 4;
+		count = 4;
 	}
-	count = lcm;
-	pitch = (ROWS_PER_NOTE_SECTION * width) / lcm;
+	else
+	{
+	// Determines the best compression for the given section.
+    // Maybe lcm is the best factor, so just keep that.
+		count = lcm;
+		String zeroline(width, '0');
+
+		//The factor list is small, just check them all by hand
+		for (int i = lcm / 2; i >= 2; i--)
+		{
+			// Skip anything that isn't a lcm factor
+			if (lcm % i > 0) continue;
+
+			bool valid = true;
+			float mod = ROWS_PER_NOTE_SECTION / i;
+			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
+			{
+				if ((int)fmod(mod, j) != 0 && memcmp(section + j * width, zeroline.str(), width))
+				{ 
+					valid = false;
+					break;
+				}
+			}
+
+			// The first (largest) match is always the best
+			if (valid && mod >= 4)
+			{
+				count = i;
+				break;
+			}
+		}
+	}
+	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
 }
 
 static void WriteSections(ExportData& data)
