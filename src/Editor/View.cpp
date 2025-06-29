@@ -139,7 +139,7 @@ void onMouseScroll(MouseScroll& evt) override
 		else
 		{
 			setCursorRow(myCursorRow + (int)(delta / myPixPerRow));
-		}		
+		}
 	}
 	evt.handled = true;
 }
@@ -150,6 +150,14 @@ void onMousePress(MousePress& evt) override
 	if(evt.button == Mouse::LMB && isMouseOverReceptors(evt.x, evt.y) && evt.unhandled())
 	{
 		myIsDraggingReceptors = true;
+		evt.setHandled();
+	}
+
+	if (evt.unhandled() && evt.button == Mouse::MMB) {
+		Vortex::vec2i mouse_pos = gSystem->getMousePos();
+		Vortex::ChartOffset ofs = gView->yToOffset(mouse_pos.y);
+
+		setCursorRow(snapRow(offsetToRow(ofs), SnapDir::SNAP_CLOSEST));
 		evt.setHandled();
 	}
 }
