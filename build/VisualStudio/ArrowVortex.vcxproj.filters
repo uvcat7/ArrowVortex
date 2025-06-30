@@ -646,11 +646,9 @@
     <ClInclude Include="..\..\src\Managers\MetadataMan.h">
       <Filter>Managers</Filter>
     </ClInclude>
-<<<<<<< HEAD
     <ClInclude Include="..\..\src\Dialogs\CustomSnap.h">
-=======
+      <Filter>Dialogs</Filter>
     <ClInclude Include="..\..\src\Dialogs\Zoom.h">
->>>>>>> main
       <Filter>Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
