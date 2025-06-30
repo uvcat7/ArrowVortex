@@ -124,7 +124,7 @@ const char* ToString(SnapType st)
 {
 	static const char* text[NUM_SNAP_TYPES] =
 	{
-		"None", "4th", "8th", "12th", "16th", "20th", "24th", "32nd", "48th", "64th", "96th", "192nd", "Custom"
+		"None", "4th", "8th", "12th", "16th", "24th", "32nd", "48th", "64th", "96th", "192nd", "Custom"
 	};
 	return (st >= 0 && st < NUM_SNAP_TYPES) ? text[st] : text[0];
 }

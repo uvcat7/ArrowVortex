@@ -109,7 +109,6 @@ enum SnapType
 	ST_8TH,
 	ST_12TH,
 	ST_16TH,
-	ST_20TH,
 	ST_24TH,
 	ST_32ND,
 	ST_48TH,

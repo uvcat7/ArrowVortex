@@ -290,6 +290,7 @@ void init(Item* menu)
 	Item* hViewSnap = newMenu();
 	add(hViewSnap, SNAP_RESET, "Reset");
 	sep(hViewSnap);
+	add(hViewSnap, OPEN_DIALOG_CUSTOM_SNAP, "Set Snap");
 	add(hViewSnap, SNAP_PREVIOUS, "Previous");
 	add(hViewSnap, SNAP_NEXT, "Next");
 
@@ -338,7 +339,6 @@ void init(Item* menu)
 	add(myViewMenu, USE_ROW_BASED_VIEW, "Row based (X-mod)");
 	sep(myViewMenu);
 	add(myViewMenu, OPEN_DIALOG_WAVEFORM_SETTINGS, "Waveform...");
-	add(myViewMenu, OPEN_DIALOG_CUSTOM_SNAP, "Snapping...");
 	add(myViewMenu, 0 /*dummy*/, "Noteskins");
 	sub(myViewMenu, myMinimapMenu, "Minimap");
 	sub(myViewMenu, myBgStyleMenu, "Background");
@@ -477,7 +477,7 @@ void registerUpdateFunctions()
 				++numValid;
 			}
 		}
-		MENU->myViewMenu->replaceSubmenu(14, hSkins, "Noteskins", (numValid == 0));
+		MENU->myViewMenu->replaceSubmenu(13, hSkins, "Noteskins", (numValid == 0));
 	};
 	myUpdateFunctions[STATUSBAR_CHART] = []
 	{

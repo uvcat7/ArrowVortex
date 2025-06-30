@@ -56,7 +56,7 @@ static const int sMiniScales[NUM_MINI_LEVELS] =
 
 static const int sRowSnapTypes[NUM_SNAP_TYPES] =
 {
-	1, 48, 24, 16, 12, 10, 8, 6, 4, 3, 2, 1, 0
+	1, 48, 24, 16, 12, 8, 6, 4, 3, 2, 1, 0
 };
 
 }; // anonymous namespace
@@ -446,11 +446,21 @@ void setCustomSnap(int size)
 {
 	if (size < 1) size = 1;
 	if (size > 192) size = 192;
+	// If the custom snap is a non-custom value, set the snap to that value instead
+	for (int i = 0; i < ST_CUSTOM; i++)
+	{
+		if (192 / sRowSnapTypes[i] == size)
+		{
+			setSnapType(i);
+			return;
+		}
+	}
 	if (myCustomSnap != size)
 	{
 		myCustomSnap = size;
 		updateCustomSnapSteps();
 		HudNote("Custom Snap: %s", OrdinalSuffix(myCustomSnap));
+		setSnapType(ST_CUSTOM);
 	}
 }
 
@@ -744,39 +754,10 @@ int snapRow(int row, SnapDir dir)
 
 		// Bump the row by one so the snap will jump to the next position if the given row
 		// is equal to the snap row.
-		int snap = sRowSnapTypes[mySnapType];
 		row = row + ((dir == SNAP_UP) ? -1 : 1);
 
-		// Special case, ITG does not really support 20th so we fake it.
-		if(snap == 10)
-		{
-			int beat = row / 48, beatrow = row % 48;
-			int rows[6] = { 0, 10, 19, 29, 38, 48 };
-			if(dir == SNAP_UP)
-			{
-				for(int i = 5; i >= 0; --i)
-				{
-					if(rows[i] < beatrow)
-					{
-						beatrow = rows[i]; break;
-					}
-				}
-			}
-			else
-			{
-				for(int i = 0; i < 6; ++i)
-				{
-					if(rows[i] > beatrow)
-					{
-						beatrow = rows[i]; break;
-					}
-				}
-
-			}
-			row = beat * 48 + beatrow;
-		}
-		// Special case, custom snapping.
-		else if (snap == 0)
+		// Custom snaps
+        if (mySnapType == ST_CUSTOM)
 		{
 			int measure = row / 192, measurerow = row % 192;
 			if (dir == SNAP_UP)
@@ -804,6 +785,7 @@ int snapRow(int row, SnapDir dir)
 		}
 		else // Regular case, snap is divisible by 192.
 		{
+			int snap = sRowSnapTypes[mySnapType];
 			if(row % snap && dir != SNAP_UP) row += snap;
 			row -= row % snap;
 		}
@@ -816,14 +798,8 @@ bool isAlignedToSnap(int row)
 {
 	int snap = sRowSnapTypes[mySnapType];
 
-	// Special case, ITG/DDR does not really support 20ths so we fake it.
-	if(snap == 10)
-	{
-		int rows[5] = { 0, 10, 19, 29, 38 };
-		return std::find(rows, rows + 5, row % 48) != rows + 5;
-	}
 	// Special case, custom snapping.
-	else if (snap == 0)
+	if (snap == 0)
 	{
 		return std::find(myCustomSnapSteps, myCustomSnapSteps + myCustomSnap, row % 192) != myCustomSnapSteps + myCustomSnap;
 	}

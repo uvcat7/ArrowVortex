@@ -581,13 +581,13 @@ void drawSnapDiamonds()
 	}
 	batch.flush();
 
-	// Custom Snap
-	if (snapType == NUM_SNAP_TYPES - 1)
+	// Snap quantization
+	if (gView->getSnapType() != ST_NONE)
 	{
 		TextStyle textStyle;
-		textStyle.fontSize = 11;
+		textStyle.fontSize = gView->getZoomLevel() >= 4 ? 11 : 9;
 
-		String snap = Str::val(gView->getCustomSnap());
+		String snap = Str::val(gView->getSnapQuant());
 
 		for (int i = 0; i < 2; ++i)
 		{

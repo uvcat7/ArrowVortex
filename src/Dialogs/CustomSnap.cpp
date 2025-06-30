@@ -30,10 +30,15 @@ namespace Vortex {
 		scol->onChange.bind(this, &Dlg::onChange);
 		scol->setRange(1.0, 192.0);
 		scol->setPrecision(0, 0);
+		scol->startCapturingText();
 	}
 
 	void Dlg::onChange()
 	{
-		gView->setCustomSnap(myCustomSnap);
+		if (myCustomSnap > 0 && myCustomSnap <= 192)
+		{
+			gView->setCustomSnap(myCustomSnap);
+			requestClose();
+		}
 	}
 }; // namespace Vortex
