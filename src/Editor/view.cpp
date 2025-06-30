@@ -248,7 +248,7 @@ int getSnapQuant()
 	}
 	else
 	{
-		return sRowSnapTypes[mySnapType];
+		return 192 / sRowSnapTypes[mySnapType];
 	}
 }
 

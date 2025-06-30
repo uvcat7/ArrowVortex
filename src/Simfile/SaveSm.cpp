@@ -22,6 +22,7 @@ enum ForceWrite { ALWAYS, SONG_ONLY, NEVER };
 static const int MEASURE_SUBDIV[] = {4, 8, 12, 16, 24, 32, 48, 64, 96, 192};
 static const int NUM_MEASURE_SUBDIV = 10;
 static const int ROWS_PER_NOTE_SECTION = 192;
+static const int MIN_SECTIONS_PER_MEASURE = 4;
 
 static double ToBeat(int row)
 {
@@ -492,9 +493,9 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 	}
 
 	// Set whole and half step measures to be quarter notes by default
-	if (lcm < 3)
+	if (lcm <= MIN_SECTIONS_PER_MEASURE)
 	{
-		count = 4;
+		count = MIN_SECTIONS_PER_MEASURE;
 	}
 	else
 	{
@@ -510,10 +511,12 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 			if (lcm % i > 0) continue;
 
 			bool valid = true;
-			float mod = ROWS_PER_NOTE_SECTION / i;
+			float mod = (float) ROWS_PER_NOTE_SECTION / i;
 			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
 			{
-				if ((int)fmod(mod, j) != 0 && memcmp(section + j * width, zeroline.str(), width))
+				// Check all the compressed rows and make sure they are empty
+				if ((int)(round(fmod(j, mod))) > 0 && (int)(round(fmod(j, mod))) < (int) mod
+					&& memcmp(section + j * width, zeroline.str(), width))
 				{ 
 					valid = false;
 					break;
@@ -521,7 +524,7 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 			}
 
 			// The first (largest) match is always the best
-			if (valid && mod >= 4)
+			if (valid && i >= MIN_SECTIONS_PER_MEASURE)
 			{
 				count = i;
 				break;
@@ -555,7 +558,7 @@ static void WriteSections(ExportData& data)
 		Vector<const Note*> holdVec(numCols, nullptr);
 		const Note** holds = holdVec.begin();
 
-		std::list<uint> quantVec(ROWS_PER_NOTE_SECTION);
+		std::list<uint> quantVec;
 
 		const Note* it = chart->notes.begin();
 		const Note* end = chart->notes.end();
@@ -640,7 +643,7 @@ static void WriteSections(ExportData& data)
 				{
 					data.file.write(m, numCols, 1);
 					data.file.write("\n", 1, 1);
-					pitch = ((int) round(192.0f / count * (k + 1)) - (int) round(192.0f / count * k)) * numCols;
+					pitch = ((int)round((float) ROWS_PER_NOTE_SECTION / count * (k + 1)) - (int)round((float)ROWS_PER_NOTE_SECTION / count * k)) * numCols;
 				}
 			}
 			// Write a comma if this is not the last section.

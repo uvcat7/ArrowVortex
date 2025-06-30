@@ -167,7 +167,6 @@ void onKeyPress(KeyPress& evt) override
 			NoteEdit edit;
 			auto note = gNotes->getNoteAt(row, col);
 			uint quant = gView->getSnapQuant();
-			HudNote("Quant is %d", quant);
 			if(note)
 			{
 				if(gMusic->isPaused())

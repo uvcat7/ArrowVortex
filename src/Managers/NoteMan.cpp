@@ -98,16 +98,17 @@ void myUpdateNotes()
 	myUpdateNoteTimes();
 	myUpdateWarpedNotes();
 	myUpdateNoteStats();
-	myTempCheckQuants();
+	myUpdateCheckQuants();
 }
 
-void myTempCheckQuants()
+void myUpdateCheckQuants()
 {
 	for (auto& note : myNotes)
 	{
 		if (note.quant < 0 || note.quant > 192)
 		{
 			HudError("Missing quant at %d, value %d", note.row, note.quant);
+			note.quant = 192;
 		}
 	}
 }

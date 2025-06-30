@@ -195,12 +195,12 @@ void NoteList::cleanup()
 		// Move a block of valid notes.
 		auto moveBegin = read;
 		while(read != end && read->row >= 0) ++read;
-		int offset = read - moveBegin;
+		auto offset = read - moveBegin;
 		memmove(write, moveBegin, offset * sizeof(Note));
 		write += offset;
 	}
 
-	myNum = write - myNotes;
+	myNum = (int) (write - myNotes);
 }
 
 void NoteList::sanitize(const Chart* chart)
@@ -511,7 +511,6 @@ static void EncodeNote(WriteStream& out, const Note& in, TempoTimeTracker& track
 static void ApplyQuantOffset(Note& out, int offsetRows) 
 {
 	int startingOffset = (out.row - offsetRows) % 192;
-	int rowsOffset = offsetRows % 192;
 	int endingOffset = out.row % 192;
 	int endingRowOffset = out.endrow % 192;
 	if (out.quant == 0 || out.quant > 192)
@@ -520,13 +519,13 @@ static void ApplyQuantOffset(Note& out, int offsetRows)
 		HudError("Bug: Missing quantization label for note at %i", out.row);
 	}
 	// Use the starting row to shift basis to the correct one
-	// get quant position of starting note/offset -> quant position of starting quant/offset
-	// -> quant position of end location -> approximate position "rounded" to row
+	// get quant-based index of starting note/offset: round(endingOffset / 192.0f * out.quant)
+	// recalculate the position in the measure of the quant: (int) round(192.0f / out.quant * (above)
+	// then make this the new measure offset
 	if (192 % out.quant > 0 && startingOffset != endingOffset)
 	{
-		int quantsToOffset = (int) (round(startingOffset / 192.0f * out.quant) + round(rowsOffset / 192.0f * out.quant)) % 192;
-		out.row = out.row - endingOffset + (int)round(192.0f / out.quant * quantsToOffset);
-		out.endrow = out.endrow - endingRowOffset + (int)round(192.0f / out.quant * quantsToOffset);
+		out.row = out.row - endingOffset + (int) round(192.0f / out.quant * round(endingOffset / 192.0f * out.quant));
+		out.endrow = out.endrow - endingRowOffset + (int) round(192.0f / out.quant * round(endingRowOffset / 192.0f * out.quant));
 	}
 }
 
