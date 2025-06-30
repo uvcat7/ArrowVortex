@@ -1,11 +1,12 @@
-# Foo.cpp
+# Foo
 # `class` Foo
 Foo is a class used for testing and template purposes.
 
-> `void` bar
-
+#### `void bar()`
 `bar` is an example function.
 
-> `int` baz
+#### `int<T> baz(T element)`
+* Template `T` - Determins the type of the `element` argument.
+* Argument `element` - Element that's used in baz.
 
-`baz` is an example function.
+`baz` is an example templated function with arguments.
