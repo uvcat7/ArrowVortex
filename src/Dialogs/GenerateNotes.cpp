@@ -20,12 +20,12 @@ namespace Vortex {
 
 static const char* SpacingStrings[] =
 {
-	"4th", "8th", "12th", "16th", "20th", "24th", "32nd"
+	"4th", "8th", "12th", "16th", "24th", "32nd"
 };
 
 static SnapType SpacingTypes[] =
 {
-	ST_4TH, ST_8TH, ST_12TH, ST_16TH, ST_20TH, ST_24TH, ST_32ND
+	ST_4TH, ST_8TH, ST_12TH, ST_16TH, ST_24TH, ST_32ND
 };
 
 static const int IFP_SIZE = 24;

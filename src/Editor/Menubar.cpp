@@ -321,6 +321,7 @@ void init(Item* menu)
 	Item* hViewSnap = newMenu();
 	add(hViewSnap, SNAP_RESET, "Reset");
 	sep(hViewSnap);
+	add(hViewSnap, OPEN_DIALOG_CUSTOM_SNAP, "Set Snap");
 	add(hViewSnap, SNAP_PREVIOUS, "Previous");
 	add(hViewSnap, SNAP_NEXT, "Next");
 

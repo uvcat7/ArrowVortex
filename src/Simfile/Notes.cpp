@@ -13,6 +13,7 @@ void EncodeNote(WriteStream& out, const Note& in)
 	{
 		out.write<uchar>(in.col);
 		out.writeNum(in.row);
+		out.write<uchar>(in.quant);
 	}
 	else
 	{
@@ -20,6 +21,7 @@ void EncodeNote(WriteStream& out, const Note& in)
 		out.writeNum(in.row);
 		out.writeNum(in.endrow);
 		out.write<uchar>((in.player << 4) | in.type);
+		out.write<uchar>(in.quant);
 	}
 }
 
@@ -29,7 +31,8 @@ void DecodeNote(ReadStream& in, Note& out)
 	if((col & 0x80) == 0)
 	{
 		int row = in.readNum();
-		out = {row, row, col, 0, 0};
+		out = {row, row, col, 0, 0, 0};
+		out.quant = in.read<uchar>();
 	}
 	else
 	{
@@ -39,6 +42,7 @@ void DecodeNote(ReadStream& in, Note& out)
 		uint v = in.read<uchar>();
 		out.player = v >> 4;
 		out.type = v & 0xF;
+		out.quant = in.read<uchar>();
 	}
 }
 
@@ -51,6 +55,7 @@ void EncodeNoteWithTime(WriteStream& out, const ExpandedNote& in)
 	{
 		out.write<uchar>(in.col);
 		out.write(in.time);
+		out.write<uchar>(in.quant);
 	}
 	else
 	{
@@ -58,6 +63,7 @@ void EncodeNoteWithTime(WriteStream& out, const ExpandedNote& in)
 		out.write(in.time);
 		out.write(in.endtime);
 		out.write<uchar>((in.player << 4) | in.type);
+		out.write<uchar>(in.quant);
 	}
 }
 
@@ -67,6 +73,7 @@ void DecodeNoteWithTime(ReadStream& in, ExpandedNote& out)
 	if((col & 0x80) == 0)
 	{
 		double time = in.read<double>();
+		out.quant = in.read<uchar>();
 	}
 	else
 	{
@@ -76,6 +83,7 @@ void DecodeNoteWithTime(ReadStream& in, ExpandedNote& out)
 		uint v = in.read<uchar>();
 		out.player = v >> 4;
 		out.type = v & 0xF;
+		out.quant = in.read<uchar>();
 	}
 }
 

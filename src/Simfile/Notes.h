@@ -53,12 +53,15 @@ struct ExpandedNote
 
 	/// Indicates which player the note belongs to in routine modes.
 	uint player : 24;
+
+	/// Indicates the quantization of the note, if it is nonstandard
+	uint quant : 8;
 };
 
 // Converts and expanded note to a compact note.
 inline Note CompressNote(const ExpandedNote& note)
 {
-	return {note.row, note.endrow, (uint)note.col, (uint)note.player, (uint)note.type};
+	return {note.row, note.endrow, (uint)note.col, (uint)note.player, (uint)note.type, (uint) note.quant};
 }
 
 // Encodes a single note and writes it to a bytestream.

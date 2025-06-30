@@ -38,6 +38,7 @@ struct View
 	virtual void setCursorToSelection(bool top) = 0;
 
 	virtual void setSnapType(int type) = 0;
+	virtual void setCustomSnap(int snap) = 0;
 	virtual int  snapRow(int row, SnapDir direction) = 0;
 	virtual bool isAlignedToSnap(int row) = 0;
 
@@ -62,6 +63,8 @@ struct View
 	virtual double offsetToTime(ChartOffset ofs) const = 0;
 
 	virtual SnapType getSnapType() const = 0;
+	virtual int getSnapQuant() = 0;
+	virtual int getCustomSnap() const = 0;
 	virtual bool isTimeBased() const = 0;
 	virtual bool hasReverseScroll() const = 0;
 	virtual bool hasChartPreview() const = 0;

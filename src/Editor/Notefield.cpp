@@ -591,6 +591,23 @@ void drawSnapDiamonds()
 		mySnapIcons[snapType].draw(&batch, vx, myY);
 	}
 	batch.flush();
+
+	// Snap quantization
+	if (gView->getSnapType() != ST_NONE)
+	{
+		TextStyle textStyle;
+		textStyle.fontSize = gView->getZoomLevel() >= 4 ? 11 : 9;
+
+		String snap = Str::val(gView->getSnapQuant());
+
+		for (int i = 0; i < 2; ++i)
+		{
+			int vx = x[i] + gView->applyZoom(i * 40 - 20);
+
+			Text::arrange(Text::MC, textStyle, snap.str());
+			Text::draw(vec2i{ vx, myY - 1 });
+		}
+	}
 }
 
 void drawNotes()

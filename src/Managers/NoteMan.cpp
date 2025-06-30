@@ -91,12 +91,26 @@ void myUpdateNotes()
 		it->isSelected = 0;
 		it->type = note.type;
 		it->player = note.player;
+		it->quant = note.quant;
 		++it;
 	}
 
 	myUpdateNoteTimes();
 	myUpdateWarpedNotes();
 	myUpdateNoteStats();
+	myUpdateCheckQuants();
+}
+
+void myUpdateCheckQuants()
+{
+	for (auto& note : myNotes)
+	{
+		if (note.quant < 0 || note.quant > 192)
+		{
+			HudError("Missing quant at %d, value %d", note.row, note.quant);
+			note.quant = 192;
+		}
+	}
 }
 
 void myUpdateNoteTimes()

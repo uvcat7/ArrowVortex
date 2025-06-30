@@ -109,13 +109,13 @@ enum SnapType
 	ST_8TH,
 	ST_12TH,
 	ST_16TH,
-	ST_20TH,
 	ST_24TH,
 	ST_32ND,
 	ST_48TH,
 	ST_64TH,
 	ST_96TH,
 	ST_192TH,
+	ST_CUSTOM,
 
 	NUM_SNAP_TYPES,
 };
@@ -139,6 +139,9 @@ Vector<uchar> GetClipboardData(StringRef tag);
 
 // Returns a text representation of the given snap type.
 const char* ToString(SnapType st);
+
+// Returns a number value with it's ordinal suffix.
+const String OrdinalSuffix(int i);
 
 // Returns the color representation of the given difficulty type.
 color32 ToColor(Difficulty dt);
