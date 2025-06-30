@@ -36,10 +36,10 @@ typedef void(*UpdateFunction)();
 typedef System::MenuItem Item;
 
 Item* myFileMenu;
+Item* myVisualSyncMenu;
 Item* myViewMenu;
 Item* myMinimapMenu;
 Item* myBgStyleMenu;
-Item* myMiniMenu;
 Item* myStatusMenu;
 Item* myEditMenu;
 
@@ -161,7 +161,7 @@ void init(Item* menu)
 	sep(hChart);
 	add(hChart, CHART_DELETE, "Delete chart");
 
-	// Audio > Select > Quantization menu.
+	// Notes > Select > Quantization menu.
 	Item* hSelectQuant = newMenu();
 	add(hSelectQuant, SELECT_QUANT_4, "4th");
 	add(hSelectQuant, SELECT_QUANT_8, "8th");
@@ -181,16 +181,30 @@ void init(Item* menu)
 	add(hSelection, SELECT_ALL_MINES, "Mines");
 	add(hSelection, SELECT_ALL_HOLDS, "Holds");
 	add(hSelection, SELECT_ALL_ROLLS, "Rolls");
+	add(hSelection, SELECT_ALL_FAKES, "Fakes");
+	add(hSelection, SELECT_ALL_LIFTS, "Lifts");
 	sep(hSelection);
 	add(hSelection, SELECT_REGION_BEFORE_CURSOR, "Before cursor");
 	add(hSelection, SELECT_REGION_AFTER_CURSOR, "After cursor");
 
 	// Notes > Convert menu.
 	Item* hNoteConvert = newMenu();
-	add(hNoteConvert, CHANGE_NOTES_TO_MINES, L"Notes \x2192 mines");
-	add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS, L"Holds \x2194 rolls");
-	add(hNoteConvert, CHANGE_HOLDS_TO_STEPS, L"Holds \x2192 steps");
-	add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, L"Switch player");
+	add(hNoteConvert, CHANGE_NOTES_TO_MINES, L"Notes \x2192 Mines");
+	add(hNoteConvert, CHANGE_NOTES_TO_FAKES, L"Notes \x2192 Fakes");
+	add(hNoteConvert, CHANGE_NOTES_TO_LIFTS, L"Notes \x2192 Lifts");
+	sep(hNoteConvert);
+	add(hNoteConvert, CHANGE_MINES_TO_NOTES, L"Mines \x2192 Notes");
+	add(hNoteConvert, CHANGE_MINES_TO_FAKES, L"Mines \x2192 Fakes");
+	add(hNoteConvert, CHANGE_MINES_TO_LIFTS, L"Mines \x2192 Lifts");
+	sep(hNoteConvert);
+	add(hNoteConvert, CHANGE_FAKES_TO_NOTES, L"Fakes \x2192 Notes");
+	add(hNoteConvert, CHANGE_LIFTS_TO_NOTES, L"Lifts \x2192 Notes");
+	sep(hNoteConvert);
+	add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS, L"Holds \x2194 Rolls");
+	add(hNoteConvert, CHANGE_HOLDS_TO_STEPS, L"Holds \x2192 Steps");
+	add(hNoteConvert, CHANGE_HOLDS_TO_MINES, L"Holds \x2192 Mines");
+	sep(hNoteConvert);
+	add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, L"Switch Player");
 
 	// Notes > Mirror menu.
 	Item* hNoteMirror = newMenu();
@@ -219,15 +233,36 @@ void init(Item* menu)
 	sub(hNotes, hNoteCompress, "Compress");
 	add(hNotes, OPEN_DIALOG_GENERATE_NOTES, "Generate...");
 
+	// Tempo > Select menu.
+	Item* hSelectTempo = newMenu();
+	add(hSelectTempo, SELECT_TEMPO_BPM, "BPM");
+	add(hSelectTempo, SELECT_TEMPO_STOP, "Stop");
+	add(hSelectTempo, SELECT_TEMPO_DELAY, "Delay");
+	add(hSelectTempo, SELECT_TEMPO_WARP, "Warp");
+	add(hSelectTempo, SELECT_TEMPO_TIME_SIG, "Time Sig.");
+	add(hSelectTempo, SELECT_TEMPO_TICK_COUNT, "Tick Count");
+	add(hSelectTempo, SELECT_TEMPO_COMBO, "Combo");
+	add(hSelectTempo, SELECT_TEMPO_SPEED, "Speed");
+	add(hSelectTempo, SELECT_TEMPO_SCROLL, "Scroll");
+	add(hSelectTempo, SELECT_TEMPO_FAKE, "Fake");
+	add(hSelectTempo, SELECT_TEMPO_LABEL, "Label");
+
+	// Tempo > Visual sync menu
+	myVisualSyncMenu = newMenu();
+	add(myVisualSyncMenu, SET_VISUAL_SYNC_CURSOR_ANCHOR, "Cursor row");
+	add(myVisualSyncMenu, SET_VISUAL_SYNC_RECEPTOR_ANCHOR, "Receptors row");
+  
 	// Tempo menu.
 	Item* hTempo = newMenu();
-	add(hTempo, SWITCH_TO_SYNC_MODE, "Sync mode");
+	sub(hTempo, hSelectTempo, "Select");
 	sep(hTempo);
 	add(hTempo, OPEN_DIALOG_ADJUST_SYNC, "Adjust sync...");
 	add(hTempo, OPEN_DIALOG_ADJUST_TEMPO, "Adjust tempo...");
 	add(hTempo, OPEN_DIALOG_ADJUST_TEMPO_SM5, "Adjust tempo SM5...");
 	sep(hTempo);
+	add(hTempo, SWITCH_TO_SYNC_MODE, "Sync mode");
 	add(hTempo, OPEN_DIALOG_TEMPO_BREAKDOWN, "Breakdown...");
+	sub(hTempo, myVisualSyncMenu, "Visual sync anchor");
 
 	// Audio > Volume menu.
 	Item* hAudioVol = newMenu();
@@ -273,18 +308,14 @@ void init(Item* menu)
 
 	// View > Zoom menu.
 	Item* hViewZoom = newMenu();
+	add(hViewZoom, OPEN_DIALOG_ZOOM, "Options");
+	sep(hViewZoom);
 	add(hViewZoom, ZOOM_RESET, "Reset");
 	sep(hViewZoom);
 	add(hViewZoom, ZOOM_IN, "Zoom in");
 	add(hViewZoom, ZOOM_OUT, "Zoom out");
-
-	// View > Mini menu.
-	myMiniMenu = newMenu();
-	add(myMiniMenu, SET_MINI_0, "  0% Mini");
-	add(myMiniMenu, SET_MINI_1, " 25% Mini");
-	add(myMiniMenu, SET_MINI_2, " 50% Mini");
-	add(myMiniMenu, SET_MINI_3, " 75% Mini");
-	add(myMiniMenu, SET_MINI_4, "100% Mini");
+	add(hViewZoom, SCALE_INCREASE, "Scale increase");
+	add(hViewZoom, SCALE_DECREASE, "Scale decrease");
 
 	// View > Snap menu.
 	Item* hViewSnap = newMenu();
@@ -343,7 +374,6 @@ void init(Item* menu)
 	sub(myViewMenu, myMinimapMenu, "Minimap");
 	sub(myViewMenu, myBgStyleMenu, "Background");
 	sub(myViewMenu, hViewZoom, "Zoom");
-	sub(myViewMenu, myMiniMenu, "Mini");
 	sub(myViewMenu, hViewSnap, "Snap");
 	sub(myViewMenu, hViewCursor, "Cursor");
 	sub(myViewMenu, myStatusMenu, "Status");
@@ -424,6 +454,11 @@ void registerUpdateFunctions()
 	{
 		MENU->myEditMenu->setChecked(TOGGLE_TIME_BASED_COPY, gEditing->hasTimeBasedCopy());
 	};
+	myUpdateFunctions[VISUAL_SYNC_ANCHOR] = []
+	{
+		MENU->myVisualSyncMenu->setChecked(SET_VISUAL_SYNC_CURSOR_ANCHOR, gEditing->getVisualSyncMode() == Editing::VisualSyncAnchor::CURSOR);
+		MENU->myVisualSyncMenu->setChecked(SET_VISUAL_SYNC_RECEPTOR_ANCHOR, gEditing->getVisualSyncMode() == Editing::VisualSyncAnchor::RECEPTORS);
+	};
 	myUpdateFunctions[USE_REVERSE_SCROLL] = []
 	{
 		MENU->myViewMenu->setChecked(TOGGLE_REVERSE_SCROLL, gView->hasReverseScroll());
@@ -449,15 +484,6 @@ void registerUpdateFunctions()
 		MENU->myBgStyleMenu->setChecked(BACKGROUND_SET_STRETCH, bg == BG_STYLE_STRETCH);
 		MENU->myBgStyleMenu->setChecked(BACKGROUND_SET_LETTERBOX, bg == BG_STYLE_LETTERBOX);
 		MENU->myBgStyleMenu->setChecked(BACKGROUND_SET_CROP, bg == BG_STYLE_CROP);
-	};
-	myUpdateFunctions[VIEW_MINI] = []
-	{
-		auto mini = gView->getMiniLevel();
-		MENU->myMiniMenu->setChecked(SET_MINI_0, mini == 0);
-		MENU->myMiniMenu->setChecked(SET_MINI_1, mini == 1);
-		MENU->myMiniMenu->setChecked(SET_MINI_2, mini == 2);
-		MENU->myMiniMenu->setChecked(SET_MINI_3, mini == 3);
-		MENU->myMiniMenu->setChecked(SET_MINI_4, mini == 4);
 	};
 	myUpdateFunctions[VIEW_NOTESKIN] = []
 	{

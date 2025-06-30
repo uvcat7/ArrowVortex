@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Input.h>
-#include <Core/slot.h>
+#include <Core/Slot.h>
 
 namespace Vortex {
 

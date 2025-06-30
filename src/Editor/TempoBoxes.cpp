@@ -198,6 +198,19 @@ int selectAll()
 	return myBoxes.size();
 }
 
+int selectType(Segment::Type type)
+{
+	for (auto& box : myBoxes)
+	{
+		box.isSelected = (box.type == type ? 1 : 0);
+	}
+	if (myBoxes.size())
+	{
+		gSelection->setType(Selection::TEMPO);
+	}
+	return myBoxes.size();
+}
+
 int selectSegments(const Tempo* tempo)
 {
 	int numSelected = 0;
@@ -331,7 +344,7 @@ void tick()
 
 void draw()
 {
-	if(myShowBoxes == false || myBoxes.empty() || gView->getZoomLevel() < 4) return;
+	if(myShowBoxes == false || myBoxes.empty() || gView->getScaleLevel() < 2) return;
 
 	auto coords = gView->getNotefieldCoords();
 	const int baseX[2] = {coords.xl, coords.xr};

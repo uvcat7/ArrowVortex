@@ -354,6 +354,7 @@
     <ClCompile Include="..\..\src\Dialogs\SongProperties.cpp" />
     <ClCompile Include="..\..\src\Dialogs\TempoBreakdown.cpp" />
     <ClCompile Include="..\..\src\Dialogs\WaveformSettings.cpp" />
+    <ClCompile Include="..\..\src\Dialogs\Zoom.cpp" />
     <ClCompile Include="..\..\src\Editor\Action.cpp" />
     <ClCompile Include="..\..\src\Editor\Aubio.cpp" />
     <ClCompile Include="..\..\src\Editor\Butterworth.cpp" />
@@ -461,6 +462,7 @@
     <ClInclude Include="..\..\src\Dialogs\SongProperties.h" />
     <ClInclude Include="..\..\src\Dialogs\TempoBreakdown.h" />
     <ClInclude Include="..\..\src\Dialogs\WaveformSettings.h" />
+    <ClInclude Include="..\..\src\Dialogs\Zoom.h" />
     <ClInclude Include="..\..\src\Editor\Action.h" />
     <ClInclude Include="..\..\src\Editor\Aubio.h" />
     <ClInclude Include="..\..\src\Editor\Butterworth.h" />

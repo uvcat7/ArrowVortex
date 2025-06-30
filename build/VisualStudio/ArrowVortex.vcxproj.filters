@@ -349,6 +349,8 @@
       <Filter>Managers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Dialogs\CustomSnap.cpp">
+	  <Filter>Dialogs</Filter>
+    <ClCompile Include="..\..\src\Dialogs\Zoom.cpp">
       <Filter>Dialogs</Filter>
     </ClCompile>
   </ItemGroup>
@@ -644,7 +646,11 @@
     <ClInclude Include="..\..\src\Managers\MetadataMan.h">
       <Filter>Managers</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="..\..\src\Dialogs\CustomSnap.h">
+=======
+    <ClInclude Include="..\..\src\Dialogs\Zoom.h">
+>>>>>>> main
       <Filter>Dialogs</Filter>
     </ClInclude>
   </ItemGroup>

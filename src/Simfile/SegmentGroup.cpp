@@ -45,21 +45,24 @@ void SegmentGroup::sanitize(const Chart* owner)
 	}
 }
 
-void SegmentGroup::prepareEdit(const SegmentEdit& in, SegmentEditResult& out)
+void SegmentGroup::prepareEdit(const SegmentEdit& in, SegmentEditResult& out, bool clearRegion)
 {
 	int regionBegin = INT_MAX;
 	int regionEnd = 0;
-	ForEachType(type)
+	if(clearRegion)
 	{
-		auto& list = in.add.myLists[type];
-		if(list.size() >= 2)
+		ForEachType(type)
 		{
-			auto first = list.begin();
-			auto last = list.rbegin();
-			if(last->row > first->row)
+			auto& list = in.add.myLists[type];
+			if(list.size() >= 2)
 			{
-				regionBegin = min(regionBegin, first->row);
-				regionEnd = max(regionEnd, last->row);
+				auto first = list.begin();
+				auto last = list.rbegin();
+				if(last->row > first->row)
+				{
+					regionBegin = min(regionBegin, first->row);
+					regionEnd = max(regionEnd, last->row);
+				}
 			}
 		}
 	}

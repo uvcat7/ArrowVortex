@@ -15,7 +15,7 @@
 
 #include <Editor/Music.h>
 #include <Editor/View.h>
-#include <Editor/editor.h>
+#include <Editor/Editor.h>
 #include <Managers/TempoMan.h>
 #include <Editor/Menubar.h>
 #include <Editor/TextOverlay.h>
@@ -211,11 +211,16 @@ void clearBlocks()
 	}
 }
 
-void overlayFilter(bool enabled)
+void setOverlayFilter(bool enabled)
 {
 	myOverlayFilter = enabled;
 
 	clearBlocks();
+}
+
+bool getOverlayFilter()
+{
+	return myOverlayFilter;
 }
 
 void enableFilter(FilterType type, double strength)
@@ -440,7 +445,17 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	int64_t srcFrames = filtered ? myFilter->samplesL.size() : music.getNumFrames();
 	int64_t samplePos = max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
 	int sampleCount = (int)min(srcFrames - samplePos, (int64_t)samplesPerBlock);
-	if(music.getNumFrames() < samplePos) sampleCount = 0;
+
+	if (samplePos >= srcFrames || sampleCount <= 0)
+	{
+		// A crash could occur if we try to access out-of-bounds memory.
+		// Fill the edges with zeroes to avoid this issue.
+		for (int y = 0; y < h; ++y)
+		{
+			edges[y] = {0, 0, 0};
+		}
+		return;
+	}
 
 	int sampleSkip = max(1, (int)(samplesPerPixel / 200.0));
 	int wh = w / 2 - 1;
@@ -494,25 +509,34 @@ void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int bloc
 	{
 		memset(texBuf, 0, w * h);
 
+		// Process edges
 		sampleEdges(edgeBuf, w, h, channel, blockId, filtered);
-		switch(myLuminance)
-		{
-			case LL_UNIFORM:   edgeLumUniform(edgeBuf, h); break;
-			case LL_AMPLITUDE: edgeLumAmplitude(edgeBuf, w, h); break;
+
+		// Apply luminance
+		if (myLuminance == LL_UNIFORM) {
+			edgeLumUniform(edgeBuf, h);
 		}
-		switch(myWaveShape)
-		{
-			case WS_RECTIFIED: edgeShapeRectified(texBuf, edgeBuf, w, h); break;
-			case WS_SIGNED:    edgeShapeSigned(texBuf, edgeBuf, w, h); break;
-		};
-		switch(myAntiAliasing)
-		{
-			case 1: antiAlias2x(texBuf, w, h); break;
-			case 2: antiAlias3x(texBuf, w, h); break;
-			case 3: antiAlias4x(texBuf, w, h); break;
-		};
-		if(!textures[channel].handle())
-		{
+		else if (myLuminance == LL_AMPLITUDE) {
+			edgeLumAmplitude(edgeBuf, w, h);
+		}
+
+		// Apply wave shape
+		if (myWaveShape == WS_RECTIFIED) {
+			edgeShapeRectified(texBuf, edgeBuf, w, h);
+		}
+		else if (myWaveShape == WS_SIGNED) {
+			edgeShapeSigned(texBuf, edgeBuf, w, h);
+		}
+
+		// Apply anti-aliasing
+		switch (myAntiAliasing) {
+		case 1: antiAlias2x(texBuf, w, h); break;
+		case 2: antiAlias3x(texBuf, w, h); break;
+		case 3: antiAlias4x(texBuf, w, h); break;
+		}
+
+		// Create or update texture
+		if (!textures[channel].handle()) {
 			textures[channel] = Texture(TEX_W, TEX_H, Texture::ALPHA);
 		}
 		textures[channel].modify(0, 0, myBlockW, TEX_H, texBuf);
@@ -581,7 +605,7 @@ void updateBlockW()
 {
 	int width = myBlockW;
 
-	myBlockW = gView->applyZoom(256);
+	myBlockW = min(TEX_W, gView->applyZoom(256));
 	mySpacing = gView->applyZoom(24);
 
 	if(myBlockW != width) clearBlocks();

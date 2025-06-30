@@ -73,6 +73,9 @@ struct Str
 	/// Converts the string to a boolean; returns alt on failure.
 	static bool readBool(StringRef s, bool alt = false);
 
+	/// Converts the string to a timestamp double; returns alt on failure.
+	static double readTime(StringRef s, double alt = 0);
+
 	/// Converts the string to a boolean; returns alt on failure.
 	static bool read(StringRef s, bool alt = false);
 

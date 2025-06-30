@@ -59,9 +59,10 @@ struct TempoMan
 
 	/// Editing functions.
 	virtual void modify(const SegmentEdit& edit) = 0;
+	virtual void modify(const SegmentEdit& edit, bool clearRegion) = 0;
 	virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;
 	virtual void removeSelectedSegments() = 0;
-	virtual void pasteFromClipboard() = 0;
+	virtual void pasteFromClipboard(bool insert) = 0;
 	virtual void copyToClipboard() = 0;
 
 	/// Sets the global music offset.
@@ -129,6 +130,13 @@ struct TempoMan
 		edit.add.append(segment);
 		modify(edit);
 	}
+
+	/// Add a (normally redundant) BPM change at `target_row` equal to BPM at that row
+	virtual void injectBoundingBpmChange(const int target_row) = 0;
+	/// Add BPM changes in the beat such that `target_row` will be shifted to `target_time` without affecting other BPM changes
+	virtual void nonDestructiveShiftRowToTime(const int target_row, const double target_time) = 0;
+	/// Adjust previous BPM change such that `target_row` will be shifted to `target_time`. 
+	virtual void destructiveShiftRowToTime(const int target_row, const double target_time) = 0;
 };
 
 extern TempoMan* gTempo;

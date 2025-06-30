@@ -77,7 +77,7 @@ public:
 
 	// Prepares a modification. The input is a list of segments which should be added and removed.
 	// The output is a list of segments that actually end up being added and removed.
-	void prepareEdit(const SegmentEdit& in, SegmentEditResult& out);
+	void prepareEdit(const SegmentEdit& in, SegmentEditResult& out, bool clearRegion);
 
 	// Appends a default constructed segment of the given type at the given row.
 	void append(Segment::Type type, int row);

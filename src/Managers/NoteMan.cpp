@@ -223,6 +223,10 @@ static String GetNoteName(const Note& note)
 		return "mine";
 	case NOTE_ROLL:
 		return "roll";
+	case NOTE_FAKE:
+		return "fake";
+	case NOTE_LIFT:
+		return "lift";
 	};
 	return "note";
 }
@@ -706,6 +710,16 @@ int select(SelectModifier mod, Filter filter)
 		{
 			return note->isWarped;
 		});
+	case SELECT_FAKES:
+		return performSelection(mod, [&](const ExpandedNote* note)
+		{
+			return note->type == NoteType::NOTE_FAKE;
+		});
+	case SELECT_LIFTS:
+		return performSelection(mod, [&](const ExpandedNote* note)
+		{
+			return note->type == NoteType::NOTE_LIFT;
+		});
 	};
 	return 0;
 }
@@ -788,7 +802,7 @@ void copyToClipboard(bool timeBased)
 	}
 }
 
-void pasteFromClipboard()
+void pasteFromClipboard(bool insert)
 {
 	Vector<uchar> buffer = GetClipboardData(clipboardTag);
 	ReadStream stream(buffer.data(), buffer.size());
@@ -822,8 +836,8 @@ void pasteFromClipboard()
 
 	// Perform the changes.
 	static const NotesMan::EditDescription desc = {"Pasted %1 note", "Pasted %1 notes"};
-	gNotes->modify(edit, true, &desc);
-	gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
+	modify(edit, !insert, &desc);
+	select(SELECT_SET, edit.add.begin(), edit.add.size());
 }
 
 // ================================================================================================

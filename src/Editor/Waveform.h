@@ -28,7 +28,8 @@ public:
 
 	virtual void clearBlocks() = 0;
 
-	virtual void overlayFilter(bool enabled) = 0;
+	virtual void setOverlayFilter(bool enabled) = 0;
+	virtual bool getOverlayFilter() = 0;
 	virtual void enableFilter(FilterType type, double strength) = 0;
 	virtual void disableFilter() = 0;
 

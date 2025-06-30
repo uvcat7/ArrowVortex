@@ -20,6 +20,7 @@
 #include <Managers/NoteskinMan.h>
 #include <Managers/StyleMan.h>
 #include <Managers/SimfileMan.h>
+#include <Managers/TempoMan.h>
 
 #include <Dialogs/Dialog.h>
 
@@ -69,6 +70,8 @@ void Action::perform(Type action)
 		gEditor->openDialog(DIALOG_TEMPO_BREAKDOWN);
 	CASE(OPEN_DIALOG_WAVEFORM_SETTINGS)
 		gEditor->openDialog(DIALOG_WAVEFORM_SETTINGS);
+	CASE(OPEN_DIALOG_ZOOM)
+		gEditor->openDialog(DIALOG_ZOOM);
 	CASE(OPEN_DIALOG_CUSTOM_SNAP)
 		gEditor->openDialog(DIALOG_CUSTOM_SNAP);
 
@@ -94,6 +97,17 @@ void Action::perform(Type action)
 	CASE(TOGGLE_TIME_BASED_COPY)
 		gEditing->toggleTimeBasedCopy();
 
+	CASE(SET_VISUAL_SYNC_CURSOR_ANCHOR)
+		gEditing->setVisualSyncAnchor(Editing::VisualSyncAnchor::CURSOR);
+	CASE(SET_VISUAL_SYNC_RECEPTOR_ANCHOR)
+		gEditing->setVisualSyncAnchor(Editing::VisualSyncAnchor::RECEPTORS);
+	CASE(INJECT_BOUNDING_BPM_CHANGE)
+		gEditing->injectBoundingBpmChange();
+	CASE(SHIFT_ROW_NONDESTRUCTIVE)
+		gEditing->shiftAnchorRowToMousePosition(false);
+	CASE(SHIFT_ROW_DESTRUCTIVE)
+		gEditing->shiftAnchorRowToMousePosition(true);
+
 	CASE(SELECT_REGION)
 		gSelection->selectRegion();
 	CASE(SELECT_ALL_STEPS)
@@ -104,6 +118,10 @@ void Action::perform(Type action)
 		gSelection->selectNotes(NotesMan::SELECT_HOLDS);
 	CASE(SELECT_ALL_ROLLS)
 		gSelection->selectNotes(NotesMan::SELECT_ROLLS);
+	CASE(SELECT_ALL_FAKES)
+		gSelection->selectNotes(NotesMan::SELECT_FAKES);
+	CASE(SELECT_ALL_LIFTS)
+		gSelection->selectNotes(NotesMan::SELECT_LIFTS);
 	CASE(SELECT_REGION_BEFORE_CURSOR)
 		gSelection->selectRegion(0, gView->getCursorRow());
 	CASE(SELECT_REGION_AFTER_CURSOR)
@@ -128,6 +146,29 @@ void Action::perform(Type action)
 	CASE(SELECT_QUANT_192)
 		gSelection->selectNotes(RT_192TH);
 
+	CASE(SELECT_TEMPO_BPM)
+		gTempoBoxes->selectType(Segment::BPM);
+	CASE(SELECT_TEMPO_STOP)
+		gTempoBoxes->selectType(Segment::STOP);
+	CASE(SELECT_TEMPO_DELAY)
+		gTempoBoxes->selectType(Segment::DELAY);
+	CASE(SELECT_TEMPO_WARP)
+		gTempoBoxes->selectType(Segment::WARP);
+	CASE(SELECT_TEMPO_TIME_SIG)
+		gTempoBoxes->selectType(Segment::TIME_SIG);
+	CASE(SELECT_TEMPO_TICK_COUNT)
+		gTempoBoxes->selectType(Segment::TICK_COUNT);
+	CASE(SELECT_TEMPO_COMBO)
+		gTempoBoxes->selectType(Segment::COMBO);
+	CASE(SELECT_TEMPO_SPEED)
+		gTempoBoxes->selectType(Segment::SPEED);
+	CASE(SELECT_TEMPO_SCROLL)
+		gTempoBoxes->selectType(Segment::SCROLL);
+	CASE(SELECT_TEMPO_FAKE)
+		gTempoBoxes->selectType(Segment::FAKE);
+	CASE(SELECT_TEMPO_LABEL)
+		gTempoBoxes->selectType(Segment::LABEL);
+
 	CASE(CHART_PREVIOUS)
 		gSimfile->previousChart();
 	CASE(CHART_NEXT)
@@ -145,14 +186,30 @@ void Action::perform(Type action)
 	CASE(CHART_CONVERT_ROUTINE_TO_COUPLES)
 		gEditing->convertRoutineToCouples();
 
-	CASE(CHANGE_HOLDS_TO_STEPS)
-		gEditing->changeHoldsToSteps();
 	CASE(CHANGE_NOTES_TO_MINES)
-		gEditing->changeNotesToMines();
+		gEditing->changeNotesToType(NoteType::NOTE_MINE);
+	CASE(CHANGE_NOTES_TO_FAKES)
+		gEditing->changeNotesToType(NoteType::NOTE_FAKE);
+	CASE(CHANGE_NOTES_TO_LIFTS)
+		gEditing->changeNotesToType(NoteType::NOTE_LIFT);
+	CASE(CHANGE_MINES_TO_NOTES)
+		gEditing->changeMinesToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_MINES_TO_FAKES)
+		gEditing->changeMinesToType(NoteType::NOTE_FAKE);
+	CASE(CHANGE_MINES_TO_LIFTS)
+		gEditing->changeMinesToType(NoteType::NOTE_LIFT);
+	CASE(CHANGE_FAKES_TO_NOTES)
+		gEditing->changeFakesToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_LIFTS_TO_NOTES)
+		gEditing->changeLiftsToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_HOLDS_TO_STEPS)
+		gEditing->changeHoldsToType(NoteType::NOTE_STEP_OR_HOLD);
+	CASE(CHANGE_HOLDS_TO_MINES)
+		gEditing->changeHoldsToType(NoteType::NOTE_MINE);
 	CASE(CHANGE_BETWEEN_HOLDS_AND_ROLLS)
 		gEditing->changeHoldsToRolls();
 	CASE(CHANGE_BETWEEN_PLAYER_NUMBERS)
-		gEditing->changePlayerNumber();	
+		gEditing->changePlayerNumber();
 
 	CASE(MIRROR_NOTES_VERTICALLY)
 		gEditing->mirrorNotes(Editing::MIRROR_V);
@@ -243,22 +300,16 @@ void Action::perform(Type action)
 		gView->setTimeBased(false);
 
 	CASE(ZOOM_RESET)
-		gView->setZoomLevel(0);
+		gView->setZoomLevel(8);
+		gView->setScaleLevel(4);
 	CASE(ZOOM_IN)
-		gView->setZoomLevel(gView->getZoomLevel() + 1);
+		gView->setZoomLevel(gView->getZoomLevel() + 0.25);
 	CASE(ZOOM_OUT)
-		gView->setZoomLevel(gView->getZoomLevel() - 1);
-
-	CASE(SET_MINI_0)
-		gView->setMiniLevel(0);
-	CASE(SET_MINI_1)
-		gView->setMiniLevel(1);
-	CASE(SET_MINI_2)
-		gView->setMiniLevel(2);
-	CASE(SET_MINI_3)
-		gView->setMiniLevel(3);
-	CASE(SET_MINI_4)
-		gView->setMiniLevel(4);
+		gView->setZoomLevel(gView->getZoomLevel() - 0.25);
+	CASE(SCALE_INCREASE)
+		gView->setScaleLevel(gView->getScaleLevel() + 0.25);
+	CASE(SCALE_DECREASE)
+		gView->setScaleLevel(gView->getScaleLevel() - 0.25);
 
 	CASE(SNAP_NEXT)
 		gView->setSnapType(gView->getSnapType() + 1);
@@ -319,7 +370,6 @@ void Action::perform(Type action)
 		gTextOverlay->show(TextOverlay::ABOUT);
 	CASE(SHOW_DONATE)
 		gTextOverlay->show(TextOverlay::DONATE);
-
 	}};
 
 	if(action >= FILE_OPEN_RECENT_BEGIN && action < FILE_OPEN_RECENT_END)

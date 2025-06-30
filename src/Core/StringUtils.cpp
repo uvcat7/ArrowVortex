@@ -267,6 +267,29 @@ bool Str::readBool(StringRef s, bool alt)
 	return alt;
 }
 
+double Str::readTime(StringRef s, double alt)
+{
+	auto time = Str::split(s, ":", false, false);
+	double v = 0.0;
+
+	switch(time.size())
+	{
+	case 3:
+		v = (readInt(time[0]) * 3600) + (readInt(time[1]) * 60) + readDouble(time[2]);
+		break;
+	case 2:
+		v = (readInt(time[0]) * 60) + readDouble(time[1]);
+		break;
+	default:
+		v = readDouble(time[0]);
+		break;
+	}
+
+	if (v == 0 && *s.myStr == 0) return alt;
+	alt = v;
+	return alt;
+}
+
 bool Str::read(StringRef s, int* out)
 {
 	char* end;

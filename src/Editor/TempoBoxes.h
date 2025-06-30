@@ -28,6 +28,7 @@ struct TempoBoxes
 	// Selection functions.
 	virtual void deselectAll() = 0;
 	virtual int selectAll() = 0;
+	virtual int selectType(Segment::Type) = 0;
 	virtual int selectSegments(const Tempo* tempo) = 0;
 	virtual int selectRows(SelectModifier mod, int begin, int end, int xl, int xr) = 0;
 	virtual int selectTime(SelectModifier mod, double begin, double end, int xl, int xr) = 0;
