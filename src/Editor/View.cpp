@@ -120,12 +120,9 @@ void saveSettings(XmrNode& settings)
 	if(!view) view = settings.addChild("view");
 
 	view->addAttrib("useTimeBasedView", myUseTimeBasedView);
-<<<<<<< HEAD:src/Editor/view.cpp
 	view->addAttrib("customSnap", (long)myCustomSnap);
-=======
 	view->addAttrib("useReverseScroll", myUseReverseScroll);
 	view->addAttrib("useChartPreview", myUseChartPreview);
->>>>>>> main:src/Editor/View.cpp
 }
 
 // ================================================================================================
