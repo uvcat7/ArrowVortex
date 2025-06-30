@@ -38,7 +38,7 @@ namespace Vortex {
 		if (myCustomSnap > 0 && myCustomSnap <= 192)
 		{
 			gView->setCustomSnap(myCustomSnap);
-			requestClose();
+			//requestClose();
 		}
 	}
 }; // namespace Vortex
