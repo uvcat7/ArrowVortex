@@ -1022,7 +1022,13 @@ void exportNotesAsLuaTable()
 
 void copySelectionToClipboard(bool remove)
 {
-	if(gSelection->getType() == Selection::TEMPO)
+	if(gSelection->getType() == Selection::NONE)
+	{
+		String time = Str::formatTime(gView->getCursorTime());
+		gSystem->setClipboardText(Str::fmt("%1").arg(time));
+		HudNote("Copied timestamp to Clipboard.");
+	}
+	else if(gSelection->getType() == Selection::TEMPO)
 	{
 		gTempo->copyToClipboard();
 		if(remove) gTempo->removeSelectedSegments();
@@ -1043,6 +1049,16 @@ void pasteFromClipboard(bool insert)
 	else if(HasClipboardData(TempoMan::clipboardTag))
 	{
 		gTempo->pasteFromClipboard(insert);
+	}
+	else
+	{
+		String text = gSystem->getClipboardText();
+		double target = Str::readTime(text);
+		if(target > 0)
+		{
+			HudNote("Jump to %s.", Str::formatTime(target));
+			gView->setCursorTime(target);
+		}
 	}
 }
 
