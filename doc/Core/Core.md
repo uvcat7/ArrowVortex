@@ -35,3 +35,10 @@ Represents an area.
 * Variable `t` - Representing the top measurement.
 * Variable `r` - Representing the right measurement.
 * Variable `b` - Representing the bottom measurement.
+
+## `struct` colorf
+Represents color in floating-point.
+
+* Variable `r` - Representing red.
+* Variable `g` - Representing green.
+* Variable `b` - Representing blue.
