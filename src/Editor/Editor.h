@@ -10,6 +10,7 @@ struct Editor
 	static void destroy();
 
 	virtual void tick() = 0;
+	virtual void tickdraw() = 0;
 
 	/// Tries to close the simfile. If there are unsaved changes and the user selects cancel when
 	/// prompted, then the simfile is not closed and false is returned. Otherwise, the simfile is

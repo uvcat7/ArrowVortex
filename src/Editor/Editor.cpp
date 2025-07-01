@@ -882,19 +882,9 @@ void tick()
 	handleInputs(events);
 	notifyChanges();
 
-	vec2i windowSize = gSystem->getWindowSize();
-	recti r = {0, 0, windowSize.x, windowSize.y};
-
 	gTextOverlay->handleInputs(events);
 
-	GuiMain::setViewSize(r.w, r.h);
-	GuiMain::frameStart(deltaTime, events);
-
-	vec2i view = gSystem->getWindowSize();
-
 	handleDialogs();
-
-	myGui->tick({0, 0, view.x, view.y}, deltaTime, events);
 	
 	if(!GuiMain::isCapturingText())
 	{
@@ -949,8 +939,22 @@ void tick()
 
 	updateTitle();
 	notifyChanges();
-	
-	if(gSimfile->isOpen())
+
+}
+
+void tickdraw()
+{
+	InputEvents& events = gSystem->getEvents();
+	vec2i windowSize = gSystem->getWindowSize();
+	recti r = { 0, 0, windowSize.x, windowSize.y };
+
+	GuiMain::setViewSize(r.w, r.h);
+	GuiMain::frameStart(deltaTime.count(), events);
+
+	vec2i view = gSystem->getWindowSize();
+	myGui->tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
+
+	if (gSimfile->isOpen())
 	{
 		gNotefield->draw();
 		gMinimap->draw();
@@ -960,10 +964,10 @@ void tick()
 	{
 		drawLogo();
 	}
+	
+	gTextOverlay->draw();
 
 	myGui->draw();
-
-	gTextOverlay->draw();
 
 	GuiMain::frameEnd();
 }
