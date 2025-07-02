@@ -271,8 +271,9 @@ void onKeyRelease(KeyRelease& evt) override
 			noteKeysHeld--;
 			if (noteKeysHeld < 0) noteKeysHeld = 0;
 			finishNotePlacement(col);
-			// Don't advance when we're stepping jumps
-			if (hasJumpToNextNote() && noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
+			// Don't advance when we're stepping jumps or when music is playing
+			if (hasJumpToNextNote() && gMusic->isPaused()
+				&& noteKeysHeld == 0 && gView->getSnapType() != ST_NONE)
 			{
 				gView->setCursorRow(gView->snapRow(gView->getCursorRow(), gView->hasReverseScroll() ? View::SNAP_UP : View::SNAP_DOWN));
 			}

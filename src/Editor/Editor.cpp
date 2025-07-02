@@ -939,7 +939,6 @@ void tick()
 
 	updateTitle();
 	notifyChanges();
-
 }
 
 void tickdraw()

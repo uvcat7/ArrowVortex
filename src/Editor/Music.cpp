@@ -20,6 +20,7 @@
 
 #include <Editor/ConvertToOgg.h>
 #include <Editor/Editor.h>
+#include <Editor/View.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
 
@@ -674,7 +675,7 @@ void onChanges(int changes)
 		| VCM_TEMPO_CHANGED
 		| VCM_END_ROW_CHANGED;
 
-	if(changes & bits)
+	if((changes & bits) && !gMusic->isPaused() && gView->hasChartPreview())
 	{
 		interruptStream();
 		if(changes & (VCM_TEMPO_CHANGED | VCM_NOTES_CHANGED))

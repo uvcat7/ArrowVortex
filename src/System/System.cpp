@@ -342,7 +342,7 @@ SystemImpl()
 	Debug::log("swap interval support :: %s\n", wglSwapInterval ? "OK" : "MISSING");
 	if(wglSwapInterval)
 	{
-		wglSwapInterval(0);
+		wglSwapInterval(-1);
 		VortexCheckGlError();
 	}
 
@@ -391,130 +391,60 @@ void createMenu()
 	SetMenu(myHWND, menu);
 }
 
-void messageThread()
+void CALLBACK messageLoop()
 {
+	using namespace std::chrono;
+	if(!myInitSuccesful) return;
+
+#ifdef DEBUG
+	long long frames = 0;
+	auto lowcounts = 0;
+	std::list<double> fpsList, sleepList, frameList, inputList, waitList; 
+	auto frameGuess = 960;
+#endif
+
 	Editor::create();
 	forwardArgs();
 	createMenu();
 
-	std::thread msgs(&SystemImpl::messageThread, this);
+	// Non-vsync FPS max target
+	auto frameTarget = duration<double>(1.0/960.0);
+
+	// Enter the message loop.
 	MSG message;
-	while (!myIsTerminated) 
+	auto prevTime = Debug::getElapsedTime();
+
+	while(!myIsTerminated)
 	{
+
+		auto startTime = Debug::getElapsedTime();
+
+		myEvents.clear();
+		// Process all windows messages.
 		myIsInsideMessageLoop = true;
-		while (PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE))
+		while (PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE | PM_NOYIELD))
 		{
 			GetMessageW(&message, nullptr, 0, 0);
 			TranslateMessage(&message);
 			DispatchMessage(&message);
 		}
 		myIsInsideMessageLoop = false;
-	}
-}
 
-void CALLBACK messageLoop()
-{
-	using namespace std::chrono;
-	if(!myInitSuccesful) return;
-
-	duration<double> accumulator = duration<double>(0.0);
-	long long frames = 0;
-	auto lowcounts = 0;
-	std::list<double> fpsList;
-	std::list<double> sleepList;
-	std::list<double> frameList;
-	std::list<double> inputList;
-	std::list<double> waitList;
-
-	Editor::create();
-	forwardArgs();
-	createMenu();
-
-	DEVMODEA deviceInfo;
-	// Fallback resolution
-	auto frameTarget = duration<double>(0.001);
-	auto refreshRate = 1000;
-	auto refreshRateNew = 0;
-	auto inputTarget = duration<double>(0.001); //1000Hz
-
-	// Enter the message loop.
-	MSG message;
-	auto prevTime = Debug::getElapsedTime();
-	auto nextTarget = prevTime + frameTarget;
-	auto lagError = 0.0;
-	auto listSize = 0;
-	duration<double> avgScheduleError = duration<double>(0.0);
-
-	HANDLE frameTimer = CreateWaitableTimerEx(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, SYNCHRONIZE | TIMER_ALL_ACCESS);
-	LARGE_INTEGER dueTime;
-	dueTime.QuadPart = -1 * frameTarget.count() * 10'000'000;
-	if (!SetWaitableTimer(frameTimer, &dueTime, 0, NULL, NULL, 0))
-	{
-		Debug::log("Error creating timer!");
-	}
-
-	if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &deviceInfo))
-	{
-		refreshRateNew = deviceInfo.dmDisplayFrequency;
-	}
-	if (refreshRate != refreshRateNew)
-	{
-		refreshRate = refreshRateNew;
-		Debug::log("Got new refresh rate of: %d Hz", refreshRateNew);
-		frameTarget = duration<double>(1.0 / refreshRateNew);
-	}
-	frameTarget = duration<double>(1.0/60);
-
-	SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-
-
-
-	while(!myIsTerminated)
-	{
-		if (frames % ((int) (1.0 / frameTarget.count()) * 5) == 0)
+		// Check if there were text input events.
+		if (myInput.size())
 		{
-			frames = 0;
+			String input = Narrow(myInput);
+			myEvents.addTextInput(input.str());
+			myInput = WideString();
 		}
 
-		//while (accumulator >= frameTarget)
-		//{
+		// Reset the mouse cursor.
+		myCursor = Cursor::ARROW;
+		gEditor->tick();
 
-			myEvents.clear();
-			auto startTime = Debug::getElapsedTime();
-			// Process all windows messages.
-			myIsInsideMessageLoop = true;
-			while (PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE | PM_NOYIELD))
-			{
-				GetMessageW(&message, nullptr, 0, 0);
-				TranslateMessage(&message);
-				DispatchMessage(&message);
-				lowcounts++;
-			}
-			myIsInsideMessageLoop = false;
-
-
-
-			// Check if there were text input events.
-			if (myInput.size())
-			{
-				String input = Narrow(myInput);
-				myEvents.addTextInput(input.str());
-				myInput = WideString();
-			}
-
-			// Reset the mouse cursor.
-			myCursor = Cursor::ARROW;
-
-			gEditor->tick();
-			Debug::logBlankLine();
-
-			auto inputTime = Debug::getElapsedTime();
-
-			accumulator -= frameTarget;
-		//}
-
-
+#ifdef DEBUG
+		auto inputTime = Debug::getElapsedTime();
+#endif
 
 		// Set up the OpenGL view.
 		glViewport(0, 0, mySize.x, mySize.y);
@@ -523,72 +453,48 @@ void CALLBACK messageLoop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		gEditor->tickdraw();
-
-		auto glTime = Debug::getElapsedTime();
-		//glFinish();
 		VortexCheckGlError();
 
 		// Display.
 		SwapBuffers(myHDC);
+
+#ifdef DEBUG
 		auto renderTime = Debug::getElapsedTime();	
+#endif
+
 		// Tick function.
 		duration<double> frameTime = Debug::getElapsedTime() - prevTime;
 		auto waitTime = frameTarget.count() - frameTime.count();
 
-		while (Debug::getElapsedTime() - prevTime < frameTarget)
+		if (wglSwapInterval)
 		{
-			//std::this_thread::yield();
+			while (Debug::getElapsedTime() - prevTime < frameTarget)
+			{
+				std::this_thread::yield();
+			}
 		}
-		//if (waitTime - lagError - avgScheduleError.count() > 0)
-		//{
-		//	auto removedError = waitTime - avgScheduleError.count() - lagError;
-		//	auto waitStart = Debug::getElapsedTime();
-		//	dueTime.QuadPart = -10'000'000 * (removedError);
-		//	SetWaitableTimer(frameTimer, &dueTime, 0, NULL, NULL, 0);
-		//	WaitForSingleObject(frameTimer, INFINITE);
-		//	sleepList.push_front(duration<double>(Debug::getElapsedTime() - waitStart).count());
-		//	listSize++;
-		//	auto avg = std::accumulate(sleepList.begin(), sleepList.end(), 0.0) / listSize;
-		//	avgScheduleError = duration<double>(avg);
-		//	if (listSize >= 480)
-		//	{
-		//		sleepList.pop_back();
-		//		listSize = 480;
-		//	}
-		//}
 
 		// End of frame
 		auto curTime = Debug::getElapsedTime();
 		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
+		prevTime = curTime;
 
-		lagError += deltaTime.count() - frameTarget.count();
+#ifdef DEBUG
 
 		fpsList.push_front(deltaTime.count());
 		waitList.push_front(duration<double>(curTime - renderTime).count());
 		frameList.push_front(duration<double>(renderTime - inputTime).count());
 		inputList.push_front(duration<double>(inputTime - startTime).count());
 
-		prevTime = curTime;
-		accumulator += deltaTime;
-
-		if (abs(deltaTime.count() - frameTarget.count()) / (frameTarget.count()) > 0.01)
+		if (abs(deltaTime.count() - 1.0/(double)frameGuess) / (1.0/(double)frameGuess) > 0.01)
 		{
-
+			lowcounts++;
 		}
-		if (fpsList.size() >= (int)(1.0 / frameTarget.count()) * 2)
+		if (fpsList.size() >= frameGuess * 2)
 		{
 			fpsList.pop_back();
-		}
-		if (frameList.size() >= (int)(1.0 / frameTarget.count()) * 2)
-		{
 			frameList.pop_back();
-		}
-		if (inputList.size() >= (int)(1.0 / frameTarget.count()) * 2)
-		{
 			inputList.pop_back();
-		}
-		if (waitList.size() >= (int)(1.0 / frameTarget.count()) * 2)
-		{
 			waitList.pop_back();
 		}
 		auto min = *std::min_element(fpsList.begin(), fpsList.end());
@@ -607,13 +513,13 @@ void CALLBACK messageLoop()
 		std::advance(inputMax, maxIndex);
 		auto waitMax = waitList.begin();
 		std::advance(waitMax, maxIndex);
-		if (frames % ((int)(1.0 / frameTarget.count()) * 2) == 0)
+		if (frames % (frameGuess * 2) == 0)
 		{
-			Debug::log("frame total average: %f, frame render average %f, std dev %f, lowest FPS %f, highest FPS %f, highest FPS render time %f, highest FPS input time %f, highest FPS wait time %f, lag frames %d",
+			Debug::log("frame total average: %f, frame render average %f, std dev %f, lowest FPS %f, highest FPS %f, highest FPS render time %f, highest FPS input time %f, highest FPS wait time %f, lag frames %d\n",
 				avg,
 				frameAvg,
 				std,
-				max,
+				1.0 / max,
 				1.0 / min,
 				*frameMax,
 				*inputMax,
@@ -622,6 +528,7 @@ void CALLBACK messageLoop()
 			lowcounts = 0;
 		}
 		frames++;
+#endif
 	}
 	Editor::destroy();
 }
