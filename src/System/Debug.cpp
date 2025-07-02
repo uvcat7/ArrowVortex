@@ -21,12 +21,12 @@ namespace Debug {
 using namespace std::chrono;
 steady_clock::time_point getElapsedTime()
 {
-	return std::chrono::high_resolution_clock::now();
+	return std::chrono::steady_clock::now();
 }
 
-double getElapsedTime(high_resolution_clock::time_point startTime)
+double getElapsedTime(steady_clock::time_point startTime)
 {
-	auto currentTime = high_resolution_clock::now();
+	auto currentTime = steady_clock::now();
 	const duration<double> deltaTime = currentTime - startTime;
 	return deltaTime.count();
 }
