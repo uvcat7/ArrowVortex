@@ -246,28 +246,28 @@ public:
 	void addValue(int pos);
 
 private:
-	xstring myErrorStr;
-	XmrResult myResult;
-	const char* myErrorPos;
-	xstring myTextBuffer;
-	int* myValueBuffer;
-	int myNumValues, myValueCap;
+	xstring xmrErrorMessage_;
+	XmrResult xmrResult_;
+	const char* xmrErrorPosition_;
+	xstring xmrTextBuffer_;
+	int* xmrValueBuffer_;
+	int xmrNumValues_, xmrValueCapacity_;
 };
 
 XmrReader::XmrReader()
-	: myErrorStr(16)
-	, myResult(XMR_SUCCESS)
-	, myErrorPos(nullptr)
-	, myTextBuffer(256)
-	, myNumValues(0)
-	, myValueCap(16)
+	: xmrErrorMessage_(16)
+	, xmrResult_(XMR_SUCCESS)
+	, xmrErrorPosition_(nullptr)
+	, xmrTextBuffer_(256)
+	, xmrNumValues_(0)
+	, xmrValueCapacity_(16)
 {
-	myValueBuffer = (int*)malloc(sizeof(int) * myValueCap);
+	xmrValueBuffer_ = (int*)malloc(sizeof(int) * xmrValueCapacity_);
 }
 
 XmrReader::~XmrReader()
 {
-	free(myValueBuffer);
+	free(xmrValueBuffer_);
 }
 
 XmrResult XmrReader::load(const char* buffer, XmrDoc& doc)
@@ -277,11 +277,11 @@ XmrResult XmrReader::load(const char* buffer, XmrDoc& doc)
 	while(*p) p = parse(p, &doc);
 
 	// If an error occured, report it.
-	if(myResult != XMR_SUCCESS)
+	if(xmrResult_ != XMR_SUCCESS)
 	{
 		// Find the error line and position.
 		int line = 1, pos = 1;
-		for(p = buffer; *p && p < myErrorPos; ++p)
+		for(p = buffer; *p && p < xmrErrorPosition_; ++p)
 		{
 			if((uchar)(*p) == 0xA)
 				++line, pos = 1; // newline character.
@@ -301,36 +301,36 @@ XmrResult XmrReader::load(const char* buffer, XmrDoc& doc)
 			err.append((long)pos);
 			err.append(": ");
 		}
-		err.append(myErrorStr.data, myErrorStr.size);
+		err.append(xmrErrorMessage_.data, xmrErrorMessage_.size);
 
 		SetError(&doc, &err);
 	}
 
-	return myResult;
+	return xmrResult_;
 }
 
 const char* XmrReader::error(const char* p, XmrResult code, char c)
 {
-	if(myResult == XMR_SUCCESS) // Only store the first error encountered.
+	if(xmrResult_ == XMR_SUCCESS) // Only store the first error encountered.
 	{
-		myErrorStr.size = 0;
-		myErrorStr.append("invalid char '");
-		myErrorStr.append(c);
-		myErrorStr.append('\'');
-		myErrorPos = p;
-		myResult = code;
+		xmrErrorMessage_.size = 0;
+		xmrErrorMessage_.append("invalid char '");
+		xmrErrorMessage_.append(c);
+		xmrErrorMessage_.append('\'');
+		xmrErrorPosition_ = p;
+		xmrResult_ = code;
 	}
 	return EMPTY_ERROR_STRING;
 }
 
 const char* XmrReader::error(const char* p, XmrResult code, const char* description)
 {
-	if(myResult == XMR_SUCCESS) // Only store the first error encountered.
+	if(xmrResult_ == XMR_SUCCESS) // Only store the first error encountered.
 	{
-		myErrorStr.size = 0;
-		myErrorStr.append(description);
-		myErrorPos = p;
-		myResult = code;
+		xmrErrorMessage_.size = 0;
+		xmrErrorMessage_.append(description);
+		xmrErrorPosition_ = p;
+		xmrResult_ = code;
 	}
 	return EMPTY_ERROR_STRING;
 }
@@ -338,38 +338,38 @@ const char* XmrReader::error(const char* p, XmrResult code, const char* descript
 const char* XmrReader::parse(const char* p, XmrNode* pn)
 {
 	// Read the name of the attribute/node.
-	myTextBuffer.size = 0;
+	xmrTextBuffer_.size = 0;
 	const char* nameEnd = parseString(p);
-	myTextBuffer.append('\0');
+	xmrTextBuffer_.append('\0');
 	p = SkipSpaceExceptNewline(nameEnd);
 	
 	// Check if we are reading an attribute.
 	if(*p == '=')
 	{
 		// Check if the attribute has a name.
-		if(myTextBuffer.size == 1)
+		if(xmrTextBuffer_.size == 1)
 		{
 			return error(p, XMR_ATTRIB_WITHOUT_NAME, "attribute without name");
 		}
 
 		// Read the first value.
-		myNumValues = 0;
-		addValue(myTextBuffer.size);
+		xmrNumValues_ = 0;
+		addValue(xmrTextBuffer_.size);
 		p = SkipSpaceExceptNewline(parseString(p + 1));
-		myTextBuffer.append('\0');
+		xmrTextBuffer_.append('\0');
 
 		// Read additional values.
 		while(*p == ',')
 		{
-			addValue(myTextBuffer.size);
+			addValue(xmrTextBuffer_.size);
 			p = SkipSpaceExceptNewline(parseString(p + 1));
-			myTextBuffer.append('\0');
+			xmrTextBuffer_.append('\0');
 		}
 
 		// Add the attribute to the node.
 		auto a = &pn->attribPtr;
 		while(*a) a = &((*a)->nextPtr);
-		*a = NewAttrib(myTextBuffer.data, myTextBuffer.size, myValueBuffer, myNumValues);
+		*a = NewAttrib(xmrTextBuffer_.data, xmrTextBuffer_.size, xmrValueBuffer_, xmrNumValues_);
 
 		// Skip the next character if it's a semicolon.
 		if(*p == ';') ++p;
@@ -378,11 +378,11 @@ const char* XmrReader::parse(const char* p, XmrNode* pn)
 	else if(*p == '{')
 	{
 		// Check if the node has a name.
-		if(myTextBuffer.size == 1)
+		if(xmrTextBuffer_.size == 1)
 		{
 			return error(p, XMR_NODE_WITHOUT_NAME, "node without name");
 		}
-		XmrNode* n = pn->addChild(myTextBuffer.data);
+		XmrNode* n = pn->addChild(xmrTextBuffer_.data);
 		const char* q = SkipSpace(p + 1); // skip '{'
 		while(*q && *q != '}') q = parse(q, n);
 		if(*q == 0) return error(p, XMR_RUNAWAY_NODE, "runaway node");
@@ -420,7 +420,7 @@ const char* XmrReader::parseString(const char* p)
 				escape = true;
 				continue;
 			}
-			myTextBuffer.append(c);
+			xmrTextBuffer_.append(c);
 		}
 		if(*q != *p) return error(p, XMR_RUNAWAY_STRING, "runaway string");
 		p = q + 1; // skip end qoutes.
@@ -431,7 +431,7 @@ const char* XmrReader::parseString(const char* p)
 		const char* q = p + 1;
 		while(*q && IsNameChar(*q)) ++q;
 		while(p != q && IsWhiteSpace(q[-1])) --q; // Remove trailing whitespace.
-		myTextBuffer.append(p, q - p);
+		xmrTextBuffer_.append(p, q - p);
 		p = q;
 	}
 
@@ -440,13 +440,13 @@ const char* XmrReader::parseString(const char* p)
 
 void XmrReader::addValue(int pos)
 {
-	if(myNumValues == myValueCap)
+	if(xmrNumValues_ == xmrValueCapacity_)
 	{
-		myValueCap *= 2;
-		myValueBuffer = (int*)realloc(myValueBuffer, sizeof(int) * myValueCap);
+		xmrValueCapacity_ *= 2;
+		xmrValueBuffer_ = (int*)realloc(xmrValueBuffer_, sizeof(int) * xmrValueCapacity_);
 	}
-	myValueBuffer[myNumValues] = pos;
-	++myNumValues;
+	xmrValueBuffer_[xmrNumValues_] = pos;
+	++xmrNumValues_;
 }
 
 // ================================================================================================

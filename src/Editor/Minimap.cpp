@@ -89,7 +89,7 @@ static void SetPixels(const SetPixelData& spd, int x, double tor, double end, co
 
 struct MinimapImpl : public Minimap {
 
-recti myRect;
+recti rect_;
 Texture myImage;
 Mode myMode;
 int myNotesH;
@@ -251,7 +251,7 @@ void renderDensity(SetPixelData& spd, const int* colx)
 
 recti myGetMapRect()
 {
-	return {myRect.x + 2, myRect.y + 16, myRect.w - 4, myRect.h - 32};
+	return {rect_.x + 2, rect_.y + 16, rect_.w - 4, rect_.h - 32};
 }
 
 recti myGetChartRect()
@@ -367,7 +367,7 @@ void onMousePress(MousePress& evt)
 {
 	if(evt.button == Mouse::LMB && !gTextOverlay->isOpen() && evt.unhandled())
 	{
-		if(IsInside(myRect, evt.x, evt.y))
+		if(IsInside(rect_, evt.x, evt.y))
 		{
 			gView->setCursorOffset(myGetMapOffset(evt.y));
 			myIsDragging = true;
@@ -388,7 +388,7 @@ void onMouseRelease(MouseRelease& evt)
 void tick()
 {
 	vec2i size = gSystem->getWindowSize();
-	myRect = { size.x - 32, 8, 24, size.y - 16 };
+	rect_ = { size.x - 32, 8, 24, size.y - 16 };
 
 	if(myIsDragging)
 	{
@@ -420,7 +420,7 @@ void draw()
 	if(gTextOverlay->isOpen()) return;
 
 	// Draw the minimap box outline.
-	recti rect(myRect);
+	recti rect(rect_);
 	Draw::fill(rect, Colors::white);
 	rect = Shrink(rect, 1);
 	Draw::fill(rect, Colors::black);

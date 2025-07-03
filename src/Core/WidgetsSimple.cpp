@@ -15,12 +15,12 @@ WgSeperator::~WgSeperator()
 
 WgSeperator::WgSeperator(GuiContext* gui) : GuiWidget(gui)
 {
-	myHeight = 2;
+	height_ = 2;
 }
 
 void WgSeperator::onDraw()
 {
-	recti r = myRect;
+	recti r = rect_;
 	Draw::fill({r.x, r.y, r.w, r.h/2}, Color32(13));
 	Draw::fill({r.x, r.y + r.h / 2, r.w, r.h / 2}, Color32(77));
 }
@@ -38,7 +38,7 @@ WgLabel::WgLabel(GuiContext* gui) : GuiWidget(gui)
 
 void WgLabel::onDraw()
 {
-	recti r = myRect;
+	recti r = rect_;
 
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
@@ -86,15 +86,15 @@ void WgButton::onDraw()
 	auto& button = GuiDraw::getButton();
 
 	// Draw the button graphic.
-	button.base.draw(myRect);
+	button.base.draw(rect_);
 
 	// Draw the button text.
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
 	if(!isEnabled()) style.textColor = GuiDraw::getMisc().colDisabled;
 
-	recti r = myRect;
-	Renderer::pushScissorRect(Shrink(myRect, 2));
+	recti r = rect_;
+	Renderer::pushScissorRect(Shrink(rect_, 2));
 	Text::arrange(Text::MC, style, text.get());
 	Text::draw({r.x + 2, r.y, r.w - 4, r.h});
 	Renderer::popScissorRect();
@@ -102,11 +102,11 @@ void WgButton::onDraw()
 	// Draw interaction effects.
 	if(isCapturingMouse())
 	{
-		button.pressed.draw(myRect);
+		button.pressed.draw(rect_);
 	}
 	else if(isMouseOver())
 	{
-		button.hover.draw(myRect);
+		button.hover.draw(rect_);
 	}	
 }
 
@@ -151,13 +151,13 @@ void WgCheckbox::onDraw()
 	auto& misc = GuiDraw::getMisc();
 
 	// Draw the checkbox graphic.
-	recti box = myBoxRect();
+	recti box = getCheckboxRect_();
 	bool checked = value.get();
 	textbox.base.draw(box);
 	if(checked) Draw::sprite(icons.check, {box.x + box.w / 2, box.y + box.h / 2});
 
 	// Draw the description text.
-	recti r = myRect;
+	recti r = rect_;
 
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
@@ -167,9 +167,9 @@ void WgCheckbox::onDraw()
 	Text::draw({r.x + 22, r.y, r.w - 24, r.h});
 }
 
-recti WgCheckbox::myBoxRect() const
+recti WgCheckbox::getCheckboxRect_() const
 {
-	recti r = myRect;
+	recti r = rect_;
 	return {r.x + 2, r.y + r.h / 2 - 8, 16, 16};
 }
 
@@ -184,13 +184,13 @@ WgSlider::~WgSlider()
 WgSlider::WgSlider(GuiContext* gui)
 	: GuiWidget(gui)
 {
-	myBegin = 0.0;
-	myEnd = 1.0;
+	slider_begin_ = 0.0;
+	slider_end_ = 1.0;
 }
 
 void WgSlider::setRange(double begin, double end)
 {
-	myBegin = begin, myEnd = end;
+	slider_begin_ = begin, slider_end_ = end;
 }
 
 void WgSlider::onMousePress(MousePress& evt)
@@ -200,7 +200,7 @@ void WgSlider::onMousePress(MousePress& evt)
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
 			startCapturingMouse();
-			myDrag(evt.x, evt.y);
+			sliderDrag_(evt.x, evt.y);
 		}
 		evt.setHandled();
 	}
@@ -210,7 +210,7 @@ void WgSlider::onMouseRelease(MouseRelease& evt)
 {
 	if(evt.button == Mouse::LMB && isCapturingMouse())
 	{
-		myDrag(evt.x, evt.y);
+		sliderDrag_(evt.x, evt.y);
 		stopCapturingMouse();
 	}
 }
@@ -221,14 +221,14 @@ void WgSlider::onTick()
 
 	if(isCapturingMouse())
 	{
-		vec2i mpos = myGui->getMousePos();
-		myDrag(mpos.x, mpos.y);
+		vec2i mpos = gui_->getMousePos();
+		sliderDrag_(mpos.x, mpos.y);
 	}
 }
 
 void WgSlider::onDraw()
 {
-	recti r = myRect;
+	recti r = rect_;
 
 	auto& button = GuiDraw::getButton();
 
@@ -239,9 +239,9 @@ void WgSlider::onDraw()
 	Draw::fill(bar, Color32(77, 255));
 
 	// Draw the draggable button graphic.
-	if(myBegin != myEnd)
+	if(slider_begin_ != slider_end_)
 	{
-		int boxX = (int)((double)bar.w * (value.get() - myBegin) / (myEnd - myBegin));
+		int boxX = (int)((double)bar.w * (value.get() - slider_begin_) / (slider_end_ - slider_begin_));
 		recti box = {bar.x + min(max(boxX, 0), bar.w) - 4, bar.y - 8, 8, 16};
 		
 		button.base.draw(box, 0);
@@ -256,21 +256,21 @@ void WgSlider::onDraw()
 	}
 }
 
-void WgSlider::myUpdateValue(double v)
+void WgSlider::sliderUpdateValue_(double v)
 {
 	double prev = value.get();
-	v = min(v, max(myBegin, myEnd));
-	v = max(v, min(myBegin, myEnd));
+	v = min(v, max(slider_begin_, slider_end_));
+	v = max(v, min(slider_begin_, slider_end_));
 	value.set(v);
 	if(value.get() != prev) onChange.call();
 }
 
-void WgSlider::myDrag(int x, int y)
+void WgSlider::sliderDrag_(int x, int y)
 {
-	recti r = myRect;
+	recti r = rect_;
 	r.w = max(r.w, 1);
-	double val = myBegin + (myEnd - myBegin) * ((double)(x - r.x) / (double)r.w);
-	myUpdateValue(val);
+	double val = slider_begin_ + (slider_end_ - slider_begin_) * ((double)(x - r.x) / (double)r.w);
+	sliderUpdateValue_(val);
 }
 
 }; // namespace Vortex

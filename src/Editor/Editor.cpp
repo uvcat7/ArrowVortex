@@ -125,7 +125,7 @@ static SimFormat ToSimFormat(StringRef str)
 
 struct EditorImpl : public Editor, public InputHandler {
 
-GuiContext* myGui;
+GuiContext* gui_;
 DialogEntry myDialogs[NUM_DIALOG_IDS];
 int myChanges;
 Texture myLogo;
@@ -157,7 +157,7 @@ EditorImpl()
 		dialog.requestOpen = false;
 	}
 
-	myGui = nullptr;
+	gui_ = nullptr;
 	myChanges = 0;
 
 	myUseMultithreading = true;
@@ -189,7 +189,7 @@ void init()
 	GuiMain::init();
 	GuiMain::setClipboardFunctions(ClipboardGet, ClipboardSet);
 
-	myGui = GuiContext::create();
+	gui_ = GuiContext::create();
 
 	// Initialize the default text style.
 	TextStyle text;
@@ -258,7 +258,7 @@ void shutdown()
 	saveDialogSettings(settings);
 
 	// Destroy the gui context first, because some dialogs refer to editor components.
-	delete myGui;
+	delete gui_;
 
 	// Destroy the editor components.
 	Minimap::destroy();
@@ -894,7 +894,7 @@ void tick()
 
 	handleDialogs();
 
-	myGui->tick({0, 0, view.x, view.y}, deltaTime, events);
+	gui_->tick({0, 0, view.x, view.y}, deltaTime, events);
 	
 	if(!GuiMain::isCapturingText())
 	{
@@ -961,7 +961,7 @@ void tick()
 		drawLogo();
 	}
 
-	myGui->draw();
+	gui_->draw();
 
 	gTextOverlay->draw();
 
@@ -991,7 +991,7 @@ int getDefaultSaveFormat() const
 
 GuiContext* getGui() const
 {
-	return myGui;
+	return gui_;
 }
 
 }; // EditorImpl

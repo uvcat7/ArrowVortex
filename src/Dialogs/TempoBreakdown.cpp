@@ -47,17 +47,17 @@ TempoList(GuiContext* gui)
 
 void onUpdateSize() override
 {
-	myScrollH = GetTempoListH();
-	myClampScrollValues();
+	scrollHeight_ = GetTempoListH();
+	clampScrollValues_();
 }
 
 void onDraw() override
 {
 	if(gSimfile->isClosed()) return;
 
-	int x = myRect.x;
-	int y = myRect.y - myScrollY;
-	recti view = {myRect.x, myRect.y, getViewWidth(), getViewHeight()};
+	int x = rect_.x;
+	int y = rect_.y - scrollPositionY_;
+	recti view = {rect_.x, rect_.y, getViewWidth(), getViewHeight()};
 	
 	TextStyle style;
 	style.textFlags = 0;

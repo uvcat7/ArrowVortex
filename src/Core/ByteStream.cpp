@@ -13,128 +13,128 @@ namespace Vortex {
 
 WriteStream::WriteStream()
 {
-	myBuf = (uchar*)malloc(128);
-	mySize = 0;
-	myCap = 128;
-	myExtern = false;
-	mySuccess = true;
+	buffer_ = (uchar*)malloc(128);
+	currentSize_ = 0;
+	capacity_ = 128;
+	isExternalBuffer_ = false;
+	isWriteSuccessful_ = true;
 }
 
 WriteStream::WriteStream(void* out, int bytes)
 {
-	myBuf = (uchar*)out;
-	mySize = 0;
-	myCap = bytes;
-	myExtern = true;
-	mySuccess = true;
+	buffer_ = (uchar*)out;
+	currentSize_ = 0;
+	capacity_ = bytes;
+	isExternalBuffer_ = true;
+	isWriteSuccessful_ = true;
 }
 
 WriteStream::~WriteStream()
 {
-	if(!myExtern) free(myBuf);
+	if(!isExternalBuffer_) free(buffer_);
 }
 
 void WriteStream::write(const void* in, int bytes)
 {
-	int newSize = mySize + bytes;
-	if(newSize <= myCap)
+	int newSize = currentSize_ + bytes;
+	if(newSize <= capacity_)
 	{
-		memcpy(myBuf + mySize, in, bytes);
-		mySize = newSize;
+		memcpy(buffer_ + currentSize_, in, bytes);
+		currentSize_ = newSize;
 	}
-	else if(!myExtern)
+	else if(!isExternalBuffer_)
 	{
-		myCap = max(myCap << 1, newSize);
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		memcpy(myBuf + mySize, in, bytes);
-		mySize = newSize;
+		capacity_ = max(capacity_ << 1, newSize);
+		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		memcpy(buffer_ + currentSize_, in, bytes);
+		currentSize_ = newSize;
 	}
 	else
 	{
-		mySuccess = false;
+		isWriteSuccessful_ = false;
 	}
 }
 
 void WriteStream::write8(const void* val)
 {
-	if(mySize < myCap)
+	if(currentSize_ < capacity_)
 	{
-		myBuf[mySize] = *(const uint8_t*)val;
-		++mySize;
+		buffer_[currentSize_] = *(const uint8_t*)val;
+		++currentSize_;
 	}
-	else if(!myExtern)
+	else if(!isExternalBuffer_)
 	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		myBuf[mySize] = *(const uint8_t*)val;
-		++mySize;
+		capacity_ <<= 1;
+		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		buffer_[currentSize_] = *(const uint8_t*)val;
+		++currentSize_;
 	}
 	else
 	{
-		mySuccess = false;
+		isWriteSuccessful_ = false;
 	}
 }
 
 void WriteStream::write16(const void* val)
 {
-	int newSize = mySize + sizeof(uint16_t);
-	if(newSize <= myCap)
+	int newSize = currentSize_ + sizeof(uint16_t);
+	if(newSize <= capacity_)
 	{
-		*(uint16_t*)(myBuf + mySize) = *(const uint16_t*)val;
-		mySize = newSize;
+		*(uint16_t*)(buffer_ + currentSize_) = *(const uint16_t*)val;
+		currentSize_ = newSize;
 	}
-	else if(!myExtern)
+	else if(!isExternalBuffer_)
 	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		*(uint16_t*)(myBuf + mySize) = *(const uint16_t*)val;
-		mySize = newSize;
+		capacity_ <<= 1;
+		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		*(uint16_t*)(buffer_ + currentSize_) = *(const uint16_t*)val;
+		currentSize_ = newSize;
 	}
 	else
 	{
-		mySuccess = false;
+		isWriteSuccessful_ = false;
 	}
 }
 
 void WriteStream::write32(const void* val)
 {
-	int newSize = mySize + sizeof(uint32_t);
-	if(newSize <= myCap)
+	int newSize = currentSize_ + sizeof(uint32_t);
+	if(newSize <= capacity_)
 	{
-		*(uint32_t*)(myBuf + mySize) = *(const uint32_t*)val;
-		mySize = newSize;
+		*(uint32_t*)(buffer_ + currentSize_) = *(const uint32_t*)val;
+		currentSize_ = newSize;
 	}
-	else if(!myExtern)
+	else if(!isExternalBuffer_)
 	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		*(uint32_t*)(myBuf + mySize) = *(const uint32_t*)val;
-		mySize = newSize;
+		capacity_ <<= 1;
+		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		*(uint32_t*)(buffer_ + currentSize_) = *(const uint32_t*)val;
+		currentSize_ = newSize;
 	}
 	else
 	{
-		mySuccess = false;
+		isWriteSuccessful_ = false;
 	}
 }
 
 void WriteStream::write64(const void* val)
 {
-	int newSize = mySize + sizeof(uint64_t);
-	if(newSize <= myCap)
+	int newSize = currentSize_ + sizeof(uint64_t);
+	if(newSize <= capacity_)
 	{
-		*(uint64_t*)(myBuf + mySize) = *(const uint64_t*)val;
-		mySize = newSize;
+		*(uint64_t*)(buffer_ + currentSize_) = *(const uint64_t*)val;
+		currentSize_ = newSize;
 	}
-	else if(!myExtern)
+	else if(!isExternalBuffer_)
 	{
-		myCap <<= 1;
-		myBuf = (uchar*)realloc(myBuf, myCap);
-		*(uint64_t*)(myBuf + mySize) = *(const uint64_t*)val;
-		mySize = newSize;
+		capacity_ <<= 1;
+		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		*(uint64_t*)(buffer_ + currentSize_) = *(const uint64_t*)val;
+		currentSize_ = newSize;
 	}
 	else
 	{
-		mySuccess = false;
+		isWriteSuccessful_ = false;
 	}
 }
 
@@ -170,9 +170,9 @@ void WriteStream::writeStr(StringRef str)
 
 ReadStream::ReadStream(const void* in, int bytes)
 {
-	myPos = (const uchar*)in;
-	myEnd = myPos + bytes;
-	mySuccess = true;
+	readPosition_ = (const uchar*)in;
+	endPosition_ = readPosition_ + bytes;
+	isReadSuccessful_ = true;
 }
 
 ReadStream::~ReadStream()
@@ -181,122 +181,122 @@ ReadStream::~ReadStream()
 
 void ReadStream::skip(int bytes)
 {
-	if(myPos + bytes <= myEnd)
+	if(readPosition_ + bytes <= endPosition_)
 	{
-		myPos += bytes;
+		readPosition_ += bytes;
 	}
 	else
 	{
-		myPos = myEnd;
-		mySuccess = false;
+		readPosition_ = endPosition_;
+		isReadSuccessful_ = false;
 	}
 }
 
 void ReadStream::read(void* out, int bytes)
 {
-	if(myPos + bytes <= myEnd)
+	if(readPosition_ + bytes <= endPosition_)
 	{
-		memcpy(out, myPos, bytes);
-		myPos += bytes;
+		memcpy(out, readPosition_, bytes);
+		readPosition_ += bytes;
 	}
 	else
 	{
-		myPos = myEnd;
-		mySuccess = false;
+		readPosition_ = endPosition_;
+		isReadSuccessful_ = false;
 	}
 }
 
 void ReadStream::read8(void* out)
 {
-	if(myPos != myEnd)
+	if(readPosition_ != endPosition_)
 	{
-		*(uint8_t*)out = *myPos;
-		++myPos;
+		*(uint8_t*)out = *readPosition_;
+		++readPosition_;
 	}
 	else
 	{
 		*(uint8_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
+		readPosition_ = endPosition_;
+		isReadSuccessful_ = false;
 	}
 }
 
 void ReadStream::read16(void* out)
 {
-	auto newPos = myPos + sizeof(uint16_t);
-	if(newPos <= myEnd)
+	auto newPos = readPosition_ + sizeof(uint16_t);
+	if(newPos <= endPosition_)
 	{
-		*(uint16_t*)out = *(const uint16_t*)myPos;
-		myPos = newPos;
+		*(uint16_t*)out = *(const uint16_t*)readPosition_;
+		readPosition_ = newPos;
 	}
 	else
 	{
 		*(uint16_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
+		readPosition_ = endPosition_;
+		isReadSuccessful_ = false;
 	}
 }
 
 
 void ReadStream::read32(void* out)
 {
-	auto newPos = myPos + sizeof(uint32_t);
-	if(newPos <= myEnd)
+	auto newPos = readPosition_ + sizeof(uint32_t);
+	if(newPos <= endPosition_)
 	{
-		*(uint32_t*)out = *(const uint32_t*)myPos;
-		myPos = newPos;
+		*(uint32_t*)out = *(const uint32_t*)readPosition_;
+		readPosition_ = newPos;
 	}
 	else
 	{
 		*(uint32_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
+		readPosition_ = endPosition_;
+		isReadSuccessful_ = false;
 	}
 }
 
 void ReadStream::read64(void* out)
 {
-	auto newPos = myPos + sizeof(uint64_t);
-	if(newPos <= myEnd)
+	auto newPos = readPosition_ + sizeof(uint64_t);
+	if(newPos <= endPosition_)
 	{
-		*(uint64_t*)out = *(const uint64_t*)myPos;
-		myPos = newPos;
+		*(uint64_t*)out = *(const uint64_t*)readPosition_;
+		readPosition_ = newPos;
 	}
 	else
 	{
 		*(uint64_t*)out = 0;
-		myPos = myEnd;
-		mySuccess = false;
+		readPosition_ = endPosition_;
+		isReadSuccessful_ = false;
 	}
 }
 
 uint ReadStream::readNum()
 {
 	uint32_t out;
-	if(myPos != myEnd)
+	if(readPosition_ != endPosition_)
 	{
-		if(*myPos < 0x80)
+		if(*readPosition_ < 0x80)
 		{
-			out = *myPos;
-			++myPos;
+			out = *readPosition_;
+			++readPosition_;
 		}
 		else
 		{
-			out = *myPos & 0x7F;
+			out = *readPosition_ & 0x7F;
 			uint shift = 7;
 			while(true)
 			{
-				if(++myPos == myEnd)
+				if(++readPosition_ == endPosition_)
 				{
 					out = 0;
-					mySuccess = false;
+					isReadSuccessful_ = false;
 					break;
 				}
-				uint byte = *myPos;
+				uint byte = *readPosition_;
 				if((byte & 0x80) == 0)
 				{
 					out |= byte << shift;
-					++myPos;
+					++readPosition_;
 					break;
 				}
 				out |= (byte & 0x7F) << shift;
@@ -307,7 +307,7 @@ uint ReadStream::readNum()
 	else
 	{
 		out = 0;
-		mySuccess = false;
+		isReadSuccessful_ = false;
 	}
 	return out;
 }
@@ -316,15 +316,15 @@ String ReadStream::readStr()
 {
 	String out;
 	uint len = readNum();
-	auto newPos = myPos + len;
-	if(newPos <= myEnd)
+	auto newPos = readPosition_ + len;
+	if(newPos <= endPosition_)
 	{
-		auto str = myPos;
-		myPos = newPos;
+		auto str = readPosition_;
+		readPosition_ = newPos;
 		return String((const char*)str, len);
 	}
-	myPos = myEnd;
-	mySuccess = false;
+	readPosition_ = endPosition_;
+	isReadSuccessful_ = false;
 	return String();
 }
 

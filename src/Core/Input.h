@@ -322,13 +322,13 @@ public:
 	bool next(FileDrop*& it) const;
 
 	/// Returns true if the list is empty, false otherwise.
-	bool isEmpty() const { return !myData; }
+	bool isEmpty() const { return !data_; }
 
 	/// Copies the events from another event list.
 	void operator = (const InputEvents& other);
 
 private:
-	void* myData;
+	void* data_;  // TODO: replace with a more descriptive variable name.
 	friend class InputHandler;
 };
 

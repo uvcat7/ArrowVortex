@@ -64,7 +64,7 @@ public:
 	CallSlot onChange;
 
 protected:
-	recti myBoxRect() const;
+	recti getCheckboxRect_() const;
 };
 
 /// Horizontal Slider GuiWidget.
@@ -85,10 +85,10 @@ public:
 	CallSlot onChange;
 
 private:
-	void myUpdateValue(double v);
-	void myDrag(int x, int y);
+	void sliderUpdateValue_(double v);
+	void sliderDrag_(int x, int y);
 
-	double myBegin, myEnd;
+	double slider_begin_, slider_end_;
 };
 
 /// Base Scrollbar GuiWidget.
@@ -112,13 +112,13 @@ public:
 	virtual bool isVertical() const = 0;
 
 protected:
-	void myUpdateValue(int v);
-	int myEnd, myPage;
-	uint myScrollAction : 9;
-	uint myScrollGrabPos : 16;
+	void scrollbarUpdateValue_(int v);
+	int scrollbarEnd_, scrollbarPage_;
+	uint scrollbarAction_ : 9;
+	uint scrollbarGrabPosition_ : 16;
 
 private:
-	uint myGetActionAt(int x, int y);
+	uint getScrollbarActionAt_(int x, int y);
 };
 
 /// Base scroll region widgets.
@@ -148,21 +148,21 @@ public:
 	int getScrollHeight() const;
 
 protected:
-	void myPreTick();
-	void myPostTick();
-	void myClampScrollValues();
+	void preTick_();
+	void postTick_();
+	void clampScrollValues_();
 
-	uint myScrollTypeH : 2;
-	uint myScrollTypeV : 2;
-	uint myScrollbarActiveH : 1;
-	uint myScrollbarActiveV : 1;
-	uint myScrollAction : 9;
-	uint myScrollGrabPos : 16;
-	int myScrollW, myScrollH;
-	int myScrollX, myScrollY;
+	uint scrollTypeHorizontal_ : 2;
+	uint scrollTypeVertical_ : 2;
+	uint isHorizontalScrollbarActive_ : 1;
+	uint isVerticalScrollbarActive_ : 1;
+	uint scrollRegionAction_ : 9;
+	uint scrollRegionGrabPosition_ : 16;
+	int scrollWidth_, scrollHeight_;
+	int scrollPositionX_, scrollPositionY_;
 
 private:
-	uint myGetActionAt(int x, int y);
+	uint getScrollRegionActionAt_(int x, int y);
 };
 
 // Vertical Scrollbar GuiWidget.
@@ -200,21 +200,21 @@ public:
 	void clearItems();	
 
 	void scroll(bool up);
-	bool interacted() const { return myIsInteracted; }
+	bool interacted() const { return isInteracted_; }
 
 	IntSlot value;
 	CallSlot onChange;
 
 protected:
-	int myHoverItem(int x, int y);
-	bool myHasScrollbar() const;
-	recti myItemRect() const;
+	int HoveredItem_(int x, int y);
+	bool hasScrollbar_() const;
+	recti itemRect_() const;
 
-	WgScrollbarV* myScrollbar;
-	Vector<String> myItems;
-	int myScrollPos;
-	uint myIsInteracted : 1;
-	uint myShowBackground : 1;
+	WgScrollbarV* scrollbar_;
+	Vector<String> scrollbarItems_;
+	int scrollPosition_;
+	uint isInteracted_ : 1;
+	uint showBackground_ : 1;
 };
 
 /// Vertical Drop Down List GuiWidget.
@@ -238,11 +238,11 @@ public:
 	CallSlot onChange;
 
 protected:
-	void myCloseList();
+	void dropListClose_();
 
-	WgSelectList* myList;
-	Vector<String> myItems;
-	int myListItem;
+	WgSelectList* selectList_;
+	Vector<String> listItems_;
+	int selectedIndex_;
 };
 
 /// Button that cycles through items in a list.
@@ -263,7 +263,7 @@ public:
 	CallSlot onChange;
 
 protected:
-	Vector<String> myItems;
+	Vector<String> cycleItems_;
 };
 
 /// Single Line Text Editor GuiWidget.
@@ -293,18 +293,18 @@ public:
 	CallSlot onChange;
 
 private:
-	void myDeleteSelection();
-	vec2i myTextPos() const;
+	void deleteSection_();
+	vec2i textPos_() const;
 
-	String myEditStr;
-	int myMaxLength, myDrag;
-	vec2i myCursor;
-	float myBlinkTime, myScroll;
-	uint myIsNumerical : 1;
-	uint myIsEditable : 1;
-	uint myForceScrollUpdate : 1;
-	uint myShowBackground : 1;
-	TextStyle mySettings;
+	String editStr_;
+	int maxLength_, drag_;
+	vec2i cursor_;
+	float blinkTime_, scroll_;
+	uint isNumerical_ : 1;
+	uint isEditable_ : 1;
+	uint forceScrollUpdate_ : 1;
+	uint backgroundVisible_ : 1;
+	TextStyle lineedit_style_;
 };
 
 /// Spin Box GuiWidget.
@@ -328,19 +328,19 @@ public:
 	CallSlot onChange;
 
 private:
-	void myUpdateValue(double v);
-	void myUpdateText();
-	void myTextChange();
-	recti myButtonRect();
+	void spinnerUpdateValue_(double v);
+	void spinnerUpdateText_();
+	void spinnerOnTextChange_();
+	recti spinnerButtonRect_();
 
-	WgLineEdit* myEdit;
-	bool myIsUpActive;
-	float myRepeatTimer;
-	double mymin, myMax, myStep;
-	double myDisplayValue;
-	int myMinDecimalPlaces;
-	int myMaxDecimalPlaces;
-	String myText;
+	WgLineEdit* spinnerInput_;
+	bool spinnerIsUpActive;
+	float spinnerRepeatTimer_;
+	double spinnerMin_, spinnerMax_, spinnerStepSize_;
+	double spinnerDisplayValue_;
+	int spinnerMinDecimalPlaces_;
+	int spinnerMaxDecimalPlaces_;
+	String spinnerText_;
 };
 
 /// Color picker widget.
@@ -360,7 +360,7 @@ public:
 
 private:
 	struct Expanded;
-	Expanded* myExpanded;
+	Expanded* colorpicker_expanded_;
 };
 
 }; // namespace Vortex

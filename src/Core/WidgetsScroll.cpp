@@ -109,21 +109,21 @@ WgScrollbar::~WgScrollbar()
 
 WgScrollbar::WgScrollbar(GuiContext* gui)
 	: GuiWidget(gui)
-	, myScrollAction(0)
-	, myScrollGrabPos(0)
+	, scrollbarAction_(0)
+	, scrollbarGrabPosition_(0)
 {
-	myEnd = 1;
-	myPage = 1;
+	scrollbarEnd_ = 1;
+	scrollbarPage_ = 1;
 }
 
 void WgScrollbar::setEnd(int size)
 {
-	myEnd = size;
+	scrollbarEnd_ = size;
 }
 
 void WgScrollbar::setPage(int size)
 {
-	myPage = size;
+	scrollbarPage_ = size;
 }
 
 void WgScrollbar::onMousePress(MousePress& evt)
@@ -132,22 +132,22 @@ void WgScrollbar::onMousePress(MousePress& evt)
 	{
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
-			uint action = myGetActionAt(evt.x, evt.y);
+			uint action = getScrollbarActionAt_(evt.x, evt.y);
 			if(action)
 			{
 				startCapturingMouse();
 			}
 			if(action == ACT_HOVER_BUTTON_H)
 			{
-				auto button = GetButton(myRect.w, myEnd, myPage, value.get());
-				myScrollGrabPos = evt.x - button.pos - myRect.x;
-				myScrollAction = ACT_DRAGGING_H;
+				auto button = GetButton(rect_.w, scrollbarEnd_, scrollbarPage_, value.get());
+				scrollbarGrabPosition_ = evt.x - button.pos - rect_.x;
+				scrollbarAction_ = ACT_DRAGGING_H;
 			}
 			if(action == ACT_HOVER_BUTTON_V)
 			{
-				auto button = GetButton(myRect.h, myEnd, myPage, value.get());
-				myScrollGrabPos = evt.y - button.pos - myRect.y;
-				myScrollAction = ACT_DRAGGING_V;
+				auto button = GetButton(rect_.h, scrollbarEnd_, scrollbarPage_, value.get());
+				scrollbarGrabPosition_ = evt.y - button.pos - rect_.y;
+				scrollbarAction_ = ACT_DRAGGING_V;
 			}
 		}
 		evt.setHandled();
@@ -157,67 +157,67 @@ void WgScrollbar::onMousePress(MousePress& evt)
 void WgScrollbar::onMouseRelease(MouseRelease& evt)
 {
 	stopCapturingMouse();
-	myScrollAction = 0;
+	scrollbarAction_ = 0;
 }
 
 void WgScrollbar::onTick()
 {
-	if(myScrollAction == ACT_DRAGGING_H)
+	if(scrollbarAction_ == ACT_DRAGGING_H)
 	{
-		int buttonPos = myGui->getMousePos().x - myRect.x - myScrollGrabPos;
-		myUpdateValue(GetScroll(myRect.w, myEnd, myPage, buttonPos));
+		int buttonPos = gui_->getMousePos().x - rect_.x - scrollbarGrabPosition_;
+		scrollbarUpdateValue_(GetScroll(rect_.w, scrollbarEnd_, scrollbarPage_, buttonPos));
 	}
-	else if(myScrollAction == ACT_DRAGGING_V)
+	else if(scrollbarAction_ == ACT_DRAGGING_V)
 	{
-		int buttonPos = myGui->getMousePos().y - myRect.y - myScrollGrabPos;
-		myUpdateValue(GetScroll(myRect.h, myEnd, myPage, buttonPos));
+		int buttonPos = gui_->getMousePos().y - rect_.y - scrollbarGrabPosition_;
+		scrollbarUpdateValue_(GetScroll(rect_.h, scrollbarEnd_, scrollbarPage_, buttonPos));
 	}
 	GuiWidget::onTick();
 }
 
 void WgScrollbar::onDraw()
 {
-	vec2i mpos = myGui->getMousePos();
-	uint action = myGetActionAt(mpos.x, mpos.y);
+	vec2i mpos = gui_->getMousePos();
+	uint action = getScrollbarActionAt_(mpos.x, mpos.y);
 
 	if(isVertical())
 	{
-		auto button = GetButton(myRect.h, myEnd, myPage, value.get());
-		DrawScrollbar(myRect, button, true, action == ACT_HOVER_BUTTON_V, action == ACT_DRAGGING_V);
+		auto button = GetButton(rect_.h, scrollbarEnd_, scrollbarPage_, value.get());
+		DrawScrollbar(rect_, button, true, action == ACT_HOVER_BUTTON_V, action == ACT_DRAGGING_V);
 	}
 	else
 	{
-		auto button = GetButton(myRect.w, myEnd, myPage, value.get());
-		DrawScrollbar(myRect, button, false, action == ACT_HOVER_BUTTON_H, action == ACT_DRAGGING_H);
+		auto button = GetButton(rect_.w, scrollbarEnd_, scrollbarPage_, value.get());
+		DrawScrollbar(rect_, button, false, action == ACT_HOVER_BUTTON_H, action == ACT_DRAGGING_H);
 	}
 }
 
-void WgScrollbar::myUpdateValue(int v)
+void WgScrollbar::scrollbarUpdateValue_(int v)
 {
 	double prev = value.get();
-	v = max(0, min(myEnd, v));
+	v = max(0, min(scrollbarEnd_, v));
 	value.set(v);
 	if(value.get() != prev) onChange.call();
 }
 
-uint WgScrollbar::myGetActionAt(int x, int y)
+uint WgScrollbar::getScrollbarActionAt_(int x, int y)
 {
-	if(myScrollAction) return myScrollAction;
-	if(!IsInside(myRect, x, y)) return ACT_NONE;
+	if(scrollbarAction_) return scrollbarAction_;
+	if(!IsInside(rect_, x, y)) return ACT_NONE;
 
-	x -= myRect.x;
-	y -= myRect.y;
+	x -= rect_.x;
+	y -= rect_.y;
 
 	if(isVertical())
 	{
-		auto button = GetButton(myRect.h, myEnd, myPage, value.get());
+		auto button = GetButton(rect_.h, scrollbarEnd_, scrollbarPage_, value.get());
 		if(y < button.pos) return ACT_HOVER_BUMP_UP;
 		if(y < button.pos + button.size) return ACT_HOVER_BUTTON_V;
 		return ACT_HOVER_BUMP_DOWN;
 	}
 	else
 	{
-		auto button = GetButton(myRect.w, myEnd, myPage, value.get());
+		auto button = GetButton(rect_.w, scrollbarEnd_, scrollbarPage_, value.get());
 		if(x < button.pos) return ACT_HOVER_BUMP_LEFT;
 		if(x < button.pos + button.size) return ACT_HOVER_BUTTON_H;
 		return ACT_HOVER_BUMP_RIGHT;
@@ -229,7 +229,7 @@ uint WgScrollbar::myGetActionAt(int x, int y)
 WgScrollbarV::WgScrollbarV(GuiContext* gui)
 	: WgScrollbar(gui)
 {
-	myWidth = 14;
+	width_ = 14;
 }
 
 bool WgScrollbarV::isVertical() const
@@ -240,7 +240,7 @@ bool WgScrollbarV::isVertical() const
 WgScrollbarH::WgScrollbarH(GuiContext* gui)
 	: WgScrollbar(gui)
 {
-	myHeight = 14;
+	height_ = 14;
 }
 
 bool WgScrollbarH::isVertical() const
@@ -259,26 +259,26 @@ WgScrollRegion::~WgScrollRegion()
 
 WgScrollRegion::WgScrollRegion(GuiContext* gui)
 	: GuiWidget(gui)
-	, myScrollTypeH(0)
-	, myScrollTypeV(0)
-	, myScrollbarActiveH(0)
-	, myScrollbarActiveV(0)
-	, myScrollAction(0)
-	, myScrollGrabPos(0)
-	, myScrollW(0)
-	, myScrollH(0)
-	, myScrollX(0)
-	, myScrollY(0)
+	, scrollTypeHorizontal_(0)
+	, scrollTypeVertical_(0)
+	, isHorizontalScrollbarActive_(0)
+	, isVerticalScrollbarActive_(0)
+	, scrollRegionAction_(0)
+	, scrollRegionGrabPosition_(0)
+	, scrollWidth_(0)
+	, scrollHeight_(0)
+	, scrollPositionX_(0)
+	, scrollPositionY_(0)
 {
 }
 
 void WgScrollRegion::onMouseScroll(MouseScroll& evt)
 {
-	if(myScrollbarActiveV)
+	if(isVerticalScrollbarActive_)
 	{
-		if(IsInside(myRect, evt.x, evt.y) && !evt.handled)
+		if(IsInside(rect_, evt.x, evt.y) && !evt.handled)
 		{
-			ApplyScrollOffset(myScrollY, getViewHeight(), myScrollH, evt.up);
+			ApplyScrollOffset(scrollPositionY_, getViewHeight(), scrollHeight_, evt.up);
 			evt.handled = true;
 		}
 	}
@@ -290,7 +290,7 @@ void WgScrollRegion::onMousePress(MousePress& evt)
 	{
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
-			uint action = myGetActionAt(evt.x, evt.y);
+			uint action = getScrollRegionActionAt_(evt.x, evt.y);
 			if(action)
 			{
 				startCapturingMouse();
@@ -298,16 +298,16 @@ void WgScrollRegion::onMousePress(MousePress& evt)
 			if(action == ACT_HOVER_BUTTON_H)
 			{
 				int w = getViewWidth();
-				auto button = GetButton(w, myScrollW, w, myScrollX);
-				myScrollGrabPos = evt.x - button.pos - myRect.x;
-				myScrollAction = ACT_DRAGGING_H;
+				auto button = GetButton(w, scrollWidth_, w, scrollPositionX_);
+				scrollRegionGrabPosition_ = evt.x - button.pos - rect_.x;
+				scrollRegionAction_ = ACT_DRAGGING_H;
 			}
 			if(action == ACT_HOVER_BUTTON_V)
 			{
 				int h = getViewHeight();
-				auto button = GetButton(h, myScrollH, h, myScrollY);
-				myScrollGrabPos = evt.y - button.pos - myRect.y;
-				myScrollAction = ACT_DRAGGING_V;
+				auto button = GetButton(h, scrollHeight_, h, scrollPositionY_);
+				scrollRegionGrabPosition_ = evt.y - button.pos - rect_.y;
+				scrollRegionAction_ = ACT_DRAGGING_V;
 			}
 		}
 		evt.setHandled();
@@ -317,131 +317,131 @@ void WgScrollRegion::onMousePress(MousePress& evt)
 void WgScrollRegion::onMouseRelease(MouseRelease& evt)
 {
 	stopCapturingMouse();
-	myScrollAction = 0;
+	scrollRegionAction_ = 0;
 }
 
 void WgScrollRegion::onTick()
 {
-	myPreTick();
-	myPostTick();
+	preTick_();
+	postTick_();
 }
 
 void WgScrollRegion::onDraw()
 {
-	vec2i mpos = myGui->getMousePos();
-	uint action = myGetActionAt(mpos.x, mpos.y);
+	vec2i mpos = gui_->getMousePos();
+	uint action = getScrollRegionActionAt_(mpos.x, mpos.y);
 
 	int viewW = getViewWidth();
 	int viewH = getViewHeight();
 
-	if(myScrollbarActiveH)
+	if(isHorizontalScrollbarActive_)
 	{
-		recti bar = {myRect.x, myRect.y + myRect.h - SCROLLBAR_SIZE, viewW, SCROLLBAR_SIZE};
-		auto button = GetButton(viewW, myScrollW, viewW, myScrollX);
+		recti bar = {rect_.x, rect_.y + rect_.h - SCROLLBAR_SIZE, viewW, SCROLLBAR_SIZE};
+		auto button = GetButton(viewW, scrollWidth_, viewW, scrollPositionX_);
 		DrawScrollbar(bar, button, false, action == ACT_HOVER_BUTTON_H, action == ACT_DRAGGING_H);
 	}
-	if(myScrollbarActiveV)
+	if(isVerticalScrollbarActive_)
 	{
-		recti bar = {myRect.x + myRect.w - SCROLLBAR_SIZE, myRect.y, SCROLLBAR_SIZE, viewH};
-		auto button = GetButton(viewH, myScrollH, viewH, myScrollY);
+		recti bar = {rect_.x + rect_.w - SCROLLBAR_SIZE, rect_.y, SCROLLBAR_SIZE, viewH};
+		auto button = GetButton(viewH, scrollHeight_, viewH, scrollPositionY_);
 		DrawScrollbar(bar, button, true, action == ACT_HOVER_BUTTON_V, action == ACT_DRAGGING_V);
 	}
 }
 
 void WgScrollRegion::setScrollType(ScrollType h, ScrollType v)
 {
-	myScrollTypeH = h;
-	myScrollTypeV = v;
+	scrollTypeHorizontal_ = h;
+	scrollTypeVertical_ = v;
 }
 
 void WgScrollRegion::setScrollW(int width)
 {
-	myScrollW = max(0, width);
+	scrollWidth_ = max(0, width);
 }
 
 void WgScrollRegion::setScrollH(int height)
 {
-	myScrollH = max(0, height);
+	scrollHeight_ = max(0, height);
 }
 
 int WgScrollRegion::getViewWidth() const
 {
-	return myRect.w - myScrollbarActiveV * SCROLLBAR_SIZE;
+	return rect_.w - isVerticalScrollbarActive_ * SCROLLBAR_SIZE;
 }
 
 int WgScrollRegion::getViewHeight() const
 {
-	return myRect.h - myScrollbarActiveH * SCROLLBAR_SIZE;
+	return rect_.h - isHorizontalScrollbarActive_ * SCROLLBAR_SIZE;
 }
 
 int WgScrollRegion::getScrollWidth() const
 {
-	return myScrollW;
+	return scrollWidth_;
 }
 
 int WgScrollRegion::getScrollHeight() const
 {
-	return myScrollH;
+	return scrollHeight_;
 }
 
-void WgScrollRegion::myPreTick()
+void WgScrollRegion::preTick_()
 {
-	vec2i mpos = myGui->getMousePos();
+	vec2i mpos = gui_->getMousePos();
 
-	int sh = myScrollTypeH;
-	int sv = myScrollTypeV;
+	int sh = scrollTypeHorizontal_;
+	int sv = scrollTypeVertical_;
 
-	myScrollbarActiveH = (sh == SCROLL_ALWAYS || (sh == SCROLL_WHEN_NEEDED && myScrollW > myRect.w));
-	myScrollbarActiveV = (sv == SCROLL_ALWAYS || (sv == SCROLL_WHEN_NEEDED && myScrollH > myRect.h));
+	isHorizontalScrollbarActive_ = (sh == SCROLL_ALWAYS || (sh == SCROLL_WHEN_NEEDED && scrollWidth_ > rect_.w));
+	isVerticalScrollbarActive_ = (sv == SCROLL_ALWAYS || (sv == SCROLL_WHEN_NEEDED && scrollHeight_ > rect_.h));
 
-	if(myScrollAction == ACT_DRAGGING_H)
+	if(scrollRegionAction_ == ACT_DRAGGING_H)
 	{
 		int w = getViewWidth();
-		int buttonPos = myGui->getMousePos().x - myRect.x - myScrollGrabPos;
-		myScrollX = GetScroll(w, myScrollW, w, buttonPos);
+		int buttonPos = gui_->getMousePos().x - rect_.x - scrollRegionGrabPosition_;
+		scrollPositionX_ = GetScroll(w, scrollWidth_, w, buttonPos);
 	}
-	else if(myScrollAction == ACT_DRAGGING_V)
+	else if(scrollRegionAction_ == ACT_DRAGGING_V)
 	{
 		int h = getViewHeight();
-		int buttonPos = myGui->getMousePos().y - myRect.y - myScrollGrabPos;
-		myScrollY = GetScroll(h, myScrollH, h, buttonPos);
+		int buttonPos = gui_->getMousePos().y - rect_.y - scrollRegionGrabPosition_;
+		scrollPositionY_ = GetScroll(h, scrollHeight_, h, buttonPos);
 	}
 
-	if(!IsInside(recti{myRect.x, myRect.y, getViewWidth(), getViewHeight()}, mpos.x, mpos.y))
+	if(!IsInside(recti{rect_.x, rect_.y, getViewWidth(), getViewHeight()}, mpos.x, mpos.y))
 	{
 		blockMouseOver();
 	}
 }
 
-void WgScrollRegion::myPostTick()
+void WgScrollRegion::postTick_()
 {
 	unblockMouseOver();
 
 	GuiWidget::onTick();
 }
 
-uint WgScrollRegion::myGetActionAt(int x, int y)
+uint WgScrollRegion::getScrollRegionActionAt_(int x, int y)
 {
-	if(myScrollAction) return myScrollAction;
+	if(scrollRegionAction_) return scrollRegionAction_;
 
-	if(!IsInside(myRect, x, y)) return ACT_NONE;
+	if(!IsInside(rect_, x, y)) return ACT_NONE;
 
-	x -= myRect.x;
-	y -= myRect.y;
+	x -= rect_.x;
+	y -= rect_.y;
 
 	int viewW = getViewWidth();
 	int viewH = getViewHeight();
-	if(myScrollbarActiveV && x >= viewW && y < viewH)
+	if(isVerticalScrollbarActive_ && x >= viewW && y < viewH)
 	{
-		auto button = GetButton(viewH, myScrollH, viewH, myScrollY);
+		auto button = GetButton(viewH, scrollHeight_, viewH, scrollPositionY_);
 		if(y < button.pos) return ACT_HOVER_BUMP_UP;
 		if(y < button.pos + button.size) return ACT_HOVER_BUTTON_V;
 		return ACT_HOVER_BUMP_DOWN;
 	}
 
-	if(myScrollbarActiveH && y >= viewH && x < viewW)
+	if(isHorizontalScrollbarActive_ && y >= viewH && x < viewW)
 	{
-		auto button = GetButton(viewW, myScrollW, viewW, myScrollX);
+		auto button = GetButton(viewW, scrollWidth_, viewW, scrollPositionX_);
 		if(x < button.pos) return ACT_HOVER_BUMP_LEFT;
 		if(x < button.pos + button.size) return ACT_HOVER_BUTTON_H;
 		return ACT_HOVER_BUMP_RIGHT;
@@ -450,10 +450,10 @@ uint WgScrollRegion::myGetActionAt(int x, int y)
 	return ACT_NONE;
 }
 
-void WgScrollRegion::myClampScrollValues()
+void WgScrollRegion::clampScrollValues_()
 {
-	myScrollX = max(0, min(myScrollX, myScrollW - getViewWidth()));
-	myScrollY = max(0, min(myScrollY, myScrollH - getViewHeight()));
+	scrollPositionX_ = max(0, min(scrollPositionX_, scrollWidth_ - getViewWidth()));
+	scrollPositionY_ = max(0, min(scrollPositionY_, scrollHeight_ - getViewHeight()));
 }
 
 }; // namespace Vortex

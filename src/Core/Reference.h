@@ -56,7 +56,7 @@ public:
 
 private:
 	void myCreateRef();
-	T* myPtr;
+	T* myPtr; // TODO rename this to something more descriptive, but need to make sure renaming it won't break stuff
 };
 
 // ================================================================================================

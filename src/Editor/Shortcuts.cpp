@@ -309,7 +309,7 @@ struct ShortcutEntry
 	bool scrollUp;
 };
 
-Vector<ShortcutEntry> myShortcuts;
+Vector<ShortcutEntry> shortcutMappings_;
 
 // ================================================================================================
 // ShortcutsImpl :: constructor and destructor.
@@ -370,7 +370,7 @@ void ParseShortcuts(ActionEntry* action, char* str)
 	// Store the shortcut if it has a key or scroll direction.
 	if(entry.key || isScroll)
 	{
-		myShortcuts.push_back(entry);
+		shortcutMappings_.push_back(entry);
 	}
 }
 
@@ -431,7 +431,7 @@ ShortcutsImpl()
 String Shortcuts::getNotation(Action::Type action)
 {
 	String out;
-	for(auto& shortcut : myShortcuts)
+	for(auto& shortcut : shortcutMappings_)
 	{
 		if(shortcut.action->code == action)
 		{
@@ -467,7 +467,7 @@ String Shortcuts::getNotation(Action::Type action)
 
 Action::Type Shortcuts::getAction(int keyflags, Code key)
 {
-	for(auto& shortcut : myShortcuts)
+	for(auto& shortcut : shortcutMappings_)
 	{
 		if(shortcut.key && shortcut.key->code == key)
 		{
@@ -482,7 +482,7 @@ Action::Type Shortcuts::getAction(int keyflags, Code key)
 
 Action::Type getAction(int keyflags, bool scrollUp)
 {
-	for(auto& shortcut : myShortcuts)
+	for(auto& shortcut : shortcutMappings_)
 	{
 		if(shortcut.key == nullptr && shortcut.scrollUp == scrollUp)
 		{

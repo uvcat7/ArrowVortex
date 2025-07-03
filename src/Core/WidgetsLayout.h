@@ -30,7 +30,7 @@ public:
 	template <typename T>
 	T* add()
 	{
-		T* w = new T(myGui);
+		T* w = new T(gui_);
 		add(w);
 		return w;
 	}
@@ -45,7 +45,7 @@ public:
 	template <typename T>
 	T* addH(int height)
 	{
-		T* w = new T(myGui);
+		T* w = new T(gui_);
 		w->setHeight(height);
 		add(w);
 		return w;
@@ -55,9 +55,9 @@ protected:
 	struct Row;
 	struct Col;
 
-	Vector<Row> myRows;
-	Vector<GuiWidget*> myWidgets;
-	int mySpacing;
+	Vector<Row> rowLayouts_;
+	Vector<GuiWidget*> widgetList_;
+	int rowSpacing_;
 };
 
 }; // namespace Vortex
