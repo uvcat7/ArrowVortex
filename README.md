@@ -88,6 +88,7 @@ Code from the following projects is included in this repository:
    - See  `lib/lua/` for more info.
 - The code in `src/Editor/Butterworth.cpp` is based upon [liir.c](https://www.exstrom.com/journal/sigproc/dsigproc.html) by Exstrom Labratories, which is GPL
 - The FFT routines in `/src/Editor/FFT.cpp` are based upon code from [Takuya OOURA's General Purpose FFT Package](https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html), which is released freely
+- Code from the [aubio](https://github.com/aubio/aubio) library, which is also GPLv3, is present in `src/Editor/Aubio.h` and `src/Editor/FindOnsets.cpp`
 
 
 ## Contributors
