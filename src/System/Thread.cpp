@@ -172,22 +172,31 @@ void ParallelThreads::run(int numItems, int numThreads)
 CriticalSection::CriticalSection()
 	: myHandle(malloc(sizeof(CRITICAL_SECTION)))
 {
+	if (!myHandle)
+		throw std::bad_alloc();
+
 	InitializeCriticalSection((LPCRITICAL_SECTION)myHandle);
 }
 
 CriticalSection::~CriticalSection()
 {
-	free(myHandle);
+	if (myHandle) {
+		DeleteCriticalSection((LPCRITICAL_SECTION)myHandle);
+		free(myHandle);
+		myHandle = nullptr;
+	}
 }
 
 void CriticalSection::lock()
 {
-	EnterCriticalSection((LPCRITICAL_SECTION)myHandle);
+	if (myHandle)
+		EnterCriticalSection((LPCRITICAL_SECTION)myHandle);
 }
 
 void CriticalSection::unlock()
 {
-	LeaveCriticalSection((LPCRITICAL_SECTION)myHandle);
+	if (myHandle)
+		LeaveCriticalSection((LPCRITICAL_SECTION)myHandle);
 }
 
 }; // namespace Vortex
