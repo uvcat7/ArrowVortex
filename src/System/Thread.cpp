@@ -1,6 +1,7 @@
 #include <System/Thread.h>
 
 #include <Core/Utils.h>
+#include <Core/AlignedMemory.h>
 
 #include <vector>
 
@@ -10,7 +11,6 @@
 #undef min
 #undef max
 
-#define AlignedMalloc(type) ((type*)_aligned_malloc(sizeof(type), 16))
 #define AlignedFree(ptr)    if(ptr) {_aligned_free(ptr); ptr = nullptr;}
 
 namespace Vortex {
@@ -142,7 +142,7 @@ void ParallelThreads::run(int numItems, int numThreads)
 	if(numItems <= 0 || numThreads <= 0) return;
 
 	ParallelThreadsShared shared;
-	shared.counter = AlignedMalloc(LONG);
+	shared.counter = AlignedMalloc<LONG>(1);
 	shared.size = *shared.counter = numItems;
 	shared.owner = this;
 

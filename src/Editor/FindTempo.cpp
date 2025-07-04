@@ -1,6 +1,7 @@
 ﻿#include <Core/Polyfit.h>
 #include <Core/Core.h>
 #include <Core/Vector.h>
+#include <Core/AlignedMemory.h>
 
 #include <System/Thread.h>
 
@@ -13,9 +14,6 @@
 #include <algorithm>
 #include <functional>
 #include <atomic>
-
-#define AlignedMalloc(type, count) ((type*)_aligned_malloc((count) * sizeof(type), 16))
-#define AlignedFree(ptr)           if(ptr){_aligned_free(ptr); ptr = nullptr;}
 
 #define MarkProgress(number, text) { if(*data->terminate) {return;} data->progress = number; }
 
@@ -107,9 +105,9 @@ GapData::GapData(int numThreads, int bufferSize, int downsample, int numOnsets, 
 	, windowSize(2048 >> downsample)
 	, bufferSize(bufferSize)
 {
-	window = AlignedMalloc(real, windowSize);
-	wrappedPos = AlignedMalloc(int, numOnsets * numThreads);
-	wrappedOnsets = AlignedMalloc(real, bufferSize * numThreads);
+	window = AlignedMalloc<real>(windowSize);
+	wrappedPos = AlignedMalloc<int>(numOnsets * numThreads);
+	wrappedOnsets = AlignedMalloc<real>(bufferSize * numThreads);
 	CreateHammingWindow(window, windowSize);
 }
 
@@ -254,7 +252,7 @@ IntervalTester::IntervalTester(int samplerate, int numOnsets, const Onset* onset
 	maxInterval = (int)(samplerate * 60.0 / MinimumBPM + 0.5);
 	numIntervals = maxInterval - minInterval;
 
-	fitness = AlignedMalloc(real, numIntervals);
+	fitness = AlignedMalloc<real>(numIntervals);
 }
 
 IntervalTester::~IntervalTester()
@@ -521,7 +519,7 @@ static real AdjustForOffbeats(SerializedTempo* data, real offset, real bpm)
 	int numFrames = data->numFrames;
 
 	// Create a slope representation of the waveform.
-	real* slopes = AlignedMalloc(real, numFrames);
+	real* slopes = AlignedMalloc<real>(numFrames);
 	ComputeSlopes(data->samples, slopes, numFrames, samplerate);
 
 	// Determine the offbeat sample position.
@@ -606,7 +604,7 @@ TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames)
 	myData.numFrames = numFrames;
 	myData.samplerate = music.getFrequency();
 
-	myData.samples = AlignedMalloc(float, numFrames);
+	myData.samples = AlignedMalloc<float>(numFrames);
 	if(!myData.samples) return;
 
 	// Copy the input samples.
