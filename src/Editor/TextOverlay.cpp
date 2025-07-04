@@ -585,7 +585,6 @@ void drawAbout()
 	DrawTitleText("ABOUT", "[ESC] close", nullptr);
 
 	auto fps = Str::fmt("%1 FPS").arg(1.0f / max(deltaTime.count(), 0.0001), 0, 0);
-	//auto fps = Str::fmt("%7 FPS").arg(deltaTime.count(), 0, 0);
 	Text::arrange(Text::TR, fps);
 	Text::draw(vec2i{size.x - 4, 4});
 }
