@@ -261,7 +261,7 @@ Vortex::Vector<T> polyfit(const T* oX, const T* oY, size_t nCount, int nDegree)
 
 // Specialized version for BPM testing, writes degree + 1 coefficients to outCoefs.
 template <typename T>
-void polyfit(int degree, T* outCoefs, const T* inValues, uint32_t numNonZeroValues, int offsetX)
+void polyfit(int degree, T* outCoefs, const T* inValues, int numNonZeroValues, int offsetX)
 {
 	// more intuative this way
 	++degree;
