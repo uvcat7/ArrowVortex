@@ -440,7 +440,6 @@ void CALLBACK messageLoop()
 
 		// Reset the mouse cursor.
 		myCursor = Cursor::ARROW;
-		gEditor->tick();
 
 #ifdef DEBUG
 		auto inputTime = Debug::getElapsedTime();
@@ -452,8 +451,9 @@ void CALLBACK messageLoop()
 		glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		gEditor->tickdraw();
 		VortexCheckGlError();
+
+		gEditor->tick();
 
 		// Display.
 		SwapBuffers(myHDC);

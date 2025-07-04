@@ -882,16 +882,26 @@ void tick()
 	handleInputs(events);
 	notifyChanges();
 
+	vec2i windowSize = gSystem->getWindowSize();
+	recti r = { 0, 0, windowSize.x, windowSize.y };
+
 	gTextOverlay->handleInputs(events);
 
+	GuiMain::setViewSize(r.w, r.h);
+	GuiMain::frameStart(deltaTime.count(), events);
+
+	vec2i view = gSystem->getWindowSize();
+
 	handleDialogs();
-	
-	if(!GuiMain::isCapturingText())
+
+	myGui->tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
+
+	if (!GuiMain::isCapturingText())
 	{
-		for(KeyPress* press = nullptr; events.next(press);)
+		for (KeyPress* press = nullptr; events.next(press);)
 		{
 			Action::Type action = gShortcuts->getAction(press->keyflags, press->key);
-			if(action)
+			if (action)
 			{
 				Action::perform(action);
 				press->handled = true;
@@ -899,12 +909,12 @@ void tick()
 		}
 	}
 
-	if(!GuiMain::isCapturingMouse())
+	if (!GuiMain::isCapturingMouse())
 	{
-		for(MouseScroll* scroll = nullptr; events.next(scroll);)
+		for (MouseScroll* scroll = nullptr; events.next(scroll);)
 		{
 			Action::Type action = gShortcuts->getAction(scroll->keyflags, scroll->up);
-			if(action)
+			if (action)
 			{
 				Action::perform(action);
 				scroll->handled = true;
@@ -912,7 +922,7 @@ void tick()
 		}
 	}
 
-	if(GuiMain::isCapturingMouse())
+	if (GuiMain::isCapturingMouse())
 	{
 		gSystem->setCursor(GuiMain::getCursorIcon());
 	}
@@ -922,14 +932,14 @@ void tick()
 	gMinimap->handleInputs(events);
 	gEditing->handleInputs(events);
 
-	if(gSimfile->isOpen())
+	if (gSimfile->isOpen())
 	{
 		gView->tick();
 	}
 
 	gSelection->handleInputs(events);
 
-	if(gSimfile->isOpen())
+	if (gSimfile->isOpen())
 	{
 		gMusic->tick();
 		gMinimap->tick();
@@ -939,19 +949,6 @@ void tick()
 
 	updateTitle();
 	notifyChanges();
-}
-
-void tickdraw()
-{
-	InputEvents& events = gSystem->getEvents();
-	vec2i windowSize = gSystem->getWindowSize();
-	recti r = { 0, 0, windowSize.x, windowSize.y };
-
-	GuiMain::setViewSize(r.w, r.h);
-	GuiMain::frameStart(deltaTime.count(), events);
-
-	vec2i view = gSystem->getWindowSize();
-	myGui->tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
 
 	if (gSimfile->isOpen())
 	{
@@ -963,10 +960,10 @@ void tickdraw()
 	{
 		drawLogo();
 	}
-	
-	gTextOverlay->draw();
 
 	myGui->draw();
+
+	gTextOverlay->draw();
 
 	GuiMain::frameEnd();
 }
