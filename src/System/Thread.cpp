@@ -11,8 +11,6 @@
 #undef min
 #undef max
 
-#define AlignedFree(ptr)    if(ptr) {_aligned_free(ptr); ptr = nullptr;}
-
 namespace Vortex {
 
 // ================================================================================================
@@ -162,7 +160,10 @@ void ParallelThreads::run(int numItems, int numThreads)
 		CloseHandle(handle);
 	}
 
-	AlignedFree(shared.counter);
+	if (shared.counter) {
+		_aligned_free(shared.counter);
+		shared.counter = nullptr;
+	};
 }
 
 // ================================================================================================
