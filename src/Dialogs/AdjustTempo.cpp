@@ -65,7 +65,7 @@ WgSpinner* Dlg::myCreateWidgetRow(StringRef label, int y, double& val, int actio
 
 	WgSpinner* spinner = myLayout.add<WgSpinner>(label);
 	spinner->value.bind(&val);
-	spinner->setPrecision(3, 3);
+	spinner->setPrecision(3, 6);
 	spinner->onChange.bind(this, &Dlg::onAction, action + 0);
 	spinner->setTooltip(tooltips2[isBPM]);
 
@@ -107,7 +107,7 @@ void Dlg::myCreateWidgets()
 	WgSpinner* spinner = myLayout.add<WgSpinner>("Offset in beats");
 	spinner->setRange(0.0, 100000.0);
 	spinner->value.bind(&myBeatsToInsert);
-	spinner->setPrecision(3, 3);
+	spinner->setPrecision(3, 6);
 	spinner->setTooltip("Number of beats to insert or remove");
 
 	WgCycleButton* cycle = myLayout.add<WgCycleButton>("Apply offset to");

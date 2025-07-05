@@ -181,7 +181,7 @@ static void WriteBpms(ExportData& data, const Tempo* tempo)
 	WriteSegments<BpmChange>(data, "BPMS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
 	[&](const BpmChange& change)
 	{
-		data.file.printf("%.3f=%.3f",
+		data.file.printf("%.3f=%.6f",
 			ToBeat(change.row), change.bpm);
 	});
 }
@@ -320,8 +320,8 @@ static void WriteDisplayBpm(ExportData& data, const Tempo* tempo)
 		else
 		{
 			Str::fmt fmt = "%1:%2";
-			fmt.arg(tempo->displayBpmRange.min, 3);
-			fmt.arg(tempo->displayBpmRange.max, 3);
+			fmt.arg(tempo->displayBpmRange.min, 6);
+			fmt.arg(tempo->displayBpmRange.max, 6);
 			WriteTag(data, "DISPLAYBPM", fmt, ALWAYS, false);
 		}
 	}
