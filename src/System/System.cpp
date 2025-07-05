@@ -193,6 +193,11 @@ void MItem::setChecked(int item, bool state)
 	CheckMenuItem((HMENU)this, item, state ? MF_CHECKED : MF_UNCHECKED);
 }
 
+void MItem::setEnabled(int item, bool state)
+{
+	EnableMenuItem((HMENU)this, item, state ? MF_ENABLED : MF_GRAYED);
+}
+
 namespace {
 
 // ================================================================================================

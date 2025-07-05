@@ -5,6 +5,7 @@
 #include <Core/StringUtils.h>
 
 #include <Managers/NoteskinMan.h>
+#include <Managers/SimfileMan.h>
 #include <Managers/StyleMan.h>
 
 #include <Editor/Action.h>
@@ -407,6 +408,12 @@ void registerUpdateFunctions()
 {
 	using namespace Action;
 
+	myUpdateFunctions[OPEN_FILE] = []
+	{
+		MENU->myFileMenu->setEnabled(FILE_CLOSE, gSimfile->isOpen());
+		MENU->myFileMenu->setEnabled(FILE_SAVE, gSimfile->isOpen());
+		MENU->myFileMenu->setEnabled(FILE_SAVE_AS, gSimfile->isOpen());
+	};
 	myUpdateFunctions[RECENT_FILES] = []
 	{
 		Item* recent = newMenu();

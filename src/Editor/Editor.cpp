@@ -456,6 +456,7 @@ bool closeSimfile()
 
 	// Close the simfile and reset the editor state.
 	gSimfile->close();
+	gMenubar->update(Menubar::OPEN_FILE);
 
 	gView->setCursorTime(0.0);
 	
@@ -483,6 +484,7 @@ bool openSimfile(StringRef path)
 		}
 		gView->setCursorTime(0.0);
 	}
+	gMenubar->update(Menubar::OPEN_FILE);
 	return result;
 }
 
@@ -556,6 +558,9 @@ bool openNextSimfile(bool iterateForward)
 
 bool saveSimfile(bool showSaveAsDialog)
 {
+	// Check if a simfile is currently open.
+	if (gSimfile->isClosed()) return true;
+
 	SimFormat saveFmt = myDefaultSaveFormat;
 	
 	String dir = gSimfile->getDir();

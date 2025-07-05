@@ -14,6 +14,7 @@ struct Menubar
 
 	ALL_PROPERTIES,
 
+	OPEN_FILE,
 	RECENT_FILES,
 
 	SHOW_WAVEFORM,
