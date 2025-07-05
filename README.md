@@ -27,11 +27,13 @@ The following features are exclusive to the newer versions of ArrowVortex provid
 - Support for Fake and Lift note types
   - New "Convert" menu options for converting to Fakes or Lifts
 - Timestamps can be copied and pasted
-- Support for custom snaps
+- Complete support for custom snaps (copy-pasting, saving, editing)
 - Non-destructive paste option (Shift+Ctrl+V)
 - New visual sync feature, inspired by DDreamStudio (sub-beat placement)
 - Wider range and finer granularity in zooming
-- Replaced the fixed Mini options with a slider
+- Fixed Mini options have been replaced with a slider
+- Ability to show Stepmania-style preview during playback
+- Auto-jump to next snap option
 
 ## Supported formats
 
