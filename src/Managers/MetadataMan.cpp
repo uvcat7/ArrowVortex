@@ -234,9 +234,29 @@ String findImageFile(const char* full, const char* abbrev)
 				return path.filename();
 			}
 		}
-		if(f == abbrev || Str::find(f, full) != String::npos)
+		if(Str::find(f, abbrev) != String::npos || Str::find(f, full) != String::npos)
 		{
 			return path.filename();
+		}
+	}
+	paths = File::findFiles(gSimfile->getDir() + "..\\", false);
+	for (auto& path : paths)
+	{
+		String f(path.filename());
+		Str::toLower(f);
+		String cmp[] = { " ", "-", "_" };
+		for (auto& s : cmp)
+		{
+			String prefix = abbrev + s;
+			String postfix = s + abbrev;
+			if (Str::startsWith(f, prefix.str()) || Str::endsWith(f, postfix.str()))
+			{
+				return "..\\" + path.filename();
+			}
+		}
+		if (Str::find(f, abbrev) != String::npos || Str::find(f, full) != String::npos)
+		{
+			return "..\\" + path.filename();
 		}
 	}
 	return {};
