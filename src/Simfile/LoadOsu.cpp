@@ -470,8 +470,7 @@ static void ConvertTimingPoints(Simfile* sim, OsuFile& osu)
 		int row = (int)(curRow + 0.5);
 		tempo->segments->append(BpmChange(row, it->second.bpm));
 
-		// Advance to the next 
-		// .
+		// Advance to the next BPM change
 		spb = 60.0 / it->second.bpm;
 		prevTime = it->first;
 		prevRow = curRow;

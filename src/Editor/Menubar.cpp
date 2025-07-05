@@ -385,7 +385,6 @@ void init(Item* menu)
 	add(hHelp, SHOW_DEBUG_LOG, "Debug Log...");
 	sep(hHelp);
 	add(hHelp, SHOW_ABOUT, "About...");
-	add(hHelp, SHOW_DONATE, "Donate...");
 
 	// Top level menu.
 	sub(menu, hFile, "File");
