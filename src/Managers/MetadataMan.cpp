@@ -298,6 +298,11 @@ String findBackgroundFile()
 	return findImageFile("bg", "background");
 }
 
+String findCdTitleFile()
+{
+	return findImageFile("cd", "cdtitle");
+}
+
 // ================================================================================================
 // MetadataManImpl :: other member functions.
 
