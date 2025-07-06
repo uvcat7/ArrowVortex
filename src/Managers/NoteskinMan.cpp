@@ -537,7 +537,7 @@ static bool Supports(const SkinType& type, const Style* style)
 
 void update(Chart* chart)
 {
-	const Style* style = chart ? chart->style : nullptr;
+ 	const Style* style = chart ? chart->style : nullptr;
 	if(myActiveStyle == style) return;
 	myActiveStyle = style;
 
