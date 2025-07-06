@@ -428,13 +428,18 @@ ShortcutsImpl()
 // ================================================================================================
 // ShortcutsImpl :: API functions.
 
-String Shortcuts::getNotation(Action::Type action)
+String Shortcuts::getNotation(Action::Type action, bool fullList = false)
 {
 	String out;
 	for(auto& shortcut : myShortcuts)
 	{
 		if(shortcut.action->code == action)
 		{
+			if (out.len())
+			{
+				out += ", ";
+			}
+
 			if(shortcut.keyflags & Keyflag::CTRL)
 			{
 				out += "Ctrl+";
@@ -459,7 +464,11 @@ String Shortcuts::getNotation(Action::Type action)
 			{
 				out += shortcut.key->name;
 			}
-			break;
+
+			if (!fullList)
+			{
+				break;
+			}
 		}
 	}
 	return out;
