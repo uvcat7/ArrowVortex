@@ -22,6 +22,7 @@ struct System
 		void replaceSubmenu(int pos, MenuItem* submenu, StringRef text, bool grayed = false);
 
 		void setChecked(int item, bool checked);
+		void setEnabled(int item, bool checked);
 	};
 
 	/// Helper struct for running system commands.

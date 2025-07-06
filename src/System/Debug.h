@@ -2,6 +2,7 @@
 
 #include <Core/Core.h>
 #include <assert.h>
+#include <chrono>
 
 #ifndef _DEBUG
 #define VORTEX_DISABLE_ASSERTS
@@ -15,10 +16,10 @@ namespace Debug
 	enum Type { INFO, WARNING, ERROR };
 
 	/// Returns a timestamp of the current time.
-	double getElapsedTime();
+	std::chrono::steady_clock::time_point getElapsedTime();
 
 	/// Returns the number of seconds elapsed since the start time.
-	double getElapsedTime(double startTime);
+	double getElapsedTime(std::chrono::steady_clock::time_point startTime);
 
 	/// Creates a blank log file.
 	void openLogFile();

@@ -7,18 +7,16 @@
 
 namespace mathalgo {
 
-typedef unsigned int uint;
-
 template <typename T>
 struct matrix
 {
-	matrix(uint nRows, uint nCols) :
+	matrix(uint32_t nRows, uint32_t nCols) :
 		rows(nRows),
 		cols(nCols),
 		data(nRows * nCols, 0)
 	{
 	}
-	static matrix identity(uint nSize)
+	static matrix identity(uint32_t nSize)
 	{
 		matrix oResult(nSize, nSize);
 
@@ -28,18 +26,18 @@ struct matrix
 
 		return oResult;
 	}
-	inline T& operator()(uint nRow, uint nCol)
+	inline T& operator()(uint32_t nRow, uint32_t nCol)
 	{
 		return data[nCol + cols*nRow];
 	}
 	inline matrix operator*(matrix& other)
 	{
 		matrix oResult(rows, other.cols);
-		for(uint r = 0; r < rows; ++r)
+		for(uint32_t r = 0; r < rows; ++r)
 		{
-			for(uint ocol = 0; ocol < other.cols; ++ocol)
+			for(uint32_t ocol = 0; ocol < other.cols; ++ocol)
 			{
-				for(uint c = 0; c < cols; ++c)
+				for(uint32_t c = 0; c < cols; ++c)
 				{
 					oResult(r, ocol) += (*this)(r, c) * other(c, ocol);
 				}
@@ -50,9 +48,9 @@ struct matrix
 	inline matrix transpose()
 	{
 		matrix oResult(cols, rows);
-		for(uint r = 0; r < rows; ++r)
+		for(uint32_t r = 0; r < rows; ++r)
 		{
-			for(uint c = 0; c < cols; ++c)
+			for(uint32_t c = 0; c < cols; ++c)
 			{
 				oResult(c, r) += (*this)(r, c);
 			}
@@ -60,8 +58,8 @@ struct matrix
 		return oResult;
 	}
 	Vortex::Vector<T> data;
-	uint rows;
-	uint cols;
+	uint32_t rows;
+	uint32_t cols;
 };
 
 template <typename T>
@@ -263,29 +261,30 @@ Vortex::Vector<T> polyfit(const T* oX, const T* oY, size_t nCount, int nDegree)
 
 // Specialized version for BPM testing, writes degree + 1 coefficients to outCoefs.
 template <typename T>
-void polyfit(int degree, T* outCoefs, const T* inValues, size_t numNonZeroValues, int offsetX)
+void polyfit(int degree, T* outCoefs, const T* inValues, int numNonZeroValues, int offsetX)
 {
 	// more intuative this way
 	++degree;
 
-	matrix<T> oXMatrix(numNonZeroValues, degree);
-	matrix<T> oYMatrix(numNonZeroValues, 1);
+	const uint32_t numValues = static_cast<uint32_t>(numNonZeroValues);
+	matrix<T> oXMatrix(numValues, degree);
+	matrix<T> oYMatrix(numValues, 1);
 
 	// copy y matrix
-	for(size_t nRow = 0, i = 0; nRow < numNonZeroValues; ++nRow, ++i)
+	for(uint32_t nRow = 0, i = 0; nRow < numValues; ++nRow, ++i)
 	{
 		while(inValues[i] == 0) ++i;
 		oYMatrix(nRow, 0) = inValues[i];
 	}
 
 	// create the X matrix
-	for(size_t nRow = 0, i = 0; nRow < numNonZeroValues; ++nRow, ++i)
+	for(uint32_t nRow = 0, i = 0; nRow < numValues; ++nRow, ++i)
 	{
 		while(inValues[i] == 0) ++i;
 		T nVal = 1.0f, x = T(offsetX + i);
 		for(int nCol = 0; nCol < degree; nCol++)
 		{
-			oXMatrix(nRow, nCol) = nVal;
+			oXMatrix(static_cast<uint32_t>(nRow), nCol) = nVal;
 			nVal *= x;
 		}
 	}

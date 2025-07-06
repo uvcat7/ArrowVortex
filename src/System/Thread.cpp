@@ -1,6 +1,7 @@
 #include <System/Thread.h>
 
 #include <Core/Utils.h>
+#include <Core/AlignedMemory.h>
 
 #include <vector>
 
@@ -9,9 +10,6 @@
 
 #undef min
 #undef max
-
-#define AlignedMalloc(type) ((type*)_aligned_malloc(sizeof(type), 16))
-#define AlignedFree(ptr)    if(ptr) {_aligned_free(ptr); ptr = nullptr;}
 
 namespace Vortex {
 
@@ -142,7 +140,7 @@ void ParallelThreads::run(int numItems, int numThreads)
 	if(numItems <= 0 || numThreads <= 0) return;
 
 	ParallelThreadsShared shared;
-	shared.counter = AlignedMalloc(LONG);
+	shared.counter = AlignedMalloc<LONG>(1);
 	shared.size = *shared.counter = numItems;
 	shared.owner = this;
 
@@ -162,7 +160,10 @@ void ParallelThreads::run(int numItems, int numThreads)
 		CloseHandle(handle);
 	}
 
-	AlignedFree(shared.counter);
+	if (shared.counter) {
+		_aligned_free(shared.counter);
+		shared.counter = nullptr;
+	};
 }
 
 // ================================================================================================
@@ -171,22 +172,31 @@ void ParallelThreads::run(int numItems, int numThreads)
 CriticalSection::CriticalSection()
 	: criticalSectionHandle(malloc(sizeof(CRITICAL_SECTION)))
 {
+	if (!criticalSectionHandle)
+		throw std::bad_alloc();
+
 	InitializeCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
 }
 
 CriticalSection::~CriticalSection()
 {
-	free(criticalSectionHandle);
+	if (criticalSectionHandle) {
+		DeleteCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
+		free(criticalSectionHandle);
+		criticalSectionHandle = nullptr;
+	}
 }
 
 void CriticalSection::lock()
 {
-	EnterCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
+	if (criticalSectionHandle)
+		EnterCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
 }
 
 void CriticalSection::unlock()
 {
-	LeaveCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
+	if (criticalSectionHandle)
+		LeaveCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
 }
 
 }; // namespace Vortex

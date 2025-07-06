@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
+#include <chrono>
 
 #include <Core/Vector.h>
 #include <Core/Reference.h>
@@ -19,6 +20,7 @@
 
 #include <Editor/ConvertToOgg.h>
 #include <Editor/Editor.h>
+#include <Editor/View.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
 
@@ -48,7 +50,7 @@ struct MusicImpl : public Music, public MixSource {
 
 Mixer* myMixer;
 Sound mySamples;
-double myPlayTimer;
+std::chrono::steady_clock::time_point myPlayTimer;
 TickData myBeatTick, myNoteTick;
 String myTitle, myArtist;
 int myMusicSpeed;
@@ -673,7 +675,7 @@ void onChanges(int changes)
 		| VCM_TEMPO_CHANGED
 		| VCM_END_ROW_CHANGED;
 
-	if(changes & bits)
+	if((changes & bits) && !gMusic->isPaused() && gView->hasChartPreview())
 	{
 		interruptStream();
 		if(changes & (VCM_TEMPO_CHANGED | VCM_NOTES_CHANGED))
