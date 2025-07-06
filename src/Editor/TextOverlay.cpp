@@ -31,6 +31,7 @@ struct Shortcut { String a, b; bool isHeader; };
 static const int NUM_ICONS = 16;
 
 static uchar supportLink[] = "https://discord.gg/GCNAyDmjqy";
+static uchar githubLink[] = "https://github.com/uvcat7/ArrowVortex";
 
 static const char* iconNames[NUM_ICONS] = {
 	"up one",
@@ -558,12 +559,32 @@ void tickAbout()
 			}
 		}
 	}
+
+	if (IsInside(getGithubButtonRect(), mpos.x, mpos.y))
+	{
+		gSystem->setCursor(Cursor::HAND);
+		MousePress* mp = nullptr;
+		if (gSystem->getEvents().next(mp))
+		{
+			if (mp->unhandled())
+			{
+				mp->setHandled();
+				gSystem->openWebpage((const char*)githubLink);
+			}
+		}
+	}
+}
+
+recti getGithubButtonRect()
+{
+	vec2i w = gSystem->getWindowSize();
+	return { w.x / 2 - 70, w.y / 2 - 60, 64, 28 };
 }
 
 recti getSupportButtonRect()
 {
 	vec2i w = gSystem->getWindowSize();
-	return { w.x / 2 - 24, w.y / 2 - 60, 64, 28 };
+	return { w.x / 2 + 22, w.y / 2 - 60, 64, 28 };
 }
 
 void drawAbout()
@@ -576,12 +597,17 @@ void drawAbout()
 	Text::arrange(Text::TC, buildDate.str());
 	Text::draw(vec2i{ size.x / 2, size.y / 2 - 112 });
 
-	Text::arrange(Text::TC, "Join our Discord for support and source code access!");
+	Text::arrange(Text::TC, "Join our Discord for support and our GitHub for source code access!");
 	Text::draw(vec2i{ size.x / 2, size.y / 2 - 80 });
 
 	recti r = getSupportButtonRect();
 	GuiDraw::getButton().base.draw(r);
 	Text::arrange(Text::MC, "Discord");
+	Text::draw(r);
+
+	r = getGithubButtonRect();
+	GuiDraw::getButton().base.draw(r);
+	Text::arrange(Text::MC, "GitHub");
 	Text::draw(r);
 
 	Text::arrange(Text::TC, "Current GitHub maintainers:\n"
