@@ -502,6 +502,11 @@ void registerUpdateFunctions()
 				++numValid;
 			}
 		}
+		// If the active type was zero, set it to the first skin in the list
+		if (!activeType)
+		{
+			hSkins->setChecked((Action::Type)(SET_NOTESKIN_BEGIN), true);
+		}
 		MENU->myViewMenu->replaceSubmenu(13, hSkins, "Noteskins", (numValid == 0));
 	};
 	myUpdateFunctions[STATUSBAR_CHART] = []
