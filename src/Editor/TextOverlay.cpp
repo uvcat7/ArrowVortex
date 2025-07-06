@@ -30,7 +30,7 @@ struct Shortcut { String a, b; bool isHeader; };
 
 static const int NUM_ICONS = 16;
 
-static uchar supportLink[] = "http://github.com/uvcat7/ArrowVortex";
+static uchar supportLink[] = "https://discord.gg/GCNAyDmjqy";
 
 static const char* iconNames[NUM_ICONS] = {
 	"up one",
@@ -581,7 +581,7 @@ void drawAbout()
 
 	recti r = getSupportButtonRect();
 	GuiDraw::getButton().base.draw(r);
-	Text::arrange(Text::MC, "GitHub");
+	Text::arrange(Text::MC, "Discord");
 	Text::draw(r);
 
 	Text::arrange(Text::TC, "Current GitHub maintainers:\n"
