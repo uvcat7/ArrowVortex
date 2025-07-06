@@ -354,6 +354,9 @@
     <ClCompile Include="..\..\src\Dialogs\Zoom.cpp">
       <Filter>Dialogs</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Dialogs\LabelBreakdown.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Core\Core.h">
@@ -651,6 +654,9 @@
       <Filter>Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Dialogs\Zoom.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Dialogs\LabelBreakdown.h">
       <Filter>Dialogs</Filter>
     </ClInclude>
   </ItemGroup>

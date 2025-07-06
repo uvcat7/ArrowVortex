@@ -1,5 +1,6 @@
 #include <Dialogs/AdjustTempoSM5.h>
 
+#include <Core/StringUtils.h>
 #include <Core/Widgets.h>
 #include <Core/WidgetsLayout.h>
 
@@ -258,6 +259,12 @@ void Dlg::onAction(int id)
 		gTempo->addSegment(Fake(row, rows));
 	} break;
 	case ACT_LABEL_SET: {
+		if(strpbrk(myLabelText.str(), ";,=") != nullptr) {
+			HudWarning("A Label cannot contain commas, semicolons, or equal signs; they will be replaced with underscores.");
+			Str::replace(myLabelText, ",", "_");
+			Str::replace(myLabelText, ";", "_");
+			Str::replace(myLabelText, "=", "_");
+		}
 		gTempo->addSegment(Label(row, myLabelText));
 	} break;
 	};
