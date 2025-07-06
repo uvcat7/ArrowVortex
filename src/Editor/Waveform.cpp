@@ -444,7 +444,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 
 	int64_t srcFrames = filtered ? myFilter->samplesL.size() : music.getNumFrames();
 	int64_t samplePos = max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
-	int sampleCount = (int)min(srcFrames - samplePos, (int64_t)samplesPerBlock);
+	double sampleCount = min((double) srcFrames - samplePos, samplesPerBlock);
 
 	if (samplePos >= srcFrames || sampleCount <= 0)
 	{
@@ -457,7 +457,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 		return;
 	}
 
-	int sampleSkip = max(1, (int)(samplesPerPixel / 200.0));
+	double sampleSkip = max(0.001, (samplesPerPixel / 200.0));
 	int wh = w / 2 - 1;
 
 	const short* in = nullptr;
@@ -472,26 +472,26 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	in += samplePos;
 
 	double advance = samplesPerPixel * TEX_H / h;
-	for(int y = 0, ofs = 0; y < h; ++y)
+	double ofs = 0;
+	for(int y = 0; y < h; ++y)
 	{
 		// Determine the last sample of the line.
-		int end = min(sampleCount, (int)((double)(y + 1) * advance));
+		double end = min(sampleCount, (double)(y + 1) * advance);
 
 		// Find the minimum/maximum amplitude within the line.
 		int minAmp = SHRT_MAX;
 		int maxAmp = SHRT_MIN;
 		while(ofs < end)
 		{
-			maxAmp = max(maxAmp, (int)*in);
-			minAmp = min(minAmp, (int)*in);
+			maxAmp = max(maxAmp, (int)*(in + (int) round(ofs)));
+			minAmp = min(minAmp, (int)*(in + (int) round(ofs)));
 			ofs += sampleSkip;
-			in += sampleSkip;
 		}
 
 		// Clamp the minimum/maximum amplitude.
 		int l = (minAmp * wh) >> 15;
 		int r = (maxAmp * wh) >> 15;
-		if(r > l)
+		if(r >= l)
 		{
 			edges[y] = {clamp(l, -wh, wh), clamp(r, -wh, wh), 0};
 		}
