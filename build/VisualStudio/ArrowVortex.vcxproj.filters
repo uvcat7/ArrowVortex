@@ -1,109 +1,48 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\src\Core\ByteStream.cpp" />
-    <ClCompile Include="..\..\src\Core\Canvas.cpp" />
-    <ClCompile Include="..\..\src\Core\GuiDialog.cpp" />
-    <ClCompile Include="..\..\src\Core\Draw.cpp" />
-    <ClCompile Include="..\..\src\Core\FontData.cpp" />
-    <ClCompile Include="..\..\src\Core\FontManager.cpp" />
-    <ClCompile Include="..\..\src\Core\Gui.cpp" />
-    <ClCompile Include="..\..\src\Core\GuiContext.cpp" />
-    <ClCompile Include="..\..\src\Core\GuiManager.cpp" />
-    <ClCompile Include="..\..\src\Core\GuiDraw.cpp" />
-    <ClCompile Include="..\..\src\Core\ImageLoader.cpp" />
-    <ClCompile Include="..\..\src\Core\Input.cpp" />
-    <ClCompile Include="..\..\src\Core\QuadBatch.cpp" />
-    <ClCompile Include="..\..\src\Core\Renderer.cpp" />
-    <ClCompile Include="..\..\src\Core\Shader.cpp" />
-    <ClCompile Include="..\..\src\Core\Slot.cpp" />
-    <ClCompile Include="..\..\src\Core\String.cpp" />
-    <ClCompile Include="..\..\src\Core\StringUtils.cpp" />
-    <ClCompile Include="..\..\src\Core\Text.cpp" />
-    <ClCompile Include="..\..\src\Core\TextDraw.cpp" />
-    <ClCompile Include="..\..\src\Core\TextLayout.cpp" />
-    <ClCompile Include="..\..\src\Core\Texture.cpp" />
-    <ClCompile Include="..\..\src\Core\TextureImpl.cpp" />
-    <ClCompile Include="..\..\src\Core\Utils.cpp" />
-    <ClCompile Include="..\..\src\Core\WideString.cpp" />
-    <ClCompile Include="..\..\src\Core\GuiWidget.cpp" />
-    <ClCompile Include="..\..\src\Core\WidgetsColor.cpp" />
-    <ClCompile Include="..\..\src\Core\WidgetsLayout.cpp" />
-    <ClCompile Include="..\..\src\Core\WidgetsScroll.cpp" />
-    <ClCompile Include="..\..\src\Core\WidgetsSelect.cpp" />
-    <ClCompile Include="..\..\src\Core\WidgetsSimple.cpp" />
-    <ClCompile Include="..\..\src\Core\WidgetsText.cpp" />
-    <ClCompile Include="..\..\src\Core\Xmr.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\AdjustSync.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\AdjustTempo.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\AdjustTempoSM5.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\ChartList.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\ChartProperties.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\CustomSnap.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\DancingBot.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\Dialog.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\GenerateNotes.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\NewChart.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\SongProperties.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\TempoBreakdown.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\WaveformSettings.cpp" />
-    <ClCompile Include="..\..\src\Dialogs\Zoom.cpp" />
-    <ClCompile Include="..\..\src\Editor\Action.cpp" />
-    <ClCompile Include="..\..\src\Editor\Aubio.cpp" />
-    <ClCompile Include="..\..\src\Editor\Butterworth.cpp" />
-    <ClCompile Include="..\..\src\Editor\Common.cpp" />
-    <ClCompile Include="..\..\src\Editor\ConvertToOgg.cpp" />
-    <ClCompile Include="..\..\src\Editor\Editing.cpp" />
-    <ClCompile Include="..\..\src\Editor\Editor.cpp" />
-    <ClCompile Include="..\..\src\Editor\FFT.cpp" />
-    <ClCompile Include="..\..\src\Editor\FindOnsets.cpp" />
-    <ClCompile Include="..\..\src\Editor\FindTempo.cpp" />
-    <ClCompile Include="..\..\src\Editor\History.cpp" />
-    <ClCompile Include="..\..\src\Editor\LoadMp3.cpp" />
-    <ClCompile Include="..\..\src\Editor\LoadOgg.cpp" />
-    <ClCompile Include="..\..\src\Editor\LoadWav.cpp" />
-    <ClCompile Include="..\..\src\Editor\Menubar.cpp" />
-    <ClCompile Include="..\..\src\Editor\Minimap.cpp" />
-    <ClCompile Include="..\..\src\Editor\Music.cpp" />
-    <ClCompile Include="..\..\src\Editor\Notefield.cpp" />
-    <ClCompile Include="..\..\src\Editor\RatingEstimator.cpp" />
-    <ClCompile Include="..\..\src\Editor\Selection.cpp" />
-    <ClCompile Include="..\..\src\Editor\Shortcuts.cpp" />
-    <ClCompile Include="..\..\src\Editor\Sound.cpp" />
-    <ClCompile Include="..\..\src\Editor\Statusbar.cpp" />
-    <ClCompile Include="..\..\src\Editor\StreamGenerator.cpp" />
-    <ClCompile Include="..\..\src\Editor\TempoBoxes.cpp" />
-    <ClCompile Include="..\..\src\Editor\TextOverlay.cpp" />
-    <ClCompile Include="..\..\src\Editor\View.cpp" />
-    <ClCompile Include="..\..\src\Editor\Waveform.cpp" />
-    <ClCompile Include="..\..\src\Managers\ChartMan.cpp" />
-    <ClCompile Include="..\..\src\Managers\MetadataMan.cpp" />
-    <ClCompile Include="..\..\src\Managers\NoteMan.cpp" />
-    <ClCompile Include="..\..\src\Managers\NoteskinMan.cpp" />
-    <ClCompile Include="..\..\src\Managers\SimfileMan.cpp" />
-    <ClCompile Include="..\..\src\Managers\StyleMan.cpp" />
-    <ClCompile Include="..\..\src\Managers\TempoMan.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Chart.cpp" />
-    <ClCompile Include="..\..\src\Simfile\LoadDwi.cpp" />
-    <ClCompile Include="..\..\src\Simfile\NoteList.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Notes.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Parsing.cpp" />
-    <ClCompile Include="..\..\src\Simfile\LoadOsu.cpp" />
-    <ClCompile Include="..\..\src\Simfile\LoadSm.cpp" />
-    <ClCompile Include="..\..\src\Simfile\SaveOsu.cpp" />
-    <ClCompile Include="..\..\src\Simfile\SaveSm.cpp" />
-    <ClCompile Include="..\..\src\Simfile\SegmentGroup.cpp" />
-    <ClCompile Include="..\..\src\Simfile\SegmentList.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Segments.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Simfile.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Tempo.cpp" />
-    <ClCompile Include="..\..\src\Simfile\TimingData.cpp" />
-    <ClCompile Include="..\..\src\Simfile\Testing.cpp" />
-    <ClCompile Include="..\..\src\System\Debug.cpp" />
-    <ClCompile Include="..\..\src\System\File.cpp" />
-    <ClCompile Include="..\..\src\System\Mixer.cpp" />
-    <ClCompile Include="..\..\src\System\System.cpp" />
-    <ClCompile Include="..\..\src\System\Thread.cpp" />
+    <ResourceCompile Include="ArrowVortex.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{ee92bdcc-b19d-4aa7-9620-9a71cd56b491}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dialogs">
+      <UniqueIdentifier>{22b8b79a-7d6e-43d2-9b9c-9cda2881defd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor">
+      <UniqueIdentifier>{dbfe20f7-dae6-439e-bd5f-76d60d4714a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simfile">
+      <UniqueIdentifier>{0d290bef-42bf-499d-bc12-dc339b3d2006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{7eca6184-a8b2-4f24-8a25-7939a01043a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Audio">
+      <UniqueIdentifier>{3e6fe2c3-dbb4-4929-8df1-03277491e836}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Audio\Formats">
+      <UniqueIdentifier>{78eebc1c-d572-440c-ba19-534aaad9f1d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Graphics">
+      <UniqueIdentifier>{389e980a-532d-441e-a3dc-524071c076f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui">
+      <UniqueIdentifier>{1d75427b-8906-47c7-ab5c-89f6156fcb90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Editing">
+      <UniqueIdentifier>{bba63472-a529-462e-bc71-3bdac385e68c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Interface">
+      <UniqueIdentifier>{c63f2cf8-e190-467f-92ef-efaf87e5afcb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Managers">
+      <UniqueIdentifier>{7e0ec208-8141-4a26-a8f7-c694e4772b23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simfile\Formats">
+      <UniqueIdentifier>{032ccee9-69fb-4c3f-8724-8c85dd9c3a85}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Core\Input.cpp">
@@ -409,10 +348,10 @@
     <ClCompile Include="..\..\src\Managers\MetadataMan.cpp">
       <Filter>Managers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Dialogs\CustomSnap.cpp">
-	  <Filter>Dialogs</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Dialogs\Zoom.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Dialogs\CustomSnap.cpp">
       <Filter>Dialogs</Filter>
     </ClCompile>
   </ItemGroup>
@@ -708,10 +647,10 @@
     <ClInclude Include="..\..\src\Managers\MetadataMan.h">
       <Filter>Managers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Dialogs\CustomSnap.h">
+    <ClInclude Include="..\..\src\Dialogs\Zoom.h">
       <Filter>Dialogs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Dialogs\Zoom.h">
+    <ClInclude Include="..\..\src\Dialogs\CustomSnap.h">
       <Filter>Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
