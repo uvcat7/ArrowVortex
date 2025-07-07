@@ -31,12 +31,12 @@ inline color32 RGBAtoColor32(int r, int g, int b, int a)
 
 inline color32 Color32(int r, int g, int b, int a = 255)
 {
-	return COLOR32(r, g, b, a);
+	return RGBAtoColor32(r, g, b, a);
 }
 
 inline color32 Color32(int lum, int a = 255)
 {
-	return COLOR32(lum, lum, lum, a);
+	return RGBAtoColor32(lum, lum, lum, a);
 }
 
 inline color32 Color32a(color32 rgb, int a)
