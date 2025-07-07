@@ -490,32 +490,59 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 		// Read notes in the current section.
 		Vector<int> holds(numCols, 0);
 		int numLines = numSymbols / numCols;
+		int quantization = numLines;
 		if(numLines > 0)
 		{
 			int startRow = section * ROWS_PER_NOTE_SECTION;
 			char* line = measureText;
 			int row = startRow; 
-			int ofs = ROWS_PER_NOTE_SECTION / numLines;
-			if (ROWS_PER_NOTE_SECTION % numLines == 0)
+
+			// Try to find custom quantizations in any 192nd snap measures
+			if (numLines == ROWS_PER_NOTE_SECTION)
 			{
-				for (int i = 0; i < numLines; ++i, line += numCols, row += ofs)
+				// Nothing better to than to check them all by hand
+				for (int i = 4; i < ROWS_PER_NOTE_SECTION; i++)
 				{
-					if (memcmp(line, emptyline, numCols) != 0)
+					bool valid = true;
+					line = measureText;
+					float mod = (float) ROWS_PER_NOTE_SECTION / i;
+					for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j, line += numCols)
 					{
-						ReadNoteRow(readNoteData, row, line, numLines);
+						// Check all the compressed rows and make sure they are empty
+						if ((int)(round(fmod(j, mod))) > 0 && (int)(round(fmod(j, mod))) < (int)mod
+							&& memcmp(line, emptyline, numCols) != 0)
+						{
+							valid = false;
+							break;
+						}
+					}
+					// The first (smallest) match is always the best
+					if (valid)
+					{
+						// numLines will be the quantization
+						quantization = i;
+						break;
 					}
 				}
 			}
-			else
+
+			Debug::log("quantization was %d", quantization);
+			line = measureText;
+			int ofs = ROWS_PER_NOTE_SECTION / numLines;
+			for (int i = 0; i < numLines; ++i)
 			{
-				for (int i = 0; i < numLines; ++i, line += numCols, row += ofs)
+				if (memcmp(line, emptyline, numCols) != 0)
 				{
-					if (memcmp(line, emptyline, numCols) != 0)
-					{
-						ReadNoteRow(readNoteData, row, line, numLines);
-					}
+					ReadNoteRow(readNoteData, row, line, quantization);
+				}
+
+				// Handle abnormal numbers of lines loading
+				if (ROWS_PER_NOTE_SECTION % numLines != 0)
+				{
 					ofs = ((int)round(192.0f / numLines * (i + 1)) - (int)round(192.0f / numLines * i));
 				}
+				line += numCols;
+				row += ofs;
 			}
 		}
 	}

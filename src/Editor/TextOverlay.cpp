@@ -591,7 +591,7 @@ void drawAbout()
 {
 	vec2i size = gSystem->getWindowSize();
 
-	Text::arrange(Text::BC, "ArrowVortex release 1.0.0 (beta)");
+	Text::arrange(Text::BC, "ArrowVortex release v1.0.0");
 	Text::draw(vec2i{size.x / 2, size.y / 2 - 128});
 	String buildDate = "Build date: " + System::getBuildData();
 	Text::arrange(Text::TC, buildDate.str());
@@ -611,7 +611,7 @@ void drawAbout()
 	Text::draw(r);
 
 	Text::arrange(Text::TC, "Current GitHub maintainers:\n"
-		"@uvcat/TheUltravioletCatastrophe\n"
+		"@uvcat7/TheUltravioletCatastrophe\n"
 		"@sukibaby/Jasmine\n"
 		"\n"
 		"Source code contributors:\n"
