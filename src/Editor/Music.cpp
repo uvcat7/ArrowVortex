@@ -673,7 +673,7 @@ void onChanges(int changes)
 		| VCM_TEMPO_CHANGED
 		| VCM_END_ROW_CHANGED;
 
-	if((changes & bits) && !gMusic->isPaused() && gView->hasChartPreview())
+	if((changes & bits))
 	{
 		interruptStream();
 		if(changes & (VCM_TEMPO_CHANGED | VCM_NOTES_CHANGED))
