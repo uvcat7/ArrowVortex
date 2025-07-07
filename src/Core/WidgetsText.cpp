@@ -27,15 +27,15 @@ WgLineEdit::~WgLineEdit()
 
 WgLineEdit::WgLineEdit(GuiContext* gui)
 	: GuiWidget(gui)
-	, myShowBackground(1)
+	, lineedit_show_background_(1)
 {
-	myMaxLength = 1 << 24;
-	myBlinkTime = 0.f;
-	myScroll = 0.f;
-	myDrag = DT_NOT_DRAGGING;
-	myIsNumerical = false;
-	myIsEditable = true;
-	myForceScrollUpdate = false;
+	lineedit_max_length_ = 1 << 24;
+	lineedit_blink_time_ = 0.f;
+	lineedit_scroll_offset_ = 0.f;
+	lineedit_drag_ = DT_NOT_DRAGGING;
+	is_numerical_ = false;
+	is_editable_ = true;
+	force_scroll_update_ = false;
 }
 
 void WgLineEdit::deselect()
@@ -43,8 +43,8 @@ void WgLineEdit::deselect()
 	if(isCapturingText())
 	{
 		stopCapturingText();
-		myDrag = DT_NOT_DRAGGING;
-		myScroll = 0.f;
+		lineedit_drag_ = DT_NOT_DRAGGING;
+		lineedit_scroll_offset_ = 0.f;
 	}
 }
 
@@ -56,25 +56,25 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 
 	if(evt.key == Key::RETURN) stopCapturingText();
 
-	myDrag = DT_NOT_DRAGGING;
-	myBlinkTime = 0.f;
+	lineedit_drag_ = DT_NOT_DRAGGING;
+	lineedit_blink_time_ = 0.f;
 
 	Key::Code key = evt.key;
 	if(evt.keyflags == Keyflag::CTRL)
 	{
 		if(key == Key::X || key == Key::C)
 		{
-			if(myCursor.x == myCursor.y)
+			if(lineedit_cursor_.x == lineedit_cursor_.y)
 			{
 				GuiMain::setClipboardText(String());
 			}
 			else
 			{
-				int a = myCursor.x, b = myCursor.y;
+				int a = lineedit_cursor_.x, b = lineedit_cursor_.y;
 				if(a > b) swapValues(a, b);
-				String substring(myEditStr.begin() + a, b - a);
+				String substring(lineedit_text_.begin() + a, b - a);
 				GuiMain::setClipboardText(substring.str());
-				if(key == Key::X) myDeleteSelection();
+				if(key == Key::X) DeleteSection();
 			}
 			evt.handled = true;
 		}
@@ -87,24 +87,24 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 		}
 		else if(key == Key::A)
 		{
-			myCursor.x = 0;
-			myCursor.y = myEditStr.len();
+			lineedit_cursor_.x = 0;
+			lineedit_cursor_.y = lineedit_text_.len();
 			evt.handled = true;
 		}
 	}
 	else if(evt.keyflags == Keyflag::SHIFT)
 	{
-		int& cy = myCursor.y;
+		int& cy = lineedit_cursor_.y;
 		if(key == Key::HOME) cy = 0;
-		if(key == Key::END) cy = myEditStr.len();
-		if(key == Key::LEFT) cy = Str::prevChar(myEditStr, cy);
-		if(key == Key::RIGHT) cy = Str::nextChar(myEditStr, cy);
+		if(key == Key::END) cy = lineedit_text_.len();
+		if(key == Key::LEFT) cy = Str::prevChar(lineedit_text_, cy);
+		if(key == Key::RIGHT) cy = Str::nextChar(lineedit_text_, cy);
 	}
 	else
 	{
-		int& cy = myCursor.y, &cx = myCursor.x;
+		int& cy = lineedit_cursor_.y, &cx = lineedit_cursor_.x;
 		if(key == Key::HOME) cx = cy = 0;
-		if(key == Key::END) cx = cy = myEditStr.len();
+		if(key == Key::END) cx = cy = lineedit_text_.len();
 		if(cx != cy)
 		{
 			if(key == Key::LEFT) cx = cy = min(cx, cy); 
@@ -112,30 +112,30 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 		}
 		else
 		{
-			if(key == Key::LEFT) cx = cy = Str::prevChar(myEditStr, cy);
-			if(key == Key::RIGHT) cx = cy = Str::nextChar(myEditStr, cy);
+			if(key == Key::LEFT) cx = cy = Str::prevChar(lineedit_text_, cy);
+			if(key == Key::RIGHT) cx = cy = Str::nextChar(lineedit_text_, cy);
 		}
 	}
 
 	if(key == Key::DELETE || key == Key::BACKSPACE)
 	{
-		if(myCursor.x == myCursor.y) 
+		if(lineedit_cursor_.x == lineedit_cursor_.y) 
 		{
 			if(key == Key::BACKSPACE)
 			{
-				myCursor.y = Str::prevChar(myEditStr, myCursor.y);
+				lineedit_cursor_.y = Str::prevChar(lineedit_text_, lineedit_cursor_.y);
 			}
 			else
 			{
-				myCursor.y = Str::nextChar(myEditStr, myCursor.y);
+				lineedit_cursor_.y = Str::nextChar(lineedit_text_, lineedit_cursor_.y);
 			}
 		}
-		myDeleteSelection();
+		DeleteSection();
 	}
 
-	int len = myEditStr.len();
-	myCursor.x = clamp(myCursor.x, 0, len);
-	myCursor.y = clamp(myCursor.y, 0, len);
+	int len = lineedit_text_.len();
+	lineedit_cursor_.x = clamp(lineedit_cursor_.x, 0, len);
+	lineedit_cursor_.y = clamp(lineedit_cursor_.y, 0, len);
 }
 
 void WgLineEdit::onKeyRelease(KeyRelease& evt)
@@ -152,30 +152,30 @@ void WgLineEdit::onMousePress(MousePress& evt)
 		{
 			if(isCapturingText() && evt.doubleClick)
 			{
-				myCursor.x = 0;
-				myCursor.y = myEditStr.len();
+				lineedit_cursor_.x = 0;
+				lineedit_cursor_.y = lineedit_text_.len();
 			}
 			else
 			{
 				if(isCapturingText())
 				{
-					myDrag = DT_REGULAR_DRAG;
+					lineedit_drag_ = DT_REGULAR_DRAG;
 				}
 				else
 				{
-					myEditStr = text.get();
-					myDrag = DT_INITIAL_DRAG;
+					lineedit_text_ = text.get();
+					lineedit_drag_ = DT_INITIAL_DRAG;
 					startCapturingText();
 				}
 
-				vec2i t = myTextPos();
-				Text::arrange(Text::ML, mySettings, myEditStr.str());
+				vec2i t = TextPosition();
+				Text::arrange(Text::ML, lineedit_style_, lineedit_text_.str());
 				int charIndex = Text::getCharIndex(vec2i{t.x, t.y}, {evt.x, evt.y});
-				myCursor.x = myCursor.y = charIndex;
+				lineedit_cursor_.x = lineedit_cursor_.y = charIndex;
 			}
 
 			startCapturingMouse();
-			myBlinkTime = 0.f;
+			lineedit_blink_time_ = 0.f;
 			evt.setHandled();
 		}
 	}
@@ -188,51 +188,51 @@ void WgLineEdit::onMouseRelease(MouseRelease& evt)
 	{
 		stopCapturingMouse();
 	}
-	if(myDrag != DT_NOT_DRAGGING)
+	if(lineedit_drag_ != DT_NOT_DRAGGING)
 	{
-		if(myIsNumerical && myDrag == DT_INITIAL_DRAG && myCursor.x == myCursor.y)
+		if(is_numerical_ && lineedit_drag_ == DT_INITIAL_DRAG && lineedit_cursor_.x == lineedit_cursor_.y)
 		{
-			myCursor.x = 0;
-			myCursor.y = myEditStr.len();
+			lineedit_cursor_.x = 0;
+			lineedit_cursor_.y = lineedit_text_.len();
 		}
-		myDrag = DT_NOT_DRAGGING;
+		lineedit_drag_ = DT_NOT_DRAGGING;
 	}
 }
 
 void WgLineEdit::onTextInput(TextInput& evt)
 {
-	if(isCapturingText() && myIsEditable && !evt.handled)
+	if(isCapturingText() && is_editable_ && !evt.handled)
 	{
-		myDeleteSelection();
-		if((int)myEditStr.len() < myMaxLength)
+		DeleteSection();
+		if((int)lineedit_text_.len() < lineedit_max_length_)
 		{
 			String input(evt.text);
 			
-			int maxInputLen = myMaxLength - myEditStr.len();
+			int maxInputLen = lineedit_max_length_ - lineedit_text_.len();
 
 			int i = input.len();
 			while(i > maxInputLen) i = Str::prevChar(input, i);
 			if(i < (int)input.len()) Str::erase(input, i);
 
-			Str::insert(myEditStr, myCursor.y, input);
+			Str::insert(lineedit_text_, lineedit_cursor_.y, input);
 
-			myCursor.y += input.len();
-			myCursor.x = myCursor.y;
+			lineedit_cursor_.y += input.len();
+			lineedit_cursor_.x = lineedit_cursor_.y;
 		}
-		myForceScrollUpdate = true;
+		force_scroll_update_ = true;
 	}
 }
 
 void WgLineEdit::onTextCaptureLost()
 {
-	if(myEditStr != text.get())
+	if(lineedit_text_ != text.get())
 	{
-		text.set(myEditStr);
+		text.set(lineedit_text_);
 		onChange.call();
 	}
-	myCursor.x = myCursor.y = 0;
-	myScroll = 0.f;
-	myEditStr.release();
+	lineedit_cursor_.x = lineedit_cursor_.y = 0;
+	lineedit_scroll_offset_ = 0.f;
+	lineedit_text_.release();
 }
 
 void WgLineEdit::onTick()
@@ -246,47 +246,47 @@ void WgLineEdit::onTick()
 
 	if(!isCapturingText()) return;
 
-	Text::arrange(Text::ML, mySettings, myEditStr.str());
+	Text::arrange(Text::ML, lineedit_style_, lineedit_text_.str());
 
 	// Update cursor position.
-	vec2i tp = myTextPos();
-	if(myDrag != DT_NOT_DRAGGING)
+	vec2i tp = TextPosition();
+	if(lineedit_drag_ != DT_NOT_DRAGGING)
 	{
-		vec2i mp = myGui->getMousePos();
-		myCursor.y = Text::getCharIndex(vec2i{tp.x, tp.y}, {mp.x, tp.y});
-		myBlinkTime = 0.f;
+		vec2i mp = gui_->getMousePos();
+		lineedit_cursor_.y = Text::getCharIndex(vec2i{tp.x, tp.y}, {mp.x, tp.y});
+		lineedit_blink_time_ = 0.f;
 	}
-	myCursor.x = min(max(myCursor.x, 0), (int)myEditStr.len());
-	myCursor.y = min(max(myCursor.y, 0), (int)myEditStr.len());
+	lineedit_cursor_.x = min(max(lineedit_cursor_.x, 0), (int)lineedit_text_.len());
+	lineedit_cursor_.y = min(max(lineedit_cursor_.y, 0), (int)lineedit_text_.len());
 
 	// Update text offset
 	
-	float dt = myGui->getDeltaTime();
-	float barW = (float)(myRect.w - 12);
+	float dt = gui_->getDeltaTime();
+	float barW = (float)(rect_.w - 12);
 	float textW = (float)Text::getSize().x;
-	float cursorX = (float)Text::getCursorPos(vec2i{0, 0}, myCursor.y).x;
-	float target = min(max(myScroll, cursorX - barW + 12), cursorX - 12);
+	float cursorX = (float)Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x;
+	float target = min(max(lineedit_scroll_offset_, cursorX - barW + 12), cursorX - 12);
 	target = max(0.f, min(target, textW - barW));
 
-	float delta = max((float)fabs(myScroll - target) * 10.f * dt, dt * 256.f);
-	float smooth = (myScroll < target) ? min(myScroll + delta, target) : max(myScroll - delta, target);
-	myScroll = myForceScrollUpdate ? target : smooth;
-	myForceScrollUpdate = false;
+	float delta = max((float)fabs(lineedit_scroll_offset_ - target) * 10.f * dt, dt * 256.f);
+	float smooth = (lineedit_scroll_offset_ < target) ? min(lineedit_scroll_offset_ + delta, target) : max(lineedit_scroll_offset_ - delta, target);
+	lineedit_scroll_offset_ = force_scroll_update_ ? target : smooth;
+	force_scroll_update_ = false;
 
 	// Update blink time
-	myBlinkTime = fmod(myBlinkTime + dt, 1.f);
+	lineedit_blink_time_ = fmod(lineedit_blink_time_ + dt, 1.f);
 }
 
 void WgLineEdit::onDraw()
 {
-	recti r = myRect;
-	vec2i tp = myTextPos();
+	recti r = rect_;
+	vec2i tp = TextPosition();
 	bool active = isCapturingText();
 
-	const char* str = active ? myEditStr.str() : text.get();
+	const char* str = active ? lineedit_text_.str() : text.get();
 
 	// Draw the background box graphic.
-	if(myShowBackground)
+	if(lineedit_show_background_)
 	{
 		auto& textbox = GuiDraw::getTextBox();
 		textbox.base.draw(r);
@@ -303,36 +303,36 @@ void WgLineEdit::onDraw()
 	Renderer::pushScissorRect(r.x + 3, r.y + 1, r.w - 6, r.h - 2);
 
 	// Draw highlighted text.
-	if(active && myCursor.x != myCursor.y)
+	if(active && lineedit_cursor_.x != lineedit_cursor_.y)
 	{
 		String hlstr = Text::escapeMarkup(str);
 
-		int cx = Text::getEscapedCharIndex(str, myCursor.x);
-		int cy = Text::getEscapedCharIndex(str, myCursor.y);
+		int cx = Text::getEscapedCharIndex(str, lineedit_cursor_.x);
+		int cy = Text::getEscapedCharIndex(str, lineedit_cursor_.y);
 		if(cx > cy) swapValues(cx, cy);
 
 		Str::insert(hlstr, cy, "{tc}{bc}{sc}");
 		Str::insert(hlstr, cx, "{tc:000F}{bc:FFFF}{sc:0000}");
 
-		mySettings.textFlags |= Text::MARKUP;
-		mySettings.textColor = Color32a(mySettings.textColor, 255);
-		Text::arrange(Text::ML, mySettings, hlstr.str());
+		lineedit_style_.textFlags |= Text::MARKUP;
+		lineedit_style_.textColor = Color32a(lineedit_style_.textColor, 255);
+		Text::arrange(Text::ML, lineedit_style_, hlstr.str());
 		Text::draw(tp);
-		mySettings.textFlags &= ~Text::MARKUP;
+		lineedit_style_.textFlags &= ~Text::MARKUP;
 	}
 	// Draw regular text.
 	else
 	{
-		mySettings.textColor = Color32a(mySettings.textColor, isEnabled() ? 255 : 128);
-		Text::arrange(Text::ML, mySettings, str);
+		lineedit_style_.textColor = Color32a(lineedit_style_.textColor, isEnabled() ? 255 : 128);
+		Text::arrange(Text::ML, lineedit_style_, str);
 		Text::draw(tp);
 	}
 
 	// Draw the cursor position I-beam graphic.
-	if(active && myIsEditable && myBlinkTime < 0.5f)
+	if(active && is_editable_ && lineedit_blink_time_ < 0.5f)
 	{
-		Text::arrange(Text::ML, mySettings, str);
-		Text::CursorPos pos = Text::getCursorPos(tp, myCursor.y);
+		Text::arrange(Text::ML, lineedit_style_, str);
+		Text::CursorPos pos = Text::getCursorPos(tp, lineedit_cursor_.y);
 		Draw::fill({pos.x, pos.y, 1, pos.h}, Colors::white);
 	}	
 
@@ -341,39 +341,39 @@ void WgLineEdit::onDraw()
 
 void WgLineEdit::hideBackground()
 {
-	myShowBackground = 0;
+	lineedit_show_background_ = 0;
 }
 
 void WgLineEdit::setMaxLength(int n)
 {
-	myMaxLength = max(0, n);
+	lineedit_max_length_ = max(0, n);
 }
 
 void WgLineEdit::setNumerical(bool numerical)
 {
-	myIsNumerical = numerical;
+	is_numerical_ = numerical;
 }
 
 void WgLineEdit::setEditable(bool editable)
 {
-	myIsEditable = editable;
+	is_editable_ = editable;
 }
 
-void WgLineEdit::myDeleteSelection()
+void WgLineEdit::DeleteSection()
 {
-	if(myIsEditable && myCursor.x != myCursor.y)
+	if(is_editable_ && lineedit_cursor_.x != lineedit_cursor_.y)
 	{
-		if(myCursor.x > myCursor.y) swapValues(myCursor.x, myCursor.y);
-		Str::erase(myEditStr, myCursor.x, myCursor.y - myCursor.x);
-		myCursor.y = myCursor.x;
-		myForceScrollUpdate = true;
+		if(lineedit_cursor_.x > lineedit_cursor_.y) swapValues(lineedit_cursor_.x, lineedit_cursor_.y);
+		Str::erase(lineedit_text_, lineedit_cursor_.x, lineedit_cursor_.y - lineedit_cursor_.x);
+		lineedit_cursor_.y = lineedit_cursor_.x;
+		force_scroll_update_ = true;
 	}
 }
 
-vec2i WgLineEdit::myTextPos() const
+vec2i WgLineEdit::TextPosition() const
 {
-	recti r = myRect;
-	return{r.x - (int)myScroll + 6, r.y + r.h / 2};
+	recti r = rect_;
+	return{r.x - (int)lineedit_scroll_offset_ + 6, r.y + r.h / 2};
 }
 
 // ================================================================================================
@@ -381,27 +381,27 @@ vec2i WgLineEdit::myTextPos() const
 
 WgSpinner::~WgSpinner()
 {
-	delete myEdit;
+	delete spinner_lineedit_;
 }
 
 WgSpinner::WgSpinner(GuiContext* gui)
 	: GuiWidget(gui)
 {
-	myIsUpActive = false;
-	myRepeatTimer = 0.f;
-	mymin = INT_MIN;
-	myMax = INT_MAX;
-	myStep = 1.0;
-	myMinDecimalPlaces = 0;
-	myMaxDecimalPlaces = 6;
-	myUpdateValue(0.0);
+	spinner_is_up_pressed_ = false;
+	spinner_repeat_timer_ = 0.f;
+	spinner_min_ = INT_MIN;
+	spinner_max_ = INT_MAX;
+	spinner_step_size_ = 1.0;
+	spinner_min_decimal_places_ = 0;
+	spinner_max_decimal_places_ = 6;
+	SpinnerUpdateValue(0.0);
 
-	myEdit = new WgLineEdit(myGui);
-	myEdit->setNumerical(true);
-	myEdit->setMaxLength(12);
-	myEdit->text.bind(&myText);
-	myEdit->onChange.bind(this, &WgSpinner::myTextChange);
-	myEdit->hideBackground();
+	spinner_lineedit_ = new WgLineEdit(gui_);
+	spinner_lineedit_->setNumerical(true);
+	spinner_lineedit_->setMaxLength(12);
+	spinner_lineedit_->text.bind(&spinner_text_);
+	spinner_lineedit_->onChange.bind(this, &WgSpinner::SpinnerOnTextChange);
+	spinner_lineedit_->hideBackground();
 }
 
 void WgSpinner::onMousePress(MousePress& evt)
@@ -410,13 +410,13 @@ void WgSpinner::onMousePress(MousePress& evt)
 	{
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
-			myEdit->deselect();
+			spinner_lineedit_->deselect();
 			startCapturingMouse();
-			recti r = myButtonRect();
-			myIsUpActive = (evt.y <= r.y + r.h / 2);
-			double sign = myIsUpActive ? 1.0 : -1.0;
-			myUpdateValue(value.get() + myStep*sign);
-			myRepeatTimer = 0.5f;
+			recti r = SpinnerButtonRect();
+			spinner_is_up_pressed_ = (evt.y <= r.y + r.h / 2);
+			double sign = spinner_is_up_pressed_ ? 1.0 : -1.0;
+			SpinnerUpdateValue(value.get() + spinner_step_size_*sign);
+			spinner_repeat_timer_ = 0.5f;
 		}
 		evt.setHandled();
 	}
@@ -434,43 +434,43 @@ void WgSpinner::onArrange(recti r)
 {
 	GuiWidget::onArrange(r);
 	r.w -= 14;
-	myEdit->arrange(r);
+	spinner_lineedit_->arrange(r);
 }
 
 void WgSpinner::onTick()
 {
-	vec2i mpos = myGui->getMousePos();
-	if(IsInside(myButtonRect(), mpos.x, mpos.y))
+	vec2i mpos = gui_->getMousePos();
+	if(IsInside(SpinnerButtonRect(), mpos.x, mpos.y))
 	{
 		captureMouseOver();
 	}
 
-	myEdit->tick();
+	spinner_lineedit_->tick();
 
 	GuiWidget::onTick();
-	if(isMouseOver() || myEdit->isMouseOver())
+	if(isMouseOver() || spinner_lineedit_->isMouseOver())
 	{
 		GuiMain::setTooltip(getTooltip());
 	}
 
 	// Propagate settings to the text edits.
-	myEdit->setEnabled(isEnabled());
+	spinner_lineedit_->setEnabled(isEnabled());
 
 	// Check if the user is pressing the increment/decrement button.
 	if(isCapturingMouse())
 	{
-		myRepeatTimer -= myGui->getDeltaTime();
-		if(myRepeatTimer <= 0.f)
+		spinner_repeat_timer_ -= gui_->getDeltaTime();
+		if(spinner_repeat_timer_ <= 0.f)
 		{
-			double sign = myIsUpActive ? 1.0 : -1.0;
-			myUpdateValue(value.get() + myStep*sign);
-			myRepeatTimer = 0.05f;
+			double sign = spinner_is_up_pressed_ ? 1.0 : -1.0;
+			SpinnerUpdateValue(value.get() + spinner_step_size_*sign);
+			spinner_repeat_timer_ = 0.05f;
 		}
 	}	
 
 	// Check if the text display is still up to date.
 	double val = value.get();
-	if(myDisplayValue != val) myUpdateText();
+	if(spinner_display_value_ != val) SpinnerUpdateText();
 }
 
 void WgSpinner::onDraw()
@@ -480,27 +480,27 @@ void WgSpinner::onDraw()
 	auto& textbox = GuiDraw::getTextBox();
 
 	// Draw the background box graphic.
-	recti rtext = SideL(myRect, myRect.w - 12);
+	recti rtext = SideL(rect_, rect_.w - 12);
 	textbox.base.draw(rtext, TileRect2::L);
-	if(myEdit->isCapturingText())
+	if(spinner_lineedit_->isCapturingText())
 	{
 		rtext.w -= 2;
 		textbox.active.draw(rtext, TileRect2::L);
 	}
-	else if(myEdit->isMouseOver())
+	else if(spinner_lineedit_->isMouseOver())
 	{
 		rtext.w -= 2;
 		textbox.hover.draw(rtext, TileRect2::L);
 	}
-	myEdit->draw();
+	spinner_lineedit_->draw();
 	
 	// Draw the buttons.
-	recti r = myButtonRect();
+	recti r = SpinnerButtonRect();
 	button.base.draw(r, TileRect2::R);
 	
 	if(isCapturingMouse())
 	{
-		if(myIsUpActive)
+		if(spinner_is_up_pressed_)
 		{
 			recti top = {r.x, r.y, r.w, r.h / 2 + 1};
 			button.pressed.draw(top, TileRect2::TR);
@@ -513,7 +513,7 @@ void WgSpinner::onDraw()
 	}
 	else if(isEnabled() && isMouseOver())
 	{
-		if(myGui->getMousePos().y < r.y + r.h / 2)
+		if(gui_->getMousePos().y < r.y + r.h / 2)
 		{
 			recti top = {r.x, r.y, r.w, r.h / 2 + 1};
 			button.hover.draw(top, TileRect2::TR);
@@ -533,52 +533,52 @@ void WgSpinner::onDraw()
 
 void WgSpinner::setRange(double min, double max)
 {
-	mymin = min, myMax = max;
+	spinner_min_ = min, spinner_max_ = max;
 }
 
 void WgSpinner::setStep(double step)
 {
-	myStep = step;
+	spinner_step_size_ = step;
 }
 
 void WgSpinner::setPrecision(int minDecimalPlaces, int maxDecimalPlaces)
 {
-	myMinDecimalPlaces = minDecimalPlaces;
-	myMaxDecimalPlaces = maxDecimalPlaces;
-	myUpdateText();
+	spinner_min_decimal_places_ = minDecimalPlaces;
+	spinner_max_decimal_places_ = maxDecimalPlaces;
+	SpinnerUpdateText();
 }
 
-void WgSpinner::myUpdateValue(double v)
+void WgSpinner::SpinnerUpdateValue(double v)
 {
 	double prev = value.get();
-	value.set(max(mymin, min(myMax, v)));
-	myUpdateText();
+	value.set(max(spinner_min_, min(spinner_max_, v)));
+	SpinnerUpdateText();
 	if(value.get() != prev) onChange.call();
 }
 
-void WgSpinner::myUpdateText()
+void WgSpinner::SpinnerUpdateText()
 {
-	myDisplayValue = value.get();
-	myText.clear();
-	Str::appendVal(myText, myDisplayValue, myMinDecimalPlaces, myMaxDecimalPlaces);
+	spinner_display_value_ = value.get();
+	spinner_text_.clear();
+	Str::appendVal(spinner_text_, spinner_display_value_, spinner_min_decimal_places_, spinner_max_decimal_places_);
 }
 
-void WgSpinner::myTextChange()
+void WgSpinner::SpinnerOnTextChange()
 {
 	double v = 0.0;
-	if(Str::parse(myText.str(), v))
+	if(Str::parse(spinner_text_.str(), v))
 	{
-		myUpdateValue(v);
+		SpinnerUpdateValue(v);
 	}
 	else
 	{
-		myUpdateText();
+		SpinnerUpdateText();
 	}
 }
 
-recti WgSpinner::myButtonRect()
+recti WgSpinner::SpinnerButtonRect()
 {
-	return SideR(myRect, 14);
+	return SideR(rect_, 14);
 }
 
 }; // namespace Vortex

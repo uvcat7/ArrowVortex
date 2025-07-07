@@ -100,7 +100,7 @@ void OggConversionThread::exec()
 	pipe->srcR = music.samplesR();
 	pipe->firstChunk = true;
 	pipe->progress = &progress;
-	pipe->terminateFlag = &myTerminateFlag;
+	pipe->terminateFlag = &terminationFlag_;
 	WriteWaveHeader((WaveHeader*)(pipe->samples), music.getNumFrames(), music.getFrequency());
 
 	// Encode the PCM file with the oggenc2 command line utility.

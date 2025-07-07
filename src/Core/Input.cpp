@@ -157,35 +157,35 @@ InputEvents::~InputEvents()
 }
 
 InputEvents::InputEvents()
-	: myData(nullptr)
+	: data_(nullptr)
 {
 }
 
 InputEvents::InputEvents(const InputEvents& other)
-	: myData(nullptr)
+	: data_(nullptr)
 {
 	*this = other;
 }
 
 void InputEvents::clear()
 {
-	EventHeader* header = (EventHeader*)myData;
+	EventHeader* header = (EventHeader*)data_;
 	while(header)
 	{
 		EventHeader* next = header->next;
 		free(header);
 		header = next;
 	}
-	myData = nullptr;
+	data_ = nullptr;
 }
 
 void InputEvents::operator = (const InputEvents& other)
 {
-	if(myData != other.myData)
+	if(data_ != other.data_)
 	{
 		clear();
 		EventHeader* last = nullptr;
-		for(EventHeader* it = (EventHeader*)other.myData; it; it = it->next)
+		for(EventHeader* it = (EventHeader*)other.data_; it; it = it->next)
 		{
 			EventHeader* event = CopyEvent(it);
 			if(last)
@@ -194,7 +194,7 @@ void InputEvents::operator = (const InputEvents& other)
 			}
 			else
 			{
-				myData = event;
+				data_ = event;
 			}
 			last = event;
 		}
@@ -206,77 +206,77 @@ void InputEvents::operator = (const InputEvents& other)
 
 void InputEvents::addMouseMove(int x, int y)
 {
-	ValidateEvents(myData);
-	AddEventT(myData, ET_MOUSE_MOVE,
+	ValidateEvents(data_);
+	AddEventT(data_, ET_MOUSE_MOVE,
 		MouseMove{x, y});
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addMousePress(Mouse::Code button, int x, int y, int keyflags, bool doubleClick)
 {
-	ValidateEvents(myData);
-	AddEventT(myData, ET_MOUSE_PRESS,
+	ValidateEvents(data_);
+	AddEventT(data_, ET_MOUSE_PRESS,
 		MousePress{button, x, y, keyflags, doubleClick, false});
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addMouseRelease(Mouse::Code button, int x, int y, int keyflags)
 {
-	ValidateEvents(myData);
-	AddEventT(myData, ET_MOUSE_RELEASE,
+	ValidateEvents(data_);
+	AddEventT(data_, ET_MOUSE_RELEASE,
 		MouseRelease{button, x, y, keyflags, false});
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addMouseScroll(bool up, int x, int y, int keyflags)
 {
-	ValidateEvents(myData);
-	AddEventT(myData, ET_MOUSE_SCROLL,
+	ValidateEvents(data_);
+	AddEventT(data_, ET_MOUSE_SCROLL,
 		MouseScroll{up, x, y, keyflags, false});
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addKeyPress(Key::Code key, int keyflags, bool repeated)
 {
-	ValidateEvents(myData);
-	AddEventT(myData, ET_KEY_PRESS,
+	ValidateEvents(data_);
+	AddEventT(data_, ET_KEY_PRESS,
 		KeyPress{key, keyflags, repeated, false});
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addKeyRelease(Key::Code key, int keyflags)
 {
-	ValidateEvents(myData);
-	AddEventT(myData, ET_KEY_RELEASE,
+	ValidateEvents(data_);
+	AddEventT(data_, ET_KEY_RELEASE,
 		KeyRelease{key, keyflags, false});
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addTextInput(const char* text)
 {
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 
 	int numBytes = sizeof(TextInput) + strlen(text) + 1;
 
-	TextInput* event = (TextInput*)AddEvent(myData, ET_TEXT_INPUT, numBytes);
+	TextInput* event = (TextInput*)AddEvent(data_, ET_TEXT_INPUT, numBytes);
 	event->handled = false;
 	event->text = nullptr;
 	WriteString(event + 1, text);
 
 	SetTextInputPointers(*event);
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addFileDrop(const char* const* files, int count, int x, int y)
 {
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 
 	int numBytes = sizeof(FileDrop) + count * sizeof(char*);
 	for(int i = 0; i < count; ++i)
 	{
 		numBytes += strlen(files[i]) + 1;
 	}
-	FileDrop* event = (FileDrop*)AddEvent(myData, ET_FILE_DROP, numBytes);
+	FileDrop* event = (FileDrop*)AddEvent(data_, ET_FILE_DROP, numBytes);
 	event->handled = false;
 	event->count = count;
 	event->x = x;
@@ -290,14 +290,14 @@ void InputEvents::addFileDrop(const char* const* files, int count, int x, int y)
 	}
 
 	SetFileDropPointers(*event);
-	ValidateEvents(myData);
+	ValidateEvents(data_);
 }
 
 void InputEvents::addWindowInactive()
 {
-	ValidateEvents(myData);
-	AddEvent(myData, ET_WINDOW_INACTIVE, 0);
-	ValidateEvents(myData);
+	ValidateEvents(data_);
+	AddEvent(data_, ET_WINDOW_INACTIVE, 0);
+	ValidateEvents(data_);
 }
 
 // ================================================================================================
@@ -305,50 +305,50 @@ void InputEvents::addWindowInactive()
 
 bool InputEvents::next(MouseMove*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_MOUSE_MOVE, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_MOUSE_MOVE, it);
 }
 
 bool InputEvents::next(MousePress*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_MOUSE_PRESS, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_MOUSE_PRESS, it);
 }
 
 bool InputEvents::next(MouseRelease*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_MOUSE_RELEASE, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_MOUSE_RELEASE, it);
 }
 
 bool InputEvents::next(MouseScroll*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_MOUSE_SCROLL, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_MOUSE_SCROLL, it);
 }
 
 bool InputEvents::next(KeyPress*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_KEY_PRESS, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_KEY_PRESS, it);
 }
 
 bool InputEvents::next(KeyRelease*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_KEY_RELEASE, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_KEY_RELEASE, it);
 }
 
 bool InputEvents::next(TextInput*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_TEXT_INPUT, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_TEXT_INPUT, it);
 }
 
 bool InputEvents::next(FileDrop*& it) const
 {
-	ValidateEvents(myData, it);
-	return ReadNext(myData, ET_FILE_DROP, it);
+	ValidateEvents(data_, it);
+	return ReadNext(data_, ET_FILE_DROP, it);
 }
 
 // ================================================================================================
@@ -421,7 +421,7 @@ static HandleEventFunction handleFunctions[NUM_EVENT_TYPES] =
 
 void InputHandler::handleInputs(InputEvents& events)
 {
-	for(EventHeader* it = (EventHeader*)events.myData; it; it = it->next)
+	for(EventHeader* it = (EventHeader*)events.data_; it; it = it->next)
 	{
 		handleFunctions[it->type](it + 1, this);
 	}

@@ -7,7 +7,7 @@
 
 namespace Vortex {
 
-#define MY_GUI ((GuiContextImpl*)myGui)
+#define MY_GUI ((GuiContextImpl*)gui_)
 
 static const int FRAME_TITLEBAR_H = 24;
 static const int FRAME_PADDING = 4;
@@ -19,31 +19,31 @@ static const int FRAME_BUTTON_W = 16;
 
 DialogData::~DialogData()
 {
-	delete myDialog;
-	delete myAction;
+	delete dialog_ptr_;
+	delete current_action_;
 }
 
 DialogData::DialogData(GuiContext* gui, GuiDialog* dialog)
 	: GuiWidget(gui)
-	, myDialog(dialog)
-	, myGui(gui)
-	, myIsPinnable(1)
-	, myIsCloseable(1)
-	, myIsMinimizable(1)
-	, myIsResizeableH(0)
-	, myIsResizeableV(0)
-	, myRequestClose(0)
-	, myRequestPin(0)
-	, myRequestMinimize(0)
-	, myRequestMoveToTop(0)
-	, myIsPinned(0)
-	, myIsMinimized(0)
-	, myMinSize({0, 0})
-	, myMaxSize({INT_MAX, INT_MAX})
-	, myPinnedPos({0, 0})
-	, myAction(nullptr)
+	, dialog_ptr_(dialog)
+	, gui_(gui)
+	, is_pinnable_(1)
+	, is_closeable_(1)
+	, is_minimizable_(1)
+	, is_horizontally_resizable_(0)
+	, is_vertically_resizable_(0)
+	, request_close_(0)
+	, request_pin_(0)
+	, request_minimize_(0)
+	, request_move_to_top_(0)
+	, pinned_state_(0)
+	, minimized_state_(0)
+	, min_size_({0, 0})
+	, max_size_({INT_MAX, INT_MAX})
+	, pinned_position_({0, 0})
+	, current_action_(nullptr)
 {
-	myRect = {16, 16, 256, 256};
+	rect_ = {16, 16, 256, 256};
 	MY_GUI->addDialog(this);
 }
 
@@ -61,15 +61,15 @@ static DialogData::DragAction* StartDrag(recti r, int mx, int my)
 	return out;
 }
 
-void DialogData::myHandleDrag()
+void DialogData::HandleDrag()
 {
-	if(myAction && myAction->type == ACT_DRAG)
+	if(current_action_ && current_action_->type == ACT_DRAG)
 	{
-		auto action = (DragAction*)myAction;
-		vec2i mpos = myGui->getMousePos();
+		auto action = (DragAction*)current_action_;
+		vec2i mpos = gui_->getMousePos();
 
-		myRect.x = mpos.x + action->offset.x;
-		myRect.y = mpos.y + action->offset.y;
+		rect_.x = mpos.x + action->offset.x;
+		rect_.y = mpos.y + action->offset.y;
 	}
 }
 
@@ -112,36 +112,36 @@ static DialogData::ResizeAction* StartResize(DialogData::ActionType type, recti 
 	return out;
 }
 
-void DialogData::myHandleResize()
+void DialogData::HandleResize()
 {
-	if(myAction && myAction->type >= ACT_RESIZE)
+	if(current_action_ && current_action_->type >= ACT_RESIZE)
 	{
-		auto action = (ResizeAction*)myAction;
-		vec2i mpos = myGui->getMousePos();
+		auto action = (ResizeAction*)current_action_;
+		vec2i mpos = gui_->getMousePos();
 		vec2i anchor = action->anchor;
 
 		if(action->dirH < 0)
 		{
-			myRect.w = anchor.x - mpos.x + action->offset.x;
-			myRect.x = anchor.x - myRect.w;
+			rect_.w = anchor.x - mpos.x + action->offset.x;
+			rect_.x = anchor.x - rect_.w;
 
 		}
 		else if(action->dirH > 0)
 		{
-			myRect.x = anchor.x;
-			myRect.w = mpos.x - anchor.x + action->offset.x;
+			rect_.x = anchor.x;
+			rect_.w = mpos.x - anchor.x + action->offset.x;
 		}
 
 		if(action->dirV < 0)
 		{
-			myRect.h = anchor.y - mpos.y + action->offset.y;
-			myRect.y = anchor.y - myRect.h;
+			rect_.h = anchor.y - mpos.y + action->offset.y;
+			rect_.y = anchor.y - rect_.h;
 
 		}
 		else if(action->dirV > 0)
 		{
-			myRect.y = anchor.y;
-			myRect.h = mpos.y - anchor.y + action->offset.y;
+			rect_.y = anchor.y;
+			rect_.h = mpos.y - anchor.y + action->offset.y;
 		}
 	}
 }
@@ -151,39 +151,39 @@ void DialogData::myHandleResize()
 
 void DialogData::onMousePress(MousePress& evt)
 {
-	myFinishActions();
+	FinishActions();
 	stopCapturingMouse();
 	if(isMouseOver())
 	{
 		if(evt.button == Mouse::LMB && evt.unhandled())
 		{
-			auto actionType = myGetAction(evt.x, evt.y);
+			auto actionType = GetAction(evt.x, evt.y);
 
-			if(actionType != ACT_NONE || IsInside(myRect, evt.x, evt.y))
+			if(actionType != ACT_NONE || IsInside(rect_, evt.x, evt.y))
 			{
-				myRequestMoveToTop = 1;
+				request_move_to_top_ = 1;
 			}
 			if(actionType == ACT_DRAG)
 			{
 				startCapturingMouse();
-				myAction = StartDrag(myRect, evt.x, evt.y);
+				current_action_ = StartDrag(rect_, evt.x, evt.y);
 			}
 			else if(actionType >= ACT_RESIZE)
 			{
 				startCapturingMouse();
-				myAction = StartResize(actionType, myRect, evt.x, evt.y);
+				current_action_ = StartResize(actionType, rect_, evt.x, evt.y);
 			}
 			else if(actionType == ACT_CLOSE)
 			{
-				myRequestClose = 1;
+				request_close_ = 1;
 			}
 			else if(actionType == ACT_MINIMIZE)
 			{
-				myRequestMinimize = 1;
+				request_minimize_ = 1;
 			}
 			else if(actionType == ACT_PIN)
 			{
-				myRequestPin = 1;
+				request_pin_ = 1;
 			}
 		}
 		evt.setHandled();
@@ -192,80 +192,80 @@ void DialogData::onMousePress(MousePress& evt)
 
 void DialogData::onMouseRelease(MouseRelease& evt)
 {
-	myFinishActions();
+	FinishActions();
 	stopCapturingMouse();
 }
 
 // ================================================================================================
 // DialogData :: update functions.
 
-void DialogData::myClampRect()
+void DialogData::ClampRect()
 {
-	recti bounds = Shrink(myGui->getView(),
+	recti bounds = Shrink(gui_->getView(),
 		FRAME_PADDING, FRAME_PADDING + FRAME_TITLEBAR_H, FRAME_PADDING, FRAME_PADDING);
 
-	if(myIsPinned)
+	if(pinned_state_)
 	{
-		myRect.x = myPinnedPos.x;
-		myRect.y = myPinnedPos.y;
+		rect_.x = pinned_position_.x;
+		rect_.y = pinned_position_.y;
 	}
 
-	if(myAction && myAction->type >= ACT_RESIZE)
+	if(current_action_ && current_action_->type >= ACT_RESIZE)
 	{
-		auto a = (ResizeAction*)myAction;
-		if(a->dirH < 0) myRect.w = min(myRect.w, a->anchor.x - bounds.x);
-		if(a->dirH > 0) myRect.w = min(myRect.w, bounds.x + bounds.w - a->anchor.x);
-		if(a->dirV < 0) myRect.h = min(myRect.h, a->anchor.y - bounds.y);
-		if(a->dirV > 0) myRect.h = min(myRect.h, bounds.y + bounds.h - a->anchor.y);
+		auto a = (ResizeAction*)current_action_;
+		if(a->dirH < 0) rect_.w = min(rect_.w, a->anchor.x - bounds.x);
+		if(a->dirH > 0) rect_.w = min(rect_.w, bounds.x + bounds.w - a->anchor.x);
+		if(a->dirV < 0) rect_.h = min(rect_.h, a->anchor.y - bounds.y);
+		if(a->dirV > 0) rect_.h = min(rect_.h, bounds.y + bounds.h - a->anchor.y);
 	}
 
-	myRect.w = max(myMinSize.x, min(myMaxSize.x, min(bounds.w, myRect.w)));
-	myRect.h = max(myMinSize.y, min(myMaxSize.y, min(bounds.h, myRect.h)));
+	rect_.w = max(min_size_.x, min(max_size_.x, min(bounds.w, rect_.w)));
+	rect_.h = max(min_size_.y, min(max_size_.y, min(bounds.h, rect_.h)));
 
-	if(myAction && myAction->type >= ACT_RESIZE)
+	if(current_action_ && current_action_->type >= ACT_RESIZE)
 	{
-		auto a = (ResizeAction*)myAction;
-		if(a->dirH < 0) myRect.x = a->anchor.x - myRect.w;
-		if(a->dirV < 0) myRect.y = a->anchor.y - myRect.h;
+		auto a = (ResizeAction*)current_action_;
+		if(a->dirH < 0) rect_.x = a->anchor.x - rect_.w;
+		if(a->dirV < 0) rect_.y = a->anchor.y - rect_.h;
 	}
 
-	int marginH = myIsMinimized ? (FRAME_PADDING * -2) : myRect.h;
-	myRect.x = max(min(myRect.x, bounds.x + bounds.w - myRect.w), bounds.x);
-	myRect.y = max(min(myRect.y, bounds.y + bounds.h - marginH), bounds.y);
+	int marginH = minimized_state_ ? (FRAME_PADDING * -2) : rect_.h;
+	rect_.x = max(min(rect_.x, bounds.x + bounds.w - rect_.w), bounds.x);
+	rect_.y = max(min(rect_.y, bounds.y + bounds.h - marginH), bounds.y);
 }
 
 void DialogData::arrange()
 {
-	if(myRequestMinimize)
+	if(request_minimize_)
 	{
-		myRequestMinimize = 0;
-		myIsMinimized = !myIsMinimized;
-		if(myIsMinimized) myIsPinned = 0;
+		request_minimize_ = 0;
+		minimized_state_ = !minimized_state_;
+		if(minimized_state_) pinned_state_ = 0;
 	}
-	if(myRequestPin)
+	if(request_pin_)
 	{
-		myRequestPin = 0;
-		myIsPinned = !myIsPinned;
-		if(myIsPinned)
+		request_pin_ = 0;
+		pinned_state_ = !pinned_state_;
+		if(pinned_state_)
 		{
-			myIsMinimized = 0;
-			myPinnedPos = Pos(myRect);
+			minimized_state_ = 0;
+			pinned_position_ = Pos(rect_);
 		}
 	}
 
-	myDialog->onUpdateSize();
-	myHandleResize();
-	myHandleDrag();
-	myClampRect();
+	dialog_ptr_->onUpdateSize();
+	HandleResize();
+	HandleDrag();
+	ClampRect();
 }
 
-void DialogData::myUpdateMouseCursor()
+void DialogData::UpdateMouseCursor()
 {
 	if(!isMouseOver()) return;
 
-	vec2i mpos = myGui->getMousePos();
+	vec2i mpos = gui_->getMousePos();
 	Cursor::Icon icon = Cursor::ARROW;
-	switch(myGetAction(mpos.x, mpos.y))
+	switch(GetAction(mpos.x, mpos.y))
 	{
 	case ACT_RESIZE_L:
 	case ACT_RESIZE_R:
@@ -287,13 +287,13 @@ void DialogData::myUpdateMouseCursor()
 
 void DialogData::tick()
 {
-	if(!myIsMinimized)
+	if(!minimized_state_)
 	{
-		myDialog->onTick();
+		dialog_ptr_->onTick();
 	}
 
-	vec2i mpos = myGui->getMousePos();
-	recti rect = myDialog->getOuterRect();
+	vec2i mpos = gui_->getMousePos();
+	recti rect = dialog_ptr_->getOuterRect();
 	rect = Expand(rect, FRAME_RESIZE_BORDER);
 
 	if(IsInside(rect, mpos.x, mpos.y))
@@ -301,21 +301,21 @@ void DialogData::tick()
 		captureMouseOver();
 	}
 
-	handleInputs(myGui->getEvents());
+	handleInputs(gui_->getEvents());
 
-	myUpdateMouseCursor();
+	UpdateMouseCursor();
 }
 
 void DialogData::draw()
 {
 	auto& dlg = GuiDraw::getDialog();
 
-	vec2i mpos = myGui->getMousePos();
-	auto action = myGetAction(mpos.x, mpos.y);
-	recti r = myDialog->getOuterRect();
+	vec2i mpos = gui_->getMousePos();
+	auto action = GetAction(mpos.x, mpos.y);
+	recti r = dialog_ptr_->getOuterRect();
 
 	// Draw the frame.
-	if(myIsPinned)
+	if(pinned_state_)
 	{
 		dlg.frame.draw({r.x, r.y, r.w, r.h}, 0);
 		recti tb = Shrink(r, 2);
@@ -324,7 +324,7 @@ void DialogData::draw()
 	}
 	else
 	{
-		if(!myIsMinimized)
+		if(!minimized_state_)
 		{
 			dlg.titlebar.draw({r.x, r.y, r.w, FRAME_TITLEBAR_H + 8}, TileRect2::T);
 			dlg.frame.draw({r.x, r.y + FRAME_TITLEBAR_H, r.w, r.h - FRAME_TITLEBAR_H}, TileRect2::B);
@@ -339,9 +339,9 @@ void DialogData::draw()
 	auto& icons = GuiDraw::getIcons();
 	int titleTextW = r.w;
 	int buttonX = RightX(r) - FRAME_BUTTON_W / 2 - 4;
-	if(!myIsPinned)
+	if(!pinned_state_)
 	{
-		if(myIsCloseable)
+		if(is_closeable_)
 		{
 			color32 col = Color32((action == ACT_CLOSE) ? 200 : 100);
 			Draw::sprite(icons.cross, {buttonX, r.y + FRAME_TITLEBAR_H / 2}, col);
@@ -352,94 +352,94 @@ void DialogData::draw()
 				GuiMain::setTooltip("Close the dialog");
 			}
 		}
-		if(myIsMinimizable)
+		if(is_minimizable_)
 		{
-			auto& tex = myIsMinimized ? icons.plus : icons.minus;
+			auto& tex = minimized_state_ ? icons.plus : icons.minus;
 			color32 col = Color32((action == ACT_MINIMIZE) ? 200 : 100);
 			Draw::sprite(tex, {buttonX, r.y + FRAME_TITLEBAR_H / 2}, col);
 			buttonX -= FRAME_BUTTON_W;
 			titleTextW -= FRAME_BUTTON_W;
 			if(action == ACT_MINIMIZE)
 			{
-				GuiMain::setTooltip(myIsMinimized ? "Show the dialog contents" : "Hide the dialog contents");
+				GuiMain::setTooltip(minimized_state_ ? "Show the dialog contents" : "Hide the dialog contents");
 			}
 		}
 	}
-	if(myIsPinnable)
+	if(is_pinnable_)
 	{
-		auto& tex = myIsPinned ? icons.unpin : icons.pin;
+		auto& tex = pinned_state_ ? icons.unpin : icons.pin;
 		color32 col = Color32((action == ACT_PIN) ? 200 : 100);
 		Draw::sprite(tex, {buttonX, r.y + FRAME_TITLEBAR_H / 2}, col);
 		buttonX -= FRAME_BUTTON_W;
 		titleTextW -= FRAME_BUTTON_W;
 		if(action == ACT_PIN)
 		{
-			GuiMain::setTooltip(myIsPinned ? "Unpin the dialog" : "Pin the dialog");
+			GuiMain::setTooltip(pinned_state_ ? "Unpin the dialog" : "Pin the dialog");
 		}
 	}
 	
 	// Draw the title text.
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	Text::arrange(Text::MC, style, titleTextW - 8, myTitle.str());
+	Text::arrange(Text::MC, style, titleTextW - 8, dialog_title_.str());
 	Text::draw({r.x, r.y, titleTextW, FRAME_TITLEBAR_H});
 
 	// Draw inner dialog area.
-	if(!myIsMinimized)
+	if(!minimized_state_)
 	{
-		myDialog->onDraw();
+		dialog_ptr_->onDraw();
 	}
 }
 
-DialogData::ActionType DialogData::myGetAction(int x, int y) const
+DialogData::ActionType DialogData::GetAction(int x, int y) const
 {
-	if(myAction)
+	if(current_action_)
 	{
-		return myAction->type;
+		return current_action_->type;
 	}
 	else
 	{
-		recti rect = myDialog->getOuterRect();
+		recti rect = dialog_ptr_->getOuterRect();
 		if(IsInside(rect, x, y))
 		{
 			// Titlebar buttons.
 			int dx = x - rect.x - rect.w + FRAME_BUTTON_W, dy = y - rect.y;
 			if(dy < FRAME_TITLEBAR_H)
 			{
-				if(!myIsPinned)
+				if(!pinned_state_)
 				{
-					if(myIsCloseable)
+					if(is_closeable_)
 					{
 						if(dx >= 0) return ACT_CLOSE;
 						dx += FRAME_BUTTON_W;
 					}
-					if(myIsMinimizable)
+					if(is_minimizable_)
 					{
 						if(dx >= 0) return ACT_MINIMIZE;
 						dx += FRAME_BUTTON_W;
 					}
 				}
-				if(myIsPinnable)
+				if(is_pinnable_)
 				{
 					if(dx >= 0) return ACT_PIN;
 					dx += FRAME_BUTTON_W;
 				}
-				return myIsPinned ? ACT_NONE : ACT_DRAG;
+				return pinned_state_ ? ACT_NONE : ACT_DRAG;
 			}
 		}
 
 		// Horizontal and vertical resizing.
 		rect = Expand(rect, FRAME_RESIZE_BORDER);
-		if(IsInside(rect, x, y) && !myIsPinned)
+		if(IsInside(rect, x, y) && !pinned_state_)
 		{
 			int resizeH = 0, resizeV = 0;
 			int dx = x - rect.x, dy = y - rect.y;
 			int border = FRAME_RESIZE_BORDER * 2;
-			if(myIsResizeableH)
+			if(is_horizontally_resizable_)
 			{
 				resizeH = (dx > rect.w - border) - (dx < border);
 			}
-			if(myIsResizeableV)
+			if(is_vertically_resizable_)
 			{
 				resizeV = (dy > rect.h - border) - (dy < border);
 			}
@@ -459,19 +459,19 @@ DialogData::ActionType DialogData::myGetAction(int x, int y) const
 	return ACT_NONE;
 }
 
-void DialogData::myFinishActions()
+void DialogData::FinishActions()
 {
-	delete myAction;
-	myAction = nullptr;
+	delete current_action_;
+	current_action_ = nullptr;
 }
 
 // ================================================================================================
 // GuiDialog :: implementation.
 
-#define DATA ((DialogData*)myData)
+#define DATA ((DialogData*)data_)
 
 GuiDialog::GuiDialog(GuiContext* gui)
-	: myData(new DialogData(gui, this))
+	: data_(new DialogData(gui, this))
 {
 }
 
@@ -497,92 +497,92 @@ void GuiDialog::onDraw()
 
 void GuiDialog::requestClose()
 {
-	DATA->myRequestClose = 1;
+	DATA->request_close_ = 1;
 }
 
 void GuiDialog::requestPin()
 {
-	DATA->myRequestPin = 1;
+	DATA->request_pin_ = 1;
 }
 
 void GuiDialog::setPosition(int x, int y)
 {
-	DATA->myRect.x = x;
-	DATA->myRect.y = y;
+	DATA->rect_.x = x;
+	DATA->rect_.y = y;
 }
 
 void GuiDialog::setTitle(StringRef str)
 {
-	DATA->myTitle = str;
+	DATA->dialog_title_ = str;
 }
 
 void GuiDialog::setWidth(int w)
 {
-	DATA->myRect.w = w;
+	DATA->rect_.w = w;
 }
 
 void GuiDialog::setHeight(int h)
 {
-	DATA->myRect.h = h;
+	DATA->rect_.h = h;
 }
 
 void GuiDialog::setMinimumWidth(int w)
 {
-	DATA->myMinSize.x = max(0, w);
+	DATA->min_size_.x = max(0, w);
 }
 
 void GuiDialog::setMinimumHeight(int h)
 {
-	DATA->myMinSize.y = max(0, h);
+	DATA->min_size_.y = max(0, h);
 }
 
 void GuiDialog::setMaximumWidth(int w)
 {
-	DATA->myMaxSize.x = max(0, w);
+	DATA->max_size_.x = max(0, w);
 }
 
 void GuiDialog::setMaximumHeight(int h)
 {
-	DATA->myMaxSize.y = max(0, h);
+	DATA->max_size_.y = max(0, h);
 }
 
 void GuiDialog::setCloseable(bool enable)
 {
-	DATA->myIsCloseable = 1;
+	DATA->is_closeable_ = 1;
 }
 
 void GuiDialog::setMinimizable(bool enable)
 {
-	DATA->myIsMinimizable = 1;
+	DATA->is_minimizable_ = 1;
 }
 
 void GuiDialog::setResizeable(bool horizontal, bool vertical)
 {
-	DATA->myIsResizeableH = horizontal;
-	DATA->myIsResizeableV = vertical;
+	DATA->is_horizontally_resizable_ = horizontal;
+	DATA->is_vertically_resizable_ = vertical;
 }
 
 GuiContext* GuiDialog::getGui() const
 {
-	return DATA->myGui;
+	return DATA->gui_;
 }
 
 recti GuiDialog::getOuterRect() const
 {
 	int pad = FRAME_PADDING;
-	recti r = Expand(DATA->myRect, pad, pad + FRAME_TITLEBAR_H, pad, pad);
-	if(DATA->myIsMinimized) r.h = FRAME_TITLEBAR_H + pad;
+	recti r = Expand(DATA->rect_, pad, pad + FRAME_TITLEBAR_H, pad, pad);
+	if(DATA->minimized_state_) r.h = FRAME_TITLEBAR_H + pad;
 	return r;
 }
 
 recti GuiDialog::getInnerRect() const
 {
-	return DATA->myRect;
+	return DATA->rect_;
 }
 
 bool GuiDialog::isPinned() const
 {
-	return DATA->myIsPinned;
+	return DATA->pinned_state_;
 }
 
 }; // namespace Vortex

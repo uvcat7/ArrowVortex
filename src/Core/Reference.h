@@ -31,32 +31,32 @@ public:
 	void copy(const Reference<T>& other);
 
 	/// Returns true if the current value is null.
-	inline bool null() const { return !myPtr; }
+	inline bool null() const { return !reference_ptr_; }
 	
 	/// Returns the number of references to the current value.
-	inline int count() const { return myPtr ? *((int*)myPtr - 1) : 0; }
+	inline int count() const { return reference_ptr_ ? *((int*)reference_ptr_ - 1) : 0; }
 
 	/// Returns a pointer to the current value.
-	inline operator T*() { return myPtr; }
+	inline operator T*() { return reference_ptr_; }
 
 	/// Returns a const pointer to the current value.
-	inline operator T*() const { return myPtr; }
+	inline operator T*() const { return reference_ptr_; }
 
 	/// Returns a pointer to the current value.
-	inline T* operator ->() { return myPtr; }
+	inline T* operator ->() { return reference_ptr_; }
 
 	/// Returns a const pointer to the current value.
-	inline const T* operator ->() const { return myPtr; }
+	inline const T* operator ->() const { return reference_ptr_; }
 
 	/// Returns a pointer to the current value.
-	inline T* get() { return myPtr; }
+	inline T* get() { return reference_ptr_; }
 
 	/// Returns a const pointer to the current value.
-	inline const T* get() const { return myPtr; }
+	inline const T* get() const { return reference_ptr_; }
 
 private:
-	void myCreateRef();
-	T* myPtr;
+	void InitReference();
+	T* reference_ptr_;
 };
 
 // ================================================================================================
@@ -70,13 +70,13 @@ Reference<T>::~Reference()
 
 template <typename T>
 Reference<T>::Reference()
-	: myPtr(nullptr)
+	: reference_ptr_(nullptr)
 {
 }
 
 template <typename T>
 Reference<T>::Reference(const Reference& r)
-	: myPtr(nullptr)
+	: reference_ptr_(nullptr)
 {
 	copy(r);
 }
@@ -91,51 +91,51 @@ Reference<T>& Reference<T>::operator = (const Reference& r)
 template <typename T>
 T* Reference<T>::create()
 {
-	myCreateRef();
-	new (myPtr) T();
-	return myPtr;
+	InitReference();
+	new (reference_ptr_) T();
+	return reference_ptr_;
 }
 
 template <typename T>
 void Reference<T>::create(const T& v)
 {
-	myCreateRef();
-	new (myPtr)T(v);
+	InitReference();
+	new (reference_ptr_)T(v);
 }
 
 template <typename T>
 void Reference<T>::destroy()
 {
-	if(myPtr)
+	if(reference_ptr_)
 	{
-		int* ref = (int*)myPtr - 1;
+		int* ref = (int*)reference_ptr_ - 1;
 		if(--*ref == 0)
 		{
-			myPtr->~T();
+			reference_ptr_->~T();
 			delete ref;
 		}
-		myPtr = nullptr;
+		reference_ptr_ = nullptr;
 	}
 }
 
 template <typename T>
 void Reference<T>::copy(const Reference& o)
 {
-	if(myPtr != o.myPtr)
+	if(reference_ptr_ != o.reference_ptr_)
 	{
 		destroy();
-		myPtr = o.myPtr;
-		++*((int*)myPtr - 1);
+		reference_ptr_ = o.reference_ptr_;
+		++*((int*)reference_ptr_ - 1);
 	}
 }
 
 template <typename T>
-void Reference<T>::myCreateRef()
+void Reference<T>::InitReference()
 {
 	destroy();
 	int* ref = (int*)malloc(sizeof(int) + sizeof(T));
 	*ref = 1;
-	myPtr = (T*)(ref + 1);
+	reference_ptr_ = (T*)(ref + 1);
 }
 
 }; // namespace Vortex

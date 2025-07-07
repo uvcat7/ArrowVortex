@@ -32,19 +32,19 @@ struct Dlg::BannerWidget : public GuiWidget
 {
 	BannerWidget(GuiContext* gui) : GuiWidget(gui)
 	{
-		myWidth = BANNER_W;
-		myHeight = BANNER_H;
+		width_ = BANNER_W;
+		height_ = BANNER_H;
 	}
 	void onDraw() override
 	{
-		recti r = myRect;
+		recti r = rect_;
 		if(tex.handle())
 		{
-			Draw::fill(myRect, Colors::white, tex.handle());
+			Draw::fill(rect_, Colors::white, tex.handle());
 		}
 		else
 		{
-			Draw::fill(myRect, Color32(26));
+			Draw::fill(rect_, Color32(26));
 		}
 	}
 	Texture tex;

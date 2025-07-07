@@ -132,11 +132,11 @@ struct WgColorPicker::Expanded
 	void tick(recti r, GuiContext* gui);
 	void draw();
 
-	recti getAr() const { return {myRect.x + myRect.w - 18, myRect.y + 4, 14, myRect.h - 8}; }
-	recti getHr() const { return {myRect.x + myRect.w - 36, myRect.y + 4, 14, myRect.h - 8}; }
-	recti getSr() const { return {myRect.x + 4, myRect.y + 4, myRect.w - 44, myRect.h - 8}; }
+	recti getAr() const { return {rect_.x + rect_.w - 18, rect_.y + 4, 14, rect_.h - 8}; }
+	recti getHr() const { return {rect_.x + rect_.w - 36, rect_.y + 4, 14, rect_.h - 8}; }
+	recti getSr() const { return {rect_.x + 4, rect_.y + 4, rect_.w - 44, rect_.h - 8}; }
 
-	recti myRect;
+	recti rect_;
 	int myDrag;
 	ColorHSV myCol;
 };
@@ -155,12 +155,12 @@ void WgColorPicker::Expanded::endDrag()
 
 void WgColorPicker::Expanded::tick(recti r, GuiContext* gui)
 {
-	myRect = {r.x + r.w + 2, r.y + r.h / 2 - 80, 196, 160};
+	rect_ = {r.x + r.w + 2, r.y + r.h / 2 - 80, 196, 160};
 
 	recti view = gui->getView();
 
-	myRect.x = clamp(myRect.x, view.x, view.x + view.w - myRect.w);
-	myRect.y = clamp(myRect.y, view.y, view.y + view.h - myRect.h);
+	rect_.x = clamp(rect_.x, view.x, view.x + view.w - rect_.w);
+	rect_.y = clamp(rect_.y, view.y, view.y + view.h - rect_.h);
 
 	vec2i mpos = gui->getMousePos();
 
@@ -185,9 +185,9 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui)
 void WgColorPicker::Expanded::draw()
 {
 	auto& dlg = GuiDraw::getDialog();
-	dlg.frame.draw(myRect, 0);
+	dlg.frame.draw(rect_, 0);
 
-	Draw::fill({myRect.x - 8, myRect.y + myRect.h / 2 - 8, 16, 16}, Colors::white, dlg.vshape.handle());
+	Draw::fill({rect_.x - 8, rect_.y + rect_.h / 2 - 8, 16, 16}, Colors::white, dlg.vshape.handle());
 
 	recti ar = getAr();
 	color32 t = ToColor32(HSVtoRGB(myCol, 1.0f));
@@ -230,29 +230,29 @@ void WgColorPicker::Expanded::draw()
 
 WgColorPicker::~WgColorPicker()
 {
-	if(myExpanded) delete myExpanded;
+	if(colorpicker_expanded_) delete colorpicker_expanded_;
 }
 
 WgColorPicker::WgColorPicker(GuiContext* gui)
 	: GuiWidget(gui)
-	, myExpanded(nullptr)
+	, colorpicker_expanded_(nullptr)
 {
 }
 
 void WgColorPicker::onMousePress(MousePress& evt)
 {
-	if(myExpanded)
+	if(colorpicker_expanded_)
 	{
-		if(IsInside(myExpanded->myRect, evt.x, evt.y) && evt.button == Mouse::LMB)
+		if(IsInside(colorpicker_expanded_->rect_, evt.x, evt.y) && evt.button == Mouse::LMB)
 		{
-			myExpanded->startDrag(evt.x, evt.y);
+			colorpicker_expanded_->startDrag(evt.x, evt.y);
 			startCapturingMouse();
 			evt.setHandled();
 		}
 		else
 		{
-			delete myExpanded;
-			myExpanded = nullptr;
+			delete colorpicker_expanded_;
+			colorpicker_expanded_ = nullptr;
 			stopCapturingFocus();
 		}
 	}
@@ -263,8 +263,8 @@ void WgColorPicker::onMousePress(MousePress& evt)
 			startCapturingMouse();
 			startCapturingFocus();
 
-			myExpanded = new Expanded;
-			myExpanded->tick(myRect, myGui);
+			colorpicker_expanded_ = new Expanded;
+			colorpicker_expanded_->tick(rect_, gui_);
 		}
 		evt.setHandled();
 	}
@@ -272,28 +272,28 @@ void WgColorPicker::onMousePress(MousePress& evt)
 
 void WgColorPicker::onMouseRelease(MouseRelease& evt)
 {
-	if(myExpanded) myExpanded->endDrag();
+	if(colorpicker_expanded_) colorpicker_expanded_->endDrag();
 	stopCapturingMouse();
 }
 
 void WgColorPicker::onTick()
 {
 	GuiWidget::onTick();
-	if(myExpanded)
+	if(colorpicker_expanded_)
 	{
-		vec2i mpos = myGui->getMousePos();
-		if(IsInside(myExpanded->myRect, mpos.x, mpos.y))
+		vec2i mpos = gui_->getMousePos();
+		if(IsInside(colorpicker_expanded_->rect_, mpos.x, mpos.y))
 		{
 			captureMouseOver();
 		}
 
 		colorf rgb = {(float)red.get(), (float)green.get(), (float)blue.get(), (float)alpha.get()};
-		myExpanded->myCol = RGBtoHSV(rgb, rgb.a);
+		colorpicker_expanded_->myCol = RGBtoHSV(rgb, rgb.a);
 
-		if(myExpanded->myDrag)
+		if(colorpicker_expanded_->myDrag)
 		{
-			myExpanded->tick(myRect, myGui);
-			rgb = HSVtoRGB(myExpanded->myCol, myExpanded->myCol.a);
+			colorpicker_expanded_->tick(rect_, gui_);
+			rgb = HSVtoRGB(colorpicker_expanded_->myCol, colorpicker_expanded_->myCol.a);
 
 			red.set(rgb.r);
 			green.set(rgb.g);
@@ -309,8 +309,8 @@ void WgColorPicker::onDraw()
 {
 	colorf rgb = {(float)red.get(), (float)green.get(), (float)blue.get(), (float)alpha.get()};
 
-	Draw::fill(myRect, Colors::black);
-	recti r = Shrink(myRect, 1);
+	Draw::fill(rect_, Colors::black);
+	recti r = Shrink(rect_, 1);
 
 	GuiDraw::checkerboard(r, Colors::white);
 
@@ -321,7 +321,7 @@ void WgColorPicker::onDraw()
 	r = Shrink(r, 1);
 	Draw::fill(r, ToColor32((float)red.get(), (float)green.get(), (float)blue.get(), (float)alpha.get()));
 
-	if(myExpanded) myExpanded->draw();
+	if(colorpicker_expanded_) colorpicker_expanded_->draw();
 }
 
 }; // namespace Vortex

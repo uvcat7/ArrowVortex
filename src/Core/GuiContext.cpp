@@ -12,134 +12,134 @@ GuiContext::~GuiContext()
 
 GuiContextImpl::~GuiContextImpl()
 {
-	Vec::release(myDialogs);
+	Vec::release(dialogs_);
 }
 
 GuiContextImpl::GuiContextImpl()
 {
-	myView = {0, 0, INT_MAX, INT_MAX};
-	myEvents = nullptr;
+	view_rect_ = {0, 0, INT_MAX, INT_MAX};
+	input_events_ = nullptr;
 }
 
 recti GuiContextImpl::getView()
 {
-	return myView;
+	return view_rect_;
 }
 
 vec2i GuiContextImpl::getMousePos()
 {
-	return myMousePos;
+	return mouse_position_;
 }
 
 float GuiContextImpl::getDeltaTime()
 {
-	return myDeltaTime;
+	return delta_time_;
 }
 
 InputEvents& GuiContextImpl::getEvents()
 {
-	return *myEvents;
+	return *input_events_;
 }
 
 void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events)
 {
-	myView = view;
+	view_rect_ = view;
 
-	myView.w = max(myView.w, 0);
-	myView.h = max(myView.h, 0);
+	view_rect_.w = max(view_rect_.w, 0);
+	view_rect_.h = max(view_rect_.h, 0);
 
-	myDeltaTime = deltaTime;
-	myEvents = &events;
+	delta_time_ = deltaTime;
+	input_events_ = &events;
 
 	// Update the mouse position.
 	for(MouseMove* move = nullptr; events.next(move);)
 	{
-		myMousePos = {move->x, move->y};
+		mouse_position_ = {move->x, move->y};
 	}
 
 	// Rearrange or delete dialogs if requested.
-	FOR_VECTOR_REVERSE(myDialogs, i)
+	FOR_VECTOR_REVERSE(dialogs_, i)
 	{
-		auto dialog = myDialogs[i];
-		if(dialog->myRequestClose)
+		auto dialog = dialogs_[i];
+		if(dialog->request_close_)
 		{
-			myDialogs.erase_values(dialog);
+			dialogs_.erase_values(dialog);
 			delete dialog;
 		}
-		else if(dialog->myRequestMoveToTop)
+		else if(dialog->request_move_to_top_)
 		{
-			myDialogs.erase(i);
-			myDialogs.push_back(dialog);
-			dialog->myRequestMoveToTop = 0;
+			dialogs_.erase(i);
+			dialogs_.push_back(dialog);
+			dialog->request_move_to_top_ = 0;
 		}
 	}
 
 	// Arrange the dialogs and widgets.
-	FOR_VECTOR_REVERSE(myDialogs, i)
+	FOR_VECTOR_REVERSE(dialogs_, i)
 	{
-		myDialogs[i]->arrange();
+		dialogs_[i]->arrange();
 	}
 
 	// Tick widgets with focus first.
-	FOR_VECTOR_REVERSE(myFocusWidgets, i)
+	FOR_VECTOR_REVERSE(focus_widgets_, i)
 	{
-		if(myFocusWidgets[i]->isEnabled())
+		if(focus_widgets_[i]->isEnabled())
 		{
-			myFocusWidgets[i]->onTick();
+			focus_widgets_[i]->onTick();
 		}
 	}
 
 	// Tick the dialogs.
-	FOR_VECTOR_REVERSE(myDialogs, i)
+	FOR_VECTOR_REVERSE(dialogs_, i)
 	{
-		myDialogs[i]->tick();
+		dialogs_[i]->tick();
 	}
 
-	myEvents = nullptr;
+	input_events_ = nullptr;
 }
 
 void GuiContextImpl::draw()
 {
 	// Draw the dialogs.
-	FOR_VECTOR_FORWARD(myDialogs, i)
+	FOR_VECTOR_FORWARD(dialogs_, i)
 	{
-		myDialogs[i]->draw();
+		dialogs_[i]->draw();
 	}
 
 	// Draw widgets with focus at the top.
-	FOR_VECTOR_FORWARD(myFocusWidgets, i)
+	FOR_VECTOR_FORWARD(focus_widgets_, i)
 	{
-		myFocusWidgets[i]->onDraw();
+		focus_widgets_[i]->onDraw();
 	}
 }
 
 void GuiContextImpl::removeWidget(GuiWidget* w)
 {
-	myFocusWidgets.erase_values(w);
+	focus_widgets_.erase_values(w);
 }
 
 void GuiContextImpl::addDialog(DialogData* f)
 {
-	myDialogs.push_back(f);
+	dialogs_.push_back(f);
 }
 
 void GuiContextImpl::removeDialog(DialogData* f)
 {
-	myDialogs.erase_values(f);
+	dialogs_.erase_values(f);
 }
 
 void GuiContextImpl::grabFocus(GuiWidget* w)
 {
-	FOR_VECTOR_FORWARD(myFocusWidgets, i)
+	FOR_VECTOR_FORWARD(focus_widgets_, i)
 	{
-		if(myFocusWidgets[i] == w) return;
+		if(focus_widgets_[i] == w) return;
 	}
-	myFocusWidgets.push_back(w);
+	focus_widgets_.push_back(w);
 }
 
 void GuiContextImpl::releaseFocus(GuiWidget* w)
 {
-	myFocusWidgets.erase_values(w);
+	focus_widgets_.erase_values(w);
 }
 
 // ================================================================================================
@@ -147,158 +147,158 @@ void GuiContextImpl::releaseFocus(GuiWidget* w)
 
 bool GuiContextImpl::bind(StringRef slot, const int* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const uint* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const long* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const ulong* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const float* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const double* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const bool* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const char* str)
 {
-	auto s = Map::findVal(myTextSlots, slot);
+	auto s = Map::findVal(text_slots_, slot);
 	if(s) (*s)->bind(str);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, const String* str)
 {
-	auto s = Map::findVal(myTextSlots, slot);
+	auto s = Map::findVal(text_slots_, slot);
 	if(s) (*s)->bind(str);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, int* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, uint* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, long* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, ulong* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, float* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, double* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, bool* v)
 {
-	auto s = Map::findVal(myValueSlots, slot);
+	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, String* str)
 {
-	auto s = Map::findVal(myTextSlots, slot);
+	auto s = Map::findVal(text_slots_, slot);
 	if(s) (*s)->bind(str);
 	return s != nullptr;
 }
 
 bool GuiContextImpl::bind(StringRef slot, Functor::Generic* f)
 {
-	auto s = Map::findVal(myCallSlots, slot);
+	auto s = Map::findVal(call_slots_, slot);
 	if(s) (*s)->bind(f); else delete f;
 	return s != nullptr;
 }
 
 void GuiContextImpl::addSlot(ValueSlot* slot, const char* name)
 {
-	myValueSlots.insert({name, slot});
+	value_slots_.insert({name, slot});
 }
 
 void GuiContextImpl::addSlot(TextSlot* slot, const char* name)
 {
-	myTextSlots.insert({name, slot});
+	text_slots_.insert({name, slot});
 }
 
 void GuiContextImpl::addSlot(CallSlot* slot, const char* name)
 {
-	myCallSlots.insert({name, slot});
+	call_slots_.insert({name, slot});
 }
 
 void GuiContextImpl::removeSlot(ValueSlot* slot)
 {
-	Map::eraseVals(myValueSlots, slot);
+	Map::eraseVals(value_slots_, slot);
 }
 
 void GuiContextImpl::removeSlot(TextSlot* slot)
 {
-	Map::eraseVals(myTextSlots, slot);
+	Map::eraseVals(text_slots_, slot);
 }
 
 void GuiContextImpl::removeSlot(CallSlot* slot)
 {
-	Map::eraseVals(myCallSlots, slot);
+	Map::eraseVals(call_slots_, slot);
 }
 
 GuiContext* GuiContext::create()

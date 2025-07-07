@@ -7,23 +7,23 @@
 
 namespace Vortex {
 
-#define MY_GUI ((GuiContextImpl*)myGui)
+#define MY_GUI ((GuiContextImpl*)gui_)
 
 // ================================================================================================
 // GuiWidget :: constructor / destructor.
 
-	GuiContext* myGui;
-	recti myRect;
-	int myWidth;
-	int myHeight;
-	uint myFlags;
+	GuiContext* gui_;
+	recti rect_;
+	int width_;
+	int height_;
+	uint flags_;
 
 GuiWidget::GuiWidget(GuiContext* gui)
-	: myGui(gui)
-	, myRect({0, 0, 128, 24})
-	, myWidth(128)
-	, myHeight(24)
-	, myFlags(WF_ENABLED)
+	: gui_(gui)
+	, rect_({0, 0, 128, 24})
+	, width_(128)
+	, height_(24)
+	, flags_(WF_ENABLED)
 {
 }
 
@@ -97,18 +97,18 @@ void GuiWidget::onTextCaptureLost()
 void GuiWidget::startCapturingFocus()
 {
 	MY_GUI->grabFocus(this);
-	SetFlags(myFlags, WF_IN_FOCUS, true);
+	SetFlags(flags_, WF_IN_FOCUS, true);
 }
 
 void GuiWidget::stopCapturingFocus()
 {
 	MY_GUI->releaseFocus(this);
-	SetFlags(myFlags, WF_IN_FOCUS, false);
+	SetFlags(flags_, WF_IN_FOCUS, false);
 }
 
 bool GuiWidget::isCapturingFocus() const
 {
-	return HasFlags(myFlags, WF_IN_FOCUS);
+	return HasFlags(flags_, WF_IN_FOCUS);
 }
 
 // ================================================================================================
@@ -130,7 +130,7 @@ void GuiWidget::arrange(recti r)
 
 void GuiWidget::onArrange(recti r)
 {
-	myRect = r;
+	rect_ = r;
 }
 
 void GuiWidget::tick()
@@ -151,14 +151,14 @@ void GuiWidget::draw()
 
 void GuiWidget::onTick()
 {
-	if(HasFlags(myFlags, WF_ENABLED))
+	if(HasFlags(flags_, WF_ENABLED))
 	{
-		vec2i mpos = myGui->getMousePos();
-		if(IsInside(myRect, mpos.x, mpos.y))
+		vec2i mpos = gui_->getMousePos();
+		if(IsInside(rect_, mpos.x, mpos.y))
 		{
 			captureMouseOver();
 		}
-		handleInputs(myGui->getEvents());
+		handleInputs(gui_->getEvents());
 		if(isMouseOver())
 		{
 			GuiMain::setTooltip(getTooltip());
@@ -180,38 +180,38 @@ void GuiWidget::setId(StringRef id)
 
 void GuiWidget::setWidth(int w)
 {
-	myWidth = w;
+	width_ = w;
 }
 
 void GuiWidget::setHeight(int h)
 {
-	myHeight = h;
+	height_ = h;
 }
 
 void GuiWidget::setSize(int w, int h)
 {
-	myWidth = w;
-	myHeight = h;
+	width_ = w;
+	height_ = h;
 }
 
 int GuiWidget::getWidth() const
 {
-	return myWidth;
+	return width_;
 }
 
 int GuiWidget::getHeight() const
 {
-	return myHeight;
+	return height_;
 }
 
 vec2i GuiWidget::getSize() const
 {
-	return {myWidth, myHeight};
+	return {width_, height_};
 }
 
 recti GuiWidget::getRect() const
 {
-	return myRect;
+	return rect_;
 }
 
 String GuiWidget::getTooltip() const
@@ -221,7 +221,7 @@ String GuiWidget::getTooltip() const
 
 void GuiWidget::setEnabled(bool value)
 {
-	SetFlags(myFlags, WF_ENABLED, value);
+	SetFlags(flags_, WF_ENABLED, value);
 }
 
 void GuiWidget::setTooltip(StringRef text)
@@ -231,12 +231,12 @@ void GuiWidget::setTooltip(StringRef text)
 
 bool GuiWidget::isEnabled() const
 {
-	return HasFlags(myFlags, WF_ENABLED);
+	return HasFlags(flags_, WF_ENABLED);
 }
 
 GuiContext* GuiWidget::getGui() const
 {
-	return myGui;
+	return gui_;
 }
 
 }; // namespace Vortex

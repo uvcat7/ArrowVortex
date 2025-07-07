@@ -126,7 +126,7 @@ void Sound::Thread::exec()
 
 bool Sound::Thread::readBlock()
 {
-	if(myTerminateFlag) return false;
+	if(terminationFlag_) return false;
 
 	int srcChannels = mySource->getNumChannels();
 	int framesRead = mySource->readFrames(BUFFER_SIZE, myBuffer);
