@@ -138,7 +138,7 @@ static void ReadMarkupColor(color32& out, const uchar* param, int len, color32 b
 		out = COLOR32(channels[0], channels[1], channels[2], channels[3]);
 		break;
 	case 1:
-		out = COLOR32(channels[0], channels[1], channels[2], 0) | (base & COLOR32_AMASK);
+		out = COLOR32(channels[0], channels[1], channels[2], 0) | (base & kColor32_AlphaMask);
 		break;
 	case 0:
 		out = base;
