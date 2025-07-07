@@ -95,59 +95,59 @@ public:
 	int find(const T& value, int pos = 0) const;
 
 	/// Returns a pointer to the array of elements.
-	inline T* data() { return myPtr; }
+	inline T* data() { return data_; }
 
 	/// Returns a const pointer to the array of elements.
-	inline const T* data() const { return myPtr; }
+	inline const T* data() const { return data_; }
 
 	/// Returns a pointer to the first element.
-	inline T* begin() { return myPtr; }
+	inline T* begin() { return data_; }
 
 	/// Returns a const pointer to the first element.
-	inline const T* begin() const { return myPtr; }
+	inline const T* begin() const { return data_; }
 
 	/// Returns a pointer to the past-the-end element.
-	inline T* end() { return myPtr + myNum; }
+	inline T* end() { return data_ + size_; }
 
 	/// Returns a const pointer to the past-the-end element.
-	inline const T* end() const { return myPtr + myNum; }
+	inline const T* end() const { return data_ + size_; }
 
 	/// Returns the final element of the vector; does not perform an out-of-bounds check.
 	/// To avoid failure, make sure size is non-zero before using this function.
-	inline T& back() { return myPtr[myNum - 1]; }
+	inline T& back() { return data_[size_ - 1]; }
 
 	/// Returns the final element of the vector; does not perform an out-of-bounds check.
 	/// To avoid failure, make sure size is non-zero before using this function.
-	inline const T& back() const { return myPtr[myNum - 1]; }
+	inline const T& back() const { return data_[size_ - 1]; }
 
 	/// Returns a reference to the value at index i; does not perform an out-of-bounds check.
-	inline T& at(int i) { return myPtr[i]; }
+	inline T& at(int i) { return data_[i]; }
 
 	/// Returns a reference to the value at index i; does not perform an out-of-bounds check.
-	inline const T& at(int i) const { return myPtr[i]; }
+	inline const T& at(int i) const { return data_[i]; }
 
 	/// Returns the current number of elements in the vector.
-	inline int size() const { return myNum; }
+	inline int size() const { return size_; }
 
 	/// Returns true if the vector has a size of zero.
-	inline bool empty() const { return !myNum; }
+	inline bool empty() const { return !size_; }
 
 	/// Return size of allocated storage capacity, expressed in elements.
-	inline int capacity() const { return myCap; }
+	inline int capacity() const { return capacity_; }
 
 	/// Returns a reference to the value at index i; does not perform an out-of-bounds check.
-	inline T& operator [] (int i) { return myPtr[i]; }
+	inline T& operator [] (int i) { return data_[i]; }
 
 	/// Returns a const reference to the value at index i; does not perform an out-of-bounds check.
-	inline const T& operator [] (int i) const { return myPtr[i]; }
+	inline const T& operator [] (int i) const { return data_[i]; }
 
 	/// Appends a value to the end of the vector.
 	inline Vector& operator << (const T& v) { push_back(v); return *this; }
 
 private:
-	void myGrow(int n);
-	T* myPtr;
-	int myNum, myCap;
+	void EnsureCapacity(int n);
+	T* data_;
+	int size_, capacity_;
 };
 
 // ================================================================================================
@@ -161,28 +161,28 @@ Vector<T>::~Vector()
 
 template <typename T>
 Vector<T>::Vector()
-	: myPtr(nullptr), myNum(0), myCap(0)
+	: data_(nullptr), size_(0), capacity_(0)
 {
 }
 
 template <typename T>
 Vector<T>::Vector(int n)
-	: myPtr(nullptr), myNum(0), myCap(0)
+	: data_(nullptr), size_(0), capacity_(0)
 {
 	reserve(n);
 }
 
 template <typename T>
 Vector<T>::Vector(Vector&& v)
-	: myPtr(v.myPtr), myNum(v.myNum), myCap(v.myCap)
+	: data_(v.data_), size_(v.size_), capacity_(v.capacity_)
 {
-	v.myPtr = nullptr;
-	v.myNum = v.myCap = 0;
+	v.data_ = nullptr;
+	v.size_ = v.capacity_ = 0;
 }
 
 template <typename T>
 Vector<T>::Vector(const Vector& v)
-	: myPtr(nullptr), myNum(0), myCap(0)
+	: data_(nullptr), size_(0), capacity_(0)
 {
 	assign(v);
 }
@@ -196,18 +196,18 @@ Vector<T>& Vector<T>::operator = (Vector<T> v)
 
 template <typename T>
 Vector<T>::Vector(int n, const T& v)
-	: myPtr(nullptr), myNum(n), myCap(0)
+	: data_(nullptr), size_(n), capacity_(0)
 {
-	myGrow(myNum);
-	for(int i = 0; i < n; ++i) new (myPtr + i) T(v);
+	EnsureCapacity(size_);
+	for(int i = 0; i < n; ++i) new (data_ + i) T(v);
 }
 
 template <typename T>
 Vector<T>::Vector(const T* begin, const T* end)
-	: myPtr(nullptr), myNum(end - begin), myCap(0)
+	: data_(nullptr), size_(end - begin), capacity_(0)
 {
-	myGrow(myNum);
-	for(T* p = myPtr; begin != end; ++begin, ++p) new (p)T(*begin);
+	EnsureCapacity(size_);
+	for(T* p = data_; begin != end; ++begin, ++p) new (p)T(*begin);
 }
 
 template <typename T>
@@ -216,9 +216,9 @@ void Vector<T>::assign(const Vector& o)
 	if(this != &o)
 	{
 		clear();
-		myNum = o.myNum;
-		myGrow(myNum);
-		for(int i = 0; i < myNum; ++i) new (myPtr + i) T(o.myPtr[i]);
+		size_ = o.size_;
+		EnsureCapacity(size_);
+		for(int i = 0; i < size_; ++i) new (data_ + i) T(o.data_[i]);
 	}
 }
 
@@ -227,42 +227,42 @@ void Vector<T>::swap(Vector& o)
 {
 	if(this != &o)
 	{
-		int n = myNum; myNum = o.myNum; o.myNum = n;
-		int c = myCap; myCap = o.myCap; o.myCap = c;
-		T*  p = myPtr; myPtr = o.myPtr; o.myPtr = p;
+		int n = size_; size_ = o.size_; o.size_ = n;
+		int c = capacity_; capacity_ = o.capacity_; o.capacity_ = c;
+		T*  p = data_; data_ = o.data_; o.data_ = p;
 	}
 }
 
 template <typename T>
 void Vector<T>::clear()
 {
-	for(int i = 0; i < myNum; ++i) myPtr[i].~T();
-	myNum = 0;
+	for(int i = 0; i < size_; ++i) data_[i].~T();
+	size_ = 0;
 }
 
 template <typename T>
 void Vector<T>::release()
 {
-	if(myPtr)
+	if(data_)
 	{
 		clear();
-		free(myPtr);
-		myPtr = nullptr;
-		myCap = 0;
+		free(data_);
+		data_ = nullptr;
+		capacity_ = 0;
 	}
 }
 
 template <typename T>
 void Vector<T>::squeeze()
 {
-	if(myNum)
+	if(size_)
 	{
-		if(myCap > myNum)
+		if(capacity_ > size_)
 		{
-			T* src = myPtr;
-			myCap = myNum;
-			myPtr = (T*)malloc(sizeof(T)*myCap);
-			memcpy(myPtr, src, myNum * sizeof(T));
+			T* src = data_;
+			capacity_ = size_;
+			data_ = (T*)malloc(sizeof(T)*capacity_);
+			memcpy(data_, src, size_ * sizeof(T));
 			free(src);
 		}
 	}
@@ -272,32 +272,32 @@ void Vector<T>::squeeze()
 template <typename T>
 void Vector<T>::reserve(int n)
 {
-	if(n > myCap)
+	if(n > capacity_)
 	{
-		myPtr = (T*)realloc(myPtr, sizeof(T)*n);
-		myCap = n;
+		data_ = (T*)realloc(data_, sizeof(T)*n);
+		capacity_ = n;
 	}
 }
 
 template <typename T>
 void Vector<T>::grow(int n)
 {
-	if(myNum < n)
+	if(size_ < n)
 	{
-		myGrow(n);
-		for(int i = myNum; i < n; ++i) new (myPtr + i) T();
-		myNum = n;
+		EnsureCapacity(n);
+		for(int i = size_; i < n; ++i) new (data_ + i) T();
+		size_ = n;
 	}
 }
 
 template <typename T>
 void Vector<T>::grow(int n, const T& val)
 {
-	if(myNum < n)
+	if(size_ < n)
 	{
-		myGrow(n);
-		for(int i = myNum; i < n; ++i) new (myPtr + i) T(val);
-		myNum = n;
+		EnsureCapacity(n);
+		for(int i = size_; i < n; ++i) new (data_ + i) T(val);
+		size_ = n;
 	}
 }
 
@@ -305,28 +305,28 @@ void Vector<T>::grow(int n, const T& val)
 template <typename T>
 void Vector<T>::truncate(int n)
 {
-	if(myNum > n)
+	if(size_ > n)
 	{
 		if(n < 0) n = 0;
-		for(int i = n; i < myNum; ++i) myPtr[i].~T();
-		myNum = n;
+		for(int i = n; i < size_; ++i) data_[i].~T();
+		size_ = n;
 	}
 }
 
 template <typename T>
 void Vector<T>::resize(int n)
 {
-	if(myNum < n) grow(n); else truncate(n);
+	if(size_ < n) grow(n); else truncate(n);
 }
 
 template <typename T>
 void Vector<T>::resize(int n, const T& val)
 {
-	if(myNum < n)
+	if(size_ < n)
 	{
-		myGrow(n);
-		for(int i = myNum; i < n; ++i) new (myPtr + i) T(val);
-		myNum = n;
+		EnsureCapacity(n);
+		for(int i = size_; i < n; ++i) new (data_ + i) T(val);
+		size_ = n;
 	}
 	else truncate(n);
 }
@@ -334,82 +334,82 @@ void Vector<T>::resize(int n, const T& val)
 template <typename T>
 T& Vector<T>::append()
 {
-	if(myNum != myCap)
-		new (myPtr + myNum) T(), ++myNum;
+	if(size_ != capacity_)
+		new (data_ + size_) T(), ++size_;
 	else
-		insert(myNum, T(), 1);
-	return myPtr[myNum - 1];
+		insert(size_, T(), 1);
+	return data_[size_ - 1];
 }
 
 template <typename T>
 void Vector<T>::push_back(const T& v)
 {
-	if(myNum != myCap)
-		new (myPtr + myNum) T(v), ++myNum;
+	if(size_ != capacity_)
+		new (data_ + size_) T(v), ++size_;
 	else
-		insert(myNum, v, 1);
+		insert(size_, v, 1);
 }
 
 template <typename T>
 void Vector<T>::push_back(T&& v)
 {
-	if(myNum != myCap)
-		new (myPtr + myNum) T(v), ++myNum;
+	if(size_ != capacity_)
+		new (data_ + size_) T(v), ++size_;
 	else
-		insert(myNum, v, 1);
+		insert(size_, v, 1);
 }
 
 template <typename T>
 void Vector<T>::insert(int i, const T& v, int n)
 {
 	if(n <= 0) return;
-	myGrow(myNum + n);
-	if(i >= myNum)
+	EnsureCapacity(size_ + n);
+	if(i >= size_)
 	{
-		i = myNum;
+		i = size_;
 	}
 	else
 	{
 		if(i < 0) i = 0;
-		memmove(myPtr + i + n, myPtr + i, sizeof(T)*(myNum - i));
+		memmove(data_ + i + n, data_ + i, sizeof(T)*(size_ - i));
 	}
 	for(int j = 0; j < n; ++j)
 	{
-		new (myPtr + i + j) T(v);
+		new (data_ + i + j) T(v);
 	}
-	myNum += n;
+	size_ += n;
 }
 
 template <typename T>
 void Vector<T>::insert(int i, const T* v, int n)
 {
 	if(n <= 0) return;
-	myGrow(myNum + n);
-	if(i >= myNum)
+	EnsureCapacity(size_ + n);
+	if(i >= size_)
 	{
-		i = myNum;
+		i = size_;
 	}
 	else
 	{
 		if(i < 0) i = 0;
-		memmove(myPtr + i + n, myPtr + i, sizeof(T)*(myNum - i));
+		memmove(data_ + i + n, data_ + i, sizeof(T)*(size_ - i));
 	}
 	for(int j = 0; j < n; ++j)
 	{
-		new (myPtr + i + j) T(v[j]);
+		new (data_ + i + j) T(v[j]);
 	}
-	myNum += n;
+	size_ += n;
 }
 
 template <typename T>
 void Vector<T>::erase(int i)
 {
-	if(i >= 0 && i < myNum)
+	if(i >= 0 && i < size_)
 	{
 		int end = i + 1;
-		myPtr[i].~T();
-		memmove(myPtr + i, myPtr + end, sizeof(T)*(myNum - end));
-		--myNum;
+		data_[i].~T();
+		memmove(data_ + i, data_ + end, sizeof(T)*(size_ - end));
+		--size_;
 	}
 }
 
@@ -417,51 +417,51 @@ template <typename T>
 void Vector<T>::erase(int begin, int end)
 {
 	if(begin < 0) begin = 0;
-	if(end > myNum) end = myNum;
+	if(end > size_) end = size_;
 	if(begin < end)
 	{
-		for(int i = begin; i < end; ++i) myPtr[i].~T();
-		memmove(myPtr + begin, myPtr + end, sizeof(T)*(myNum - end));
-		myNum -= end - begin;
+		for(int i = begin; i < end; ++i) data_[i].~T();
+		memmove(data_ + begin, data_ + end, sizeof(T)*(size_ - end));
+		size_ -= end - begin;
 	}
 }
 
 template <typename T>
 void Vector<T>::erase_values(const T& v)
 {
-	for(int i = myNum - 1; i >= 0; --i)
+	for(int i = size_ - 1; i >= 0; --i)
 	{
-		if(myPtr[i] == v) erase(i);
+		if(data_[i] == v) erase(i);
 	}
 }
 
 template <typename T>
 void Vector<T>::pop_back()
 {
-	if(myNum) myPtr[--myNum].~T();
+	if(size_) data_[--size_].~T();
 }
 
 template <typename T>
 bool Vector<T>::contains(const T& v) const
 {
-	return find(v) != myNum;
+	return find(v) != size_;
 }
 
 template <typename T>
 int Vector<T>::find(const T& v, int i) const
 {
-	while(i < myNum && myPtr[i] != v) ++i;
+	while(i < size_ && data_[i] != v) ++i;
 	return i;
 }
 
 template <typename T>
-void Vector<T>::myGrow(int n)
+void Vector<T>::EnsureCapacity(int n)
 {
-	if(myCap < n)
+	if(capacity_ < n)
 	{
-		myCap <<= 1;
-		if(myCap < n) myCap = n;
-		myPtr = (T*)realloc(myPtr, sizeof(T)*myCap);
+		capacity_ <<= 1;
+		if(capacity_ < n) capacity_ = n;
+		data_ = (T*)realloc(data_, sizeof(T)*capacity_);
 	}
 }
 
