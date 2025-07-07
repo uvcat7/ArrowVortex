@@ -27,9 +27,9 @@ namespace Vortex {
 
 namespace {
 
-static const int MAP_HEIGHT = 1024;
+static const int MAP_HEIGHT = 4096;
 static const int MAP_WIDTH = 16;
-static const int TEXTURE_SIZE = 128;
+static const int TEXTURE_SIZE = 256; //sqrt(MAP_HEIGHT_MAX * MAP_WIDTH)
 static const int NUM_PIECES = MAP_HEIGHT / TEXTURE_SIZE;
 
 static const color32 arrowcol[9] =
@@ -113,7 +113,6 @@ MinimapImpl()
 	myIsDragging = false;
 
 	VortexAssert(TEXTURE_SIZE * TEXTURE_SIZE == MAP_HEIGHT * MAP_WIDTH);
-
 	// Split the texture area into vertical strips from left to right.
 	float u = 0.f, du = (float)MAP_WIDTH / (float)TEXTURE_SIZE;
 	for(int i = 0; i < NUM_PIECES; ++i, u += du)
@@ -251,28 +250,25 @@ void renderDensity(SetPixelData& spd, const int* colx)
 
 recti myGetMapRect()
 {
+	vec2i size = gSystem->getWindowSize();
+	myRect = { size.x - 32, 8, 24, size.y - 16 };
 	return {myRect.x + 2, myRect.y + 16, myRect.w - 4, myRect.h - 32};
 }
 
-recti myGetChartRect()
+bool updateMinimapHeight()
 {
 	recti rect = myGetMapRect();
-	if(myNotesH > rect.h)
-	{
-		double cursorOfsY = gView->getCursorOffset() - myChartBeginOfs;
-		double chartOfsH = myChartEndOfs - myChartBeginOfs;
-		double t = cursorOfsY / chartOfsH;
 
-		if(gView->hasReverseScroll()) t = 1.0 - t;
-
-		rect.y -= (int)((double)(myNotesH - rect.h) * t + 0.5);
-	}
-	else
+	//If the vertical size has changed, update the minimap
+	if (rect.h != myNotesH)
 	{
-		rect.y += rect.h / 2 - myNotesH / 2;
+		myNotesH = min(MAP_HEIGHT, rect.h);
+		onChanges(VCM_VIEW_CHANGED);
+		return true;
 	}
-	rect.h = myNotesH;
-	return rect;
+
+
+	return false;
 }
 
 double myGetMapOffset(int y)
@@ -281,18 +277,10 @@ double myGetMapOffset(int y)
 	if(myNotesH > 0)
 	{
 		int topY, bottomY;
-		recti mapRect = myGetMapRect();
-		if(myNotesH > mapRect.h)
-		{
-			topY = mapRect.y;
-			bottomY = mapRect.y + mapRect.h;
-		}
-		else
-		{
-			recti chartRect = myGetChartRect();
-			topY = chartRect.y;
-			bottomY = chartRect.y + chartRect.h;
-		}
+		recti chartRect = myGetMapRect();
+		updateMinimapHeight();
+		topY = chartRect.y;
+		bottomY = chartRect.y + chartRect.h;
 
 		double t = clamp((double)(y - topY) / (double)(bottomY - topY), 0.0, 1.0);
 		if(gView->hasReverseScroll()) t = 1.0 - t;
@@ -313,10 +301,8 @@ void onChanges(int changes)
 	Vector<uint> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
 
 	// The height of the chart region is based on the time elapsed between the first and last row.
-	// The full map height is only used if the chart length exceeds 4 minutes (aka 240 seconds).
 	double timeStart = gTempo->rowToTime(0);
 	double timeEnd = gTempo->rowToTime(gSimfile->getEndRow());
-	myNotesH = clamp((int)(MAP_HEIGHT * (timeEnd - timeStart) / 240.0), 0, MAP_HEIGHT);
 
 	if(gView->isTimeBased())
 	{
@@ -341,7 +327,8 @@ void onChanges(int changes)
 			colx[c] = MAP_WIDTH / 2 + (c - cols / 2) * coldx;
 		}
 
-		double pixPerOfs = (double)myNotesH / (myChartEndOfs - myChartBeginOfs);
+		auto rect = myGetMapRect();
+		double pixPerOfs = (double) rect.h / (myChartEndOfs - myChartBeginOfs);
 		SetPixelData spd = {buffer.data(), colw, pixPerOfs, myChartBeginOfs};
 
 		if(myMode == DENSITY)
@@ -399,7 +386,7 @@ void tick()
 
 void drawRegion(int x, int w, double ofsA, double ofsB, color32 color)
 {
-	recti chartRect = myGetChartRect();
+	recti chartRect = myGetMapRect();
 	double pixPerOfs = (double)chartRect.h / (myChartEndOfs - myChartBeginOfs);
 	int baseY = chartRect.y;
 	if(gView->hasReverseScroll())
@@ -418,6 +405,8 @@ void draw()
 {
 	// If the text overlay is open, we hide the minimap to avoid clutter.
 	if(gTextOverlay->isOpen()) return;
+
+	updateMinimapHeight();
 
 	// Draw the minimap box outline.
 	recti rect(myRect);
@@ -438,9 +427,9 @@ void draw()
 	}
 
 	// Draw the marker lines for the first and last row.
-	recti chartRect = myGetChartRect();
-	Draw::fill(SideT(chartRect, 1), COLOR32(128, 128, 128, 255));
-	Draw::fill(SideB(chartRect, 1), COLOR32(128, 128, 128, 255));
+
+	Draw::fill(SideT(rect, 1), COLOR32(128, 128, 128, 255));
+	Draw::fill(SideB(rect, 1), COLOR32(128, 128, 128, 255));
 
 	// Draw the view range.
 	if(myNotesH > 0)
@@ -452,17 +441,17 @@ void draw()
 
 	// Draw the minimap image.
 	int vp[NUM_PIECES * 8], y, dy;
-	int xl = chartRect.x + chartRect.w / 2 - MAP_WIDTH / 2;
+	int xl = rect.x + rect.w / 2 - MAP_WIDTH / 2;
 	int xr = xl + MAP_WIDTH;
 
 	if(gView->hasReverseScroll())
 	{
-		y = chartRect.y + chartRect.h;
+		y = rect.y + rect.h;
 		dy = -TEXTURE_SIZE;
 	}
 	else
 	{
-		y = chartRect.y;
+		y = rect.y;
 		dy = TEXTURE_SIZE;
 	}
 
