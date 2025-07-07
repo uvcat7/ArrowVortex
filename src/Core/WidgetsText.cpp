@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+constexpr int MaximumPastedTextLength = 200;
+constexpr int MaximumTextBoxLength = 255;
 namespace Vortex {
 
 // ===================================================================================
@@ -31,7 +33,7 @@ WgLineEdit::WgLineEdit(GuiContext* gui)
 	: GuiWidget(gui)
 	, lineedit_show_background_(1)
 {
-	lineedit_max_length_ = 1 << 24;
+	lineedit_max_length_ = MaximumTextBoxLength;
 	lineedit_blink_time_ = 0.f;
 	lineedit_scroll_offset_ = 0.f;
 	lineedit_drag_ = DT_NOT_DRAGGING;
@@ -201,7 +203,6 @@ void WgLineEdit::onMouseRelease(MouseRelease& evt)
 	}
 }
 
-constexpr int MaximumTextLength = 200; // in chars
 void WgLineEdit::onTextInput(TextInput& evt)
 {
 	if(isCapturingText() && is_editable_ && !evt.handled)
@@ -222,13 +223,13 @@ void WgLineEdit::onTextInput(TextInput& evt)
 			}
 
 			// truncate input
-			if (input.len() > MaximumTextLength)
+			if (input.len() > MaximumPastedTextLength)
 			{
-				Str::erase(input, MaximumTextLength, input.len() - MaximumTextLength);
+				Str::erase(input, MaximumPastedTextLength, input.len() - MaximumPastedTextLength);
 			}
 
 			// ensure total length does not exceed max length
-			int maxInputLen = std::min(MaximumTextLength, lineedit_max_length_ - lineedit_text_.len());
+			int maxInputLen = std::min(MaximumPastedTextLength, lineedit_max_length_ - lineedit_text_.len());
 			if (input.len() > maxInputLen)
 			{
 				Str::erase(input, maxInputLen, input.len() - maxInputLen);
