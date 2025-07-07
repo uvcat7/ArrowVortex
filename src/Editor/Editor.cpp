@@ -899,7 +899,7 @@ void tick()
 
 	handleDialogs();
 
-	gui_>tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
+	gui_->tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
 
 	if (!GuiMain::isCapturingText())
 	{
