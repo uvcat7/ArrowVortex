@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 #include <limits.h>
-#include <chrono>
 
 namespace Vortex {
 
@@ -94,7 +93,7 @@ private:
 	int myCurrentFrame;
 	int myReservedFrames;
 	uchar myProgress;
-	std::chrono::steady_clock::time_point myStartTime;
+	double myStartTime;
 };
 
 Sound::Thread::~Thread()
