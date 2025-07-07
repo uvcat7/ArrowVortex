@@ -720,6 +720,7 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 			for (UINT i = 0; i < numFiles; ++i)
 			{
 				// Get the length of the file path and retrieve it.
+				// Giving 0 for the stringbuffer returns path size without nullbyte.
 				UINT pathLen = DragQueryFileW((HDROP)wp, i, nullptr, 0);
 				WideString wstr(pathLen, 0);
 				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathLen + 1);
