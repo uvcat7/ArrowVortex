@@ -13,8 +13,6 @@
 #include <Editor/Common.h>
 #include <Editor/Editing.h>
 
-#define Dlg DialogAdjustTempo
-
 namespace Vortex {
 
 enum Actions
@@ -33,11 +31,11 @@ enum Actions
 	ACT_REMOVE_BEATS,
 };
 
-Dlg::~Dlg()
+DialogAdjustTempo::~DialogAdjustTempo()
 {
 }
 
-Dlg::Dlg()
+DialogAdjustTempo::DialogAdjustTempo()
 {
 	setTitle("ADJUST TEMPO");
 	myCreateWidgets();
@@ -46,7 +44,7 @@ Dlg::Dlg()
 	myInsertTarget = 0;
 }
 
-WgSpinner* Dlg::myCreateWidgetRow(StringRef label, int y, double& val, int action)
+WgSpinner* DialogAdjustTempo::myCreateWidgetRow(StringRef label, int y, double& val, int action)
 {
 	bool isBPM = (action == ACT_BPM_SET);
 
@@ -66,28 +64,28 @@ WgSpinner* Dlg::myCreateWidgetRow(StringRef label, int y, double& val, int actio
 	WgSpinner* spinner = myLayout.add<WgSpinner>(label);
 	spinner->value.bind(&val);
 	spinner->setPrecision(3, 6);
-	spinner->onChange.bind(this, &Dlg::onAction, action + 0);
+	spinner->onChange.bind(this, &DialogAdjustTempo::onAction, action + 0);
 	spinner->setTooltip(tooltips2[isBPM]);
 
 	WgButton* op1 = myLayout.add<WgButton>();
 	op1->text.set(isBPM ? "{g:halve}" : "{g:full selection}");
-	op1->onPress.bind(this, &Dlg::onAction, action + 1);
+	op1->onPress.bind(this, &DialogAdjustTempo::onAction, action + 1);
 	op1->setTooltip(isBPM ? tooltips[0] : tooltips[2]);
 
 	WgButton* op2 = myLayout.add<WgButton>();
 	op2->text.set(isBPM ? "{g:double}" : "{g:half selection}");
-	op2->onPress.bind(this, &Dlg::onAction, action + 2);
+	op2->onPress.bind(this, &DialogAdjustTempo::onAction, action + 2);
 	op2->setTooltip(isBPM ? tooltips[1] : tooltips[3]);
 
 	WgButton* tweak = myLayout.add<WgButton>();
 	tweak->text.set("{g:tweak}");
-	tweak->onPress.bind(this, &Dlg::onAction, action + 3);
+	tweak->onPress.bind(this, &DialogAdjustTempo::onAction, action + 3);
 	tweak->setTooltip(isBPM ? "Tweak the current BPM" : "Tweak the current stop");
 
 	return spinner;
 }
 
-void Dlg::myCreateWidgets()
+void DialogAdjustTempo::myCreateWidgets()
 {
 	myLayout.row().col(38).col(116).col(24).col(24).col(24);
 
@@ -118,19 +116,19 @@ void Dlg::myCreateWidgets()
 	
 	WgButton* insert = myLayout.add<WgButton>();
 	insert->text.set("Insert beats");
-	insert->onPress.bind(this, &Dlg::onAction, (int)ACT_INSERT_BEATS);
+	insert->onPress.bind(this, &DialogAdjustTempo::onAction, (int)ACT_INSERT_BEATS);
 	insert->setTooltip("Insert the above number of beats at the cursor position\n"
 		"All notes and tempo changes after the cursor will be shifted down");
 
 	WgButton* remove = myLayout.add<WgButton>();
 	remove->text.set("Delete beats");
-	remove->onPress.bind(this, &Dlg::onAction, (int)ACT_REMOVE_BEATS);
+	remove->onPress.bind(this, &DialogAdjustTempo::onAction, (int)ACT_REMOVE_BEATS);
 	remove->setTooltip("Delete the above number of beats at the cursor position\n"
 		"All notes and tempo changes after the cursor will be shifted up\n"
 		"Notes and tempo changes in the deleted region will be removed");
 }
 
-void Dlg::onChanges(int changes)
+void DialogAdjustTempo::onChanges(int changes)
 {
 	if(changes & VCM_FILE_CHANGED)
 	{
@@ -148,7 +146,7 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onTick()
+void DialogAdjustTempo::onTick()
 {
 	if(gSimfile->isOpen())
 	{
@@ -160,7 +158,7 @@ void Dlg::onTick()
 	EditorDialog::onTick();
 }
 
-void Dlg::onAction(int id)
+void DialogAdjustTempo::onAction(int id)
 {
 	if(gSimfile->isClosed()) return;
 	int row = gView->getCursorRow();

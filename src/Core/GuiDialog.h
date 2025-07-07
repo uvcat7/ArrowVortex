@@ -48,41 +48,41 @@ public:
 	void tick();
 	void draw();
 
-	GuiDialog* myDialog;
-	GuiContext* myGui;
+	GuiDialog* dialog_ptr_;
+	GuiContext* gui_;
 
-	uint myIsPinnable : 1;
-	uint myIsCloseable : 1;
-	uint myIsMinimizable : 1;
-	uint myIsResizeableH : 1;
-	uint myIsResizeableV : 1;
+	uint is_pinnable_ : 1;
+	uint is_closeable_ : 1;
+	uint is_minimizable_ : 1;
+	uint is_horizontally_resizable_ : 1;
+	uint is_vertically_resizable_ : 1;
 
-	uint myRequestClose : 1;
-	uint myRequestPin : 1;
-	uint myRequestMinimize : 1;
-	uint myRequestMoveToTop : 1;
+	uint request_close_ : 1;
+	uint request_pin_ : 1;
+	uint request_minimize_ : 1;
+	uint request_move_to_top_ : 1;
 
-	uint myIsPinned : 1;
-	uint myIsMinimized : 1;
+	uint pinned_state_ : 1;
+	uint minimized_state_ : 1;
 
 private:
 	friend class GuiDialog;
 
-	void myClampRect();
-	void myHandleResize();
-	void myHandleDrag();
-	void myUpdateMouseCursor();
+	void ClampRect();
+	void HandleResize();
+	void HandleDrag();
+	void UpdateMouseCursor();
 
-	ActionType myGetAction(int x, int y) const;
-	void myFinishActions();
+	ActionType GetAction(int x, int y) const;
+	void FinishActions();
 
-	vec2i myMinSize;
-	vec2i myMaxSize;
-	vec2i myPinnedPos;
+	vec2i min_size_;
+	vec2i max_size_;
+	vec2i pinned_position_;
 
-	String myTitle;
+	String dialog_title_;
 
-	BaseAction* myAction;
+	BaseAction* current_action_;
 };
 
 }; // namespace Vortex

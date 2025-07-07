@@ -119,13 +119,13 @@ public:
 	TextureHandle texture(int size, vec2i& outTexSize);
 
 	/// Returns the font data; used internally.
-	inline void* data() const { return myData; }
+	inline void* data() const { return data_; }
 
 	/// Logs debug info on the currently loaded fonts.
 	static void LogInfo();
 
 private:
-	void* myData;
+	void* data_;  // TODO: replace with a more descriptive variable name.
 };
 
 /// Settings for text rendering.

@@ -34,27 +34,27 @@ static const int NUM_PIECES = MAP_HEIGHT / TEXTURE_SIZE;
 
 static const color32 arrowcol[9] =
 {
-	COLOR32(255,   0,   0, 255), // Red.
-	COLOR32( 12,  74, 206, 255), // Blue.
-	COLOR32(145,  12, 206, 255), // Purple.
-	COLOR32(255, 255,   0, 255), // Yellow.
-	COLOR32(206,  12, 113, 255), // Pink.
-	COLOR32(247, 148,  29, 255), // Orange.
-	COLOR32(105, 231, 245, 255), // Teal.
-	COLOR32(  0, 198,   0, 255), // Green.
-	COLOR32(132, 132, 132, 255), // Gray.
+	RGBAtoColor32(255,   0,   0, 255), // Red.
+	RGBAtoColor32( 12,  74, 206, 255), // Blue.
+	RGBAtoColor32(145,  12, 206, 255), // Purple.
+	RGBAtoColor32(255, 255,   0, 255), // Yellow.
+	RGBAtoColor32(206,  12, 113, 255), // Pink.
+	RGBAtoColor32(247, 148,  29, 255), // Orange.
+	RGBAtoColor32(105, 231, 245, 255), // Teal.
+	RGBAtoColor32(  0, 198,   0, 255), // Green.
+	RGBAtoColor32(132, 132, 132, 255), // Gray.
 };
 static const color32 freezecol =
 {
-	COLOR32(64, 128, 0, 255) // Green
+	RGBAtoColor32(64, 128, 0, 255) // Green
 };
 static const color32 rollcol =
 {
-	COLOR32(96, 96, 128, 255), // Blue gray
+	RGBAtoColor32(96, 96, 128, 255), // Blue gray
 };
 static const color32 minecol =
 {
-	COLOR32(192, 192, 192, 255), // Light gray
+	RGBAtoColor32(192, 192, 192, 255), // Light gray
 };
 
 struct SetPixelData
@@ -89,7 +89,7 @@ static void SetPixels(const SetPixelData& spd, int x, double tor, double end, co
 
 struct MinimapImpl : public Minimap {
 
-recti myRect;
+recti rect_;
 Texture myImage;
 Mode myMode;
 int myNotesH;
@@ -140,7 +140,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			color32 color;
 			if(note.isSelected)
 			{
-				color = COLOR32(255, 255, 255, 255);
+				color = RGBAtoColor32(255, 255, 255, 255);
 			}
 			else
 			{
@@ -162,7 +162,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			color32 color;
 			if(note.isSelected)
 			{
-				color = COLOR32(255, 255, 255, 255);
+				color = RGBAtoColor32(255, 255, 255, 255);
 			}
 			else
 			{
@@ -354,7 +354,7 @@ void onMousePress(MousePress& evt)
 {
 	if(evt.button == Mouse::LMB && !gTextOverlay->isOpen() && evt.unhandled())
 	{
-		if(IsInside(myRect, evt.x, evt.y))
+		if(IsInside(rect_, evt.x, evt.y))
 		{
 			gView->setCursorOffset(myGetMapOffset(evt.y));
 			myIsDragging = true;
@@ -375,7 +375,7 @@ void onMouseRelease(MouseRelease& evt)
 void tick()
 {
 	vec2i size = gSystem->getWindowSize();
-	myRect = { size.x - 32, 8, 24, size.y - 16 };
+	rect_ = { size.x - 32, 8, 24, size.y - 16 };
 
 	if(myIsDragging)
 	{
@@ -409,7 +409,7 @@ void draw()
 	updateMinimapHeight();
 
 	// Draw the minimap box outline.
-	recti rect(myRect);
+	recti rect(rect_);
 	Draw::fill(rect, Colors::white);
 	rect = Shrink(rect, 1);
 	Draw::fill(rect, Colors::black);
@@ -423,20 +423,19 @@ void draw()
 		auto region = gSelection->getSelectedRegion();
 		double top = gView->rowToOffset(region.beginRow);
 		double btm = gView->rowToOffset(region.endRow);
-		drawRegion(rect.x, rect.w, top, btm, COLOR32(153, 255, 153, 153));
+		drawRegion(rect.x, rect.w, top, btm, RGBAtoColor32(153, 255, 153, 153));
 	}
 
 	// Draw the marker lines for the first and last row.
-
-	Draw::fill(SideT(rect, 1), COLOR32(128, 128, 128, 255));
-	Draw::fill(SideB(rect, 1), COLOR32(128, 128, 128, 255));
+	Draw::fill(SideT(chartRect, 1), RGBAtoColor32(128, 128, 128, 255));
+	Draw::fill(SideB(chartRect, 1), RGBAtoColor32(128, 128, 128, 255));
 
 	// Draw the view range.
 	if(myNotesH > 0)
 	{
 		double top = gView->yToOffset(0);
 		double btm = gView->yToOffset(gView->getHeight());
-		drawRegion(rect.x, rect.w, top, btm, COLOR32(255, 204, 102, 128));
+		drawRegion(rect.x, rect.w, top, btm, RGBAtoColor32(255, 204, 102, 128));
 	}
 
 	// Draw the minimap image.

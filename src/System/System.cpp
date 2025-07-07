@@ -21,15 +21,20 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <winuser.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <gl/gl.h>
 #undef ERROR
 
+#include <thread>
+#include <numeric>
 #include <stdio.h>
 #include <ctime>
 #include <bitset>
+#include <list>
+#include <vector>
 
 #undef DELETE
 
@@ -146,9 +151,19 @@ static bool LogCheckpoint(bool result, const char* description)
 	}
 	else
 	{
+		char lpMsgBuf[100];
 		DWORD code = GetLastError();
+		FormatMessageA(
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			code,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			lpMsgBuf,
+			60, 
+			NULL);
 		Debug::blockBegin(Debug::ERROR, description);
-		Debug::log("windows error code: %i\n", code);
+		Debug::log("windows error code %i: %s", code, lpMsgBuf);
 		Debug::blockEnd();
 	}
 	return !result;
@@ -191,6 +206,11 @@ void MItem::replaceSubmenu(int pos, MItem* submenu, StringRef text, bool grayed)
 void MItem::setChecked(int item, bool state)
 {
 	CheckMenuItem((HMENU)this, item, state ? MF_CHECKED : MF_UNCHECKED);
+}
+
+void MItem::setEnabled(int item, bool state)
+{
+	EnableMenuItem((HMENU)this, item, state ? MF_ENABLED : MF_GRAYED);
 }
 
 namespace {
@@ -327,7 +347,7 @@ SystemImpl()
 	Debug::log("swap interval support :: %s\n", wglSwapInterval ? "OK" : "MISSING");
 	if(wglSwapInterval)
 	{
-		wglSwapInterval(1);
+		wglSwapInterval(-1);
 		VortexCheckGlError();
 	}
 
@@ -376,11 +396,16 @@ void createMenu()
 	SetMenu(myHWND, menu);
 }
 
-void messageLoop()
+void CALLBACK messageLoop()
 {
 	if(!myInitSuccesful) return;
 
-	deltaTime = 1.0 / 60.0;
+#ifdef DEBUG
+	long long frames = 0;
+	auto lowcounts = 0;
+	std::list<double> fpsList, sleepList, frameList, inputList, waitList; 
+	auto frameGuess = 960;
+#endif
 
 	Editor::create();
 	forwardArgs();
@@ -391,11 +416,13 @@ void messageLoop()
 	double prevTime = Debug::getElapsedTime();
 	while(!myIsTerminated)
 	{
-		myEvents.clear();
 
+		auto startTime = Debug::getElapsedTime();
+
+		myEvents.clear();
 		// Process all windows messages.
 		myIsInsideMessageLoop = true;
-		while(PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE))
+		while (PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE | PM_NOYIELD))
 		{
 			GetMessageW(&message, nullptr, 0, 0);
 			TranslateMessage(&message);
@@ -404,11 +431,10 @@ void messageLoop()
 		myIsInsideMessageLoop = false;
 
 		// Check if there were text input events.
-		if(myInput.size())
+		if (!myInput.empty())
 		{
-			String input = Narrow(myInput);
-			myEvents.addTextInput(input.str());
-			myInput = WideString();
+			myEvents.addTextInput(Narrow(myInput).str());
+			myInput.clear();
 		}
 
 		// Set up the OpenGL view.
@@ -426,7 +452,6 @@ void messageLoop()
 		prevTime = curTime;
 
 		gEditor->tick();
-		Debug::logBlankLine();
 
 		// Display.
 		SwapBuffers(myHDC);
@@ -688,23 +713,30 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 		{
 			POINT pos;
 			DragQueryPoint((HDROP)wp, &pos);
-			// Passing 0xFFFFFFFF will return the file count.
-			int numFiles = (int)DragQueryFileW((HDROP)wp, 0xFFFFFFFF, 0, 0);
-			char** files = (char**)malloc(sizeof(char*) * numFiles);
-			for(int i = 0; i < numFiles; ++i)
+
+			// Get the number of files dropped.
+			UINT numFiles = DragQueryFileW((HDROP)wp, 0xFFFFFFFF, nullptr, 0);
+			std::vector<String> files(numFiles);
+
+			for (UINT i = 0; i < numFiles; ++i)
 			{
+				// Get the length of the file path and retrieve it.
 				// Giving 0 for the stringbuffer returns path size without nullbyte.
-				int pathlen = (int)DragQueryFileW((HDROP)wp, i, 0, 0);
-				WideString wstr(pathlen, 0);
-				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathlen + 1);
-				String str = Narrow(wstr);
-				files[i] = (char*)malloc(str.len() + 1);
-				memcpy(files[i], str.begin(), str.len() + 1);
+				UINT pathLen = DragQueryFileW((HDROP)wp, i, nullptr, 0);
+				WideString wstr(pathLen, 0);
+				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathLen + 1);
+				files[i] = Narrow(wstr);
 			}
+
 			DragFinish((HDROP)wp);
-			myEvents.addFileDrop(files, numFiles, pos.x, pos.y);
-			for(int i = 0; i < numFiles; ++i) free(files[i]);
-			free(files);
+
+			// Pass the file drop event to the input handler.
+			std::vector<const char*> filePtrs;
+			for (const auto& file : files)
+			{
+				filePtrs.push_back(file.str());
+			}
+			myEvents.addFileDrop(filePtrs.data(), static_cast<int>(filePtrs.size()), pos.x, pos.y);
 		}
 		break;
 	}

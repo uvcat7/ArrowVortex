@@ -432,111 +432,111 @@ void Texture::Data::setWrapping(bool repeat)
 
 typedef TextureManager TexMan;
 
-#define TEXDATA ((Texture::Data*)myData)
+#define TEXDATA ((Texture::Data*)data_)
 
 Texture::~Texture()
 {
-	if(myData) TexMan::release(TEXDATA);
+	if(data_) TexMan::release(TEXDATA);
 }
 
 Texture::Texture()
-	: myData(nullptr)
+	: data_(nullptr)
 {
 }
 
 Texture::Texture(int w, int h, Format fmt)
-	: myData(nullptr)
+	: data_(nullptr)
 {
 	w = max(w, 1);
 	h = max(h, 1);
 	Vector<uchar> pixels;
 	pixels.resize(w * h * sNumChannels[fmt], 0);
-	myData = TexMan::load(w, h, fmt, false, pixels.begin());
+	data_ = TexMan::load(w, h, fmt, false, pixels.begin());
 }
 
 Texture::Texture(const char* path, bool mipmap, Format fmt)
-	: myData(nullptr)
+	: data_(nullptr)
 {
-	myData = TexMan::load(path, fmt, mipmap);
+	data_ = TexMan::load(path, fmt, mipmap);
 }
 
 Texture::Texture(int w, int h, const uchar* pixels, bool mipmap, Format fmt)
-	: myData(nullptr)
+	: data_(nullptr)
 {
-	myData = TexMan::load(w, h, fmt, mipmap, pixels);
+	data_ = TexMan::load(w, h, fmt, mipmap, pixels);
 }
 
 Texture::Texture(Texture&& tex)
-	: myData(tex.myData)
+	: data_(tex.data_)
 {
-	tex.myData = nullptr;
+	tex.data_ = nullptr;
 }
 
 Texture::Texture(const Texture& tex)
-	: myData(tex.myData)
+	: data_(tex.data_)
 {
-	if(myData) TEXDATA->refs++;
+	if(data_) TEXDATA->refs++;
 }
 
 Texture& Texture::operator = (Texture&& tex)
 {
-	if(myData) TexMan::release(TEXDATA);
-	myData = tex.myData;
-	tex.myData = nullptr;
+	if(data_) TexMan::release(TEXDATA);
+	data_ = tex.data_;
+	tex.data_ = nullptr;
 	return *this;
 }
 
 Texture& Texture::operator = (const Texture& tex)
 {
-	if(myData) TexMan::release(TEXDATA);
-	myData = tex.myData;
-	if(myData) TEXDATA->refs++;
+	if(data_) TexMan::release(TEXDATA);
+	data_ = tex.data_;
+	if(data_) TEXDATA->refs++;
 	return *this;
 }
 
 void Texture::modify(int x, int y, int w, int h, const uchar* pixels)
 {
-	if(myData) TEXDATA->modify(x, y, w, h, pixels);
+	if(data_) TEXDATA->modify(x, y, w, h, pixels);
 }
 
 void Texture::setWrapping(bool repeat)
 {
-	if(myData) TEXDATA->setWrapping(repeat);
+	if(data_) TEXDATA->setWrapping(repeat);
 }
 
 void Texture::setFiltering(bool linear)
 {
-	if(myData) TEXDATA->setFiltering(linear);
+	if(data_) TEXDATA->setFiltering(linear);
 }
 
 void Texture::cache() const
 {
-	if(myData) TEXDATA->cached = true;
+	if(data_) TEXDATA->cached = true;
 }
 
 TextureHandle Texture::handle() const
 {
-	return myData ? TEXDATA->handle : 0;
+	return data_ ? TEXDATA->handle : 0;
 }
 
 vec2i Texture::size() const
 {
-	return myData ? vec2i{ TEXDATA->w, TEXDATA->h } : vec2i{ 0, 0 };
+	return data_ ? vec2i{ TEXDATA->w, TEXDATA->h } : vec2i{ 0, 0 };
 }
 
 int Texture::width() const
 {
-	return myData ? TEXDATA->w : 0;
+	return data_ ? TEXDATA->w : 0;
 }
 
 int Texture::height() const
 {
-	return myData ? TEXDATA->h : 0;
+	return data_ ? TEXDATA->h : 0;
 }
 
 Texture::Format Texture::format() const
 {
-	return myData ? TEXDATA->fmt : Texture::RGBA;
+	return data_ ? TEXDATA->fmt : Texture::RGBA;
 }
 
 void Texture::LogInfo()

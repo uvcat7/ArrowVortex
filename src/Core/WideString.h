@@ -52,7 +52,7 @@ public:
 	void append(const wchar_t* begin, const wchar_t* end);
 
 	/// Returns the number of characters in the string.
-	inline int size() const { return *((int*)myStr - 1); }
+	inline int size() const { return *((int*)widestring_ - 1); }
 
 	/// Returns the number of characters in the string.
 	inline int length() const { return size(); }
@@ -61,22 +61,22 @@ public:
 	inline bool empty() const { return !size(); }
 
 	/// Returns a pointer to the string contents.
-	inline const wchar_t* str() const { return myStr; }
+	inline const wchar_t* str() const { return widestring_; }
 
 	/// Returns a pointer to the start of the string.
-	inline wchar_t* begin() { return myStr; }
+	inline wchar_t* begin() { return widestring_; }
 
 	/// Returns a const pointer to the start of the string.
-	inline const wchar_t* begin() const { return myStr; }
+	inline const wchar_t* begin() const { return widestring_; }
 
 	/// Returns a pointer to one character past the end of the string.
-	inline wchar_t* end() { return myStr + size(); }
+	inline wchar_t* end() { return widestring_ + size(); }
 
 	/// Returns a const pointer to one character past the end of the string.
-	inline const wchar_t* end() const { return myStr + size(); }
+	inline const wchar_t* end() const { return widestring_ + size(); }
 
 private:
-	wchar_t* myStr;
+	wchar_t* widestring_;
 };
 
 // Wide String operators.

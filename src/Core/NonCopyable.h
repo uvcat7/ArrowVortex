@@ -13,7 +13,7 @@ namespace NonCopyable_
 		~NonCopyable(){}
 	private:
 		NonCopyable(const NonCopyable&);
-		void operator=(const NonCopyable&);
+		void operator=(const NonCopyable&); // why is this private?
 	};
 }
 typedef NonCopyable_::NonCopyable NonCopyable;

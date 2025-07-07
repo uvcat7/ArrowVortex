@@ -9,8 +9,6 @@
 #include <Simfile/SegmentList.h>
 #include <Simfile/SegmentGroup.h>
 
-#define Dlg DialogTempoBreakdown
-
 namespace Vortex {
 
 // ================================================================================================
@@ -33,7 +31,7 @@ static int GetTempoListH()
 	return max(h, 16);
 }
 
-struct Dlg::TempoList : public WgScrollRegion {
+struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
 
 ~TempoList()
 {
@@ -47,17 +45,17 @@ TempoList(GuiContext* gui)
 
 void onUpdateSize() override
 {
-	myScrollH = GetTempoListH();
-	myClampScrollValues();
+	scroll_height_ = GetTempoListH();
+	ClampScrollPositions();
 }
 
 void onDraw() override
 {
 	if(gSimfile->isClosed()) return;
 
-	int x = myRect.x;
-	int y = myRect.y - myScrollY;
-	recti view = {myRect.x, myRect.y, getViewWidth(), getViewHeight()};
+	int x = rect_.x;
+	int y = rect_.y - scroll_position_y_;
+	recti view = {rect_.x, rect_.y, getViewWidth(), getViewHeight()};
 	
 	TextStyle style;
 	style.textFlags = 0;
@@ -108,12 +106,12 @@ void onDraw() override
 // ================================================================================================
 // DialogTempoBreakdown
 
-Dlg::~Dlg()
+DialogTempoBreakdown::~DialogTempoBreakdown()
 {
 	delete myList;
 }
 
-Dlg::Dlg()
+DialogTempoBreakdown::DialogTempoBreakdown()
 {
 	setTitle("TEMPO BREAKDOWN");
 	setWidth(200);
@@ -124,7 +122,7 @@ Dlg::Dlg()
 	myList = new TempoList(getGui());
 }
 
-void Dlg::onUpdateSize()
+void DialogTempoBreakdown::onUpdateSize()
 {
 	myList->updateSize();
 	int h = myList->getScrollHeight();
@@ -132,13 +130,13 @@ void Dlg::onUpdateSize()
 	setMaximumHeight(min(1024, h));
 }
 
-void Dlg::onTick()
+void DialogTempoBreakdown::onTick()
 {
 	myList->arrange(getInnerRect());
 	myList->tick();
 }
 
-void Dlg::onDraw()
+void DialogTempoBreakdown::onDraw()
 {
 	myList->draw();
 }

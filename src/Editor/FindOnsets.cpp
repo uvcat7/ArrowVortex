@@ -3,6 +3,7 @@
 
 #include <Core/Utils.h>
 #include <Core/Vector.h>
+#include <Core/AlignedMemory.h>
 
 #include <System/Thread.h>
 
@@ -12,9 +13,6 @@
 #pragma warning(disable: 4244)
 
 //#define DEBUG_INFO
-
-#define AlignedMalloc(type, count) ((type*)_aligned_malloc((count) * sizeof(type), 16))
-#define AlignedFree(ptr)           if(ptr){_aligned_free(ptr); ptr = nullptr;}
 
 typedef double real;
 

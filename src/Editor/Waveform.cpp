@@ -96,37 +96,37 @@ void update()
 
 struct WaveformImpl : public Waveform {
 
-Vector<WaveBlock*> myBlocks;
+Vector<WaveBlock*> waveformBlocks_;
 
-WaveFilter* myFilter;
-Vector<uchar> myTexBuf;
+WaveFilter* waveformFilter_;
+Vector<uchar> waveformTextureBuffer_;
 
-int myBlockW, mySpacing;
+int waveformBlockWidth_, waveformSpacing_;
 
-ColorScheme myColors;
-WaveShape myWaveShape;
-Luminance myLuminance;
-int myAntiAliasing;
-bool myOverlayFilter;
+ColorScheme waveformColorScheme_;
+WaveShape waveformShape_;
+Luminance waveformLuminance_;
+int waveformAntiAliasingMode_;
+bool waveformOverlayFilter_;
 
 // ================================================================================================
 // ViewImpl :: constructor / destructor.
 
 ~WaveformImpl()
 {
-	for(auto block : myBlocks) delete block;
-	delete myFilter;
+	for(auto block : waveformBlocks_) delete block;
+	delete waveformFilter_;
 }
 
 WaveformImpl()
 {
 	setPreset(PRESET_VORTEX);
 
-	myFilter = nullptr;
-	myOverlayFilter = true;
+	waveformFilter_ = nullptr;
+	waveformOverlayFilter_ = true;
 
 	updateBlockW();
-	myTexBuf.resize(TEX_W * TEX_H);
+	waveformTextureBuffer_.resize(TEX_W * TEX_H);
 
 	clearBlocks();
 }
@@ -171,9 +171,9 @@ void loadSettings(XmrNode& settings)
 	XmrNode* waveform = settings.child("waveform");
 	if(waveform)
 	{
-		waveform->get("bgColor", (float*)&myColors.bg, 4);
-		waveform->get("waveColor", (float*)&myColors.wave, 4);
-		waveform->get("filterColor", (float*)&myColors.filter, 4);
+		waveform->get("bgColor", (float*)&waveformColorScheme_.bg, 4);
+		waveform->get("waveColor", (float*)&waveformColorScheme_.wave, 4);
+		waveform->get("filterColor", (float*)&waveformColorScheme_.filter, 4);
 
 		const char* ll = waveform->get("luminance");
 		if(ll) setLuminance(ToLuminance(ll));
@@ -181,8 +181,8 @@ void loadSettings(XmrNode& settings)
 		const char* ws = waveform->get("waveStyle");
 		if(ws) setWaveShape(ToWaveShape(ws));	
 
-		waveform->get("antiAliasing", &myAntiAliasing);
-		setAntiAliasing(clamp(myAntiAliasing, 0, 3));
+		waveform->get("antiAliasing", &waveformAntiAliasingMode_);
+		setAntiAliasing(clamp(waveformAntiAliasingMode_, 0, 3));
 	}
 }
 
@@ -191,13 +191,13 @@ void saveSettings(XmrNode& settings)
 	XmrNode* waveform = settings.child("waveform");
 	if(!waveform) waveform = settings.addChild("waveform");
 
-	SaveColor(waveform, "bgColor", myColors.bg);
-	SaveColor(waveform, "waveColor", myColors.wave);
-	SaveColor(waveform, "filterColor", myColors.filter);
+	SaveColor(waveform, "bgColor", waveformColorScheme_.bg);
+	SaveColor(waveform, "waveColor", waveformColorScheme_.wave);
+	SaveColor(waveform, "filterColor", waveformColorScheme_.filter);
 
-	waveform->addAttrib("luminance", ToString(myLuminance));
-	waveform->addAttrib("waveStyle", ToString(myWaveShape));
-	waveform->addAttrib("antiAliasing", (long)myAntiAliasing);
+	waveform->addAttrib("luminance", ToString(waveformLuminance_));
+	waveform->addAttrib("waveStyle", ToString(waveformShape_));
+	waveform->addAttrib("antiAliasing", (long)waveformAntiAliasingMode_);
 }
 
 // ================================================================================================
@@ -205,7 +205,7 @@ void saveSettings(XmrNode& settings)
 
 void clearBlocks()
 {
-	for(auto block : myBlocks)
+	for(auto block : waveformBlocks_)
 	{
 		block->id = UNUSED_BLOCK;
 	}
@@ -213,42 +213,42 @@ void clearBlocks()
 
 void setOverlayFilter(bool enabled)
 {
-	myOverlayFilter = enabled;
+	waveformOverlayFilter_ = enabled;
 
 	clearBlocks();
 }
 
 bool getOverlayFilter()
 {
-	return myOverlayFilter;
+	return waveformOverlayFilter_;
 }
 
 void enableFilter(FilterType type, double strength)
 {
-	delete myFilter;
-	myFilter = new WaveFilter(type, strength);
+	delete waveformFilter_;
+	waveformFilter_ = new WaveFilter(type, strength);
 
 	clearBlocks();
 }
 
 void disableFilter()
 {
-	delete myFilter;
-	myFilter = nullptr;
+	delete waveformFilter_;
+	waveformFilter_ = nullptr;
 
 	clearBlocks();
 }
 
 int getWidth()
 {
-	return myBlockW * 2 + mySpacing * 2 + 8;
+	return waveformBlockWidth_ * 2 + waveformSpacing_ * 2 + 8;
 }
 
 void onChanges(int changes)
 {
 	if(changes & VCM_MUSIC_IS_LOADED)
 	{
-		if(myFilter) myFilter->update();
+		if(waveformFilter_) waveformFilter_->update();
 	}
 }
 
@@ -261,20 +261,20 @@ void setPreset(Preset preset)
 	switch(preset)
 	{
 	case PRESET_VORTEX:
-		myColors.bg = {0.0f, 0.0f, 0.0f, 1};
-		myColors.wave = {0.4f, 0.6, 0.4f, 1};
-		myColors.filter = {0.8f, 0.8f, 0.5f, 1};
-		myWaveShape = WS_RECTIFIED;
-		myLuminance = LL_UNIFORM;
-		myAntiAliasing = 1;		
+		waveformColorScheme_.bg = {0.0f, 0.0f, 0.0f, 1};
+		waveformColorScheme_.wave = {0.4f, 0.6, 0.4f, 1};
+		waveformColorScheme_.filter = {0.8f, 0.8f, 0.5f, 1};
+		waveformShape_ = WS_RECTIFIED;
+		waveformLuminance_ = LL_UNIFORM;
+		waveformAntiAliasingMode_ = 1;		
 		break;
 	case PRESET_DDREAM:
-		myColors.bg = {0.45f, 0.6f, 0.11f, 0.8f};
-		myColors.wave = {0.9f, 0.9f, 0.33f, 1};
-		myColors.filter = {0.8f, 0.3f, 0.3f, 1};
-		myWaveShape = WS_SIGNED;
-		myLuminance = LL_UNIFORM;
-		myAntiAliasing = 0;
+		waveformColorScheme_.bg = {0.45f, 0.6f, 0.11f, 0.8f};
+		waveformColorScheme_.wave = {0.9f, 0.9f, 0.33f, 1};
+		waveformColorScheme_.filter = {0.8f, 0.3f, 0.3f, 1};
+		waveformShape_ = WS_SIGNED;
+		waveformLuminance_ = LL_UNIFORM;
+		waveformAntiAliasingMode_ = 0;
 		break;
 	};
 	clearBlocks();
@@ -282,45 +282,45 @@ void setPreset(Preset preset)
 
 void setColors(ColorScheme colors)
 {
-	myColors = colors;
+	waveformColorScheme_ = colors;
 }
 
 ColorScheme getColors()
 {
-	return myColors;
+	return waveformColorScheme_;
 }
 
 void setLuminance(Luminance lum)
 {
-	myLuminance = lum;
+	waveformLuminance_ = lum;
 	clearBlocks();
 }
 
 Luminance getLuminance()
 {
-	return myLuminance;
+	return waveformLuminance_;
 }
 
 void setWaveShape(WaveShape style)
 {
-	myWaveShape = style;
+	waveformShape_ = style;
 	clearBlocks();
 }
 
 WaveShape getWaveShape()
 {
-	return myWaveShape;
+	return waveformShape_;
 }
 
 void setAntiAliasing(int level)
 {
-	myAntiAliasing = level;
+	waveformAntiAliasingMode_ = level;
 	clearBlocks();
 }
 
 int getAntiAliasing()
 {
-	return myAntiAliasing;
+	return waveformAntiAliasingMode_;
 }
 
 // ================================================================================================
@@ -380,7 +380,7 @@ void antiAlias2x(uchar* dst, int w, int h)
 	int newW = w / 2, newH = h / 2;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = myTexBuf.begin() + (y * 2) * w;
+		uchar* line = waveformTextureBuffer_.begin() + (y * 2) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
 			uchar* a = line + (x * 2), *b = a + w;
@@ -397,7 +397,7 @@ void antiAlias3x(uchar* dst, int w, int h)
 	int newW = w / 3, newH = h / 3;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = myTexBuf.begin() + (y * 3) * w;
+		uchar* line = waveformTextureBuffer_.begin() + (y * 3) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
 			uchar* a = line + (x * 3);
@@ -416,7 +416,7 @@ void antiAlias4x(uchar* dst, int w, int h)
 	int newW = w / 4, newH = h / 4;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = myTexBuf.begin() + (y * 4) * w;
+		uchar* line = waveformTextureBuffer_.begin() + (y * 4) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
 			uchar* a = line + (x * 4), *b = a + w;
@@ -442,7 +442,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	double samplesPerPixel = samplesPerSec / fabs(gView->getPixPerSec());
 	double samplesPerBlock = (double)TEX_H * samplesPerPixel;
 
-	int64_t srcFrames = filtered ? myFilter->samplesL.size() : music.getNumFrames();
+	int64_t srcFrames = filtered ? waveformFilter_->samplesL.size() : music.getNumFrames();
 	int64_t samplePos = max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
 	double sampleCount = min((double) srcFrames - samplePos, samplesPerBlock);
 
@@ -463,7 +463,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	const short* in = nullptr;
 	if(filtered)
 	{
-		in = ((channel == 0) ? myFilter->samplesL.begin() : myFilter->samplesR.begin());
+		in = ((channel == 0) ? waveformFilter_->samplesL.begin() : waveformFilter_->samplesR.begin());
 	}
 	else
 	{
@@ -504,7 +504,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 
 void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int blockId, bool filtered)
 {
-	uchar* texBuf = myTexBuf.begin();
+	uchar* texBuf = waveformTextureBuffer_.begin();
 	for(int channel = 0; channel < 2; ++channel)
 	{
 		memset(texBuf, 0, w * h);
@@ -513,23 +513,23 @@ void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int bloc
 		sampleEdges(edgeBuf, w, h, channel, blockId, filtered);
 
 		// Apply luminance
-		if (myLuminance == LL_UNIFORM) {
+		if (waveformLuminance_ == LL_UNIFORM) {
 			edgeLumUniform(edgeBuf, h);
 		}
-		else if (myLuminance == LL_AMPLITUDE) {
+		else if (waveformLuminance_ == LL_AMPLITUDE) {
 			edgeLumAmplitude(edgeBuf, w, h);
 		}
 
 		// Apply wave shape
-		if (myWaveShape == WS_RECTIFIED) {
+		if (waveformShape_ == WS_RECTIFIED) {
 			edgeShapeRectified(texBuf, edgeBuf, w, h);
 		}
-		else if (myWaveShape == WS_SIGNED) {
+		else if (waveformShape_ == WS_SIGNED) {
 			edgeShapeSigned(texBuf, edgeBuf, w, h);
 		}
 
 		// Apply anti-aliasing
-		switch (myAntiAliasing) {
+		switch (waveformAntiAliasingMode_) {
 		case 1: antiAlias2x(texBuf, w, h); break;
 		case 2: antiAlias3x(texBuf, w, h); break;
 		case 3: antiAlias4x(texBuf, w, h); break;
@@ -539,22 +539,22 @@ void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int bloc
 		if (!textures[channel].handle()) {
 			textures[channel] = Texture(TEX_W, TEX_H, Texture::ALPHA);
 		}
-		textures[channel].modify(0, 0, myBlockW, TEX_H, texBuf);
+		textures[channel].modify(0, 0, waveformBlockWidth_, TEX_H, texBuf);
 	}
 }
 
 void renderBlock(WaveBlock* block)
 {
-	int w = myBlockW * (myAntiAliasing + 1);
-	int h = TEX_H * (myAntiAliasing + 1);
-	myTexBuf.resize(w * h);
+	int w = waveformBlockWidth_ * (waveformAntiAliasingMode_ + 1);
+	int h = TEX_H * (waveformAntiAliasingMode_ + 1);
+	waveformTextureBuffer_.resize(w * h);
 
 	Vector<WaveEdge> edges;
 	edges.resize(h);
 
-	if(myFilter)
+	if(waveformFilter_)
 	{
-		if(myOverlayFilter)
+		if(waveformOverlayFilter_)
 		{
 			renderWaveform(block->tex + 0, edges.begin(), w, h, block->id, false);
 			renderWaveform(block->tex + 2, edges.begin(), w, h, block->id, true);
@@ -573,7 +573,7 @@ void renderBlock(WaveBlock* block)
 WaveBlock* getBlock(int id)
 {
 	// Check if we already have the requested block.
-	for(auto block : myBlocks)
+	for(auto block : waveformBlocks_)
 	{
 		if(block->id == id)
 		{
@@ -582,7 +582,7 @@ WaveBlock* getBlock(int id)
 	}
 
 	// If not, check if we have any free blocks available.
-	for(auto block : myBlocks)
+	for(auto block : waveformBlocks_)
 	{
 		if(block->id == UNUSED_BLOCK)
 		{
@@ -594,7 +594,7 @@ WaveBlock* getBlock(int id)
 
 	// If not, create a new block.
 	WaveBlock* block = new WaveBlock;
-	myBlocks.push_back(block);
+	waveformBlocks_.push_back(block);
 
 	block->id = id;
 	renderBlock(block);
@@ -603,23 +603,23 @@ WaveBlock* getBlock(int id)
 
 void updateBlockW()
 {
-	int width = myBlockW;
+	int width = waveformBlockWidth_;
 
-	myBlockW = min(TEX_W, gView->applyZoom(256));
-	mySpacing = gView->applyZoom(24);
+	waveformBlockWidth_ = min(TEX_W, gView->applyZoom(256));
+	waveformSpacing_ = gView->applyZoom(24);
 
-	if(myBlockW != width) clearBlocks();
+	if(waveformBlockWidth_ != width) clearBlocks();
 }
 
 void drawBackground()
 {
 	updateBlockW();
 
-	int w = myBlockW * 2 + mySpacing * 2 + 8;
+	int w = waveformBlockWidth_ * 2 + waveformSpacing_ * 2 + 8;
 	int h = gView->getHeight();
 	int cx = gView->getReceptorCoords().xc;
 
-	Draw::fill({cx - w / 2, 0, w, h}, ToColor32(myColors.bg));
+	Draw::fill({cx - w / 2, 0, w, h}, ToColor32(waveformColorScheme_.bg));
 }
 
 void drawPeaks()
@@ -640,7 +640,7 @@ void drawPeaks()
 	}
 
 	// Free up blocks that are no longer visible.
-	for(auto block : myBlocks)
+	for(auto block : waveformBlocks_)
 	{
 		if(block->id != UNUSED_BLOCK)
 		{
@@ -653,12 +653,12 @@ void drawPeaks()
 	}
 
 	// Show blocks for the regions of the song that are visible.
-	int border = mySpacing, pw = myBlockW / 2;
+	int border = waveformSpacing_, pw = waveformBlockWidth_ / 2;
 	int cx = gView->getReceptorCoords().xc;
 	int xl = cx - pw - border;
 	int xr = cx + pw + border;
 
-	areaf uvs = {0, 0, myBlockW / (float)TEX_W, 1};
+	areaf uvs = {0, 0, waveformBlockWidth_ / (float)TEX_W, 1};
 	if(reversed) swapValues(uvs.t, uvs.b);
 
 	int id = max(0, visibilityStartY / TEX_H);
@@ -672,16 +672,16 @@ void drawPeaks()
 		TextureHandle texL = block->tex[0].handle();
 		TextureHandle texR = block->tex[1].handle();
 
-		color32 waveCol = ToColor32(myColors.wave);
+		color32 waveCol = ToColor32(waveformColorScheme_.wave);
 		Draw::fill({xl - pw, y, pw * 2, TEX_H}, waveCol, texL, uvs, Texture::ALPHA);
 		Draw::fill({xr - pw, y, pw * 2, TEX_H}, waveCol, texR, uvs, Texture::ALPHA);
 
-		if(myFilter && myOverlayFilter)
+		if(waveformFilter_ && waveformOverlayFilter_)
 		{
 			TextureHandle texL = block->tex[2].handle();
 			TextureHandle texR = block->tex[3].handle();
 
-			color32 filterCol = ToColor32(myColors.filter);
+			color32 filterCol = ToColor32(waveformColorScheme_.filter);
 			Draw::fill({xl - pw, y, pw * 2, TEX_H}, filterCol, texL, uvs, Texture::ALPHA);
 			Draw::fill({xr - pw, y, pw * 2, TEX_H}, filterCol, texR, uvs, Texture::ALPHA);
 		}

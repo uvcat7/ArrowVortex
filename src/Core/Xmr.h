@@ -155,7 +155,7 @@ struct XmrNode
 	int get(const char* name, bool* v, int n) const;
 	int get(const char* name, float* v, int n) const;
 	int get(const char* name, double* v, int n) const;
-	int get(const char* name, char** v, int n) const;
+	int get(const char* name, char** v, int n) const; // signature not found?
 	/// @}
 
 	/// The name of the node.

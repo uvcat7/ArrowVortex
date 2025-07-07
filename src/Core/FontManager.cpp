@@ -267,7 +267,7 @@ FontData* FontManager::fallback()
 
 void Font::cache() const
 {
-	FontManager::cache((FontData*)myData);
+	FontManager::cache((FontData*)data_);
 }
 
 void Font::LogInfo()

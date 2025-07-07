@@ -1,5 +1,6 @@
 // Based on the general purpose FFT routines from Ooura's Mathematical Software Packages
 // (copyright Takuya OOURA, 1996-2001).
+// https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html
 
 #include <math.h>
 

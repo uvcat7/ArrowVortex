@@ -419,7 +419,7 @@ void drawBoxHelp(const TempoBox& box)
 	vec2i nameSize = Text::getSize();
 
 	style.fontSize = 10;
-	style.textColor = COLOR32(192, 192, 192, 255);
+	style.textColor = RGBAtoColor32(192, 192, 192, 255);
 	Text::arrange(Text::TC, style, meta->help);
 	vec2i helpSize = Text::getSize();
 
@@ -427,9 +427,9 @@ void drawBoxHelp(const TempoBox& box)
 	int h = nameSize.y + helpSize.y + 8;
 	recti r = recti{x - w / 2, y, w, h};
 
-	Draw::roundedBox(r, COLOR32(128, 128, 128, 255));
+	Draw::roundedBox(r, RGBAtoColor32(128, 128, 128, 255));
 	r = Shrink(r, 1);
-	Draw::roundedBox(r, COLOR32(26, 26, 26, 255));
+	Draw::roundedBox(r, RGBAtoColor32(26, 26, 26, 255));
 
 	Text::draw(vec2i{x, y + nameSize.y + 4});
 

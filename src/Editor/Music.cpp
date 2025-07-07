@@ -685,7 +685,7 @@ void onChanges(int changes)
 			if (changes & VCM_NOTES_CHANGED) updateNoteTicks();
 			if (changes & VCM_END_ROW_CHANGED) updateBeatTicks();
 		}
-
+    
 		if (changes & VCM_CHART_CHANGED) resumeStream();
 	}
 }

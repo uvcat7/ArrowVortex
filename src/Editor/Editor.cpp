@@ -125,7 +125,7 @@ static SimFormat ToSimFormat(StringRef str)
 
 struct EditorImpl : public Editor, public InputHandler {
 
-GuiContext* myGui;
+GuiContext* gui_;
 DialogEntry myDialogs[NUM_DIALOG_IDS];
 int myChanges;
 Texture myLogo;
@@ -157,7 +157,7 @@ EditorImpl()
 		dialog.requestOpen = false;
 	}
 
-	myGui = nullptr;
+	gui_ = nullptr;
 	myChanges = 0;
 
 	myUseMultithreading = true;
@@ -189,14 +189,14 @@ void init()
 	GuiMain::init();
 	GuiMain::setClipboardFunctions(ClipboardGet, ClipboardSet);
 
-	myGui = GuiContext::create();
+	gui_ = GuiContext::create();
 
 	// Initialize the default text style.
 	TextStyle text;
 	text.font = Font(myFontPath.str(), Text::HINT_AUTO);
 	text.fontSize = myFontSize;
 	text.textColor = Colors::white;
-	text.shadowColor = COLOR32(0, 0, 0, 128);
+	text.shadowColor = RGBAtoColor32(0, 0, 0, 128);
 	text.makeDefault();
 
 	// Create the text overlay, so other editor components can show HUD messages.
@@ -258,7 +258,7 @@ void shutdown()
 	saveDialogSettings(settings);
 
 	// Destroy the gui context first, because some dialogs refer to editor components.
-	delete myGui;
+	delete gui_;
 
 	// Destroy the editor components.
 	Minimap::destroy();
@@ -457,6 +457,7 @@ bool closeSimfile()
 
 	// Close the simfile and reset the editor state.
 	gSimfile->close();
+	gMenubar->update(Menubar::OPEN_FILE);
 
 	gView->setCursorTime(0.0);
 	
@@ -484,6 +485,7 @@ bool openSimfile(StringRef path)
 		}
 		gView->setCursorTime(0.0);
 	}
+	gMenubar->update(Menubar::OPEN_FILE);
 	return result;
 }
 
@@ -557,6 +559,9 @@ bool openNextSimfile(bool iterateForward)
 
 bool saveSimfile(bool showSaveAsDialog)
 {
+	// Check if a simfile is currently open.
+	if (gSimfile->isClosed()) return true;
+
 	SimFormat saveFmt = myDefaultSaveFormat;
 	
 	String dir = gSimfile->getDir();
@@ -873,8 +878,8 @@ void updateTitle()
 void drawLogo()
 {
 	vec2i size = gSystem->getWindowSize();
-	Draw::fill({0, 0, size.x, size.y}, COLOR32(38, 38, 38, 255));
-	Draw::sprite(myLogo, {size.x / 2, size.y / 2}, COLOR32(255, 255, 255, 26));
+	Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(38, 38, 38, 255));
+	Draw::sprite(myLogo, {size.x / 2, size.y / 2}, RGBAtoColor32(255, 255, 255, 26));
 }
 
 void tick()
@@ -884,7 +889,7 @@ void tick()
 	notifyChanges();
 
 	vec2i windowSize = gSystem->getWindowSize();
-	recti r = {0, 0, windowSize.x, windowSize.y};
+	recti r = { 0, 0, windowSize.x, windowSize.y };
 
 	gTextOverlay->handleInputs(events);
 
@@ -895,14 +900,14 @@ void tick()
 
 	handleDialogs();
 
-	myGui->tick({0, 0, view.x, view.y}, deltaTime, events);
-	
-	if(!GuiMain::isCapturingText())
+	gui_->tick({ 0, 0, view.x, view.y }, deltaTime, events);
+
+	if (!GuiMain::isCapturingText())
 	{
-		for(KeyPress* press = nullptr; events.next(press);)
+		for (KeyPress* press = nullptr; events.next(press);)
 		{
 			Action::Type action = gShortcuts->getAction(press->keyflags, press->key);
-			if(action)
+			if (action)
 			{
 				Action::perform(action);
 				press->handled = true;
@@ -910,12 +915,12 @@ void tick()
 		}
 	}
 
-	if(!GuiMain::isCapturingMouse())
+	if (!GuiMain::isCapturingMouse())
 	{
-		for(MouseScroll* scroll = nullptr; events.next(scroll);)
+		for (MouseScroll* scroll = nullptr; events.next(scroll);)
 		{
 			Action::Type action = gShortcuts->getAction(scroll->keyflags, scroll->up);
-			if(action)
+			if (action)
 			{
 				Action::perform(action);
 				scroll->handled = true;
@@ -923,7 +928,7 @@ void tick()
 		}
 	}
 
-	if(GuiMain::isCapturingMouse())
+	if (GuiMain::isCapturingMouse())
 	{
 		gSystem->setCursor(GuiMain::getCursorIcon());
 	}
@@ -933,14 +938,14 @@ void tick()
 	gMinimap->handleInputs(events);
 	gEditing->handleInputs(events);
 
-	if(gSimfile->isOpen())
+	if (gSimfile->isOpen())
 	{
 		gView->tick();
 	}
 
 	gSelection->handleInputs(events);
 
-	if(gSimfile->isOpen())
+	if (gSimfile->isOpen())
 	{
 		gMusic->tick();
 		gMinimap->tick();
@@ -950,8 +955,8 @@ void tick()
 
 	updateTitle();
 	notifyChanges();
-	
-	if(gSimfile->isOpen())
+
+	if (gSimfile->isOpen())
 	{
 		gNotefield->draw();
 		gMinimap->draw();
@@ -962,7 +967,7 @@ void tick()
 		drawLogo();
 	}
 
-	myGui->draw();
+	gui_->draw();
 
 	gTextOverlay->draw();
 
@@ -992,7 +997,7 @@ int getDefaultSaveFormat() const
 
 GuiContext* getGui() const
 {
-	return myGui;
+	return gui_;
 }
 
 }; // EditorImpl

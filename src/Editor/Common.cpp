@@ -111,13 +111,13 @@ color32 ToColor(Difficulty dt)
 {
 	switch(dt)
 	{
-		case DIFF_BEGINNER:  return COLOR32(16, 222, 255, 255);
-		case DIFF_EASY:      return COLOR32(99, 220, 99, 255);
-		case DIFF_MEDIUM:    return COLOR32(255, 228, 98, 255);
-		case DIFF_HARD:      return COLOR32(255, 98, 97, 255);
-		case DIFF_CHALLENGE: return COLOR32(109, 142, 210, 255);
+		case DIFF_BEGINNER:  return RGBAtoColor32(16, 222, 255, 255);
+		case DIFF_EASY:      return RGBAtoColor32(99, 220, 99, 255);
+		case DIFF_MEDIUM:    return RGBAtoColor32(255, 228, 98, 255);
+		case DIFF_HARD:      return RGBAtoColor32(255, 98, 97, 255);
+		case DIFF_CHALLENGE: return RGBAtoColor32(109, 142, 210, 255);
 	};
-	return COLOR32(180, 183, 186, 255);
+	return RGBAtoColor32(180, 183, 186, 255);
 }
 
 const char* ToString(SnapType st)
