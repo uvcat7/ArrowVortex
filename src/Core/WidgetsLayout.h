@@ -55,9 +55,9 @@ protected:
 	struct Row;
 	struct Col;
 
-	Vector<Row> rowLayouts_;
-	Vector<GuiWidget*> widgetList_;
-	int rowSpacing_;
+	Vector<Row> row_list_;
+	Vector<GuiWidget*> widget_list_;
+	int row_spacing_;
 };
 
 }; // namespace Vortex

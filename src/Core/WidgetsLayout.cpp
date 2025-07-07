@@ -28,7 +28,7 @@ struct RowLayout::Row
 
 RowLayout::~RowLayout()
 {
-	for(auto widget : widgetList_)
+	for(auto widget : widget_list_)
 	{
 		delete widget;
 	}
@@ -36,11 +36,11 @@ RowLayout::~RowLayout()
 
 RowLayout::RowLayout(GuiContext* gui, int spacing)
 	: GuiWidget(gui)
-	, rowSpacing_(spacing)
+	, row_spacing_(spacing)
 {
 	Row row;
 	row.cols.push_back({0, 1, 0});
-	rowLayouts_.push_back(row);
+	row_list_.push_back(row);
 }
 
 void RowLayout::onUpdateSize()
@@ -50,7 +50,7 @@ void RowLayout::onUpdateSize()
 	width_ = 0;
 	height_ = 0;
 
-	for(auto& row : rowLayouts_)
+	for(auto& row : row_list_)
 	{
 		GuiWidget** widget = row.widgets.begin();
 		int numWidgets = row.widgets.size();
@@ -72,7 +72,7 @@ void RowLayout::onUpdateSize()
 			{
 				y += h;
 				height_ = y;
-				y += rowSpacing_;
+				y += row_spacing_;
 				x = 0, c = 0, h = 0;
 			}
 
@@ -89,12 +89,12 @@ void RowLayout::onUpdateSize()
 
 			x += cols[c].width;
 			width_ = max(width_, x);
-			x += rowSpacing_;
+			x += row_spacing_;
 		}
 
 		y += h;
 		height_ = y;
-		y += rowSpacing_;
+		y += row_spacing_;
 	}
 }
 
@@ -104,7 +104,7 @@ void RowLayout::onArrange(recti r)
 
 	int extraW = max(0, r.w - width_);
 
-	for(auto& row : rowLayouts_)
+	for(auto& row : row_list_)
 	{
 		bool expanded = false;
 
@@ -118,7 +118,7 @@ void RowLayout::onArrange(recti r)
 		{
 			if(c == numCols)
 			{
-				y += h + rowSpacing_;
+				y += h + row_spacing_;
 				x = r.x, c = 0, h = 0;
 				expanded = false;
 			}
@@ -137,45 +137,45 @@ void RowLayout::onArrange(recti r)
 				h = max(h, size.y);
 			}
 
-			x += cols[c].width + rowSpacing_;
+			x += cols[c].width + row_spacing_;
 		}
 
-		y += h + rowSpacing_;
+		y += h + row_spacing_;
 	}
 }
 
 void RowLayout::onTick()
 {
-	FOR_VECTOR_REVERSE(widgetList_, i)
+	FOR_VECTOR_REVERSE(widget_list_, i)
 	{
-		widgetList_[i]->tick();
+		widget_list_[i]->tick();
 	}
 }
 
 void RowLayout::onDraw()
 {
-	FOR_VECTOR_FORWARD(widgetList_, i)
+	FOR_VECTOR_FORWARD(widget_list_, i)
 	{
-		widgetList_[i]->draw();
+		widget_list_[i]->draw();
 	}
 }
 
 void RowLayout::add(GuiWidget* widget)
 {
-	widgetList_.push_back(widget);
-	rowLayouts_.back().widgets.push_back(widget);
+	widget_list_.push_back(widget);
+	row_list_.back().widgets.push_back(widget);
 }
 
 void RowLayout::addBlank()
 {
-	rowLayouts_.back().widgets.push_back(nullptr);
+	row_list_.back().widgets.push_back(nullptr);
 }
 
 RowLayout& RowLayout::row(bool expand)
 {
-	if(rowLayouts_.back().widgets.empty()) rowLayouts_.pop_back();
+	if(row_list_.back().widgets.empty()) row_list_.pop_back();
 
-	Row& row = rowLayouts_.append();
+	Row& row = row_list_.append();
 	row.expand = (expand == true);
 
 	return *this;
@@ -188,7 +188,7 @@ RowLayout& RowLayout::col(bool expand)
 
 RowLayout& RowLayout::col(int w, bool expand)
 {
-	Col& col = rowLayouts_.back().cols.append();
+	Col& col = row_list_.back().cols.append();
 	col.width = (w == INT_MAX) ? 0 : w;
 	col.adjust = (w == INT_MAX);
 	col.expand = (expand == true);
@@ -198,12 +198,12 @@ RowLayout& RowLayout::col(int w, bool expand)
 
 GuiWidget** RowLayout::begin()
 {
-	return widgetList_.begin();
+	return widget_list_.begin();
 }
 
 GuiWidget** RowLayout::end()
 {
-	return widgetList_.end();
+	return widget_list_.end();
 }
 
 }; // namespace Vortex
