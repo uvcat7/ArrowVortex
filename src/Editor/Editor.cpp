@@ -166,7 +166,7 @@ EditorImpl()
 	myBackgroundStyle = BG_STYLE_STRETCH;
 	myDefaultSaveFormat = SIM_SM;
 
-	myFontPath = "assets/bokutachi no gothic 2.otf";
+	myFontPath = "assets/NotoSansJP-Medium.ttf";
 	myFontSize = 13;
 }
 
@@ -320,7 +320,8 @@ void loadSettings(XmrDoc& settings)
 		interface->get("fontSize", &myFontSize);
 
 		const char* path = interface->get("fontPath");
-		if(path) myFontPath = path;
+		FileReader testPath;
+		if(path && testPath.open(path)) myFontPath = path;
 	}
 }
 

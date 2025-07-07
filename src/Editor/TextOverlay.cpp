@@ -30,18 +30,8 @@ struct Shortcut { String a, b; bool isHeader; };
 
 static const int NUM_ICONS = 16;
 
-static uchar donateLink[] =
-{
-	169, 230, 230, 223, 234, 144, 158, 161, 235, 220,
-	239, 111, 226, 211, 232, 231, 183, 219, 160, 215,
-	212, 229, 112, 213, 217, 216, 164, 184, 216, 224,
-	163, 220, 221, 163, 229, 213, 225, 182, 185, 220,
-	214, 177, 196, 235, 110, 234, 213, 219, 224, 185,
-	218, 152, 220, 212, 235, 181, 215, 214, 206, 217,
-	203, 227, 230, 227, 211, 215, 170, 214, 175, 195,
-	199, 154, 176, 171, 173, 179, 205, 152, 197, 181,
-	193, 188, 0
-};
+static uchar supportLink[] = "https://discord.gg/GCNAyDmjqy";
+static uchar githubLink[] = "https://github.com/uvcat7/ArrowVortex";
 
 static const char* iconNames[NUM_ICONS] = {
 	"up one",
@@ -121,7 +111,7 @@ void addShortcut(const char* name, const char* keys)
 
 void addShortcut(Action::Type action, const char* name)
 {
-	String notation = gShortcuts->getNotation(action);
+	String notation = gShortcuts->getNotation(action, true);
 	if(notation.len()) addShortcut(name, notation.str());
 }
 
@@ -240,8 +230,6 @@ void tick()
 		tickShortcuts(); break;
 	case ABOUT:
 		tickAbout(); break;
-	case DONATE:
-		tickDonate(); break;
 	};
 }
 
@@ -298,13 +286,6 @@ void show(Mode mode)
 		else
 		{
 			debugLog_ = "(could not open ArrowVortex.log)";
-		}
-	}
-	else if(textOverlayMode_ == DONATE && donateLink[81] == 188)
-	{
-		for(int i = 0; i < 82; ++i)
-		{
-			donateLink[i] -= "ArrowVortex"[i % 11];
 		}
 	}
 
@@ -375,8 +356,6 @@ void draw()
 		drawShortcuts(); break;
 	case ABOUT:
 		drawAbout(); break;
-	case DONATE:
-		drawDonate(); break;
 	};
 }
 
@@ -535,7 +514,7 @@ void tickShortcuts()
 
 void drawShortcuts()
 {
-	int x = gSystem->getWindowSize().x / 2 - 250, w = 500;
+	int x = gSystem->getWindowSize().x / 2 - 325, w = 650;
 	int y = 32 - textOverlayScrollPos_;
 	for(const Shortcut& e : displayShortcuts_)
 	{
@@ -566,85 +545,89 @@ void drawShortcuts()
 
 void tickAbout()
 {
+	vec2i mpos = gSystem->getMousePos();
+	if (IsInside(getSupportButtonRect(), mpos.x, mpos.y))
+	{
+		gSystem->setCursor(Cursor::HAND);
+		MousePress* mp = nullptr;
+		if (gSystem->getEvents().next(mp))
+		{
+			if (mp->unhandled())
+			{
+				mp->setHandled();
+				gSystem->openWebpage((const char*)supportLink);
+			}
+		}
+	}
+
+	if (IsInside(getGithubButtonRect(), mpos.x, mpos.y))
+	{
+		gSystem->setCursor(Cursor::HAND);
+		MousePress* mp = nullptr;
+		if (gSystem->getEvents().next(mp))
+		{
+			if (mp->unhandled())
+			{
+				mp->setHandled();
+				gSystem->openWebpage((const char*)githubLink);
+			}
+		}
+	}
+}
+
+recti getGithubButtonRect()
+{
+	vec2i w = gSystem->getWindowSize();
+	return { w.x / 2 - 70, w.y / 2 - 60, 64, 28 };
+}
+
+recti getSupportButtonRect()
+{
+	vec2i w = gSystem->getWindowSize();
+	return { w.x / 2 + 22, w.y / 2 - 60, 64, 28 };
 }
 
 void drawAbout()
 {
 	vec2i size = gSystem->getWindowSize();
 
-	Text::arrange(Text::BC, "ArrowVortex (beta)");
-	Text::draw(vec2i{size.x / 2, size.y / 2 - 2});
-
-	Text::arrange(Text::TC, "Bram 'Fietsemaker' van de Wetering");
-	Text::draw(vec2i{size.x / 2, size.y / 2 + 2});
-
-	String buildDate = "Build :: " + System::getBuildData();
+	Text::arrange(Text::BC, "ArrowVortex release 1.0.0 (beta)");
+	Text::draw(vec2i{size.x / 2, size.y / 2 - 128});
+	String buildDate = "Build date: " + System::getBuildData();
 	Text::arrange(Text::TC, buildDate.str());
-	Text::draw(vec2i{size.x / 2, size.y / 2 + 64});
+	Text::draw(vec2i{ size.x / 2, size.y / 2 - 112 });
+
+	Text::arrange(Text::TC, "Join our Discord for support and our GitHub for source code access!");
+	Text::draw(vec2i{ size.x / 2, size.y / 2 - 80 });
+
+	recti r = getSupportButtonRect();
+	GuiDraw::getButton().base.draw(r);
+	Text::arrange(Text::MC, "Discord");
+	Text::draw(r);
+
+	r = getGithubButtonRect();
+	GuiDraw::getButton().base.draw(r);
+	Text::arrange(Text::MC, "GitHub");
+	Text::draw(r);
+
+	Text::arrange(Text::TC, "Current GitHub maintainers:\n"
+		"@uvcat/TheUltravioletCatastrophe\n"
+		"@sukibaby/Jasmine\n"
+		"\n"
+		"Source code contributors:\n"
+		"@Psycast/Velocity\n"
+		"@DeltaEpsilon7787/Delta Epsilon\n"
+	    "@DolpinChips/insep\n"
+		"\n"
+		"Original program and many thanks to : \n"
+		"Bram 'Fietsemaker' van de Wetering\n");
+	Text::draw(vec2i{ size.x / 2, size.y / 2 - 16 });
 
 	DrawTitleText("ABOUT", "[ESC] close", nullptr);
 
 	auto fps = Str::fmt("%1 FPS").arg(1.0f / max(deltaTime, 0.0001f), 0, 0);
 	Text::arrange(Text::TR, fps);
 	Text::draw(vec2i{size.x - 4, 4});
-}
-
-// ================================================================================================
-// TextOverlayImpl :: donate.
-
-recti getDonateButtonRect()
-{
-	vec2i w = gSystem->getWindowSize();
-	return {w.x / 2 - 24, w.y / 2 - 12, 64, 28};
-}
-
-void tickDonate()
-{
-	vec2i mpos = gSystem->getMousePos();
-	if(IsInside(getDonateButtonRect(), mpos.x, mpos.y))
-	{
-		gSystem->setCursor(Cursor::HAND);
-		MousePress* mp = nullptr;
-		if(gSystem->getEvents().next(mp))
-		{
-			if(mp->unhandled())
-			{
-				mp->setHandled();
-				gSystem->openWebpage((const char*)donateLink);
-			}
-		}
-	}
-}
-
-void drawDonate()
-{
-	vec2i size = gSystem->getWindowSize();
-
-	const char* txtA =
-		"By popular request, it is now possible to support\n"
-		"the development of ArrowVortex by throwing me a\n"
-		"few bucks on PayPal. ArrowVortex is free to use,\n"
-		"so donating is entirely optional.";
-
-	const char* txtB =
-		"You can support ArrowVortex in other ways as well.\n"
-		"Spread the word, get more people involved in stepfile\n"
-		"making, and/or visit the DDRNL.com forum and drop a\n"
-		"message in the ArrowVortex thread.";
-
-	recti r = getDonateButtonRect();
-	GuiDraw::getButton().base.draw(r);
-
-	Text::arrange(Text::MC, "Donate");
-	Text::draw(r);
-
-	Text::arrange(Text::BC, txtA);
-	Text::draw(vec2i{size.x / 2, size.y / 2 - 32});
-
-	Text::arrange(Text::TC, txtB);
-	Text::draw(vec2i{size.x / 2, size.y / 2 + 32});
-
-	DrawTitleText("DONATE", "[ESC] close", nullptr);
 }
 
 }; // TextOverlayImpl
