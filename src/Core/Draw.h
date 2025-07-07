@@ -19,7 +19,7 @@ constexpr int kColor32_BlueShift = 16;
 constexpr int kColor32_AlphaShift = 24;
 
 // Inline function to create a color32 from 8-bit RGBA values.
-inline color32 COLOR32(int r, int g, int b, int a)
+inline color32 RGBAtoColor32(int r, int g, int b, int a)
 {
     return static_cast<color32>(
         ((a << kColor32_AlphaShift) & kColor32_AlphaMask) |
