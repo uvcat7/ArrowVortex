@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdexcept>
 
 namespace Vortex {
 
@@ -16,24 +17,36 @@ static char* nullstr = (char*)(metaData + metaSize);
 
 void StrAlloc(char*& s, int n)
 {
-	int* cap = (int*)malloc(metaSize + n + 1);
-	cap[0] = cap[1] = n;
-	s = (char*)(cap + 2);
+	int* cap = static_cast<int*>(malloc(metaSize + n + 1));
+	if (!cap) {
+		throw std::bad_alloc();
+	}
+	cap[0] = n; // capacity
+	cap[1] = n; // length
+	s = reinterpret_cast<char*>(cap + 2);
+	s[n] = '\0'; // null-terminate
 }
 
 void StrRealloc(char*& s, int n)
 {
 	if(s != nullstr)
 	{
-		int* cap = (int*)s - 2;
-		if(*cap < n)
+		int* cap = reinterpret_cast<int*>(s) - 2;
+		if (cap[0] < n)
 		{
-			*cap = *cap << 1;
-			if(*cap < n) *cap = n;
-			cap = (int*)realloc(cap, metaSize + *cap + 1);
-			s = (char*)(cap + 2);
+			int newCapacity = cap[0] * 2;
+			if (newCapacity < n) {
+				newCapacity = n;
+			}
+			cap = static_cast<int*>(realloc(cap, metaSize + newCapacity + 1));
+			if (!cap) {
+				throw std::bad_alloc();
+			}
+			cap[0] = newCapacity;
+			s = reinterpret_cast<char*>(cap + 2);
 		}
-		cap[1] = n;
+		cap[1] = n; // length
+		s[n] = '\0'; // null-terminate
 	}
 	else
 	{
@@ -51,7 +64,8 @@ void StrFree(char* s)
 
 void StrSetLen(char* s, int n)
 {
-	*((int*)s - 1) = n;
+	reinterpret_cast<int*>(s)[-1] = n; // length
+	s[n] = '\0'; // null-terminate
 }
 
 const int String::npos = INT_MAX;
