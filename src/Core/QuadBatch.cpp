@@ -86,7 +86,7 @@ void BatchSprite::draw(QuadBatchT* out, int x, int y, int y2)
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, uchar alpha)
 {
-	draw(out, x, y, RGBAtoColor32(255, 255, 255, alpha));
+	draw(out, x, y, (color32)RGBAtoColor32(255, 255, 255, alpha));
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, color32 col)

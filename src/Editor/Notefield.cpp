@@ -145,7 +145,7 @@ bool myShowSongPreview;
 
 NotefieldImpl()
 {
-	mySongBgColor = COLOR32(255, 255, 255, 255);
+	mySongBgColor = RGBAtoColor32(255, 255, 255, 255);
 	myBgBrightness = 50;
 
 	myShowWaveform = true;
@@ -197,7 +197,7 @@ void onChanges(int changes)
 				int r = (int)(0.5f * (float)rsum / (float)numPixels);
 				int g = (int)(0.5f * (float)gsum / (float)numPixels);
 				int b = (int)(0.5f * (float)bsum / (float)numPixels);
-				mySongBgColor = COLOR32(r, g, b, 255);
+				mySongBgColor = RGBAtoColor32(r, g, b, 255);
 				mySongBg = Texture(img.width, img.height, img.pixels, false, Texture::RGBA);
 				ImageLoader::release(img);
 			}
@@ -342,7 +342,7 @@ void drawBackground()
 	}
 	else
 	{
-		Draw::fill({myX, view.y, myW, view.h}, COLOR32(0, 0, 0, 128));
+		Draw::fill({myX, view.y, myW, view.h}, RGBAtoColor32(0, 0, 0, 128));
 	}
 }
 
@@ -469,7 +469,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * it->rowTime);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = COLOR32(26, 128, 128, 128);
+					color32 col = RGBAtoColor32(26, 128, 128, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -479,7 +479,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * it->endTime);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = COLOR32(128, 128, 51, 128);
+					color32 col = RGBAtoColor32(128, 128, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -495,7 +495,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * (it + 1)->row);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = COLOR32(128, 26, 51, 128);
+					color32 col = RGBAtoColor32(128, 26, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -747,7 +747,7 @@ void drawGhostNote(const Note& n)
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
 
 	// Render ghost hold.
-	Renderer::setColor(COLOR32(255, 255, 255, 192));
+	Renderer::setColor(RGBAtoColor32(255, 255, 255, 192));
 	Renderer::bindShader(Renderer::SH_TEXTURE);
 	Renderer::bindTexture(noteskin->noteTex.handle());
 
@@ -782,7 +782,7 @@ void drawSongPreviewArea()
 	{
 		int yt = max(0, gView->timeToY(start));
 		int yb = min(gView->getHeight(), gView->timeToY(end));
-		Draw::fill({myX, yt, myW, yb - yt}, COLOR32(255, 255, 255, 64));
+		Draw::fill({myX, yt, myW, yb - yt}, RGBAtoColor32(255, 255, 255, 64));
 		if(gView->getScaleLevel() > 2)
 		{
 			TextStyle textStyle;
@@ -873,7 +873,7 @@ void TweakInfoBox::draw(recti r)
 	TextStyle textStyle;
 	for(int i = 0; i < 4; ++i)
 	{
-		textStyle.textColor = COLOR32(255, 255, 255, 128);
+		textStyle.textColor = RGBAtoColor32(255, 255, 255, 128);
 		Text::arrange(Text::TR, textStyle, keys[i]);
 		Text::draw(vec2i{r.x - 8, r.y + 32 + i * 14});
 

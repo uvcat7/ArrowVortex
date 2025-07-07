@@ -320,7 +320,7 @@ void DrawTitleText(const char* left, const char* mid, const char* right)
 {
 	vec2i size = gSystem->getWindowSize();
 
-	Draw::fill({0, 0, size.x, 28}, COLOR32(0, 0, 0, 191));
+	Draw::fill({0, 0, size.x, 28}, RGBAtoColor32(0, 0, 0, 191));
 	Draw::fill({0, 28, size.x, 1}, Colors::white);
 
 	if(right)
@@ -350,9 +350,9 @@ void DrawScrollbar()
 		int barY = box.y + box.h * textOverlayScrollPos_ / (textOverlayScrollEnd_ + textOverlayPageSize_);
 		int barH = box.h * textOverlayPageSize_ / (textOverlayScrollEnd_ + textOverlayPageSize_);
 
-		Draw::outline(box, COLOR32(255, 255, 255, 128));
-		Draw::fill(box, COLOR32(255, 255, 255, 64));
-		Draw::fill({box.x, barY, box.w, barH}, COLOR32(255, 255, 255, 128));
+		Draw::outline(box, RGBAtoColor32(255, 255, 255, 128));
+		Draw::fill(box, RGBAtoColor32(255, 255, 255, 64));
+		Draw::fill({box.x, barY, box.w, barH}, RGBAtoColor32(255, 255, 255, 128));
 	}
 }
 
@@ -361,7 +361,7 @@ void draw()
 	if(textOverlayMode_ != HUD)
 	{
 		vec2i size = gSystem->getWindowSize();
-		Draw::fill({0, 0, size.x, size.y}, COLOR32(0, 0, 0, 191));
+		Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(0, 0, 0, 191));
 	}
 	switch(textOverlayMode_)
 	{
@@ -452,8 +452,8 @@ void drawHud()
 		recti r = {x - size.x / 2, y, size.x, size.y};
 		recti r2 = {r.x - 4, r.y - 4, r.w + 8, r.h + 8};
 
-		Draw::fill(r2, COLOR32(0, 0, 0, 128));
-		Draw::outline(r2, COLOR32(128, 128, 128, 128));
+		Draw::fill(r2, RGBAtoColor32(0, 0, 0, 128));
+		Draw::outline(r2, RGBAtoColor32(128, 128, 128, 128));
 
 		box->draw(r);
 
