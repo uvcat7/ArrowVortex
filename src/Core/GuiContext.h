@@ -63,17 +63,17 @@ public:
 	void releaseFocus(GuiWidget* w);
 
 private:
-	std::map<String, ValueSlot*> valueSlots_;
-	std::map<String, TextSlot*> textSlots_;
-	std::map<String, CallSlot*> callSlots_;
+	std::map<String, ValueSlot*> value_slots_;
+	std::map<String, TextSlot*> text_slots_;
+	std::map<String, CallSlot*> call_slots_;
 
-	recti viewRect_;
-	vec2i mousePosition_;
-	float deltaTime_;
-	InputEvents* inputEvents_;
+	recti view_rect_;
+	vec2i mouse_position_;
+	float delta_time_;
+	InputEvents* input_events_;
 
 	Vector<DialogData*> dialogs_;
-	Vector<GuiWidget*> focusWidgets_;
+	Vector<GuiWidget*> focus_widgets_;
 };
 
 }; // namespace Vortex
