@@ -669,18 +669,24 @@ void updateNoteTicks()
 
 void onChanges(int changes)
 {
-	const int bits = VCM_NOTES_CHANGED
-		| VCM_TEMPO_CHANGED
-		| VCM_END_ROW_CHANGED;
+	const int bits = VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED | VCM_CHART_CHANGED;
 
-	if(changes & bits)
+	if (changes & bits)
 	{
-		interruptStream();
-		if(changes & (VCM_TEMPO_CHANGED | VCM_NOTES_CHANGED))
+		if (changes & VCM_CHART_CHANGED) interruptStream();
+
+		if (changes & VCM_TEMPO_CHANGED)
+		{
 			updateNoteTicks();
-		if(changes & (VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED))
 			updateBeatTicks();
-		resumeStream();
+		}
+		else
+		{
+			if (changes & VCM_NOTES_CHANGED) updateNoteTicks();
+			if (changes & VCM_END_ROW_CHANGED) updateBeatTicks();
+		}
+
+		if (changes & VCM_CHART_CHANGED) resumeStream();
 	}
 }
 
