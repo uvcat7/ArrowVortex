@@ -320,7 +320,7 @@ void DialogData::draw()
 		dlg.frame.draw({r.x, r.y, r.w, r.h}, 0);
 		recti tb = Shrink(r, 2);
 		tb.h = FRAME_TITLEBAR_H - 2;
-		Draw::fill(tb, COLOR32(0, 0, 0, 48));
+		Draw::fill(tb, RGBAtoColor32(0, 0, 0, 48));
 	}
 	else
 	{
