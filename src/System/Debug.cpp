@@ -18,22 +18,16 @@ namespace Debug {
 // ================================================================================================
 // Debug :: timing functions.
 
-static double GetTimeFreq()
-{
-	LARGE_INTEGER i;
-	if(QueryPerformanceFrequency(&i))
-	{
-		return 1.0 / (double)i.QuadPart;
-	}
-	return 1.0;
-}
-
 double getElapsedTime()
 {
-	static double sTimerFreq = GetTimeFreq();
-	LARGE_INTEGER i;
-	QueryPerformanceCounter(&i);
-	return (double)i.QuadPart * sTimerFreq;
+	static const double timer = []() {
+		LARGE_INTEGER freq;
+		return QueryPerformanceFrequency(&freq) ? 1.0 / static_cast<double>(freq.QuadPart) : 1.0;
+	}();
+
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
+	return static_cast<double>(counter.QuadPart) * timer;
 }
 
 double getElapsedTime(double startTime)
