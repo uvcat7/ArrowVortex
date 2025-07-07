@@ -61,16 +61,16 @@ void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events)
 	FOR_VECTOR_REVERSE(dialogs_, i)
 	{
 		auto dialog = dialogs_[i];
-		if(dialog->requestClose_)
+		if(dialog->request_close_)
 		{
 			dialogs_.erase_values(dialog);
 			delete dialog;
 		}
-		else if(dialog->requestMoveToTop_)
+		else if(dialog->request_move_to_top_)
 		{
 			dialogs_.erase(i);
 			dialogs_.push_back(dialog);
-			dialog->requestMoveToTop_ = 0;
+			dialog->request_move_to_top_ = 0;
 		}
 	}
 
