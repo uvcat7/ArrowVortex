@@ -43,7 +43,7 @@ static const int sRowSnapTypes[NUM_SNAP_TYPES] =
 
 struct ViewImpl : public View, public InputHandler {
 
-recti myRect;
+recti rect_;
 double myChartTopY;
 double myCursorTime, myCursorBeat;
 double myPixPerSec, myPixPerRow;
@@ -85,7 +85,7 @@ ViewImpl()
 	, myPixPerRow(16 * BEATS_PER_ROW)
 {
 	vec2i windowSize = gSystem->getWindowSize();
-	myRect = {0, 0, windowSize.x, windowSize.y};
+	rect_ = {0, 0, windowSize.x, windowSize.y};
 }
 
 // ================================================================================================
@@ -106,7 +106,7 @@ void loadSettings(XmrNode& settings)
 		// if myUseReverseScroll is set, the receptor Y position must be inverted.
 		if (myUseReverseScroll)
 		{
-			myReceptorY = myRect.h - myReceptorY;
+			myReceptorY = rect_.h - myReceptorY;
 		}
 	}
 
@@ -306,15 +306,15 @@ void onChanges(int changes)
 void tick()
 {
 	vec2i windowSize = gSystem->getWindowSize();
-	myRect = {0, 0, windowSize.x, windowSize.y};
+	rect_ = {0, 0, windowSize.x, windowSize.y};
 
 	handleInputs(gSystem->getEvents());
 
 	// handle receptor dragging.
 	if(myIsDraggingReceptors)
 	{
-		myReceptorX = gSystem->getMousePos().x - CenterX(myRect);
-		myReceptorY = gSystem->getMousePos().y - myRect.y;
+		myReceptorX = gSystem->getMousePos().x - CenterX(rect_);
+		myReceptorY = gSystem->getMousePos().y - rect_.y;
 	}
 
 	// Set cursor to arrows when hovering over/dragging the receptors.
@@ -347,9 +347,9 @@ void tick()
 	}
 
 	// Clamp the receptor X and Y to the view region.
-	int minRecepX = myRect.x - myRect.w / 2;
-	int maxRecepX = RightX(myRect) - myRect.w / 2;
-	myReceptorY = min(max(myReceptorY, myRect.y), BottomY(myRect));
+	int minRecepX = rect_.x - rect_.w / 2;
+	int maxRecepX = RightX(rect_) - rect_.w / 2;
+	myReceptorY = min(max(myReceptorY, rect_.y), BottomY(rect_));
 	myReceptorX = min(max(myReceptorX, minRecepX), maxRecepX);
 
 	// Store the y-position of time zero.
@@ -386,7 +386,7 @@ void updateCustomSnapSteps()
 void toggleReverseScroll()
 {
 	myUseReverseScroll = !myUseReverseScroll;
-	myReceptorY = myRect.h - myReceptorY;
+	myReceptorY = rect_.h - myReceptorY;
 	updateScrollValues();
 	gMenubar->update(Menubar::USE_REVERSE_SCROLL);
 }
@@ -593,8 +593,8 @@ Coords getReceptorCoords() const
 {
 	Coords out;
 	auto noteskin = gNoteskin->get();	
-	out.y = myRect.y + myReceptorY;
-	out.xc = myRect.x + myRect.w / 2 + myReceptorX;
+	out.y = rect_.y + myReceptorY;
+	out.xc = rect_.x + rect_.w / 2 + myReceptorX;
 	if(noteskin)
 	{
 		out.xl = out.xc + applyZoom(noteskin->leftX);
@@ -626,7 +626,7 @@ Coords getNotefieldCoords() const
 int columnToX(int col) const
 {
 	auto noteskin = gNoteskin->get();
-	int cx = myRect.x + myRect.w / 2 + myReceptorX;
+	int cx = rect_.x + rect_.w / 2 + myReceptorX;
 	if(!noteskin) return cx;
 	int x = (col < gStyle->getNumCols()) ? noteskin->colX[col] : 0;
 	return cx + applyZoom(x);
@@ -695,17 +695,17 @@ double offsetToTime(ChartOffset ofs) const
 
 int getWidth() const
 {
-	return myRect.w;
+	return rect_.w;
 }
 
 int getHeight() const
 {
-	return myRect.h;
+	return rect_.h;
 }
 
 const recti& getRect() const
 {
-	return myRect;
+	return rect_;
 }
 
 int applyZoom(int v) const

@@ -69,14 +69,14 @@ static const char* iconNames[NUM_ICONS] = {
 
 struct TextOverlayImpl : public TextOverlay {
 
-Vector<HudEntry> myHud;
-Vector<InfoBox*> myInfoBoxes;
-Vector<String> myLog;
-Vector<Shortcut> myShortcuts;
-String myDebugLog;
+Vector<HudEntry> hudEntries_;
+Vector<InfoBox*> infoBoxes_;
+Vector<String> logEntries_;
+Vector<Shortcut> displayShortcuts_;
+String debugLog_;
 
-int myScrollPos, myScrollEnd, myPageSize;
-Mode myMode;
+int textOverlayScrollPos_, textOverlayScrollEnd_, textOverlayPageSize_;
+Mode textOverlayMode_;
 
 // ================================================================================================
 // TextOverlayImpl :: constructor and destructor.
@@ -87,11 +87,11 @@ Mode myMode;
 
 TextOverlayImpl()
 {
-	myMode = HUD;
+	textOverlayMode_ = HUD;
 
-	myScrollPos = 0;
-	myScrollEnd = 0;
-	myPageSize = 0;
+	textOverlayScrollPos_ = 0;
+	textOverlayScrollEnd_ = 0;
+	textOverlayPageSize_ = 0;
 
 	Texture icons[NUM_ICONS];
 	Texture::createTiles("assets/icons text.png", 16, 16, NUM_ICONS, icons, false, Texture::ALPHA);
@@ -106,14 +106,14 @@ TextOverlayImpl()
 
 void addShortcutHeader(const char* name)
 {
-	Shortcut& shortcut = myShortcuts.append();
+	Shortcut& shortcut = displayShortcuts_.append();
 	shortcut.isHeader = true;
 	shortcut.a = name;
 }
 
 void addShortcut(const char* name, const char* keys)
 {
-	Shortcut& shortcut = myShortcuts.append();
+	Shortcut& shortcut = displayShortcuts_.append();
 	shortcut.isHeader = false;
 	shortcut.a = name;
 	shortcut.b = keys;
@@ -127,7 +127,7 @@ void addShortcut(Action::Type action, const char* name)
 
 void LoadShortcuts()
 {
-	if(!myShortcuts.empty()) return;
+	if(!displayShortcuts_.empty()) return;
 
 	addShortcutHeader("Basic");
 	addShortcut("Play/pause", "Space");
@@ -201,34 +201,34 @@ void UpdateScrollValues()
 {
 	vec2i size = gSystem->getWindowSize();
 
-	if(myMode == MESSAGE_LOG)
+	if(textOverlayMode_ == MESSAGE_LOG)
 	{
-		myPageSize = max(0, (size.y - 32) / 16);
-		myScrollEnd = max(0, myLog.size() - myPageSize);
+		textOverlayPageSize_ = max(0, (size.y - 32) / 16);
+		textOverlayScrollEnd_ = max(0, logEntries_.size() - textOverlayPageSize_);
 	}
-	else if(myMode == SHORTCUTS)
+	else if(textOverlayMode_ == SHORTCUTS)
 	{
-		myPageSize = size.y;
-		myScrollEnd = 32;
-		for(const Shortcut& e : myShortcuts)
+		textOverlayPageSize_ = size.y;
+		textOverlayScrollEnd_ = 32;
+		for(const Shortcut& e : displayShortcuts_)
 		{
-			myScrollEnd += e.isHeader ? 24 : 18;
+			textOverlayScrollEnd_ += e.isHeader ? 24 : 18;
 		}
-		myScrollEnd = max(0, myScrollEnd - myPageSize);
+		textOverlayScrollEnd_ = max(0, textOverlayScrollEnd_ - textOverlayPageSize_);
 	}
 	else
 	{
-		myPageSize = size.y;
-		myScrollEnd = 0;
+		textOverlayPageSize_ = size.y;
+		textOverlayScrollEnd_ = 0;
 	}
 
-	myScrollPos = min(max(0, myScrollPos), myScrollEnd);
+	textOverlayScrollPos_ = min(max(0, textOverlayScrollPos_), textOverlayScrollEnd_);
 }
 
 void tick()
 {
 	UpdateScrollValues();
-	switch(myMode)
+	switch(textOverlayMode_)
 	{
 	case HUD:
 		tickHud(); break;
@@ -247,60 +247,60 @@ void tick()
 
 void onKeyPress(KeyPress& evt) override
 {
-	if(myMode == MESSAGE_LOG && evt.key == Key::DELETE && !evt.handled)
+	if(textOverlayMode_ == MESSAGE_LOG && evt.key == Key::DELETE && !evt.handled)
 	{
-		myLog.release();
+		logEntries_.release();
 		evt.handled = true;
 	}
-	if(myMode != HUD && evt.key == Key::ESCAPE && !evt.handled)
+	if(textOverlayMode_ != HUD && evt.key == Key::ESCAPE && !evt.handled)
 	{
-		myMode = HUD;
+		textOverlayMode_ = HUD;
 		evt.handled = true;
 	}
 }
 
 void onMouseScroll(MouseScroll& evt) override
 {
-	if(myMode != HUD && !evt.handled)
+	if(textOverlayMode_ != HUD && !evt.handled)
 	{
 		int delta = evt.up ? -1 : +1;
-		myScrollPos += delta * max(1, myPageSize / 10);
-		myScrollPos = min(max(0, myScrollPos), myScrollEnd);
+		textOverlayScrollPos_ += delta * max(1, textOverlayPageSize_ / 10);
+		textOverlayScrollPos_ = min(max(0, textOverlayScrollPos_), textOverlayScrollEnd_);
 		evt.handled = true;
 	}
 }
 
 void show(Mode mode)
 {
-	if(myMode == mode)
+	if(textOverlayMode_ == mode)
 	{
-		myMode = HUD;
+		textOverlayMode_ = HUD;
 	}
 	else
 	{
-		myMode = mode;
+		textOverlayMode_ = mode;
 	}
 
-	myDebugLog.clear();
+	debugLog_.clear();
 
-	if(myMode == SHORTCUTS)
+	if(textOverlayMode_ == SHORTCUTS)
 	{
 		LoadShortcuts();
 	}
-	else if(myMode == DEBUG_LOG)
+	else if(textOverlayMode_ == DEBUG_LOG)
 	{
 		bool success;
-		myDebugLog = File::getText("ArrowVortex.log", &success);
+		debugLog_ = File::getText("ArrowVortex.log", &success);
 		if(success)
 		{
-			Str::erase(myDebugLog, 0, 3); // UTF-8 BOM.
+			Str::erase(debugLog_, 0, 3); // UTF-8 BOM.
 		}
 		else
 		{
-			myDebugLog = "(could not open ArrowVortex.log)";
+			debugLog_ = "(could not open ArrowVortex.log)";
 		}
 	}
-	else if(myMode == DONATE && donateLink[81] == 188)
+	else if(textOverlayMode_ == DONATE && donateLink[81] == 188)
 	{
 		for(int i = 0; i < 82; ++i)
 		{
@@ -313,14 +313,14 @@ void show(Mode mode)
 
 bool isOpen()
 {
-	return myMode != HUD;
+	return textOverlayMode_ != HUD;
 }
 
 void DrawTitleText(const char* left, const char* mid, const char* right)
 {
 	vec2i size = gSystem->getWindowSize();
 
-	Draw::fill({0, 0, size.x, 28}, COLOR32(0, 0, 0, 191));
+	Draw::fill({0, 0, size.x, 28}, RGBAtoColor32(0, 0, 0, 191));
 	Draw::fill({0, 28, size.x, 1}, Colors::white);
 
 	if(right)
@@ -342,28 +342,28 @@ void DrawTitleText(const char* left, const char* mid, const char* right)
 
 void DrawScrollbar()
 {
-	if(myPageSize > 0 && myScrollEnd > 0)
+	if(textOverlayPageSize_ > 0 && textOverlayScrollEnd_ > 0)
 	{
 		vec2i size = gSystem->getWindowSize();
 		recti box = {size.x - 16, 32, 12, size.y - 36};
 
-		int barY = box.y + box.h * myScrollPos / (myScrollEnd + myPageSize);
-		int barH = box.h * myPageSize / (myScrollEnd + myPageSize);
+		int barY = box.y + box.h * textOverlayScrollPos_ / (textOverlayScrollEnd_ + textOverlayPageSize_);
+		int barH = box.h * textOverlayPageSize_ / (textOverlayScrollEnd_ + textOverlayPageSize_);
 
-		Draw::outline(box, COLOR32(255, 255, 255, 128));
-		Draw::fill(box, COLOR32(255, 255, 255, 64));
-		Draw::fill({box.x, barY, box.w, barH}, COLOR32(255, 255, 255, 128));
+		Draw::outline(box, RGBAtoColor32(255, 255, 255, 128));
+		Draw::fill(box, RGBAtoColor32(255, 255, 255, 64));
+		Draw::fill({box.x, barY, box.w, barH}, RGBAtoColor32(255, 255, 255, 128));
 	}
 }
 
 void draw()
 {
-	if(myMode != HUD)
+	if(textOverlayMode_ != HUD)
 	{
 		vec2i size = gSystem->getWindowSize();
-		Draw::fill({0, 0, size.x, size.y}, COLOR32(0, 0, 0, 191));
+		Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(0, 0, 0, 191));
 	}
-	switch(myMode)
+	switch(textOverlayMode_)
 	{
 	case HUD:
 		drawHud(); break;
@@ -385,35 +385,35 @@ void addMessage(const char* str, MessageType type)
 	String msg = str;
 	if(type == NOTE)
 	{
-		myHud.push_back({msg, type, 0.5f});
+		hudEntries_.push_back({msg, type, 0.5f});
 	}
 	else if(type == INFO)
 	{
-		myLog.push_back(msg);
-		myHud.push_back({msg, type, 3.0f});
+		logEntries_.push_back(msg);
+		hudEntries_.push_back({msg, type, 3.0f});
 	}
 	else if(type == WARNING)
 	{
 		Str::insert(msg, 0, "{tc:FF0}WARNING:{tc} ");
-		myLog.push_back(msg);
-		myHud.push_back({msg, type, 6.0f});
+		logEntries_.push_back(msg);
+		hudEntries_.push_back({msg, type, 6.0f});
 	}
 	else if(type == ERROR)
 	{
 		Str::insert(msg, 0, "{tc:F44}ERROR:{tc} ");
-		myLog.push_back(msg);
-		myHud.push_back({msg, type, 6.0f});
+		logEntries_.push_back(msg);
+		hudEntries_.push_back({msg, type, 6.0f});
 	}
 }
 
 void addInfoBox(InfoBox* box)
 {
-	myInfoBoxes.push_back(box);
+	infoBoxes_.push_back(box);
 }
 
 void removeInfoBox(InfoBox* box)
 {
-	myInfoBoxes.erase_values(box);
+	infoBoxes_.erase_values(box);
 }
 
 // ================================================================================================
@@ -421,10 +421,10 @@ void removeInfoBox(InfoBox* box)
 
 void tickHud()
 {
-	for(int i = myHud.size() - 1; i >= 0; --i)
+	for(int i = hudEntries_.size() - 1; i >= 0; --i)
 	{
-		float fade = 0.75f * (myHud.size() - 1 - i);
-		if(myHud[i].type == NOTE)
+		float fade = 0.75f * (hudEntries_.size() - 1 - i);
+		if(hudEntries_[i].type == NOTE)
 		{
 			fade += 0.25;
 		}
@@ -432,10 +432,10 @@ void tickHud()
 		{
 			fade += 0.5f;
 		}
-		auto delta = clamp(deltaTime.count() * fade, 0.0, 1.0);
+		float delta = clamp(deltaTime * fade, 0.0f, 1.0f);
 
-		myHud[i].timeLeft -= delta;
-		if(myHud[i].timeLeft <= -0.5f) myHud.erase(i);
+		hudEntries_[i].timeLeft -= delta;
+		if(hudEntries_[i].timeLeft <= -0.5f) hudEntries_.erase(i);
 	}
 }
 
@@ -446,14 +446,14 @@ void drawHud()
 
 	vec2i view = gSystem->getWindowSize();
 	int x = view.x / 2, y = 8;
-	for(auto& box : myInfoBoxes)
+	for(auto& box : infoBoxes_)
 	{
 		vec2i size = {280, box->height()};
 		recti r = {x - size.x / 2, y, size.x, size.y};
 		recti r2 = {r.x - 4, r.y - 4, r.w + 8, r.h + 8};
 
-		Draw::fill(r2, COLOR32(0, 0, 0, 128));
-		Draw::outline(r2, COLOR32(128, 128, 128, 128));
+		Draw::fill(r2, RGBAtoColor32(0, 0, 0, 128));
+		Draw::outline(r2, RGBAtoColor32(128, 128, 128, 128));
 
 		box->draw(r);
 
@@ -461,7 +461,7 @@ void drawHud()
 	}
 
 	x = 4, y = 4;
-	for(auto& m : myHud)
+	for(auto& m : hudEntries_)
 	{
 		int a = clamp((int)(m.timeLeft * 512.0f + 256.0f), 0, 255);
 
@@ -475,7 +475,7 @@ void drawHud()
 	}
 
 	// Speed up the message removal if we have too many.
-	if(y > view.y) myHud.erase(0);
+	if(y > view.y) hudEntries_.erase(0);
 }
 
 // ================================================================================================
@@ -494,9 +494,9 @@ void drawMessageLog()
 
 	// Messages.
 	int x = 4, y = 32, bottomY = size.y;
-	for(int i = myScrollPos, n = myLog.size(); i < n && y < bottomY - 16; ++i)
+	for(int i = textOverlayScrollPos_, n = logEntries_.size(); i < n && y < bottomY - 16; ++i)
 	{
-		auto& m = myLog[i];
+		auto& m = logEntries_[i];
 		Text::arrange(Text::TL, textStyle, m.str());
 		Text::draw(recti{x, y, size.x - 8, size.y});
 		y += Text::getSize().y + 2;
@@ -519,7 +519,7 @@ void drawDebugLog()
 
 	TextStyle textStyle;
 	textStyle.fontSize = 11;
-	Text::arrange(Text::TL, textStyle, myDebugLog.str());
+	Text::arrange(Text::TL, textStyle, debugLog_.str());
 	Text::draw(recti{4, 32, size.x - 8, size.y});
 
 	DrawTitleText("DEBUG LOG", "[ESC] close", "");
@@ -536,8 +536,8 @@ void tickShortcuts()
 void drawShortcuts()
 {
 	int x = gSystem->getWindowSize().x / 2 - 325, w = 650;
-	int y = 32 - myScrollPos;
-	for(const Shortcut& e : myShortcuts)
+	int y = 32 - textOverlayScrollPos_;
+	for(const Shortcut& e : displayShortcuts_)
 	{
 		if(e.isHeader)
 		{
@@ -584,7 +584,7 @@ void drawAbout()
 
 	DrawTitleText("ABOUT", "[ESC] close", nullptr);
 
-	auto fps = Str::fmt("%1 FPS").arg(1.0f / max(deltaTime.count(), 0.0001), 0, 0);
+	auto fps = Str::fmt("%1 FPS").arg(1.0f / max(deltaTime, 0.0001f), 0, 0);
 	Text::arrange(Text::TR, fps);
 	Text::draw(vec2i{size.x - 4, 4});
 }

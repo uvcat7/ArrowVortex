@@ -29,9 +29,9 @@ const colorf Colorsf::white = {1, 1, 1, 1};
 const colorf Colorsf::black = {0, 0, 0, 1};
 const colorf Colorsf::blank = {0, 0, 0, 0};
 
-const color32 Colors::white = COLOR32(255, 255, 255, 255);
-const color32 Colors::black = COLOR32(0, 0, 0, 255);
-const color32 Colors::blank = COLOR32(0, 0, 0, 0);
+const color32 Colors::white = RGBAtoColor32(255, 255, 255, 255);
+const color32 Colors::black = RGBAtoColor32(0, 0, 0, 255);
+const color32 Colors::blank = RGBAtoColor32(0, 0, 0, 0);
 
 // ================================================================================================
 // TileBar.

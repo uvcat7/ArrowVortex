@@ -15,8 +15,6 @@
 #include <Editor/Common.h>
 #include <Managers/ChartMan.h>
 
-#define Dlg DialogChartProperties
-
 namespace Vortex {
 
 enum Result
@@ -41,11 +39,11 @@ static const char* noteItemLabels[] =
 	"steps", "jumps", "mines", "holds", "rolls", "warps"
 };
 
-Dlg::~Dlg()
+DialogChartProperties::~DialogChartProperties()
 {
 }
 
-Dlg::Dlg()
+DialogChartProperties::DialogChartProperties()
 	: myDifficulty(0)
 	, myRating(1)
 	, myStyle(0)
@@ -59,7 +57,7 @@ Dlg::Dlg()
 	onChanges(VCM_ALL_CHANGES);
 }
 
-void Dlg::onChanges(int changes)
+void DialogChartProperties::onChanges(int changes)
 {
 	if(changes & (VCM_CHART_PROPERTIES_CHANGED | VCM_CHART_CHANGED))
 	{
@@ -97,7 +95,7 @@ void Dlg::onChanges(int changes)
 // ================================================================================================
 // Chart properties.
 
-void Dlg::myCreateChartProperties()
+void DialogChartProperties::myCreateChartProperties()
 {
 	myLayout.row().col(76).col(260);
 
@@ -136,22 +134,22 @@ void Dlg::myCreateChartProperties()
 	artist->setTooltip("Author of the chart");
 }
 
-void Dlg::mySetStepArtist()
+void DialogChartProperties::mySetStepArtist()
 {
 	gChart->setStepArtist(myStepArtist);
 }
 
-void Dlg::mySetDifficulty()
+void DialogChartProperties::mySetDifficulty()
 {
 	gChart->setDifficulty((Difficulty)myDifficulty);
 }
 
-void Dlg::mySetRating()
+void DialogChartProperties::mySetRating()
 {
 	gChart->setMeter(myRating);
 }
 
-void Dlg::myCalcRating()
+void DialogChartProperties::myCalcRating()
 {
 	int rating = (int)(gChart->getEstimatedMeter() * 10 + 0.5);
 	if(rating == 190)
@@ -179,7 +177,7 @@ static void StringifyNoteInfo(String& out, const char* name, int count)
 	}
 }
 
-void Dlg::myCreateNoteInfo()
+void DialogChartProperties::myCreateNoteInfo()
 {
 	myLayout.row().col(340);
 	myLayout.add<WgSeperator>();
@@ -218,7 +216,7 @@ void Dlg::myCreateNoteInfo()
 	myStreamMeasureCount = myLayout.add<WgLabel>();
 }
 
-void Dlg::myUpdateNoteInfo()
+void DialogChartProperties::myUpdateNoteInfo()
 {
 	int count[6] = {0, 0, 0, 0, 0, 0};
 	count[0] = gNotes->getNumSteps();
@@ -242,7 +240,7 @@ void Dlg::myUpdateNoteInfo()
 	myNoteDensity->text.set(Str::fmt("Note density: %1 NPS").arg(density, 1, 1).str);
 }
 
-void Dlg::myCopyNoteInfo()
+void DialogChartProperties::myCopyNoteInfo()
 {
 	String out;
 	if(gChart->isOpen())
@@ -265,7 +263,7 @@ void Dlg::myCopyNoteInfo()
 	}
 }
 
-void Dlg::mySelectNotes(int type)
+void DialogChartProperties::mySelectNotes(int type)
 {
 	NotesMan::Filter f = NotesMan::SELECT_STEPS;
 	switch(type)
@@ -283,7 +281,7 @@ void Dlg::mySelectNotes(int type)
 // ================================================================================================
 // Stream breakdown.
 
-class Dlg::BreakdownWidget : public GuiWidget
+class DialogChartProperties::BreakdownWidget : public GuiWidget
 {
 public:
 	~BreakdownWidget();
@@ -298,11 +296,11 @@ public:
 	void onDraw() override;
 	
 private:
-	Dlg* myDialog;
+	DialogChartProperties* myDialog;
 	Vector<WgButton*> myButtons;
 };
 
-Dlg::BreakdownWidget::~BreakdownWidget()
+DialogChartProperties::BreakdownWidget::~BreakdownWidget()
 {
 	for(auto button : myButtons)
 	{
@@ -310,12 +308,12 @@ Dlg::BreakdownWidget::~BreakdownWidget()
 	}
 }
 
-Dlg::BreakdownWidget::BreakdownWidget(GuiContext* gui)
+DialogChartProperties::BreakdownWidget::BreakdownWidget(GuiContext* gui)
 	: GuiWidget(gui)
 {
 }
 
-void Dlg::BreakdownWidget::updateBreakdown(WgLabel* measureCount)
+void DialogChartProperties::BreakdownWidget::updateBreakdown(WgLabel* measureCount)
 {
 	int measures = 0;
 	auto breakdown = gChart->getStreamBreakdown(&measures);
@@ -344,13 +342,13 @@ void Dlg::BreakdownWidget::updateBreakdown(WgLabel* measureCount)
 	measureCount->text.set(Str::fmt("Stream measures: %1").arg(measures).str);
 }
 
-void Dlg::BreakdownWidget::selectStream(vec2i rows)
+void DialogChartProperties::BreakdownWidget::selectStream(vec2i rows)
 {
 	gView->setCursorRow(rows.x);
 	gSelection->selectRegion(rows.x, rows.y);
 }
 
-void Dlg::BreakdownWidget::onUpdateSize()
+void DialogChartProperties::BreakdownWidget::onUpdateSize()
 {
 	int x = 0, y = 20;
 	for(auto button : myButtons)
@@ -365,7 +363,7 @@ void Dlg::BreakdownWidget::onUpdateSize()
 	setSize(340, y);
 }
 
-void Dlg::BreakdownWidget::onArrange(recti r)
+void DialogChartProperties::BreakdownWidget::onArrange(recti r)
 {
 	int x = 0, y = 0;
 	for(auto button : myButtons)
@@ -380,7 +378,7 @@ void Dlg::BreakdownWidget::onArrange(recti r)
 	}
 }
 
-void Dlg::BreakdownWidget::onTick()
+void DialogChartProperties::BreakdownWidget::onTick()
 {
 	for(auto button : myButtons)
 	{
@@ -388,7 +386,7 @@ void Dlg::BreakdownWidget::onTick()
 	}
 }
 
-void Dlg::BreakdownWidget::onDraw()
+void DialogChartProperties::BreakdownWidget::onDraw()
 {
 	for(auto button : myButtons)
 	{
@@ -396,7 +394,7 @@ void Dlg::BreakdownWidget::onDraw()
 	}
 }
 
-void Dlg::myCreateBreakdown()
+void DialogChartProperties::myCreateBreakdown()
 {
 	myLayout.row().col(340);
 	myLayout.add<WgSeperator>();
@@ -416,12 +414,12 @@ void Dlg::myCreateBreakdown()
 	myLayout.add(myBreakdown);
 }
 
-void Dlg::myUpdateBreakdown()
+void DialogChartProperties::myUpdateBreakdown()
 {
 	myBreakdown->updateBreakdown(myStreamMeasureCount);
 }
 
-void Dlg::myCopyBreakdown()
+void DialogChartProperties::myCopyBreakdown()
 {
 	auto breakdown = gChart->getStreamBreakdown();
 	if(breakdown.empty())

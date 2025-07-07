@@ -63,7 +63,7 @@ public:
 	Format format() const;
 
 	/// Returns the texture data; used internally.
-	inline void* data() const { return myData; }
+	inline void* data() const { return data_; }
 
 	/// Logs debug info on the currently loaded textures.
 	static void LogInfo();
@@ -73,7 +73,7 @@ public:
 		Texture* outTiles, bool mipmap = false, Format fmt = RGBA);
 
 private:
-	Data* myData;
+	Data* data_;  // TODO: replace with a more descriptive variable name.
 };
 
 }; // namespace Vortex

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <chrono>
 
 namespace Vortex {
 
@@ -52,7 +51,7 @@ struct TimingData;
 typedef const String& StringRef;
 typedef uint64_t TextureHandle;
 
-extern std::chrono::duration<double> deltaTime;
+extern float deltaTime;
 
 extern void HudNote(const char* fmt, ...);
 extern void HudInfo(const char* fmt, ...);

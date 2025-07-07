@@ -19,10 +19,10 @@ private:
 	void myCreateWidgets();
 	void myGenerateNotes();
 
-	StreamGenerator myStream;
-	WgDroplist* mySpacingList;
-	int myFootSelectorIndex;
-	int mySpacing;
+	StreamGenerator streamGenerator_;
+	WgDroplist* spacingDroplist_;
+	int footSelectionIndex_;
+	int spacingValue_;
 };
 
 }; // namespace Vortex

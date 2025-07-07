@@ -86,7 +86,7 @@ public:
 	void bind(bool* v);
 
 protected:
-	void* myData;
+	void* data_;  // TODO: replace with a more descriptive variable name.
 };
 
 /// Slot that binds to an integer value.
@@ -168,7 +168,7 @@ public:
 	const char* get() const;
 
 private:
-	void* myData;
+	void* data_;  // TODO: replace with a more descriptive variable name.
 };
 
 /// Slot that binds to a functor.
@@ -216,7 +216,7 @@ public:
 	}
 
 private:
-	void* myData;
+	void* data_;  // TODO: replace with a more descriptive variable name.
 };
 
 }; // namespace Vortex

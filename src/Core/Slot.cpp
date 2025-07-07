@@ -178,104 +178,104 @@ static void ReleaseVal(void* data)
 // ValueSlot :: implementation.
 
 ValueSlot::ValueSlot()
-	: myData(nullptr)
+	: data_(nullptr)
 {
 }
 
 ValueSlot::~ValueSlot()
 {
-	ReleaseVal(myData);
+	ReleaseVal(data_);
 }
 
 void ValueSlot::bind(ValueSlot* other)
 {
-	ReferenceVal(other->myData);
-	ReleaseVal(myData);
-	myData = other->myData;
+	ReferenceVal(other->data_);
+	ReleaseVal(data_);
+	data_ = other->data_;
 }
 
 void ValueSlot::bind(const int* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstIntPtr<int>(v);
+	ReleaseVal(data_);
+	data_ = new ConstIntPtr<int>(v);
 }
 
 void ValueSlot::bind(const uint* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstIntPtr<uint>(v);
+	ReleaseVal(data_);
+	data_ = new ConstIntPtr<uint>(v);
 }
 
 void ValueSlot::bind(const long* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstIntPtr<long>(v);
+	ReleaseVal(data_);
+	data_ = new ConstIntPtr<long>(v);
 }
 
 void ValueSlot::bind(const ulong* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstIntPtr<ulong>(v);
+	ReleaseVal(data_);
+	data_ = new ConstIntPtr<ulong>(v);
 }
 
 void ValueSlot::bind(const float* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstFloatPtr<float>(v);
+	ReleaseVal(data_);
+	data_ = new ConstFloatPtr<float>(v);
 }
 
 void ValueSlot::bind(const double* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstFloatPtr<double>(v);
+	ReleaseVal(data_);
+	data_ = new ConstFloatPtr<double>(v);
 }
 
 void ValueSlot::bind(const bool* v)
 {
-	ReleaseVal(myData);
-	myData = new ConstBoolPtr(v);
+	ReleaseVal(data_);
+	data_ = new ConstBoolPtr(v);
 }
 
 void ValueSlot::bind(int* v)
 {
-	ReleaseVal(myData);
-	myData = new IntPtr<int>(v);
+	ReleaseVal(data_);
+	data_ = new IntPtr<int>(v);
 }
 
 void ValueSlot::bind(uint* v)
 {
-	ReleaseVal(myData);
-	myData = new IntPtr<uint>(v);
+	ReleaseVal(data_);
+	data_ = new IntPtr<uint>(v);
 }
 
 void ValueSlot::bind(long* v)
 {
-	ReleaseVal(myData);
-	myData = new IntPtr<long>(v);
+	ReleaseVal(data_);
+	data_ = new IntPtr<long>(v);
 }
 
 void ValueSlot::bind(ulong* v)
 {
-	ReleaseVal(myData);
-	myData = new IntPtr<ulong>(v);
+	ReleaseVal(data_);
+	data_ = new IntPtr<ulong>(v);
 }
 
 void ValueSlot::bind(float* v)
 {
-	ReleaseVal(myData);
-	myData = new FloatPtr<float>(v);
+	ReleaseVal(data_);
+	data_ = new FloatPtr<float>(v);
 }
 
 void ValueSlot::bind(double* v)
 {
-	ReleaseVal(myData);
-	myData = new FloatPtr<double>(v);
+	ReleaseVal(data_);
+	data_ = new FloatPtr<double>(v);
 }
 
 void ValueSlot::bind(bool* v)
 {
-	ReleaseVal(myData);
-	myData = new BoolPtr(v);
+	ReleaseVal(data_);
+	data_ = new BoolPtr(v);
 }
 
 // ================================================================================================
@@ -283,7 +283,7 @@ void ValueSlot::bind(bool* v)
 
 IntSlot::IntSlot()
 {
-	myData = new IntValue;
+	data_ = new IntValue;
 }
 
 IntSlot::~IntSlot()
@@ -292,18 +292,18 @@ IntSlot::~IntSlot()
 
 void IntSlot::unbind()
 {
-	ReleaseVal(myData);
-	myData = new IntValue;
+	ReleaseVal(data_);
+	data_ = new IntValue;
 }
 
 void IntSlot::set(int v)
 {
-	((BaseValue*)myData)->set(v);
+	((BaseValue*)data_)->set(v);
 }
 
 int IntSlot::get() const
 {
-	return ((BaseValue*)myData)->geti();
+	return ((BaseValue*)data_)->geti();
 }
 
 // ================================================================================================
@@ -311,7 +311,7 @@ int IntSlot::get() const
 
 FloatSlot::FloatSlot()
 {
-	myData = new DoubleValue;
+	data_ = new DoubleValue;
 }
 
 FloatSlot::~FloatSlot()
@@ -320,18 +320,18 @@ FloatSlot::~FloatSlot()
 
 void FloatSlot::unbind()
 {
-	ReleaseVal(myData);
-	myData = new DoubleValue;
+	ReleaseVal(data_);
+	data_ = new DoubleValue;
 }
 
 void FloatSlot::set(double v)
 {
-	((BaseValue*)myData)->set(v);
+	((BaseValue*)data_)->set(v);
 }
 
 double FloatSlot::get() const
 {
-	return ((BaseValue*)myData)->getf();
+	return ((BaseValue*)data_)->getf();
 }
 
 // ================================================================================================
@@ -339,7 +339,7 @@ double FloatSlot::get() const
 
 BoolSlot::BoolSlot()
 {
-	myData = new BoolValue;
+	data_ = new BoolValue;
 }
 
 BoolSlot::~BoolSlot()
@@ -348,18 +348,18 @@ BoolSlot::~BoolSlot()
 
 void BoolSlot::unbind()
 {
-	ReleaseVal(myData);
-	myData = new BoolValue;
+	ReleaseVal(data_);
+	data_ = new BoolValue;
 }
 
 void BoolSlot::set(bool v)
 {
-	((BaseValue*)myData)->set(v);
+	((BaseValue*)data_)->set(v);
 }
 
 bool BoolSlot::get() const
 {
-	return ((BaseValue*)myData)->getb();
+	return ((BaseValue*)data_)->getb();
 }
 
 // ================================================================================================
@@ -426,87 +426,87 @@ static void ReleaseStr(void* data)
 
 TextSlot::TextSlot()
 {
-	myData = new StringVal;
+	data_ = new StringVal;
 }
 
 TextSlot::~TextSlot()
 {
-	ReleaseStr(myData);
+	ReleaseStr(data_);
 }
 
 void TextSlot::unbind()
 {
-	ReleaseStr(myData);
-	myData = new StringVal;
+	ReleaseStr(data_);
+	data_ = new StringVal;
 }
 
 void TextSlot::bind(TextSlot* other)
 {
-	ReferenceStr(other->myData);
-	ReleaseStr(myData);
-	myData = other->myData;
+	ReferenceStr(other->data_);
+	ReleaseStr(data_);
+	data_ = other->data_;
 }
 
 void TextSlot::bind(const char* str)
 {
-	ReleaseStr(myData);
-	myData = new ConstCharPtr(str);
+	ReleaseStr(data_);
+	data_ = new ConstCharPtr(str);
 }
 
 void TextSlot::bind(const String* str)
 {
-	ReleaseStr(myData);
-	myData = new ConstStringPtr(str);
+	ReleaseStr(data_);
+	data_ = new ConstStringPtr(str);
 }
 
 void TextSlot::bind(String* str)
 {
-	ReleaseStr(myData);
-	myData = new StringPtr(str);
+	ReleaseStr(data_);
+	data_ = new StringPtr(str);
 }
 
 void TextSlot::set(const char* str)
 {
-	((BaseStr*)myData)->set(str);
+	((BaseStr*)data_)->set(str);
 }
 
 void TextSlot::set(StringRef str)
 {
-	((BaseStr*)myData)->set(str.str());
+	((BaseStr*)data_)->set(str.str());
 }
 
 const char* TextSlot::get() const
 {
-	return ((BaseStr*)myData)->get();
+	return ((BaseStr*)data_)->get();
 }
 
 // ================================================================================================
 // CallSlot :: implementation.
 
-CallSlot::CallSlot() : myData(nullptr)
+CallSlot::CallSlot() : data_(nullptr)
 {
 }
 
 CallSlot::~CallSlot()
 {
-	delete (Functor::Generic*)myData;
+	delete (Functor::Generic*)data_;
 }
 
 void CallSlot::unbind()
 {
-	delete (Functor::Generic*)myData;
-	myData = nullptr;
+	delete (Functor::Generic*)data_;
+	data_ = nullptr;
 }
 
 void CallSlot::bind(Functor::Generic* fun)
 {
-	delete (Functor::Generic*)myData;
-	myData = fun;
+	delete (Functor::Generic*)data_;
+	data_ = fun;
 }
 
 void CallSlot::call()
 {
-	if(myData) ((Functor::Generic*)myData)->exec();
+	if(data_) ((Functor::Generic*)data_)->exec();
 }
 
 }; // namespace Vortex

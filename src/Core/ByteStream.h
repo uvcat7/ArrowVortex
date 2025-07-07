@@ -59,18 +59,18 @@ public:
 	}
 
 	// Returns true if all write operations have succeeded.
-	bool success() const { return mySuccess; }
+	bool success() const { return is_write_successful_; }
 
 	// Returns the total amount of written bytes.
-	int size() const { return mySize; }
+	int size() const { return current_size_; }
 
 	// Returns a pointer to the start of the written data.
-	const uchar* data() const { return myBuf; }
+	const uchar* data() const { return buffer_; }
 
 private:
-	uchar* myBuf;
-	int mySize, myCap;
-	bool myExtern, mySuccess;
+	uchar* buffer_;
+	int current_size_, capacity_;
+	bool is_external_buffer_, is_write_successful_;
 };
 
 struct ReadStream
@@ -139,20 +139,20 @@ public:
 	}
 
 	// Sets success to false and skips to the stream end.
-	void invalidate() { mySuccess = false; myPos = myEnd; }
+	void invalidate() { is_read_successful_ = false; read_position_ = end_position_; }
 
 	// Returns true if all read operations have succeeded.
-	bool success() const { return mySuccess; }
+	bool success() const { return is_read_successful_; }
 
 	// Returns the number of bytes left to read.
-	size_t bytesleft() const { return myEnd - myPos; }
+	size_t bytesleft() const { return end_position_ - read_position_; }
 
 	// Returns the current read position.
-	const uchar* pos() const { return myPos; }
+	const uchar* pos() const { return read_position_; }
 
 private:
-	const uchar* myPos, *myEnd;
-	bool mySuccess;
+	const uchar* read_position_, *end_position_;
+	bool is_read_successful_;
 };
 
 }; // namespace Vortex

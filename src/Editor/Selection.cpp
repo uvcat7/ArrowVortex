@@ -271,7 +271,7 @@ void drawRegionSelection()
 	// Draw area selection box.
 	if(myIsSelectingRegion || myRegion.beginRow != myRegion.endRow)
 	{
-		color32 outline = COLOR32(153, 255, 153, 153);
+		color32 outline = RGBAtoColor32(153, 255, 153, 153);
 		auto coords = gView->getReceptorCoords();
 		int x = coords.xl, w = coords.xr - coords.xl;
 		if(myIsSelectingRegion)
@@ -283,7 +283,7 @@ void drawRegionSelection()
 		{
 			int t = gView->rowToY(myRegion.beginRow);
 			int b = gView->rowToY(myRegion.endRow);
-			Draw::fill({x, t, w, b - t}, COLOR32(153, 255, 153, 90));
+			Draw::fill({x, t, w, b - t}, RGBAtoColor32(153, 255, 153, 90));
 			Draw::outline({x, t, w, b - t}, outline);
 		}
 	}
@@ -298,8 +298,8 @@ void drawSelectionBox()
 		vec2i start = {myDragSelectionX, gView->offsetToY(myDragSelectionTor)};
 
 		// Selection rectangle.
-		color32 outline = COLOR32(255, 191, 128, 128);
-		color32 fill = COLOR32(255, 191, 128, 89);
+		color32 outline = RGBAtoColor32(255, 191, 128, 128);
+		color32 fill = RGBAtoColor32(255, 191, 128, 89);
 
 		int x = start.x, x2 = mpos.x;
 		int y = start.y, y2 = mpos.y;

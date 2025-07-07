@@ -5,8 +5,6 @@
 
 #include <Editor/View.h>
 
-#define Dlg DialogZoom
-
 namespace Vortex {
 
 enum Actions
@@ -15,23 +13,23 @@ enum Actions
 	ACT_SCALE,
 };
 
-Dlg::~Dlg()
+DialogZoom::~DialogZoom()
 {
 }
 
-Dlg::Dlg()
+DialogZoom::DialogZoom()
 {
 	setTitle("ZOOM");
 	myCreateWidgets();
 }
 
-void Dlg::myCreateWidgets()
+void DialogZoom::myCreateWidgets()
 {
 	myLayout.row().col(64).col(70).col(70);
 
 	WgSlider* slider = myLayout.add<WgSlider>("Zoom");
 	slider->value.bind(&myZoomLevel);
-	slider->onChange.bind(this, &Dlg::onAction, (int)ACT_ZOOM);
+	slider->onChange.bind(this, &DialogZoom::onAction, (int)ACT_ZOOM);
 	slider->setRange(1.0, 19.0);
 	slider->setTooltip("Zoom Level");
 
@@ -40,11 +38,11 @@ void Dlg::myCreateWidgets()
 	spinner->setPrecision(2, 2);
 	spinner->setRange(1.0, 19.0);
 	spinner->setStep(1.0);
-	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_ZOOM);
+	spinner->onChange.bind(this, &DialogZoom::onAction, (int)ACT_ZOOM);
 
 	slider = myLayout.add<WgSlider>("Scale");
 	slider->value.bind(&myScaleLevel);
-	slider->onChange.bind(this, &Dlg::onAction, (int)ACT_SCALE);
+	slider->onChange.bind(this, &DialogZoom::onAction, (int)ACT_SCALE);
 	slider->setRange(1.0, 10.0);
 	slider->setTooltip("Note Scale");
 
@@ -53,17 +51,17 @@ void Dlg::myCreateWidgets()
 	spinner->setPrecision(2, 2);
 	spinner->setRange(1.0, 10.0);
 	spinner->setStep(0.25);
-	spinner->onChange.bind(this, &Dlg::onAction, (int)ACT_SCALE);
+	spinner->onChange.bind(this, &DialogZoom::onAction, (int)ACT_SCALE);
 }
 
-void Dlg::onTick()
+void DialogZoom::onTick()
 {
 	myZoomLevel = gView->getZoomLevel() + 3;
 	myScaleLevel = gView->getScaleLevel();
 	EditorDialog::onTick();
 }
 
-void Dlg::onAction(int id)
+void DialogZoom::onAction(int id)
 {
 	switch (id)
 	{

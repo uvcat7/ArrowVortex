@@ -18,8 +18,6 @@
 
 #include <Editor/Music.h>
 
-#define Dlg DialogSongProperties
-
 namespace Vortex {
 
 enum BannerSize
@@ -28,34 +26,34 @@ enum BannerSize
 	BANNER_H = 164
 };
 
-struct Dlg::BannerWidget : public GuiWidget
+struct DialogSongProperties::BannerWidget : public GuiWidget
 {
 	BannerWidget(GuiContext* gui) : GuiWidget(gui)
 	{
-		myWidth = BANNER_W;
-		myHeight = BANNER_H;
+		width_ = BANNER_W;
+		height_ = BANNER_H;
 	}
 	void onDraw() override
 	{
-		recti r = myRect;
+		recti r = rect_;
 		if(tex.handle())
 		{
-			Draw::fill(myRect, Colors::white, tex.handle());
+			Draw::fill(rect_, Colors::white, tex.handle());
 		}
 		else
 		{
-			Draw::fill(myRect, Color32(26));
+			Draw::fill(rect_, Color32(26));
 		}
 	}
 	Texture tex;
 };
 
-Dlg::~Dlg()
+DialogSongProperties::~DialogSongProperties()
 {
 	gNotefield->toggleShowSongPreview();
 }
 
-Dlg::Dlg()
+DialogSongProperties::DialogSongProperties()
 {
 	gNotefield->toggleShowSongPreview();
 
@@ -80,7 +78,7 @@ static WgLineEdit* CreateField(RowLayout& layout, StringRef label, String& str, 
 	return edit;
 }
 
-void Dlg::myCreateWidgets()
+void DialogSongProperties::myCreateWidgets()
 {
 	myLayout.row().col(418);
 	myBannerWidget = myLayout.add<BannerWidget>();
@@ -110,7 +108,7 @@ void Dlg::myCreateWidgets()
 	w->setTooltip("Path of the music file");
 
 	auto findMusic = myLayout.add<WgButton>();
-	findMusic->onPress.bind(this, &Dlg::onFindMusic);
+	findMusic->onPress.bind(this, &DialogSongProperties::onFindMusic);
 	findMusic->text.set("{g:search}");
 	findMusic->setTooltip("Search the stepfile directory for audio files");
 
@@ -118,7 +116,7 @@ void Dlg::myCreateWidgets()
 	w->setTooltip("Path of the background image\nRecommended size: 640x480 (DDR/ITG) or larger");
 
 	auto findBG = myLayout.add<WgButton>();
-	findBG->onPress.bind(this, &Dlg::onFindBG);
+	findBG->onPress.bind(this, &DialogSongProperties::onFindBG);
 	findBG->text.set("{g:search}");
 	findBG->setTooltip("Search the stepfile directory for background images");
 
@@ -126,7 +124,7 @@ void Dlg::myCreateWidgets()
 	w->setTooltip("Path of the banner image\nRecommended size: 256x80 / 512x160 (DDR), 418x164 (ITG)");
 
 	auto findBanner = myLayout.add<WgButton>();
-	findBanner->onPress.bind(this, &Dlg::onFindBanner);
+	findBanner->onPress.bind(this, &DialogSongProperties::onFindBanner);
 	findBanner->text.set("{g:search}");
 	findBanner->setTooltip("Search the stepfile directory for banner images");
 
@@ -150,12 +148,12 @@ void Dlg::myCreateWidgets()
 	previewEnd->setTooltip("The end time of the music preview");
 
 	auto setPreview = myLayout.add<WgButton>();
-	setPreview->onPress.bind(this, &Dlg::onSetPreview);
+	setPreview->onPress.bind(this, &DialogSongProperties::onSetPreview);
 	setPreview->text.set("Set region");
 	setPreview->setTooltip("Set the music preview to the selected region");
 
 	auto playPreview = myLayout.add<WgButton>();
-	playPreview->onPress.bind(this, &Dlg::onPlayPreview);
+	playPreview->onPress.bind(this, &DialogSongProperties::onPlayPreview);
 	playPreview->text.set("{g:play}");
 	playPreview->setTooltip("Play the music preview");
 
@@ -163,12 +161,12 @@ void Dlg::myCreateWidgets()
 
 	mySpinMinBPM = myLayout.add<WgSpinner>("Disp. BPM");
 	mySpinMinBPM->value.bind(&myDisplayBpmRange.min);
-	mySpinMinBPM->onChange.bind(this, &Dlg::mySetDisplayBpm);
+	mySpinMinBPM->onChange.bind(this, &DialogSongProperties::mySetDisplayBpm);
 	mySpinMinBPM->setTooltip("The low value of the display BPM");
 
 	mySpinMaxBPM = myLayout.add<WgSpinner>("to");
 	mySpinMaxBPM->value.bind(&myDisplayBpmRange.max);
-	mySpinMaxBPM->onChange.bind(this, &Dlg::mySetDisplayBpm);
+	mySpinMaxBPM->onChange.bind(this, &DialogSongProperties::mySetDisplayBpm);
 	mySpinMaxBPM->setTooltip("The high value of the display BPM");
 
 	myBpmTypeList = myLayout.add<WgCycleButton>();
@@ -176,11 +174,11 @@ void Dlg::myCreateWidgets()
 	myBpmTypeList->addItem("Custom");
 	myBpmTypeList->addItem("Random");
 	myBpmTypeList->value.bind(&myDisplayBpmType);
-	myBpmTypeList->onChange.bind(this, &Dlg::mySetDisplayBpm);
+	myBpmTypeList->onChange.bind(this, &DialogSongProperties::mySetDisplayBpm);
 	myBpmTypeList->setTooltip("Determines how the BPM preview is displayed");
 }
 
-void Dlg::myUpdateWidgets()
+void DialogSongProperties::myUpdateWidgets()
 {
 	bool enableBpmType = gSimfile->isOpen();
 	bool enableBpmRange = enableBpmType && (myDisplayBpmType == BPM_CUSTOM);
@@ -193,7 +191,7 @@ void Dlg::myUpdateWidgets()
 // ================================================================================================
 // Updating properties.
 
-void Dlg::myUpdateProperties()
+void DialogSongProperties::myUpdateProperties()
 {
 	if(gSimfile->isOpen())
 	{
@@ -259,7 +257,7 @@ void Dlg::myUpdateProperties()
 	}
 }
 
-void Dlg::myUpdateBanner()
+void DialogSongProperties::myUpdateBanner()
 {
 	myBannerWidget->tex = Texture();
 	if(gSimfile->isOpen())
@@ -281,7 +279,7 @@ void Dlg::myUpdateBanner()
 // ================================================================================================
 // Other functions.
 
-void Dlg::onChanges(int changes)
+void DialogSongProperties::onChanges(int changes)
 {
 	if(changes & VCM_SONG_PROPERTIES_CHANGED)
 	{
@@ -294,7 +292,7 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onSetPreview()
+void DialogSongProperties::onSetPreview()
 {
 	auto region = gSelection->getSelectedRegion();
 	double start = gTempo->rowToTime(region.beginRow);
@@ -302,7 +300,7 @@ void Dlg::onSetPreview()
 	gMetadata->setMusicPreview(start, len);
 }
 
-void Dlg::onPlayPreview()
+void DialogSongProperties::onPlayPreview()
 {
 	if(gSimfile->isOpen())
 	{
@@ -312,7 +310,7 @@ void Dlg::onPlayPreview()
 	}
 }
 
-void Dlg::onFindMusic()
+void DialogSongProperties::onFindMusic()
 {
 	String path = gMetadata->findMusicFile();
 	if(path.empty())
@@ -325,7 +323,7 @@ void Dlg::onFindMusic()
 	}
 }
 
-void Dlg::onFindBanner()
+void DialogSongProperties::onFindBanner()
 {
 	String path = gMetadata->findBannerFile();
 	if(path.empty())
@@ -338,7 +336,7 @@ void Dlg::onFindBanner()
 	}
 }
 
-void Dlg::onFindBG()
+void DialogSongProperties::onFindBG()
 {
 	String path = gMetadata->findBackgroundFile();
 	if(path.empty())
@@ -351,7 +349,7 @@ void Dlg::onFindBG()
 	}
 }
 
-void Dlg::mySetDisplayBpm()
+void DialogSongProperties::mySetDisplayBpm()
 {
 	switch(myDisplayBpmType)
 	{
