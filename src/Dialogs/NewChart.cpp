@@ -13,15 +13,13 @@
 #include <Editor/Common.h>
 #include <Editor/Editor.h>
 
-#define Dlg DialogNewChart
-
 namespace Vortex {
 
-Dlg::~Dlg()
+DialogNewChart::~DialogNewChart()
 {
 }
 
-Dlg::Dlg()
+DialogNewChart::DialogNewChart()
 	: myDifficulty(0)
 	, myRating(1)
 	, myStyle(0)
@@ -31,7 +29,7 @@ Dlg::Dlg()
 	onChanges(VCM_ALL_CHANGES);
 }
 
-void Dlg::myCreateWidgets()
+void DialogNewChart::myCreateWidgets()
 {
 	myLayout.row().col(76).col(232);
 
@@ -72,11 +70,11 @@ void Dlg::myCreateWidgets()
 	
 	WgButton* accept = myLayout.add<WgButton>();
 	accept->text.set("Create");
-	accept->onPress.bind(this, &Dlg::myCreateChart);
+	accept->onPress.bind(this, &DialogNewChart::myCreateChart);
 	accept->setTooltip("Create a chart with the current settings");
 }
 
-void Dlg::myCreateChart()
+void DialogNewChart::myCreateChart()
 {
 	if(gSimfile->isOpen())
 	{

@@ -14,14 +14,12 @@
 
 #include <Editor/Common.h>
 
-#define Dlg DialogChartList
-
 namespace Vortex {
 
 // ================================================================================================
 // ChartButton
 
-struct Dlg::ChartButton : public GuiWidget {
+struct DialogChartList::ChartButton : public GuiWidget {
 
 ChartButton(GuiContext* gui, TileRect2* bar, int index)
 	: GuiWidget(gui)
@@ -137,7 +135,7 @@ static int GetChartListH()
 	return max(24, h);
 }
 
-struct Dlg::ChartList : public WgScrollRegion {
+struct DialogChartList::ChartList : public WgScrollRegion {
 
 Vector<ChartButton*> myButtons;
 TileRect2 myButtonTex;
@@ -256,12 +254,12 @@ void updateButtons()
 // ================================================================================================
 // DialogChartList
 
-Dlg::~Dlg()
+DialogChartList::~DialogChartList()
 {
 	delete myList;
 }
 
-Dlg::Dlg()
+DialogChartList::DialogChartList()
 {
 	setTitle("LIST OF CHARTS");
 
@@ -276,7 +274,7 @@ Dlg::Dlg()
 	myList = new ChartList(getGui());
 }
 
-void Dlg::onChanges(int changes)
+void DialogChartList::onChanges(int changes)
 {
 	if(changes & VCM_CHART_LIST_CHANGED)
 	{
@@ -288,7 +286,7 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onUpdateSize()
+void DialogChartList::onUpdateSize()
 {
 	myList->updateSize();
 	int h = myList->getScrollHeight();
@@ -296,13 +294,13 @@ void Dlg::onUpdateSize()
 	setMaximumHeight(min(1024, h));
 }
 
-void Dlg::onTick()
+void DialogChartList::onTick()
 {
 	myList->arrange(getInnerRect());
 	myList->tick();
 }
 
-void Dlg::onDraw()
+void DialogChartList::onDraw()
 {
 	myList->draw();
 }

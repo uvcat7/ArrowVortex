@@ -4,15 +4,13 @@
 
 #include <Editor/Waveform.h>
 
-#define Dlg DialogWaveformSettings
-
 namespace Vortex {
 
-Dlg::~Dlg()
+DialogWaveformSettings::~DialogWaveformSettings()
 {
 }
 
-Dlg::Dlg()
+DialogWaveformSettings::DialogWaveformSettings()
 {
 	presetIndex_ = 0;
 
@@ -31,7 +29,7 @@ Dlg::Dlg()
 
 	// Color Scheme.
 	WgCycleButton* preset = myLayout.add<WgCycleButton>("Presets");
-	preset->onChange.bind(this, &Dlg::myApplyPreset);
+	preset->onChange.bind(this, &DialogWaveformSettings::myApplyPreset);
 	preset->value.bind(&presetIndex_);
 	preset->addItem("Vortex");
 	preset->addItem("DDReam");
@@ -43,7 +41,7 @@ Dlg::Dlg()
 	bgColor->green.bind(&settingsColorScheme_.bg.g);
 	bgColor->blue.bind(&settingsColorScheme_.bg.b);
 	bgColor->alpha.bind(&settingsColorScheme_.bg.a);
-	bgColor->onChange.bind(this, &Dlg::myUpdateSettings);
+	bgColor->onChange.bind(this, &DialogWaveformSettings::myUpdateSettings);
 	bgColor->setTooltip("Color of the waveform background");
 
 	// FG color.
@@ -52,7 +50,7 @@ Dlg::Dlg()
 	waveColor->green.bind(&settingsColorScheme_.wave.g);
 	waveColor->blue.bind(&settingsColorScheme_.wave.b);
 	waveColor->alpha.bind(&settingsColorScheme_.wave.a);
-	waveColor->onChange.bind(this, &Dlg::myUpdateSettings);
+	waveColor->onChange.bind(this, &DialogWaveformSettings::myUpdateSettings);
 	waveColor->setTooltip("Color of the waveform");
 
 	// Filter color
@@ -61,13 +59,13 @@ Dlg::Dlg()
 	filterColor->green.bind(&settingsColorScheme_.filter.g);
 	filterColor->blue.bind(&settingsColorScheme_.filter.b);
 	filterColor->alpha.bind(&settingsColorScheme_.filter.a);
-	filterColor->onChange.bind(this, &Dlg::myUpdateSettings);
+	filterColor->onChange.bind(this, &DialogWaveformSettings::myUpdateSettings);
 	filterColor->setTooltip("Color of the filtered waveform");
 
 	// Luminance.
 	WgCycleButton* lum = myLayout.add<WgCycleButton>("Luminance");
 	lum->value.bind(&luminanceValue_);
-	lum->onChange.bind(this, &Dlg::myUpdateSettings);
+	lum->onChange.bind(this, &DialogWaveformSettings::myUpdateSettings);
 	lum->addItem("Uniform");
 	lum->addItem("Amplitude");
 	lum->setTooltip("Determines the lightness of the waveform peaks");
@@ -75,7 +73,7 @@ Dlg::Dlg()
 	// Wave shape.
 	WgCycleButton* shape = myLayout.add<WgCycleButton>("Wave shape");
 	shape->value.bind(&waveShape_);
-	shape->onChange.bind(this, &Dlg::myUpdateSettings);
+	shape->onChange.bind(this, &DialogWaveformSettings::myUpdateSettings);
 	shape->addItem("Rectified");
 	shape->addItem("Signed");
 	shape->setTooltip("Determines the shape of the waveform peaks");
@@ -83,7 +81,7 @@ Dlg::Dlg()
 	// Anti-aliasing.
 	WgCycleButton* aa = myLayout.add<WgCycleButton>("Anti-aliasing");
 	aa->value.bind(&antiAliasingMode_);
-	aa->onChange.bind(this, &Dlg::myUpdateSettings);
+	aa->onChange.bind(this, &DialogWaveformSettings::myUpdateSettings);
 	aa->addItem("None");
 	aa->addItem("2x");
 	aa->addItem("3x");
@@ -111,7 +109,7 @@ Dlg::Dlg()
 	WgCheckbox* bothWaves = myLayout.add<WgCheckbox>();
 	bothWaves->text.set("Overlay filtered waveform");
 	bothWaves->value.bind(&isOverlayFilterActive_);
-	bothWaves->onChange.bind(this, &Dlg::myToggleOverlayFilter);
+	bothWaves->onChange.bind(this, &DialogWaveformSettings::myToggleOverlayFilter);
 	bothWaves->setTooltip("If enabled, the filtered waveform is shown on top of the original waveform");
 
 	// Filtering.
@@ -119,16 +117,16 @@ Dlg::Dlg()
 
 	WgButton* disable = myLayout.add<WgButton>();
 	disable->text.set("Disable filter");
-	disable->onPress.bind(this, &Dlg::myDisableFilter);
+	disable->onPress.bind(this, &DialogWaveformSettings::myDisableFilter);
 	disable->setTooltip("Hides the filtered waveform");
 
 	WgButton* enable = myLayout.add<WgButton>();
 	enable->text.set("Apply filter");
-	enable->onPress.bind(this, &Dlg::myEnableFilter);
+	enable->onPress.bind(this, &DialogWaveformSettings::myEnableFilter);
 	enable->setTooltip("Shows the filtered waveform");
 }
 
-void Dlg::myApplyPreset()
+void DialogWaveformSettings::myApplyPreset()
 {
 	gWaveform->setPreset((Waveform::Preset)presetIndex_);
 	settingsColorScheme_ = gWaveform->getColors();
@@ -137,7 +135,7 @@ void Dlg::myApplyPreset()
 	antiAliasingMode_ = gWaveform->getAntiAliasing();
 }
 
-void Dlg::myUpdateSettings()
+void DialogWaveformSettings::myUpdateSettings()
 {
 	gWaveform->setColors(settingsColorScheme_);
 	gWaveform->setAntiAliasing(antiAliasingMode_);
@@ -145,17 +143,17 @@ void Dlg::myUpdateSettings()
 	gWaveform->setWaveShape((Waveform::WaveShape)waveShape_);
 }
 
-void Dlg::myToggleOverlayFilter()
+void DialogWaveformSettings::myToggleOverlayFilter()
 {
 	gWaveform->setOverlayFilter(isOverlayFilterActive_);
 }
 
-void Dlg::myEnableFilter()
+void DialogWaveformSettings::myEnableFilter()
 {
 	gWaveform->enableFilter((Waveform::FilterType)filterType_, filterStrength_);
 }
 
-void Dlg::myDisableFilter()
+void DialogWaveformSettings::myDisableFilter()
 {
 	gWaveform->disableFilter();
 }	

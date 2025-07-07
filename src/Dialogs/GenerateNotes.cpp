@@ -14,8 +14,6 @@
 #include <Managers/StyleMan.h>
 #include <Managers/SimfileMan.h>
 
-#define Dlg DialogGenerateNotes
-
 namespace Vortex {
 
 static const char* SpacingStrings[] =
@@ -31,11 +29,11 @@ static SnapType SpacingTypes[] =
 static const int IFP_SIZE = 24;
 static const int IFP_SPACING = 4;
 
-Dlg::~Dlg()
+DialogGenerateNotes::~DialogGenerateNotes()
 {
 }
 
-Dlg::Dlg()
+DialogGenerateNotes::DialogGenerateNotes()
 	: footSelectionIndex_(0)
 	, spacingValue_(0)
 {
@@ -43,7 +41,7 @@ Dlg::Dlg()
 	myCreateWidgets();
 }
 
-void Dlg::myCreateWidgets()
+void DialogGenerateNotes::myCreateWidgets()
 {
 	myLayout.row().col(true);
 	myLayout.addBlank();
@@ -85,12 +83,12 @@ void Dlg::myCreateWidgets()
 
 	WgButton* generate = myLayout.add<WgButton>();
 	generate->text.set("Generate notes");
-	generate->onPress.bind(this, &Dlg::myGenerateNotes);
+	generate->onPress.bind(this, &DialogGenerateNotes::myGenerateNotes);
 
 	onChanges(VCM_ALL_CHANGES);
 }
 
-void Dlg::onChanges(int changes)
+void DialogGenerateNotes::onChanges(int changes)
 {
 	if(changes & VCM_CHART_CHANGED)
 	{
@@ -104,7 +102,7 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::myGenerateNotes()
+void DialogGenerateNotes::myGenerateNotes()
 {
 	auto region = gSelection->getSelectedRegion();
 	if(gSimfile->isClosed())

@@ -13,8 +13,6 @@
 #include <Editor/Editing.h>
 #include <Editor/History.h>
 
-#define Dlg DialogAdjustSync
-
 namespace Vortex {
 
 enum Actions
@@ -30,12 +28,12 @@ enum Actions
 	ACT_DEC_OFS_ONE,
 };
 
-Dlg::~Dlg()
+DialogAdjustSync::~DialogAdjustSync()
 {
 	delete myTempoDetector;
 }
 
-Dlg::Dlg()
+DialogAdjustSync::DialogAdjustSync()
 	: mySelectedResult(0)
 	, myOffset(0)
 	, myInitialBPM(0)
@@ -47,24 +45,24 @@ Dlg::Dlg()
 	onChanges(VCM_ALL_CHANGES);
 }
 
-WgSpinner* Dlg::myCreateWidgetRow(StringRef label, double& val, int setAction, int tweakAction,
+WgSpinner* DialogAdjustSync::myCreateWidgetRow(StringRef label, double& val, int setAction, int tweakAction,
 	const char* tooltip1, const char* tooltip2)
 {
 	WgSpinner* spinner = myLayout.add<WgSpinner>(label);
 	spinner->value.bind(&val);
 	spinner->setPrecision(3, 3);
-	spinner->onChange.bind(this, &Dlg::onAction, setAction);
+	spinner->onChange.bind(this, &DialogAdjustSync::onAction, setAction);
 	spinner->setTooltip(tooltip1);
 
 	WgButton* tweak = myLayout.add<WgButton>();
 	tweak->text.set("{g:tweak}");
 	tweak->setTooltip(tooltip2);
-	tweak->onPress.bind(this, &Dlg::onAction, tweakAction);
+	tweak->onPress.bind(this, &DialogAdjustSync::onAction, tweakAction);
 
 	return spinner;
 }
 
-void Dlg::myCreateWidgets()
+void DialogAdjustSync::myCreateWidgets()
 {
 	myLayout.row().col(84).col(124).col(24);
 
@@ -100,7 +98,7 @@ void Dlg::myCreateWidgets()
 	{
 		WgButton* button = myLayout.add<WgButton>();
 		button->text.set(moveText[i]);
-		button->onPress.bind(this, &Dlg::onAction, (int)ACT_INC_OFS_ONE + i);
+		button->onPress.bind(this, &DialogAdjustSync::onAction, (int)ACT_INC_OFS_ONE + i);
 		button->setTooltip(moveTooltip[i]);
 	}
 
@@ -115,17 +113,17 @@ void Dlg::myCreateWidgets()
 	myLayout.row().col(118).col(118);
 	myApplyBPM = myLayout.add<WgButton>();
 	myApplyBPM->text.set("Apply BPM");
-	myApplyBPM->onPress.bind(this, &Dlg::onApplyBPM);
+	myApplyBPM->onPress.bind(this, &DialogAdjustSync::onApplyBPM);
 	myApplyBPM->setTooltip("Apply the selected BPM estimate");
 	myApplyBPM->setEnabled(false);
 
 	myFindBPM = myLayout.add<WgButton>();
 	myFindBPM->text.set("{g:calculate} Find BPM");
-	myFindBPM->onPress.bind(this, &Dlg::onFindBPM);
+	myFindBPM->onPress.bind(this, &DialogAdjustSync::onFindBPM);
 	myFindBPM->setTooltip("Estimate the music BPM by analyzing the audio");
 }
 
-void Dlg::onChanges(int changes)
+void DialogAdjustSync::onChanges(int changes)
 {
 	if(changes & VCM_TEMPO_CHANGED)
 	{
@@ -146,7 +144,7 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onTick()
+void DialogAdjustSync::onTick()
 {
 	EditorDialog::onTick();
 
@@ -186,7 +184,7 @@ void Dlg::onTick()
 	}
 }
 
-void Dlg::onAction(int id)
+void DialogAdjustSync::onAction(int id)
 {
 	switch(id)
 	{
@@ -215,7 +213,7 @@ void Dlg::onAction(int id)
 	};
 }
 
-void Dlg::onApplyBPM()
+void DialogAdjustSync::onApplyBPM()
 {
 	if(mySelectedResult >= 0 && mySelectedResult < myDetectionResults.size())
 	{
@@ -234,7 +232,7 @@ void Dlg::onApplyBPM()
 	}
 }
 
-void Dlg::onFindBPM()
+void DialogAdjustSync::onFindBPM()
 {
 	if(!myTempoDetector)
 	{
@@ -255,7 +253,7 @@ void Dlg::onFindBPM()
 	}
 }
 
-void Dlg::myResetBPMDetection()
+void DialogAdjustSync::myResetBPMDetection()
 {
 	if(myTempoDetector)
 	{
