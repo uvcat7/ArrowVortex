@@ -81,15 +81,15 @@ public:
 	Canvas& operator = (const Canvas& other);
 
 	/// Returns a pointer to the pixel array, 4 values per pixel, RGBA order.
-	float* pixels() { return canvasData_; }
+	float* pixels() { return canvas_data_; }
 
-	int width() const  { return canvasWidth_; } ///< Returns the number of horizontal pixels.
-	int height() const { return canvasHeight_; } ///< Returns the number of vertical pixels.
+	int width() const  { return canvas_width_; } ///< Returns the number of horizontal pixels.
+	int height() const { return canvas_height_; } ///< Returns the number of vertical pixels.
 
 private:
 	struct Data;
-	float* canvasData_;
-	int canvasWidth_, canvasHeight_;
+	float* canvas_data_;
+	int canvas_width_, canvas_height_;
 	Data* data_;  // TODO: replace with a more descriptive variable name.
 };
 

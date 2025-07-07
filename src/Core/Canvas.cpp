@@ -222,33 +222,33 @@ void Canvas::Data::draw(float* buf, int w, int h, const areaf& area, DistanceFun
 
 Canvas::~Canvas()
 {
-	if(canvasData_) free(canvasData_);
+	if(canvas_data_) free(canvas_data_);
 	delete data_;
 }
 
 Canvas::Canvas()
-	: canvasData_(nullptr), canvasWidth_(0), canvasHeight_(0), data_(new Canvas::Data)
+	: canvas_data_(nullptr), canvas_width_(0), canvas_height_(0), data_(new Canvas::Data)
 {
-	data_->mask = {0, 0, canvasWidth_, canvasHeight_};
+	data_->mask = {0, 0, canvas_width_, canvas_height_};
 }
 
 Canvas::Canvas(int w, int h, float lum)
-	: canvasData_(nullptr), canvasWidth_(w), canvasHeight_(h), data_(new Canvas::Data)
+	: canvas_data_(nullptr), canvas_width_(w), canvas_height_(h), data_(new Canvas::Data)
 {
-	canvasData_ = (float*)malloc(w * h * 4 * sizeof(float));
-	data_->mask = {0, 0, canvasWidth_, canvasHeight_};
+	canvas_data_ = (float*)malloc(w * h * 4 * sizeof(float));
+	data_->mask = {0, 0, canvas_width_, canvas_height_};
 	clear(lum);
 }
 
 Canvas::Canvas(const Canvas& other)
-	: canvasData_(nullptr), canvasWidth_(0), canvasHeight_(0), data_(new Canvas::Data)
+	: canvas_data_(nullptr), canvas_width_(0), canvas_height_(0), data_(new Canvas::Data)
 {
 	*this = other;
 }
 
 void Canvas::setMask(int l, int t, int r, int b)
 {
-	data_->mask = {max(0, l), max(0, t), min(r, canvasWidth_), min(r, canvasHeight_)};
+	data_->mask = {max(0, l), max(0, t), min(r, canvas_width_), min(r, canvas_height_)};
 }
 
 void Canvas::setOutline(float size)
@@ -300,7 +300,7 @@ void Canvas::setColor(const colorf& tl, const colorf& tr, const colorf& bl, cons
 
 void Canvas::clear(float l)
 {
-	for(float* p = canvasData_, *end = p + canvasWidth_ * canvasHeight_ * 4; p < end;)
+	for(float* p = canvas_data_, *end = p + canvas_width_ * canvas_height_ * 4; p < end;)
 	{
 		*p = l; ++p;
 		*p = l; ++p;
@@ -315,13 +315,13 @@ void Canvas::line(float x1, float y1, float x2, float y2, float width)
 	float xmin = min(x1, x2), xmax = max(x1, x2);
 	float ymin = min(y1, y2), ymax = max(y1, y2);
 	GetLineDist func(x1, y1, x2, y2, r);
-	data_->draw(canvasData_, canvasWidth_, canvasHeight_, {xmin - r, ymin - r, xmax + r, ymax + r}, &func);
+	data_->draw(canvas_data_, canvas_width_, canvas_height_, {xmin - r, ymin - r, xmax + r, ymax + r}, &func);
 }
 
 void Canvas::circle(float x, float y, float r)
 {
 	GetCircleDist func(x, y, r);
-	data_->draw(canvasData_, canvasWidth_, canvasHeight_, {x - r, y - r, x + r, y + r}, &func);
+	data_->draw(canvas_data_, canvas_width_, canvas_height_, {x - r, y - r, x + r, y + r}, &func);
 }
 
 void Canvas::box(float x1, float y1, float x2, float y2, float radius)
@@ -330,7 +330,7 @@ void Canvas::box(float x1, float y1, float x2, float y2, float radius)
 	float yt = min(y1, y2), yb = max(y1, y2);
 	float r = min(min(xr - xl, yb - yt)*0.5f, max(0.f, radius));
 	GetRoundRectDist func(xl, yt, xr, yb, r);
-	data_->draw(canvasData_, canvasWidth_, canvasHeight_, {xl, yt, xr, yb}, &func);
+	data_->draw(canvas_data_, canvas_width_, canvas_height_, {xl, yt, xr, yb}, &func);
 }
 
 void Canvas::box(int x1, int y1, int x2, int y2, float radius)
@@ -342,29 +342,29 @@ void Canvas::polygon(const float* x, const float* y, int vertexCount)
 {
 	if(vertexCount < 3) return;
 	GetPolyDist func(x, y, vertexCount);
-	data_->draw(canvasData_, canvasWidth_, canvasHeight_, {0, 0, (float)canvasWidth_, (float)canvasHeight_}, &func);
+	data_->draw(canvas_data_, canvas_width_, canvas_height_, {0, 0, (float)canvas_width_, (float)canvas_height_}, &func);
 }
 
 Texture Canvas::createTexture(bool mipmap) const
 {
-	uchar* dst = (uchar*)malloc(canvasWidth_*canvasHeight_ * 4 * sizeof(uchar));
-	for(int i = 0; i < canvasWidth_ * canvasHeight_ * 4; ++i)
+	uchar* dst = (uchar*)malloc(canvas_width_*canvas_height_ * 4 * sizeof(uchar));
+	for(int i = 0; i < canvas_width_ * canvas_height_ * 4; ++i)
 	{
-		int v = (int)(canvasData_[i] * 255.f + 0.5f);
+		int v = (int)(canvas_data_[i] * 255.f + 0.5f);
 		dst[i] = min(max(v, 0), 255);
 	}
-	Texture result(canvasWidth_, canvasHeight_, dst, mipmap);
+	Texture result(canvas_width_, canvas_height_, dst, mipmap);
 	free(dst);
 	return result;
 }
 
 Canvas& Canvas::operator = (const Canvas& other)
 {
-	if(canvasData_) free(canvasData_);
+	if(canvas_data_) free(canvas_data_);
 	*data_ = *other.data_;
-	canvasWidth_ = other.canvasWidth_, canvasHeight_ = other.canvasHeight_, canvasData_ = nullptr;
-	if(other.canvasData_) canvasData_ = (float*)malloc(canvasWidth_ * canvasHeight_ * 4 * sizeof(float));
-	memcpy(canvasData_, other.canvasData_, canvasWidth_ * canvasHeight_ * 4 * sizeof(float));
+	canvas_width_ = other.canvas_width_, canvas_height_ = other.canvas_height_, canvas_data_ = nullptr;
+	if(other.canvas_data_) canvas_data_ = (float*)malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float));
+	memcpy(canvas_data_, other.canvas_data_, canvas_width_ * canvas_height_ * 4 * sizeof(float));
 	return *this;
 }
 
