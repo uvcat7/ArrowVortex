@@ -134,7 +134,7 @@ void DialogSongProperties::myCreateWidgets()
 	w->setTooltip("Path of the CD title image (logo of the simfile author)\nRecommended size: around 64x48 (DDR/ITG)");
 
 	auto findCDTitle = myLayout.add<WgButton>();
-	findCDTitle->onPress.bind(this, &Dlg::onFindCdTitle);
+	findCDTitle->onPress.bind(this, &DialogSongProperties::onFindCdTitle);
 	findCDTitle->text.set("{g:search}");
 	findCDTitle->setTooltip("Search the stepfile directory for CD title images");
 

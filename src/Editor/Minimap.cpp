@@ -251,8 +251,8 @@ void renderDensity(SetPixelData& spd, const int* colx)
 recti myGetMapRect()
 {
 	vec2i size = gSystem->getWindowSize();
-	myRect = { size.x - 32, 8, 24, size.y - 16 };
-	return {myRect.x + 2, myRect.y + 16, myRect.w - 4, myRect.h - 32};
+	rect_ = { size.x - 32, 8, 24, size.y - 16 };
+	return {rect_.x + 2, rect_.y + 16, rect_.w - 4, rect_.h - 32};
 }
 
 bool updateMinimapHeight()
@@ -266,7 +266,6 @@ bool updateMinimapHeight()
 		onChanges(VCM_VIEW_CHANGED);
 		return true;
 	}
-
 
 	return false;
 }
@@ -427,8 +426,8 @@ void draw()
 	}
 
 	// Draw the marker lines for the first and last row.
-	Draw::fill(SideT(chartRect, 1), RGBAtoColor32(128, 128, 128, 255));
-	Draw::fill(SideB(chartRect, 1), RGBAtoColor32(128, 128, 128, 255));
+	Draw::fill(SideT(rect, 1), RGBAtoColor32(128, 128, 128, 255));
+	Draw::fill(SideB(rect, 1), RGBAtoColor32(128, 128, 128, 255));
 
 	// Draw the view range.
 	if(myNotesH > 0)
