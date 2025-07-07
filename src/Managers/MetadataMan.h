@@ -22,6 +22,9 @@ struct MetadataMan
 	/// Returns the relative path of the first background file in the simfile directory.
 	virtual String findBackgroundFile() = 0;
 
+	/// Returns the relative path of the first CD title file in the simfile directory.
+	virtual String findCdTitleFile() = 0;
+
 	/// Sets the song title.
 	virtual void setTitle(StringRef s) = 0;
 

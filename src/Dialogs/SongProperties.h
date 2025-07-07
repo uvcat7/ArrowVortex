@@ -24,6 +24,7 @@ public:
 	void onFindMusic();
 	void onFindBanner();
 	void onFindBG();
+	void onFindCdTitle();
 
 private:
 	struct BannerWidget;

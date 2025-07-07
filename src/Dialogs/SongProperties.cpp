@@ -128,10 +128,15 @@ void DialogSongProperties::myCreateWidgets()
 	findBanner->text.set("{g:search}");
 	findBanner->setTooltip("Search the stepfile directory for banner images");
 
-	myLayout.row().col(72).col(342);
+	//myLayout.row().col(72).col(342);
 
 	w = CreateField(myLayout, "CD Title", myCdTitle, [](String& s){ gMetadata->setCdTitlePath(s); });
 	w->setTooltip("Path of the CD title image (logo of the simfile author)\nRecommended size: around 64x48 (DDR/ITG)");
+
+	auto findCDTitle = myLayout.add<WgButton>();
+	findCDTitle->onPress.bind(this, &DialogSongProperties::onFindCdTitle);
+	findCDTitle->text.set("{g:search}");
+	findCDTitle->setTooltip("Search the stepfile directory for CD title images");
 
 	myLayout.row().col(418);
 	myLayout.add<WgSeperator>();
@@ -346,6 +351,19 @@ void DialogSongProperties::onFindBG()
 	else
 	{
 		gMetadata->setBackgroundPath(path);
+	}
+}
+
+void DialogSongProperties::onFindCdTitle()
+{
+	String path = gMetadata->findCdTitleFile();
+	if (path.empty())
+	{
+		HudNote("Could not find any CD Title art...");
+	}
+	else
+	{
+		gMetadata->setCdTitlePath(path);
 	}
 }
 

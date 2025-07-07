@@ -501,6 +501,7 @@ String getClipboardText() const
 		{
 			str = Narrow(src, wcslen(src));
 			GlobalUnlock(hData);
+			Str::replace(str, "\n", "");
 		}
 		CloseClipboard();
 	}

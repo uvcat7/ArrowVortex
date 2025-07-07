@@ -149,7 +149,7 @@ static bool IsEquivalent(const BpmChange& seg, const BpmChange& other)
 template <>
 static String GetDescription(const BpmChange& seg)
 {
-	return Str::val(seg.bpm, 3, 3);
+	return Str::val(seg.bpm, 3, 6);
 }
 
 static const SegmentMeta BpmChangeMeta =

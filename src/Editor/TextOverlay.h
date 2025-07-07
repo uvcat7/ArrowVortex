@@ -24,7 +24,7 @@ struct InfoBoxWithProgress : public InfoBox
 
 struct TextOverlay : public InputHandler
 {
-	enum Mode { HUD, SHORTCUTS, MESSAGE_LOG, DEBUG_LOG, ABOUT, DONATE };
+	enum Mode { HUD, SHORTCUTS, MESSAGE_LOG, DEBUG_LOG, ABOUT};
 	enum MessageType { NOTE, INFO, WARNING, ERROR };
 
 	static void create();
