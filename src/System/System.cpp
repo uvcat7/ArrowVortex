@@ -431,11 +431,10 @@ void CALLBACK messageLoop()
 		myIsInsideMessageLoop = false;
 
 		// Check if there were text input events.
-		if(myInput.size())
+		if (!myInput.empty())
 		{
-			String input = Narrow(myInput);
-			myEvents.addTextInput(input.str());
-			myInput = WideString();
+			myEvents.addTextInput(Narrow(myInput).str());
+			myInput.clear();
 		}
 
 		// Set up the OpenGL view.
