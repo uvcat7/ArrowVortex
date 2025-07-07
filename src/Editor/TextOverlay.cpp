@@ -111,7 +111,7 @@ void addShortcut(const char* name, const char* keys)
 
 void addShortcut(Action::Type action, const char* name)
 {
-	String notation = gShortcuts->getNotation(action);
+	String notation = gShortcuts->getNotation(action, true);
 	if(notation.len()) addShortcut(name, notation.str());
 }
 
@@ -514,7 +514,7 @@ void tickShortcuts()
 
 void drawShortcuts()
 {
-	int x = gSystem->getWindowSize().x / 2 - 250, w = 500;
+	int x = gSystem->getWindowSize().x / 2 - 325, w = 650;
 	int y = 32 - textOverlayScrollPos_;
 	for(const Shortcut& e : displayShortcuts_)
 	{
