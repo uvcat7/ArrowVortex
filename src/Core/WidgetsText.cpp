@@ -9,6 +9,8 @@
 #include <Core/GuiDraw.h>
 #include <Core/Shader.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ===================================================================================
@@ -199,6 +201,7 @@ void WgLineEdit::onMouseRelease(MouseRelease& evt)
 	}
 }
 
+constexpr int MaximumTextLength = 200; // in chars
 void WgLineEdit::onTextInput(TextInput& evt)
 {
 	if(isCapturingText() && is_editable_ && !evt.handled)
@@ -207,12 +210,29 @@ void WgLineEdit::onTextInput(TextInput& evt)
 		if((int)lineedit_text_.len() < lineedit_max_length_)
 		{
 			String input(evt.text);
-			
-			int maxInputLen = lineedit_max_length_ - lineedit_text_.len();
 
-			int i = input.len();
-			while(i > maxInputLen) i = Str::prevChar(input, i);
-			if(i < (int)input.len()) Str::erase(input, i);
+			// replace newlines with spaces
+			for (int i = 0; i < input.len(); ++i)
+			{
+				if (input[i] == '\n' || input[i] == '\r')
+				{
+					char* mutableInput = const_cast<char*>(input.str());
+					mutableInput[i] = ' ';
+				}
+			}
+
+			// truncate input
+			if (input.len() > MaximumTextLength)
+			{
+				Str::erase(input, MaximumTextLength, input.len() - MaximumTextLength);
+			}
+
+			// ensure total length does not exceed max length
+			int maxInputLen = std::min(MaximumTextLength, lineedit_max_length_ - lineedit_text_.len());
+			if (input.len() > maxInputLen)
+			{
+				Str::erase(input, maxInputLen, input.len() - maxInputLen);
+			}
 
 			Str::insert(lineedit_text_, lineedit_cursor_.y, input);
 
