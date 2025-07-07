@@ -34,6 +34,7 @@
 #include <ctime>
 #include <bitset>
 #include <list>
+#include <vector>
 
 #undef DELETE
 
@@ -712,23 +713,29 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 		{
 			POINT pos;
 			DragQueryPoint((HDROP)wp, &pos);
-			// Passing 0xFFFFFFFF will return the file count.
-			int numFiles = (int)DragQueryFileW((HDROP)wp, 0xFFFFFFFF, 0, 0);
-			char** files = (char**)malloc(sizeof(char*) * numFiles);
-			for(int i = 0; i < numFiles; ++i)
+
+			// Get the number of files dropped.
+			UINT numFiles = DragQueryFileW((HDROP)wp, 0xFFFFFFFF, nullptr, 0);
+			std::vector<String> files(numFiles);
+
+			for (UINT i = 0; i < numFiles; ++i)
 			{
-				// Giving 0 for the stringbuffer returns path size without nullbyte.
-				int pathlen = (int)DragQueryFileW((HDROP)wp, i, 0, 0);
-				WideString wstr(pathlen, 0);
-				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathlen + 1);
-				String str = Narrow(wstr);
-				files[i] = (char*)malloc(str.len() + 1);
-				memcpy(files[i], str.begin(), str.len() + 1);
+				// Get the length of the file path and retrieve it.
+				UINT pathLen = DragQueryFileW((HDROP)wp, i, nullptr, 0);
+				WideString wstr(pathLen, 0);
+				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathLen + 1);
+				files[i] = Narrow(wstr);
 			}
+
 			DragFinish((HDROP)wp);
-			myEvents.addFileDrop(files, numFiles, pos.x, pos.y);
-			for(int i = 0; i < numFiles; ++i) free(files[i]);
-			free(files);
+
+			// Pass the file drop event to the input handler.
+			std::vector<const char*> filePtrs;
+			for (const auto& file : files)
+			{
+				filePtrs.push_back(file.str());
+			}
+			myEvents.addFileDrop(filePtrs.data(), static_cast<int>(filePtrs.size()), pos.x, pos.y);
 		}
 		break;
 	}
