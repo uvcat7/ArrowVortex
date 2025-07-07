@@ -61,46 +61,46 @@ const int String::npos = INT_MAX;
 
 String::~String()
 {
-	StrFree(myStr);
+	StrFree(string_);
 }
 
 String::String()
-	: myStr(nullstr)
+	: string_(nullstr)
 {
 }
 
 String::String(String&& s)
-	: myStr(s.myStr)
+	: string_(s.string_)
 {
-	s.myStr = nullstr;
+	s.string_ = nullstr;
 }
 
 String::String(StringRef s)
 {
 	int n = s.len();
-	StrAlloc(myStr, n);
-	memcpy(myStr, s.myStr, n + 1);
+	StrAlloc(string_, n);
+	memcpy(string_, s.string_, n + 1);
 }
 
 String::String(int n, char c)
 {
-	StrAlloc(myStr, n);
-	memset(myStr, c, n);
-	myStr[n] = 0;
+	StrAlloc(string_, n);
+	memset(string_, c, n);
+	string_[n] = 0;
 }
 
 String::String(const char* s)
 {
 	int n = strlen(s);
-	StrAlloc(myStr, n);
-	memcpy(myStr, s, n + 1);
+	StrAlloc(string_, n);
+	memcpy(string_, s, n + 1);
 }
 
 String::String(const char* s, int n)
 {
-	StrAlloc(myStr, n);
-	memcpy(myStr, s, n);
-	myStr[n] = 0;
+	StrAlloc(string_, n);
+	memcpy(string_, s, n);
+	string_[n] = 0;
 }
 
 String& String::operator = (String&& s)
@@ -112,28 +112,28 @@ String& String::operator = (String&& s)
 String& String::operator = (StringRef s)
 {
 	int n = s.len();
-	StrRealloc(myStr, n);
-	memcpy(myStr, s.myStr, n + 1);
+	StrRealloc(string_, n);
+	memcpy(string_, s.string_, n + 1);
 	return *this;
 }
 
 void String::swap(String& s)
 {
-	char* tmp = myStr;
-	myStr = s.myStr;
-	s.myStr = tmp;
+	char* tmp = string_;
+	string_ = s.string_;
+	s.string_ = tmp;
 }
 
 void String::release()
 {
-	StrFree(myStr);
-	myStr = nullstr;
+	StrFree(string_);
+	string_ = nullstr;
 }
 
 void String::clear()
 {
-	StrSetLen(myStr, 0);
-	myStr[0] = 0;
+	StrSetLen(string_, 0);
+	string_[0] = 0;
 }
 
 }; // namespace Vortex

@@ -28,7 +28,7 @@ struct Str2 {
 
 static inline int cap(StringRef s)
 {
-	return *((int*)s.myStr - 2);
+	return *((int*)s.string_ - 2);
 }
 
 static String cat(const char* a, int n, const char* b, int m)
@@ -41,7 +41,7 @@ static String cat(const char* a, int n, const char* b, int m)
 	mem[len] = 0;
 
 	String out;
-	out.myStr = mem;
+	out.string_ = mem;
 	return out;
 }
 
@@ -49,7 +49,7 @@ static void reallocate(String& s, int n)
 {
 	if(n > cap(s))
 	{
-		StrRealloc(s.myStr, n);
+		StrRealloc(s.string_, n);
 	}
 	else if(n <= 0)
 	{
@@ -60,15 +60,15 @@ static void reallocate(String& s, int n)
 static void createGap(String& s, int pos, int size)
 {
 	int len = s.len();
-	StrRealloc(s.myStr, len + size);
-	memmove(s.myStr + pos + size, s.myStr + pos, len + 1 - pos);
+	StrRealloc(s.string_, len + size);
+	memmove(s.string_ + pos + size, s.string_ + pos, len + 1 - pos);
 }
 
 static void closeGap(String& s, int pos, int size)
 {
 	int len = s.len();
-	memmove(s.myStr + pos, s.myStr + pos + size, len + 1 - pos - size);
-	StrSetLen(s.myStr, len - size);
+	memmove(s.string_ + pos, s.string_ + pos + size, len + 1 - pos - size);
+	StrSetLen(s.string_, len - size);
 }
 
 }; // Str2
@@ -85,9 +85,9 @@ void Str::assign(String& s, int n, char c)
 {
 	if(n > 0)
 	{
-		StrRealloc(s.myStr, n);
-		memset(s.myStr, c, n);
-		s.myStr[n] = 0;
+		StrRealloc(s.string_, n);
+		memset(s.string_, c, n);
+		s.string_[n] = 0;
 	}
 	else
 	{
@@ -102,7 +102,7 @@ void Str::assign(String& s, String&& str)
 
 void Str::assign(String& s, StringRef str)
 {
-	assign(s, str.myStr, str.len());
+	assign(s, str.string_, str.len());
 }
 
 void Str::assign(String& s, const char* str)
@@ -112,9 +112,9 @@ void Str::assign(String& s, const char* str)
 
 void Str::assign(String& s, const char* str, int n)
 {
-	StrRealloc(s.myStr, n);
-	memcpy(s.myStr, str, n);
-	s.myStr[n] = 0;
+	StrRealloc(s.string_, n);
+	memcpy(s.string_, str, n);
+	s.string_[n] = 0;
 }
 
 // ================================================================================================
@@ -124,14 +124,14 @@ void Str::append(String& s, char c)
 {
 	int len = s.len();
 	int n = len + 1;
-	StrRealloc(s.myStr, n);
-	s.myStr[len] = c;
-	s.myStr[n] = 0;
+	StrRealloc(s.string_, n);
+	s.string_[len] = c;
+	s.string_[n] = 0;
 }
 
 void Str::append(String& s, StringRef str)
 {
-	append(s, str.myStr, str.len());
+	append(s, str.string_, str.len());
 }
 
 void Str::append(String& s, const char* str)
@@ -145,9 +145,9 @@ void Str::append(String& s, const char* str, int n)
 	{
 		int len = s.len();
 		int newlen = len + n;
-		StrRealloc(s.myStr, newlen);
-		memcpy(s.myStr + len, str, n);
-		s.myStr[newlen] = 0;
+		StrRealloc(s.string_, newlen);
+		memcpy(s.string_ + len, str, n);
+		s.string_[newlen] = 0;
 	}
 }
 
@@ -164,13 +164,13 @@ void Str::insert(String& s, int pos, char c)
 	else if(pos >= 0)
 	{
 		Str2::createGap(s, pos, 1);
-		s.myStr[pos] = c;
+		s.string_[pos] = c;
 	}
 }
 
 void Str::insert(String& s, int pos, StringRef str)
 {
-	insert(s, pos, str.myStr, str.len());
+	insert(s, pos, str.string_, str.len());
 }
 
 void Str::insert(String& s, int pos, const char* str)
@@ -188,7 +188,7 @@ void Str::insert(String& s, int pos, const char* str, int n)
 	else if(n > 0)
 	{
 		Str2::createGap(s, pos, n);
-		memcpy(s.myStr + pos, str, n);
+		memcpy(s.string_ + pos, str, n);
 	}
 }
 
@@ -205,8 +205,8 @@ void Str::truncate(String& s, int n)
 		}
 		else
 		{
-			s.myStr[n] = 0;
-			StrSetLen(s.myStr, n);
+			s.string_[n] = 0;
+			StrSetLen(s.string_, n);
 		}
 	}
 }
@@ -216,9 +216,9 @@ void Str::extend(String& s, int n, char c)
 	int len = s.len();
 	if(n > len)
 	{
-		StrRealloc(s.myStr, n);
-		memset(s.myStr + len, c, n - len);
-		s.myStr[n] = 0;
+		StrRealloc(s.string_, n);
+		memset(s.string_ + len, c, n - len);
+		s.string_[n] = 0;
 	}
 }
 
@@ -285,7 +285,7 @@ double Str::readTime(StringRef s, double alt)
 		break;
 	}
 
-	if (v == 0 && *s.myStr == 0) return alt;
+	if (v == 0 && *s.string_ == 0) return alt;
 	alt = v;
 	return alt;
 }
@@ -293,8 +293,8 @@ double Str::readTime(StringRef s, double alt)
 bool Str::read(StringRef s, int* out)
 {
 	char* end;
-	int v = strtol(s.myStr, &end, 10);
-	if(v == 0 && (*s.myStr == 0 || *end != 0)) return false;
+	int v = strtol(s.string_, &end, 10);
+	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
 	*out = v;
 	return true;
 }
@@ -302,8 +302,8 @@ bool Str::read(StringRef s, int* out)
 bool Str::read(StringRef s, uint* out)
 {
 	char* end;
-	uint v = strtoul(s.myStr, &end, 10);
-	if(v == 0 && (*s.myStr == 0 || *end != 0)) return false;
+	uint v = strtoul(s.string_, &end, 10);
+	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
 	*out = v;
 	return true;
 }
@@ -311,8 +311,8 @@ bool Str::read(StringRef s, uint* out)
 bool Str::read(StringRef s, float* out)
 {
 	char* end;
-	float v = strtof(s.myStr, &end);
-	if(v == 0 && (*s.myStr == 0 || *end != 0)) return false;
+	float v = strtof(s.string_, &end);
+	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
 	*out = v;
 	return true;
 }
@@ -320,20 +320,20 @@ bool Str::read(StringRef s, float* out)
 bool Str::read(StringRef s, double* out)
 {
 	char* end;
-	double v = strtod(s.myStr, &end);
-	if(v == 0 && (*s.myStr == 0 || *end != 0)) return false;
+	double v = strtod(s.string_, &end);
+	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
 	*out = v;
 	return true;
 }
 
 bool Str::read(StringRef s, bool* out)
 {
-	if(stricmp(s.myStr, "true") == 0 || stricmp(s.myStr, "yes") == 0)
+	if(stricmp(s.string_, "true") == 0 || stricmp(s.string_, "yes") == 0)
 	{
 		*out = true;
 		return true;
 	}
-	else if(stricmp(s.myStr, "false") == 0 || stricmp(s.myStr, "no") == 0)
+	else if(stricmp(s.string_, "false") == 0 || stricmp(s.string_, "no") == 0)
 	{
 		*out = false;
 		return true;
@@ -361,13 +361,13 @@ static bool IsWhiteSpace(char c)
 void Str::trim(String& s)
 {
 	int n = 0, m = 0, len = s.len();
-	while(IsWhiteSpace(s.myStr[m])) ++m;
-	if(s.myStr[m] == 0) { s.clear(); return; }
+	while(IsWhiteSpace(s.string_[m])) ++m;
+	if(s.string_[m] == 0) { s.clear(); return; }
 
-	while(m < len) s.myStr[n++] = s.myStr[m++];
-	while(IsWhiteSpace(s.myStr[n - 1])) --n;
-	s.myStr[n] = 0;
-	StrSetLen(s.myStr, n);
+	while(m < len) s.string_[n++] = s.string_[m++];
+	while(IsWhiteSpace(s.string_[n - 1])) --n;
+	s.string_[n] = 0;
+	StrSetLen(s.string_, n);
 }
 
 void Str::simplify(String& s)
@@ -377,12 +377,12 @@ void Str::simplify(String& s)
 	while(m < len)
 	{
 		w = m;
-		while(IsWhiteSpace(s.myStr[m])) ++m;
-		if(m > w) s.myStr[n++] = ' ';
-		s.myStr[n++] = s.myStr[m++];
+		while(IsWhiteSpace(s.string_[m])) ++m;
+		if(m > w) s.string_[n++] = ' ';
+		s.string_[n++] = s.string_[m++];
 	}
-	s.myStr[n] = 0;
-	StrSetLen(s.myStr, n);
+	s.string_[n] = 0;
+	StrSetLen(s.string_, n);
 }
 
 void Str::erase(String& s, int pos, int n)
@@ -405,14 +405,14 @@ void Str::pop_back(String& s)
 	int len = s.len();
 	if(len)
 	{
-		s.myStr[--len] = 0;
-		StrSetLen(s.myStr, len);
+		s.string_[--len] = 0;
+		StrSetLen(s.string_, len);
 	}
 }
 
 void Str::replace(String& s, char find, char replace)
 {
-	char* c = s.myStr;
+	char* c = s.string_;
 	for(int i = 0, len = s.len(); i < len; ++i, ++c)
 	{
 		if(*c == find) *c = replace;
@@ -428,7 +428,7 @@ void Str::replace(String& s, const char* fnd, const char* rep)
 
 	int fndlen = strlen(fnd);
 	int replen = strlen(rep);
-	String out(s.myStr, pos);
+	String out(s.string_, pos);
 	
 	while(pos != String::npos)
 	{
@@ -436,7 +436,7 @@ void Str::replace(String& s, const char* fnd, const char* rep)
 		append(out, rep, replen);
 		int next = find(s, fnd, pos);
 		int end = (next != String::npos) ? next : s.len();
-		append(out, s.myStr + pos, end - pos);
+		append(out, s.string_ + pos, end - pos);
 		pos = next;
 	}
 
@@ -447,7 +447,7 @@ void Str::toUpper(String& s)
 {
 	for(int i = 0, len = s.len(); i < len; ++i)
 	{
-		s.myStr[i] = ToUpper(s.myStr[i]);
+		s.string_[i] = ToUpper(s.string_[i]);
 	}
 }
 
@@ -455,7 +455,7 @@ void Str::toLower(String& s)
 {
 	for(int i = 0, len = s.len(); i < len; ++i)
 	{
-		s.myStr[i] = ToLower(s.myStr[i]);
+		s.string_[i] = ToLower(s.string_[i]);
 	}
 }
 
@@ -473,7 +473,7 @@ String Str::substr(StringRef s, int pos, int n)
 	else if(pos < len && n > 0)
 	{
 		n = min(n, len - pos);
-		return String(s.myStr + pos, n);
+		return String(s.string_ + pos, n);
 	}
 	return {};
 }
@@ -482,14 +482,14 @@ int Str::nextChar(StringRef s, int pos)
 {
 	int len = s.len();
 	if(pos >= len) return String::npos;
-	do { ++pos; } while(pos < len && (s.myStr[pos] & 0xC0) == 0x80);
+	do { ++pos; } while(pos < len && (s.string_[pos] & 0xC0) == 0x80);
 	return pos;
 }
 
 int Str::prevChar(StringRef s, int pos)
 {
 	if(pos <= 0) return -1;
-	do { --pos; } while(pos >= 0 && (s.myStr[pos] & 0xC0) == 0x80);
+	do { --pos; } while(pos >= 0 && (s.string_[pos] & 0xC0) == 0x80);
 	return pos;
 }
 
@@ -503,7 +503,7 @@ int Str::find(StringRef s, char c, int pos)
 {
 	int len = s.len();
 	pos = max(pos, 0);
-	while(pos < len && s.myStr[pos] != c) ++pos;
+	while(pos < len && s.string_[pos] != c) ++pos;
 	return (pos < len) ? pos : String::npos;
 }
 
@@ -517,9 +517,9 @@ int Str::find(StringRef s, const char* str, int pos)
 
 	for(int i = pos; i < len; ++i)
 	{
-		if(s.myStr[i] == *str)
+		if(s.string_[i] == *str)
 		{
-			const char* a = str, *b = s.myStr + i;
+			const char* a = str, *b = s.string_ + i;
 			while(*a && *a == *b) ++a, ++b;
 			if(*a == 0) return i;
 		}
@@ -532,7 +532,7 @@ int Str::findLast(StringRef s, char c, int pos)
 {
 	int len = s.len();
 	pos = min(pos, len - 1);
-	while(pos >= 0 && s.myStr[pos] != c) --pos;
+	while(pos >= 0 && s.string_[pos] != c) --pos;
 	return (pos >= 0) ? pos : -1;
 }
 
@@ -542,7 +542,7 @@ int Str::findAnyOf(StringRef s, const char* c, int pos)
 	pos = max(pos, 0);
 	while(pos < len)
 	{
-		const char a = s.myStr[pos], *b = c;
+		const char a = s.string_[pos], *b = c;
 		while(*b && *b != a) ++b;
 		if(*b) break;
 		++pos;
@@ -556,7 +556,7 @@ int Str::findLastOf(StringRef s, const char* c, int pos)
 	pos = min(pos, len - 1);
 	while(pos >= 0)
 	{
-		const char a = s.myStr[pos], *b = c;
+		const char a = s.string_[pos], *b = c;
 		while(*b && *b != a) ++b;
 		if(*b) break;
 		--pos;
@@ -582,14 +582,14 @@ static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
 bool Str::endsWith(StringRef s, const char* suffix, bool useCase)
 {
 	int len = s.len(), n = strlen(suffix), res = 1;
-	if(len >= n) return Equals(s.myStr + len - n, suffix, n, useCase);
+	if(len >= n) return Equals(s.string_ + len - n, suffix, n, useCase);
 	return false;
 }
 
 bool Str::startsWith(StringRef s, const char* prefix, bool useCase)
 {
 	int len = s.len(), n = strlen(prefix), res = 1;
-	if(len >= n) return Equals(s.myStr, prefix, n, useCase);
+	if(len >= n) return Equals(s.string_, prefix, n, useCase);
 	return false;
 }
 
@@ -809,7 +809,7 @@ Fmt& Fmt::arg(char c)
 
 Fmt& Fmt::arg(StringRef s)
 {
-	return arg(s.myStr, s.len());
+	return arg(s.string_, s.len());
 }
 
 Fmt& Fmt::arg(const char* s)
@@ -858,12 +858,12 @@ Fmt& Fmt::arg(const char* s, int n)
 	if(n > markerLen)
 	{
 		Str2::createGap(str, markerPos + markerLen, n - markerLen);
-		memcpy(str.myStr + markerPos, s, n);
+		memcpy(str.string_ + markerPos, s, n);
 	}
 	else
 	{
 		Str2::closeGap(str, markerPos, markerLen - n);
-		memcpy(str.myStr + markerPos, s, n);
+		memcpy(str.string_ + markerPos, s, n);
 	}
 
 	return *this;
