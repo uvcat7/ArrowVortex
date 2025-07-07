@@ -151,7 +151,7 @@ void WgCheckbox::onDraw()
 	auto& misc = GuiDraw::getMisc();
 
 	// Draw the checkbox graphic.
-	recti box = getCheckboxRect_();
+	recti box = GetCheckboxRect();
 	bool checked = value.get();
 	textbox.base.draw(box);
 	if(checked) Draw::sprite(icons.check, {box.x + box.w / 2, box.y + box.h / 2});
@@ -167,7 +167,7 @@ void WgCheckbox::onDraw()
 	Text::draw({r.x + 22, r.y, r.w - 24, r.h});
 }
 
-recti WgCheckbox::getCheckboxRect_() const
+recti WgCheckbox::GetCheckboxRect() const
 {
 	recti r = rect_;
 	return {r.x + 2, r.y + r.h / 2 - 8, 16, 16};
@@ -200,7 +200,7 @@ void WgSlider::onMousePress(MousePress& evt)
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
 			startCapturingMouse();
-			sliderDrag_(evt.x, evt.y);
+			SliderDrag(evt.x, evt.y);
 		}
 		evt.setHandled();
 	}
@@ -210,7 +210,7 @@ void WgSlider::onMouseRelease(MouseRelease& evt)
 {
 	if(evt.button == Mouse::LMB && isCapturingMouse())
 	{
-		sliderDrag_(evt.x, evt.y);
+		SliderDrag(evt.x, evt.y);
 		stopCapturingMouse();
 	}
 }
@@ -222,7 +222,7 @@ void WgSlider::onTick()
 	if(isCapturingMouse())
 	{
 		vec2i mpos = gui_->getMousePos();
-		sliderDrag_(mpos.x, mpos.y);
+		SliderDrag(mpos.x, mpos.y);
 	}
 }
 
@@ -256,7 +256,7 @@ void WgSlider::onDraw()
 	}
 }
 
-void WgSlider::sliderUpdateValue_(double v)
+void WgSlider::SliderUpdateValue(double v)
 {
 	double prev = value.get();
 	v = min(v, max(slider_begin_, slider_end_));
@@ -265,12 +265,12 @@ void WgSlider::sliderUpdateValue_(double v)
 	if(value.get() != prev) onChange.call();
 }
 
-void WgSlider::sliderDrag_(int x, int y)
+void WgSlider::SliderDrag(int x, int y)
 {
 	recti r = rect_;
 	r.w = max(r.w, 1);
 	double val = slider_begin_ + (slider_end_ - slider_begin_) * ((double)(x - r.x) / (double)r.w);
-	sliderUpdateValue_(val);
+	SliderUpdateValue(val);
 }
 
 }; // namespace Vortex

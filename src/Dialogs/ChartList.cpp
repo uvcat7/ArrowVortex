@@ -172,18 +172,18 @@ ChartList(GuiContext* gui)
 
 void onUpdateSize() override
 {
-	scrollHeight_ = GetChartListH();
-	clampScrollValues_();
+	scroll_height_ = GetChartListH();
+	ClampScrollPositions();
 }
 
 void onTick() override
 {
-	preTick_();
+	PreTick();
 
-	int viewW = getViewWidth() - 2 * isVerticalScrollbarActive_;
+	int viewW = getViewWidth() - 2 * is_vertical_scrollbar_active_;
 
 	// Update the properties of each button.
-	int y = rect_.y - scrollPositionY_;
+	int y = rect_.y - scroll_position_y_;
 	const Style* style = nullptr;
 	for(int i = 0; i < myButtons.size(); ++i)
 	{
@@ -199,16 +199,16 @@ void onTick() override
 		y += 21;
 	}
 
-	postTick_();
+	PostTick();
 }
 
 void onDraw() override
 {
 	TextStyle textStyle;
-	int w = getViewWidth() - 2 * isVerticalScrollbarActive_;
+	int w = getViewWidth() - 2 * is_vertical_scrollbar_active_;
 	int h = getViewHeight();
 	int x = rect_.x;
-	int y = rect_.y - scrollPositionY_;
+	int y = rect_.y - scroll_position_y_;
 	const Style* style = nullptr;
 	int chartIndex = 0;
 

@@ -20,27 +20,27 @@ WgSelectList::~WgSelectList()
 
 WgSelectList::WgSelectList(GuiContext* gui)
 	: GuiWidget(gui)
-	, scrollPosition_(0)
-	, isInteracted_(0)
-	, showBackground_(1)
+	, scroll_position_(0)
+	, is_interacted_(0)
+	, show_background_(1)
 {
 	scrollbar_ = new WgScrollbarV(gui_);
-	scrollbar_->value.bind(&scrollPosition_);
+	scrollbar_->value.bind(&scroll_position_);
 }
 
 void WgSelectList::hideBackground()
 {
-	showBackground_ = 0;
+	show_background_ = 0;
 }
 
 void WgSelectList::addItem(StringRef text)
 {
-	scrollbarItems_.push_back(text);
+	selectlist_items_.push_back(text);
 }
 
 void WgSelectList::clearItems()
 {
-	scrollbarItems_.clear();
+	selectlist_items_.clear();
 }
 
 void WgSelectList::onMousePress(MousePress& evt)
@@ -52,10 +52,10 @@ void WgSelectList::onMousePress(MousePress& evt)
 			startCapturingMouse();
 
 			// Handle interaction with the item list.
-			int i = HoveredItem_(evt.x, evt.y);
+			int i = HoveredItem(evt.x, evt.y);
 			if(i >= 0)
 			{
-				isInteracted_ = 1;
+				is_interacted_ = 1;
 				if(value.get() != i)
 				{
 					value.set(i);
@@ -77,7 +77,7 @@ void WgSelectList::onMouseRelease(MouseRelease& evt)
 
 void WgSelectList::onMouseScroll(MouseScroll& evt)
 {
-	if(isMouseOver() && hasScrollbar_() && !evt.handled)
+	if(isMouseOver() && HasScrollBar() && !evt.handled)
 	{
 		scroll(evt.up);
 		evt.handled = true;
@@ -86,11 +86,11 @@ void WgSelectList::onMouseScroll(MouseScroll& evt)
 
 void WgSelectList::scroll(bool up)
 {
-	if(hasScrollbar_())
+	if(HasScrollBar())
 	{
-		int end = scrollbarItems_.size() * ITEM_H - itemRect_().h;
+		int end = selectlist_items_.size() * ITEM_H - ItemRect().h;
 		int delta = up ? -ITEM_H : ITEM_H;
-		scrollPosition_ = min(max(scrollPosition_ + delta, 0), end);
+		scroll_position_ = min(max(scroll_position_ + delta, 0), end);
 	}
 }
 
@@ -104,8 +104,8 @@ void WgSelectList::onArrange(recti r)
 
 void WgSelectList::onTick()
 {
-	scrollbar_->setEnd(scrollbarItems_.size() * ITEM_H);
-	scrollbar_->setPage(itemRect_().h);
+	scrollbar_->setEnd(selectlist_items_.size() * ITEM_H);
+	scrollbar_->setPage(ItemRect().h);
 	scrollbar_->tick();
 
 	GuiWidget::onTick();
@@ -118,41 +118,41 @@ void WgSelectList::onDraw()
 
 	// Draw the list background box.
 	recti r = rect_;
-	if(showBackground_)
+	if(show_background_)
 	{
 		textbox.base.draw(r);
 	}
 
-	r = itemRect_();
+	r = ItemRect();
 	Renderer::pushScissorRect(r.x, r.y, r.w, r.h);
 
 	// Highlight the currently selected item.
-	int item = value.get(), numItems = scrollbarItems_.size();
+	int item = value.get(), numItems = selectlist_items_.size();
 	if(item >= 0 && item < numItems)
 	{
-		misc.imgSelect.draw({r.x, r.y - scrollPosition_ + item * ITEM_H, r.w, ITEM_H});
+		misc.imgSelect.draw({r.x, r.y - scroll_position_ + item * ITEM_H, r.w, ITEM_H});
 	}
 
 	// Highlight the mouse over item.
 	if(isMouseOver())
 	{
 		vec2i mpos = gui_->getMousePos();
-		int mo = HoveredItem_(mpos.x, mpos.y);
+		int mo = HoveredItem(mpos.x, mpos.y);
 		if(mo != item && mo >= 0 && mo < numItems)
 		{
 			color32 col = Color32(255, 255, 255, isEnabled() ? 128 : 0);
-			misc.imgSelect.draw({r.x, r.y - scrollPosition_ + mo * ITEM_H, r.w, ITEM_H}, col);
+			misc.imgSelect.draw({r.x, r.y - scroll_position_ + mo * ITEM_H, r.w, ITEM_H}, col);
 		}
 	}
 
 	// Draw the item texts.
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	for(int i = 0, ty = r.y - scrollPosition_; i<numItems; ++i, ty += ITEM_H)
+	for(int i = 0, ty = r.y - scroll_position_; i<numItems; ++i, ty += ITEM_H)
 	{
 		if(ty > r.y - ITEM_H && ty < r.y + r.h)
 		{
-			Text::arrange(Text::MC, style, scrollbarItems_[i].str());
+			Text::arrange(Text::MC, style, selectlist_items_[i].str());
 			Text::draw({r.x + 2, ty, r.w - 2, ITEM_H});
 		}
 	}
@@ -160,32 +160,32 @@ void WgSelectList::onDraw()
 	Renderer::popScissorRect();
 
 	// Draw the scrollbar.
-	if(hasScrollbar_())
+	if(HasScrollBar())
 	{
 		scrollbar_->draw();
 	}
 }
 
-int WgSelectList::HoveredItem_(int x, int y)
+int WgSelectList::HoveredItem(int x, int y)
 {
-	recti r = itemRect_();
+	recti r = ItemRect();
 	if(x >= r.x && y >= r.y && x < r.x+r.w && y < r.y+r.h)
 	{
-		int i = (y - r.y + scrollPosition_) / ITEM_H;
-		if(i >= 0 && i < scrollbarItems_.size()) return i;
+		int i = (y - r.y + scroll_position_) / ITEM_H;
+		if(i >= 0 && i < selectlist_items_.size()) return i;
 	}
 	return -1;
 }
 
-bool WgSelectList::hasScrollbar_() const
+bool WgSelectList::HasScrollBar() const
 {
-	return (scrollbarItems_.size() * ITEM_H) > (rect_.h - 6);
+	return (selectlist_items_.size() * ITEM_H) > (rect_.h - 6);
 }
 
-recti WgSelectList::itemRect_() const
+recti WgSelectList::ItemRect() const
 {
 	recti r = rect_;
-	if(hasScrollbar_()) r.w -= scrollbar_->getWidth() + 1;
+	if(HasScrollBar()) r.w -= scrollbar_->getWidth() + 1;
 	return {r.x+3, r.y+3, r.w-6, r.h-6};
 }
 
@@ -197,45 +197,45 @@ recti WgSelectList::itemRect_() const
 WgDroplist::~WgDroplist()
 {
 	clearItems();
-	dropListClose_();
+	CloseDroplist();
 }
 
 WgDroplist::WgDroplist(GuiContext* gui)
 	: GuiWidget(gui)
 {
-	selectList_ = nullptr;
+	selectlist_widget_ = nullptr;
 }
 
 void WgDroplist::onMousePress(MousePress& evt)
 {
-	if(selectList_)
+	if(selectlist_widget_)
 	{
-		recti r = selectList_->getRect();
+		recti r = selectlist_widget_->getRect();
 		if(evt.button == Mouse::RMB || !IsInside(r, evt.x, evt.y))
 		{
-			dropListClose_();
+			CloseDroplist();
 			evt.setHandled();
 		}
 	}
 	else if(isMouseOver())
 	{
-		int numItems = listItems_.size();
+		int numItems = droplist_items_.size();
 		if(isEnabled() && numItems && evt.button == Mouse::LMB && evt.unhandled())
 		{
 			int h = min(numItems * 18 + 8, 128);
 			recti r = {rect_.x, rect_.y + rect_.h, rect_.w, h};
-			selectList_ = new WgSelectList(gui_);
-			selectList_->setHeight(h);
-			selectList_->onArrange(r);
-			selectList_->hideBackground();
+			selectlist_widget_ = new WgSelectList(gui_);
+			selectlist_widget_->setHeight(h);
+			selectlist_widget_->onArrange(r);
+			selectlist_widget_->hideBackground();
 
 			for(int i = 0; i < numItems; ++i)
 			{
-				selectList_->addItem(listItems_[i].str());
+				selectlist_widget_->addItem(droplist_items_[i].str());
 			}
 
-			selectedIndex_ = value.get();
-			selectList_->value.bind(&selectedIndex_);
+			selected_index_ = value.get();
+			selectlist_widget_->value.bind(&selected_index_);
 
 			startCapturingMouse();
 			startCapturingFocus();
@@ -251,9 +251,9 @@ void WgDroplist::onMouseRelease(MouseRelease& evt)
 
 void WgDroplist::onMouseScroll(MouseScroll& evt)
 {
-	if(selectList_ && !evt.handled)
+	if(selectlist_widget_ && !evt.handled)
 	{
-		selectList_->scroll(evt.up);
+		selectlist_widget_->scroll(evt.up);
 		evt.handled = true;
 	}
 }
@@ -261,26 +261,26 @@ void WgDroplist::onMouseScroll(MouseScroll& evt)
 void WgDroplist::onArrange(recti r)
 {
 	GuiWidget::onArrange(r);
-	if(selectList_)
+	if(selectlist_widget_)
 	{
-		selectList_->onArrange({rect_.x, rect_.y + rect_.h, rect_.w, selectList_->getSize().y});
+		selectlist_widget_->onArrange({rect_.x, rect_.y + rect_.h, rect_.w, selectlist_widget_->getSize().y});
 	}
 }
 
 void WgDroplist::onTick()
 {
 	GuiWidget::onTick();
-	if(selectList_)
+	if(selectlist_widget_)
 	{
-		selectList_->tick();
-		if(selectList_->interacted())
+		selectlist_widget_->tick();
+		if(selectlist_widget_->interacted())
 		{
-			if(selectedIndex_ != value.get())
+			if(selected_index_ != value.get())
 			{
-				value.set(selectedIndex_);
+				value.set(selected_index_);
 				onChange.call();
 			}
-			dropListClose_();
+			CloseDroplist();
 		}
 	}	
 }
@@ -291,16 +291,16 @@ void WgDroplist::onDraw()
 	auto& misc = GuiDraw::getMisc();
 	auto& icons = GuiDraw::getIcons();
 
-	int numItems = listItems_.size();
+	int numItems = droplist_items_.size();
 
 	// Draw the list of items.
-	if(selectList_)
+	if(selectlist_widget_)
 	{
 		recti r = Expand(rect_, 1);
-		r.h += selectList_->getHeight();
+		r.h += selectlist_widget_->getHeight();
 		auto& textbox = GuiDraw::getTextBox();
 		textbox.base.draw(r);
-		selectList_->draw();
+		selectlist_widget_->draw();
 	}
 
 	// Draw the button graphic.
@@ -316,7 +316,7 @@ void WgDroplist::onDraw()
 	int item = value.get();
 	if(item >= 0 && item < numItems)
 	{
-		Text::arrange(Text::MC, style, rect_.w - 18, listItems_[item].str());
+		Text::arrange(Text::MC, style, rect_.w - 18, droplist_items_[item].str());
 		Text::draw({r.x + 6, r.y, r.w - 18, r.h});
 	}
 
@@ -333,20 +333,20 @@ void WgDroplist::onDraw()
 
 void WgDroplist::clearItems()
 {
-	listItems_.clear();
+	droplist_items_.clear();
 }
 
 void WgDroplist::addItem(StringRef text)
 {
-	listItems_.push_back(text);
+	droplist_items_.push_back(text);
 }
 
-void WgDroplist::dropListClose_()
+void WgDroplist::CloseDroplist()
 {
-	if(selectList_)
+	if(selectlist_widget_)
 	{
-		delete selectList_;
-		selectList_ = nullptr;
+		delete selectlist_widget_;
+		selectlist_widget_ = nullptr;
 		stopCapturingFocus();
 	}
 }
@@ -366,17 +366,17 @@ WgCycleButton::WgCycleButton(GuiContext* gui)
 
 void WgCycleButton::addItem(StringRef text)
 {
-	cycleItems_.push_back(text);
+	cycle_items_.push_back(text);
 }
 
 void WgCycleButton::clearItems()
 {
-	cycleItems_.clear();
+	cycle_items_.clear();
 }
 
 void WgCycleButton::onMousePress(MousePress& evt)
 {
-	int numItems = cycleItems_.size();
+	int numItems = cycle_items_.size();
 	if(isMouseOver())
 	{
 		if(numItems > 1 && isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
@@ -411,7 +411,7 @@ void WgCycleButton::onDraw()
 	auto& icons = GuiDraw::getIcons();
 	auto& button = GuiDraw::getButton();
 
-	int numItems = cycleItems_.size(), item = value.get();
+	int numItems = cycle_items_.size(), item = value.get();
 
 	// Draw the button graphic.
 	recti r = rect_;
@@ -435,7 +435,7 @@ void WgCycleButton::onDraw()
 		if(!isEnabled()) style.textColor = misc.colDisabled;
 
 		Renderer::pushScissorRect(Shrink(rect_, 2));
-		Text::arrange(Text::MC, style, cycleItems_[item].str());
+		Text::arrange(Text::MC, style, cycle_items_[item].str());
 		Text::draw({r.x + 2, r.y, r.w - 4, r.h});
 		Renderer::popScissorRect();
 	}
