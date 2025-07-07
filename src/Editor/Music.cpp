@@ -3,7 +3,6 @@
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
-#include <chrono>
 
 #include <Core/Vector.h>
 #include <Core/Reference.h>
@@ -20,7 +19,6 @@
 
 #include <Editor/ConvertToOgg.h>
 #include <Editor/Editor.h>
-#include <Editor/View.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
 
@@ -50,7 +48,7 @@ struct MusicImpl : public Music, public MixSource {
 
 Mixer* myMixer;
 Sound mySamples;
-std::chrono::steady_clock::time_point myPlayTimer;
+double myPlayTimer;
 TickData myBeatTick, myNoteTick;
 String myTitle, myArtist;
 int myMusicSpeed;

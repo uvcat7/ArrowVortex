@@ -21,20 +21,15 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <winuser.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <gl/gl.h>
 #undef ERROR
 
-#include <chrono>
-#include <thread>
-#include <numeric>
 #include <stdio.h>
 #include <ctime>
 #include <bitset>
-#include <list>
 
 #undef DELETE
 
@@ -45,7 +40,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 namespace Vortex {
 
-std::chrono::duration<double> deltaTime; // Defined in <Core/Core.h>
+float deltaTime; // Defined in <Core/Core.h>
 
 namespace {
 
@@ -151,19 +146,9 @@ static bool LogCheckpoint(bool result, const char* description)
 	}
 	else
 	{
-		char lpMsgBuf[100];
 		DWORD code = GetLastError();
-		FormatMessageA(
-			FORMAT_MESSAGE_FROM_SYSTEM |
-			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			code,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			lpMsgBuf,
-			60, 
-			NULL);
 		Debug::blockBegin(Debug::ERROR, description);
-		Debug::log("windows error code %i: %s", code, lpMsgBuf);
+		Debug::log("windows error code: %i\n", code);
 		Debug::blockEnd();
 	}
 	return !result;
@@ -222,7 +207,7 @@ struct SystemImpl : public System {
 
 wchar_t* myClassName;
 HINSTANCE myInstance;
-std::chrono::steady_clock::time_point myApplicationStartTime;
+double myApplicationStartTime;
 Cursor::Icon myCursor;
 Key::Code myKeyMap[256];
 InputEvents myEvents;
@@ -347,7 +332,7 @@ SystemImpl()
 	Debug::log("swap interval support :: %s\n", wglSwapInterval ? "OK" : "MISSING");
 	if(wglSwapInterval)
 	{
-		wglSwapInterval(-1);
+		wglSwapInterval(1);
 		VortexCheckGlError();
 	}
 
@@ -396,38 +381,26 @@ void createMenu()
 	SetMenu(myHWND, menu);
 }
 
-void CALLBACK messageLoop()
+void messageLoop()
 {
-	using namespace std::chrono;
 	if(!myInitSuccesful) return;
 
-#ifdef DEBUG
-	long long frames = 0;
-	auto lowcounts = 0;
-	std::list<double> fpsList, sleepList, frameList, inputList, waitList; 
-	auto frameGuess = 960;
-#endif
+	deltaTime = 1.0 / 60.0;
 
 	Editor::create();
 	forwardArgs();
 	createMenu();
 
-	// Non-vsync FPS max target
-	auto frameTarget = duration<double>(1.0/960.0);
-
 	// Enter the message loop.
 	MSG message;
-	auto prevTime = Debug::getElapsedTime();
-
+	double prevTime = Debug::getElapsedTime();
 	while(!myIsTerminated)
 	{
-
-		auto startTime = Debug::getElapsedTime();
-
 		myEvents.clear();
+
 		// Process all windows messages.
 		myIsInsideMessageLoop = true;
-		while (PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE | PM_NOYIELD))
+		while(PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE))
 		{
 			GetMessageW(&message, nullptr, 0, 0);
 			TranslateMessage(&message);
@@ -436,19 +409,12 @@ void CALLBACK messageLoop()
 		myIsInsideMessageLoop = false;
 
 		// Check if there were text input events.
-		if (myInput.size())
+		if(myInput.size())
 		{
 			String input = Narrow(myInput);
 			myEvents.addTextInput(input.str());
 			myInput = WideString();
 		}
-
-		// Reset the mouse cursor.
-		myCursor = Cursor::ARROW;
-
-#ifdef DEBUG
-		auto inputTime = Debug::getElapsedTime();
-#endif
 
 		// Set up the OpenGL view.
 		glViewport(0, 0, mySize.x, mySize.y);
@@ -456,84 +422,19 @@ void CALLBACK messageLoop()
 		glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		VortexCheckGlError();
+		// Reset the mouse cursor.
+		myCursor = Cursor::ARROW;
+
+		// Tick function.
+		double curTime = Debug::getElapsedTime();
+		deltaTime = (float)min(max(0.00025, curTime - prevTime), 0.25);
+		prevTime = curTime;
 
 		gEditor->tick();
+		Debug::logBlankLine();
 
 		// Display.
 		SwapBuffers(myHDC);
-
-#ifdef DEBUG
-		auto renderTime = Debug::getElapsedTime();	
-#endif
-
-		// Tick function.
-		duration<double> frameTime = Debug::getElapsedTime() - prevTime;
-		auto waitTime = frameTarget.count() - frameTime.count();
-
-		if (wglSwapInterval)
-		{
-			while (Debug::getElapsedTime() - prevTime < frameTarget)
-			{
-				std::this_thread::yield();
-			}
-		}
-
-		// End of frame
-		auto curTime = Debug::getElapsedTime();
-		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
-		prevTime = curTime;
-
-#ifdef DEBUG
-
-		fpsList.push_front(deltaTime.count());
-		waitList.push_front(duration<double>(curTime - renderTime).count());
-		frameList.push_front(duration<double>(renderTime - inputTime).count());
-		inputList.push_front(duration<double>(inputTime - startTime).count());
-
-		if (abs(deltaTime.count() - 1.0/(double)frameGuess) / (1.0/(double)frameGuess) > 0.01)
-		{
-			lowcounts++;
-		}
-		if (fpsList.size() >= frameGuess * 2)
-		{
-			fpsList.pop_back();
-			frameList.pop_back();
-			inputList.pop_back();
-			waitList.pop_back();
-		}
-		auto min = *std::min_element(fpsList.begin(), fpsList.end());
-		auto max = *std::max_element(fpsList.begin(), fpsList.end());
-		auto maxIndex = std::distance(fpsList.begin(), std::max_element(fpsList.begin(), fpsList.end()));
-		auto siz = fpsList.size();
-		auto avg = std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
-		auto varianceFunc = [&avg, &siz](double accumulator, double val){
-			return accumulator + (val - avg) * (val - avg);
-		};
-		auto std = sqrt(std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) / siz);
-		auto frameAvg = std::accumulate(frameList.begin(), frameList.end(), 0.0) / frameList.size();
-		auto frameMax = frameList.begin();
-		std::advance(frameMax, maxIndex);
-		auto inputMax = inputList.begin();
-		std::advance(inputMax, maxIndex);
-		auto waitMax = waitList.begin();
-		std::advance(waitMax, maxIndex);
-		if (frames % (frameGuess * 2) == 0)
-		{
-			Debug::log("frame total average: %f, frame render average %f, std dev %f, lowest FPS %f, highest FPS %f, highest FPS render time %f, highest FPS input time %f, highest FPS wait time %f, lag frames %d\n",
-				avg,
-				frameAvg,
-				std,
-				1.0 / max,
-				1.0 / min,
-				*frameMax,
-				*inputMax,
-				*waitMax,
-				lowcounts);
-			lowcounts = 0;
-		}
-		frames++;
-#endif
 	}
 	Editor::destroy();
 }

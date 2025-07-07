@@ -321,6 +321,8 @@ void Text::draw(vec2i textPos)
 		}
 		batch.flush();
 	}
+
+	VortexCheckGlError();
 }
 
 };

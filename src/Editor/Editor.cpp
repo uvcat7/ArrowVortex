@@ -893,13 +893,13 @@ void tick()
 	gTextOverlay->handleInputs(events);
 
 	GuiMain::setViewSize(r.w, r.h);
-	GuiMain::frameStart(deltaTime.count(), events);
+	GuiMain::frameStart(deltaTime, events);
 
 	vec2i view = gSystem->getWindowSize();
 
 	handleDialogs();
 
-	gui_->tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
+	gui_->tick({ 0, 0, view.x, view.y }, deltaTime, events);
 
 	if (!GuiMain::isCapturingText())
 	{
