@@ -584,7 +584,7 @@ recti getGithubButtonRect()
 recti getSupportButtonRect()
 {
 	vec2i w = gSystem->getWindowSize();
-	return { w.x / 2 + 22, w.y / 2 - 60, 64, 28 };
+	return { w.x / 2 + 16, w.y / 2 - 60, 64, 28 };
 }
 
 void drawAbout()
