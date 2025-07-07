@@ -21,15 +21,19 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <winuser.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <gl/gl.h>
 #undef ERROR
 
+#include <thread>
+#include <numeric>
 #include <stdio.h>
 #include <ctime>
 #include <bitset>
+#include <list>
 
 #undef DELETE
 
@@ -146,9 +150,19 @@ static bool LogCheckpoint(bool result, const char* description)
 	}
 	else
 	{
+		char lpMsgBuf[100];
 		DWORD code = GetLastError();
+		FormatMessageA(
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			code,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			lpMsgBuf,
+			60, 
+			NULL);
 		Debug::blockBegin(Debug::ERROR, description);
-		Debug::log("windows error code: %i\n", code);
+		Debug::log("windows error code %i: %s", code, lpMsgBuf);
 		Debug::blockEnd();
 	}
 	return !result;
@@ -332,7 +346,7 @@ SystemImpl()
 	Debug::log("swap interval support :: %s\n", wglSwapInterval ? "OK" : "MISSING");
 	if(wglSwapInterval)
 	{
-		wglSwapInterval(1);
+		wglSwapInterval(-1);
 		VortexCheckGlError();
 	}
 
@@ -381,11 +395,16 @@ void createMenu()
 	SetMenu(myHWND, menu);
 }
 
-void messageLoop()
+void CALLBACK messageLoop()
 {
 	if(!myInitSuccesful) return;
 
-	deltaTime = 1.0 / 60.0;
+#ifdef DEBUG
+	long long frames = 0;
+	auto lowcounts = 0;
+	std::list<double> fpsList, sleepList, frameList, inputList, waitList; 
+	auto frameGuess = 960;
+#endif
 
 	Editor::create();
 	forwardArgs();
@@ -396,11 +415,13 @@ void messageLoop()
 	double prevTime = Debug::getElapsedTime();
 	while(!myIsTerminated)
 	{
-		myEvents.clear();
 
+		auto startTime = Debug::getElapsedTime();
+
+		myEvents.clear();
 		// Process all windows messages.
 		myIsInsideMessageLoop = true;
-		while(PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE))
+		while (PeekMessage(&message, nullptr, 0, 0, PM_NOREMOVE | PM_NOYIELD))
 		{
 			GetMessageW(&message, nullptr, 0, 0);
 			TranslateMessage(&message);
@@ -431,7 +452,6 @@ void messageLoop()
 		prevTime = curTime;
 
 		gEditor->tick();
-		Debug::logBlankLine();
 
 		// Display.
 		SwapBuffers(myHDC);

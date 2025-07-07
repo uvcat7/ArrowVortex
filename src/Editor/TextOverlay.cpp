@@ -575,7 +575,7 @@ void drawAbout()
 	Text::arrange(Text::BC, "ArrowVortex (beta)");
 	Text::draw(vec2i{size.x / 2, size.y / 2 - 2});
 
-	Text::arrange(Text::TC, "(C) Bram 'Fietsemaker' van de Wetering");
+	Text::arrange(Text::TC, "Bram 'Fietsemaker' van de Wetering");
 	Text::draw(vec2i{size.x / 2, size.y / 2 + 2});
 
 	String buildDate = "Build :: " + System::getBuildData();
