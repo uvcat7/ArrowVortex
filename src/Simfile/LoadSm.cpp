@@ -520,7 +520,6 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 					// The first (smallest) match is always the best
 					if (valid)
 					{
-						// numLines will be the quantization
 						quantization = i;
 						break;
 					}
