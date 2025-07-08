@@ -526,23 +526,16 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 			// The first (largest) match is always the best
 			if (valid && i >= MIN_SECTIONS_PER_MEASURE)
 			{
-				// Is our factor a standard snap? If so, use it.
-				for (int j = 0; j < NUM_MEASURE_SUBDIV; j++)
-				{
-					if (MEASURE_SUBDIV[j] == i)
-					{
-						count = i;
-						break;
-					}
-				}
-				// If not, save the measure as 192nds for SM5 Editor compatibility.
-				if (count != i)
-				{
-					count = ROWS_PER_NOTE_SECTION;
-				}
+				count = i;
 				break;
 			}
 		}
+	}
+	// Is our factor a standard snap? If so, use it.
+	// If not, save the measure as 192nds for SM5 Editor compatibility.
+	if (ROWS_PER_NOTE_SECTION % count != 0)
+	{
+		count = ROWS_PER_NOTE_SECTION;
 	}
 	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
 }
