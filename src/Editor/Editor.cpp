@@ -126,7 +126,7 @@ static SimFormat ToSimFormat(StringRef str)
 
 struct EditorImpl : public Editor, public InputHandler {
 
-GuiContext* myGui;
+GuiContext* gui_;
 DialogEntry myDialogs[NUM_DIALOG_IDS];
 int myChanges;
 Texture myLogo;
@@ -158,7 +158,7 @@ EditorImpl()
 		dialog.requestOpen = false;
 	}
 
-	myGui = nullptr;
+	gui_ = nullptr;
 	myChanges = 0;
 
 	myUseMultithreading = true;
@@ -167,7 +167,7 @@ EditorImpl()
 	myBackgroundStyle = BG_STYLE_STRETCH;
 	myDefaultSaveFormat = SIM_SM;
 
-	myFontPath = "assets/bokutachi no gothic 2.otf";
+	myFontPath = "assets/NotoSansJP-Medium.ttf";
 	myFontSize = 13;
 }
 
@@ -190,14 +190,14 @@ void init()
 	GuiMain::init();
 	GuiMain::setClipboardFunctions(ClipboardGet, ClipboardSet);
 
-	myGui = GuiContext::create();
+	gui_ = GuiContext::create();
 
 	// Initialize the default text style.
 	TextStyle text;
 	text.font = Font(myFontPath.str(), Text::HINT_AUTO);
 	text.fontSize = myFontSize;
 	text.textColor = Colors::white;
-	text.shadowColor = COLOR32(0, 0, 0, 128);
+	text.shadowColor = RGBAtoColor32(0, 0, 0, 128);
 	text.makeDefault();
 
 	// Create the text overlay, so other editor components can show HUD messages.
@@ -259,7 +259,7 @@ void shutdown()
 	saveDialogSettings(settings);
 
 	// Destroy the gui context first, because some dialogs refer to editor components.
-	delete myGui;
+	delete gui_;
 
 	// Destroy the editor components.
 	Minimap::destroy();
@@ -321,7 +321,8 @@ void loadSettings(XmrDoc& settings)
 		interface->get("fontSize", &myFontSize);
 
 		const char* path = interface->get("fontPath");
-		if(path) myFontPath = path;
+		FileReader testPath;
+		if(path && testPath.open(path)) myFontPath = path;
 	}
 }
 
@@ -880,8 +881,8 @@ void updateTitle()
 void drawLogo()
 {
 	vec2i size = gSystem->getWindowSize();
-	Draw::fill({0, 0, size.x, size.y}, COLOR32(38, 38, 38, 255));
-	Draw::sprite(myLogo, {size.x / 2, size.y / 2}, COLOR32(255, 255, 255, 26));
+	Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(38, 38, 38, 255));
+	Draw::sprite(myLogo, {size.x / 2, size.y / 2}, RGBAtoColor32(255, 255, 255, 26));
 }
 
 void tick()
@@ -896,13 +897,13 @@ void tick()
 	gTextOverlay->handleInputs(events);
 
 	GuiMain::setViewSize(r.w, r.h);
-	GuiMain::frameStart(deltaTime.count(), events);
+	GuiMain::frameStart(deltaTime, events);
 
 	vec2i view = gSystem->getWindowSize();
 
 	handleDialogs();
 
-	myGui->tick({ 0, 0, view.x, view.y }, deltaTime.count(), events);
+	gui_->tick({ 0, 0, view.x, view.y }, deltaTime, events);
 
 	if (!GuiMain::isCapturingText())
 	{
@@ -969,7 +970,7 @@ void tick()
 		drawLogo();
 	}
 
-	myGui->draw();
+	gui_->draw();
 
 	gTextOverlay->draw();
 
@@ -999,7 +1000,7 @@ int getDefaultSaveFormat() const
 
 GuiContext* getGui() const
 {
-	return myGui;
+	return gui_;
 }
 
 }; // EditorImpl

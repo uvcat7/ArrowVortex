@@ -69,46 +69,46 @@ inline void StrCopy(wchar_t* dst, const wchar_t* src, int n)
 
 WideString::~WideString()
 {
-	StrFree(myStr);
+	StrFree(widestring_);
 }
 
 WideString::WideString()
-	: myStr(nullstr)
+	: widestring_(nullstr)
 {
 }
 
 WideString::WideString(WideString&& s)
-	: myStr(s.myStr)
+	: widestring_(s.widestring_)
 {
-	s.myStr = nullstr;
+	s.widestring_ = nullstr;
 }
 
 WideString::WideString(const WideString& s)
 {
 	int n = s.size();
-	StrAlloc(myStr, n);
-	StrCopy(myStr, s.myStr, n + 1);
+	StrAlloc(widestring_, n);
+	StrCopy(widestring_, s.widestring_, n + 1);
 }
 
 WideString::WideString(int n, wchar_t c)
 {
-	StrAlloc(myStr, n);
-	StrSet(myStr, c, n);
-	myStr[n] = 0;
+	StrAlloc(widestring_, n);
+	StrSet(widestring_, c, n);
+	widestring_[n] = 0;
 }
 
 WideString::WideString(const wchar_t* s)
 {
 	int n = wcslen(s);
-	StrAlloc(myStr, n);
-	StrCopy(myStr, s, n + 1);
+	StrAlloc(widestring_, n);
+	StrCopy(widestring_, s, n + 1);
 }
 
 WideString::WideString(const wchar_t* s, int n)
 {
-	StrAlloc(myStr, n);
-	StrCopy(myStr, s, n);
-	myStr[n] = 0;
+	StrAlloc(widestring_, n);
+	StrCopy(widestring_, s, n);
+	widestring_[n] = 0;
 }
 
 WideString& WideString::operator = (WideString&& s)
@@ -125,8 +125,8 @@ WideString& WideString::operator = (const WideString& s)
 
 void WideString::clear()
 {
-	StrFree(myStr);
-	myStr = nullstr;
+	StrFree(widestring_);
+	widestring_ = nullstr;
 }
 
 void WideString::assign(WideString&& s)
@@ -142,24 +142,24 @@ void WideString::assign(const WideString& str)
 void WideString::assign(const wchar_t* begin, const wchar_t* end)
 {
 	int n = end - begin;
-	StrRealloc(myStr, n);
-	StrCopy(myStr, begin, n);
-	myStr[n] = 0;
+	StrRealloc(widestring_, n);
+	StrCopy(widestring_, begin, n);
+	widestring_[n] = 0;
 }
 
 void WideString::swap(WideString& s)
 {
-	wchar_t* tmp = myStr;
-	myStr = s.myStr;
-	s.myStr = tmp;
+	wchar_t* tmp = widestring_;
+	widestring_ = s.widestring_;
+	s.widestring_ = tmp;
 }
 
 void WideString::push_back(wchar_t c)
 {
 	int len = size(), n = len + 1;
-	StrRealloc(myStr, n);
-	myStr[len] = c;
-	myStr[n] = 0;
+	StrRealloc(widestring_, n);
+	widestring_[len] = c;
+	widestring_[n] = 0;
 }
 
 void WideString::append(const WideString& str)
@@ -178,9 +178,9 @@ void WideString::append(const wchar_t* begin, const wchar_t* end)
 	if(n > 0)
 	{
 		int len = size(), newlen = len + n;
-		StrRealloc(myStr, newlen);
-		StrCopy(myStr + len, begin, n);
-		myStr[newlen] = 0;
+		StrRealloc(widestring_, newlen);
+		StrCopy(widestring_ + len, begin, n);
+		widestring_[newlen] = 0;
 	}
 }
 

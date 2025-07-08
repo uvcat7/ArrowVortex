@@ -5,15 +5,13 @@
 
 #include <Editor/View.h>
 
-#define Dlg DialogCustomSnap
-
 namespace Vortex {
 
-	Dlg::~Dlg()
+	DialogCustomSnap::~DialogCustomSnap()
 	{
 	}
 
-	Dlg::Dlg()
+	DialogCustomSnap::DialogCustomSnap()
 	{
 		myCustomSnap = gView->getCustomSnap();
 
@@ -21,19 +19,19 @@ namespace Vortex {
 		myCreateWidgets();
 	}
 
-	void Dlg::myCreateWidgets()
+	void DialogCustomSnap::myCreateWidgets()
 	{
 		myLayout.row().col(80).col(80);
 
 		WgSpinner* scol = myLayout.add<WgSpinner>("Snapping");
 		scol->value.bind(&myCustomSnap);
-		scol->onChange.bind(this, &Dlg::onChange);
+		scol->onChange.bind(this, &DialogCustomSnap::onChange);
 		scol->setRange(1.0, 192.0);
 		scol->setPrecision(0, 0);
 		scol->startCapturingText();
 	}
 
-	void Dlg::onChange()
+	void DialogCustomSnap::onChange()
 	{
 		if (myCustomSnap > 0 && myCustomSnap <= 192)
 		{

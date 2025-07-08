@@ -149,7 +149,7 @@ static bool IsEquivalent(const BpmChange& seg, const BpmChange& other)
 template <>
 static String GetDescription(const BpmChange& seg)
 {
-	return Str::val(seg.bpm, 3, 3);
+	return Str::val(seg.bpm, 3, 6);
 }
 
 static const SegmentMeta BpmChangeMeta =
@@ -158,7 +158,7 @@ static const SegmentMeta BpmChangeMeta =
 	"BPM change",
 	"BPM changes",
 	"Beats per minute",
-	COLOR32(128, 26, 26, 255),
+	RGBAtoColor32(128, 26, 26, 255),
 	SegmentMeta::RIGHT,
 	WRAP(BpmChange)
 };
@@ -212,7 +212,7 @@ static const SegmentMeta StopMeta =
 	"Stop",
 	"Stops",
 	"Duration (seconds)",
-	COLOR32(128, 128, 51, 255),
+	RGBAtoColor32(128, 128, 51, 255),
 	SegmentMeta::LEFT,
 	WRAP(Stop)
 };
@@ -266,7 +266,7 @@ static const SegmentMeta DelayMeta =
 	"Delay",
 	"Delays",
 	"Duration (seconds)",
-	COLOR32(26, 128, 128, 255),
+	RGBAtoColor32(26, 128, 128, 255),
 	SegmentMeta::LEFT,
 	WRAP(Delay)
 };
@@ -320,7 +320,7 @@ static const SegmentMeta WarpMeta =
 	"Warp",
 	"Warps",
 	"Duration (beats)",
-	COLOR32(128, 26, 51, 255),
+	RGBAtoColor32(128, 26, 51, 255),
 	SegmentMeta::RIGHT,
 	WRAP(Warp)
 };
@@ -377,7 +377,7 @@ static const SegmentMeta TimeSignatureMeta =
 	"Time signature",
 	"Time signatures",
 	"Beats per measure\nBeat note type",
-	COLOR32(128, 102, 26, 255),
+	RGBAtoColor32(128, 102, 26, 255),
 	SegmentMeta::LEFT,
 	WRAP(TimeSignature)
 };
@@ -431,7 +431,7 @@ static const SegmentMeta TickCountMeta =
 	"Tick count",
 	"Tick counts",
 	"Hold ticks per beat",
-	COLOR32(51, 128, 26, 255),
+	RGBAtoColor32(51, 128, 26, 255),
 	SegmentMeta::RIGHT,
 	WRAP(TickCount)
 };
@@ -487,7 +487,7 @@ static const SegmentMeta ComboMeta =
 	"Combo segment",
 	"Combo segments",
 	"Hit multiplier\nMiss multiplier",
-	COLOR32(51, 102, 26, 255),
+	RGBAtoColor32(51, 102, 26, 255),
 	SegmentMeta::RIGHT,
 	WRAP(Combo)
 };
@@ -545,7 +545,7 @@ static const SegmentMeta SpeedMeta =
 	"Speed segment",
 	"Speed segments",
 	"Stretch ratio\nDelay time\nUnit (beats/time)",
-	COLOR32(26, 51, 51, 255),
+	RGBAtoColor32(26, 51, 51, 255),
 	SegmentMeta::RIGHT,
 	WRAP(Speed)
 };
@@ -599,7 +599,7 @@ static const SegmentMeta ScrollMeta =
 	"Scroll segment",
 	"Scroll segments",
 	"Scroll rate multiplier",
-	COLOR32(51, 102, 102, 255),
+	RGBAtoColor32(51, 102, 102, 255),
 	SegmentMeta::LEFT,
 	WRAP(Scroll)
 };
@@ -653,7 +653,7 @@ static const SegmentMeta FakeMeta =
 	"Fake segment",
 	"Fake segments",
 	"Duration (beats)",
-	COLOR32(128, 128, 51, 255),
+	RGBAtoColor32(128, 128, 51, 255),
 	SegmentMeta::LEFT,
 	WRAP(Fake)
 };
@@ -706,7 +706,7 @@ static const SegmentMeta LabelMeta =
 	"Label",
 	"Labels",
 	"Description",
-	COLOR32(102, 51, 51, 255),
+	RGBAtoColor32(102, 51, 51, 255),
 	SegmentMeta::RIGHT,
 	WRAP(Label)
 };

@@ -370,8 +370,6 @@ void Action::perform(Type action)
 		gTextOverlay->show(TextOverlay::DEBUG_LOG);
 	CASE(SHOW_ABOUT)
 		gTextOverlay->show(TextOverlay::ABOUT);
-	CASE(SHOW_DONATE)
-		gTextOverlay->show(TextOverlay::DONATE);
 	}};
 
 	if(action >= FILE_OPEN_RECENT_BEGIN && action < FILE_OPEN_RECENT_END)

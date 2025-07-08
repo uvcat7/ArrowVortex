@@ -206,7 +206,6 @@ namespace Action {
 	SHOW_MESSAGE_LOG,
 	SHOW_DEBUG_LOG,
 	SHOW_ABOUT,
-	SHOW_DONATE,
 	};
 
 	// Performs the action associated with the action type.

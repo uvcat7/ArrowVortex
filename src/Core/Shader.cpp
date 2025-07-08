@@ -183,41 +183,41 @@ static GLuint Link(GLuint vert, GLuint frag, String& log)
 
 Shader::~Shader()
 {
-	Destroy(myProgram, myVert, myFrag);
+	Destroy(program_id_, vertex_shader_id_, fragment_shader_id_);
 }
 
-Shader::Shader() : myProgram(0), myVert(0), myFrag(0)
+Shader::Shader() : program_id_(0), vertex_shader_id_(0), fragment_shader_id_(0)
 {
 }
 
 bool Shader::load(const char* vertexCode, const char* fragmentCode, const char* def,
 	const char* shaderName, const char* vertexFile, const char* fragmentFile)
 {
-	Destroy(myProgram, myVert, myFrag);
+	Destroy(program_id_, vertex_shader_id_, fragment_shader_id_);
 
 	String log;
 
-	myVert = Compile(GL_VERTEX_SHADER, vertexCode, log);
-	if(!myVert) return Error(log, "could not compile vertex shader",
+	vertex_shader_id_ = Compile(GL_VERTEX_SHADER, vertexCode, log);
+	if(!vertex_shader_id_) return Error(log, "could not compile vertex shader",
 		shaderName, vertexFile, nullptr);
 	VortexCheckGlError();
 
-	myFrag = Compile(GL_FRAGMENT_SHADER, fragmentCode, log);
-	if(!myFrag) return Error(log, "could not compile fragment shader",
+	fragment_shader_id_ = Compile(GL_FRAGMENT_SHADER, fragmentCode, log);
+	if(!fragment_shader_id_) return Error(log, "could not compile fragment shader",
 		shaderName, fragmentFile, nullptr);
 	VortexCheckGlError();
 
-	myProgram = Link(myVert, myFrag, log);
-	if(!myProgram) return Error(log, "could not link shaders",
+	program_id_ = Link(vertex_shader_id_, fragment_shader_id_, log);
+	if(!program_id_) return Error(log, "could not link shaders",
 		shaderName, vertexFile, fragmentFile);
 	VortexCheckGlError();
 
-	return (myProgram != 0);
+	return (program_id_ != 0);
 }
 
 void Shader::bind()
 {
-	glUseProgram(myProgram);
+	glUseProgram(program_id_);
 }
 
 void Shader::unbind()
@@ -227,7 +227,7 @@ void Shader::unbind()
 
 int Shader::getUniformLocation(const char* name)
 {
-	return glGetUniformLocation(myProgram, name);
+	return glGetUniformLocation(program_id_, name);
 }
 
 void Shader::uniform1i(int loc, int val)

@@ -14,14 +14,12 @@
 
 #include <Editor/Common.h>
 
-#define Dlg DialogChartList
-
 namespace Vortex {
 
 // ================================================================================================
 // ChartButton
 
-struct Dlg::ChartButton : public GuiWidget {
+struct DialogChartList::ChartButton : public GuiWidget {
 
 ChartButton(GuiContext* gui, TileRect2* bar, int index)
 	: GuiWidget(gui)
@@ -62,7 +60,7 @@ void onTick() override
 
 void onDraw() override
 {
-	recti r = myRect;
+	recti r = rect_;
 
 	TextStyle textStyle;
 	textStyle.textFlags = Text::ELLIPSES;
@@ -75,7 +73,7 @@ void onDraw() override
 	if(chart)
 	{
 		// Draw the left-side colored bar with difficulty and meter.
-		recti left = {myRect.x, myRect.y, min(r.w, 128), 20};
+		recti left = {rect_.x, rect_.y, min(r.w, 128), 20};
 		color32 color = ToColor(chart->difficulty);
 		myBar->draw(left, 0, color);
 
@@ -91,7 +89,7 @@ void onDraw() override
 			String stepCount = Str::val(chart->stepCount());
 
 			int maxW = r.w - left.w - 8;
-			recti right = {myRect.x + left.w, myRect.y, myRect.w - left.w, 20};
+			recti right = {rect_.x + left.w, rect_.y, rect_.w - left.w, 20};
 			Text::arrange(Text::MR, textStyle, maxW, stepCount.str());
 			Text::draw(vec2i{right.x + right.w - 6, right.y + 10});
 
@@ -137,7 +135,7 @@ static int GetChartListH()
 	return max(24, h);
 }
 
-struct Dlg::ChartList : public WgScrollRegion {
+struct DialogChartList::ChartList : public WgScrollRegion {
 
 Vector<ChartButton*> myButtons;
 TileRect2 myButtonTex;
@@ -172,18 +170,18 @@ ChartList(GuiContext* gui)
 
 void onUpdateSize() override
 {
-	myScrollH = GetChartListH();
-	myClampScrollValues();
+	scroll_height_ = GetChartListH();
+	ClampScrollPositions();
 }
 
 void onTick() override
 {
-	myPreTick();
+	PreTick();
 
-	int viewW = getViewWidth() - 2 * myScrollbarActiveV;
+	int viewW = getViewWidth() - 2 * is_vertical_scrollbar_active_;
 
 	// Update the properties of each button.
-	int y = myRect.y - myScrollY;
+	int y = rect_.y - scroll_position_y_;
 	const Style* style = nullptr;
 	for(int i = 0; i < myButtons.size(); ++i)
 	{
@@ -194,29 +192,29 @@ void onTick() override
 			style = chart->style;
 			y += 24;
 		}
-		button->arrange({myRect.x, y, viewW, 20});
+		button->arrange({rect_.x, y, viewW, 20});
 		button->tick();
 		y += 21;
 	}
 
-	myPostTick();
+	PostTick();
 }
 
 void onDraw() override
 {
 	TextStyle textStyle;
-	int w = getViewWidth() - 2 * myScrollbarActiveV;
+	int w = getViewWidth() - 2 * is_vertical_scrollbar_active_;
 	int h = getViewHeight();
-	int x = myRect.x;
-	int y = myRect.y - myScrollY;
+	int x = rect_.x;
+	int y = rect_.y - scroll_position_y_;
 	const Style* style = nullptr;
 	int chartIndex = 0;
 
-	Renderer::pushScissorRect({myRect.x, myRect.y, w, h});
+	Renderer::pushScissorRect({rect_.x, rect_.y, w, h});
 	if(myButtons.empty())
 	{
 		Text::arrange(Text::MC, textStyle, "- no charts -");
-		Text::draw(vec2i{x + w / 2, y + myRect.h / 2});
+		Text::draw(vec2i{x + w / 2, y + rect_.h / 2});
 	}
 	else for(auto button : myButtons)
 	{
@@ -256,12 +254,12 @@ void updateButtons()
 // ================================================================================================
 // DialogChartList
 
-Dlg::~Dlg()
+DialogChartList::~DialogChartList()
 {
 	delete myList;
 }
 
-Dlg::Dlg()
+DialogChartList::DialogChartList()
 {
 	setTitle("LIST OF CHARTS");
 
@@ -276,7 +274,7 @@ Dlg::Dlg()
 	myList = new ChartList(getGui());
 }
 
-void Dlg::onChanges(int changes)
+void DialogChartList::onChanges(int changes)
 {
 	if(changes & VCM_CHART_LIST_CHANGED)
 	{
@@ -288,7 +286,7 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onUpdateSize()
+void DialogChartList::onUpdateSize()
 {
 	myList->updateSize();
 	int h = myList->getScrollHeight();
@@ -296,13 +294,13 @@ void Dlg::onUpdateSize()
 	setMaximumHeight(min(1024, h));
 }
 
-void Dlg::onTick()
+void DialogChartList::onTick()
 {
 	myList->arrange(getInnerRect());
 	myList->tick();
 }
 
-void Dlg::onDraw()
+void DialogChartList::onDraw()
 {
 	myList->draw();
 }

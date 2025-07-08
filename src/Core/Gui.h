@@ -143,11 +143,11 @@ protected:
 	virtual void onDraw();
 
 protected:
-	GuiContext* myGui;
-	recti myRect;
-	int myWidth;
-	int myHeight;
-	uint myFlags;
+	GuiContext* gui_;
+	recti rect_;
+	int width_;
+	int height_;
+	uint flags_;
 };
 
 // Base class for dialog objects.
@@ -190,7 +190,7 @@ public:
 	bool isPinned() const;
 
 protected:
-	void* myData;
+	void* data_; // TODO: replace with a more descriptive variable name.
 };
 
 /// Global gui functions.

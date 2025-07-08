@@ -37,41 +37,41 @@ public:
 	void release();
 
 	/// Returns the number of characters in the string.
-	inline int len() const { return *((int*)myStr - 1); }
+	inline int len() const { return *((int*)string_ - 1); }
 
 	/// Returns true if the string has a length of zero, false otherwise.
 	inline bool empty() const { return !len(); }
 
 	/// Returns a pointer to the start of the string.
-	inline const char* str() const { return myStr; }
+	inline const char* str() const { return string_; }
 
 	/// Returns a pointer to the start of the string.
-	inline char* begin() { return myStr; }
+	inline char* begin() { return string_; }
 
 	/// Returns a const pointer to the start of the string.
-	inline const char* begin() const { return myStr; }
+	inline const char* begin() const { return string_; }
 
 	/// Returns a pointer to one character past the end of the string.
-	inline char* end() { return myStr + len(); }
+	inline char* end() { return string_ + len(); }
 
 	/// Returns a const pointer to one character past the end of the string.
-	inline const char* end() const { return myStr + len(); }
+	inline const char* end() const { return string_ + len(); }
 
 	/// Returns the first character of the string; does not perform an out-of-bounds check.
-	inline char front() const { return myStr[0]; }
+	inline char front() const { return string_[0]; }
 
 	/// Returns the final character of the string; does not perform an out-of-bounds check.
-	inline char back() const { return myStr[len() - 1]; }
+	inline char back() const { return string_[len() - 1]; }
 
 	/// Returns the character at position pos; does not perform an out-of-bounds check.
-	inline char operator [] (int pos) const { return myStr[pos]; }
+	inline char operator [] (int pos) const { return string_[pos]; }
 
 	// Friend structs used in StringUtils.
 	friend struct Str2;
 	friend struct Str;
 
 private:
-	char* myStr;
+	char* string_;
 };
 
 // Basic lexographical comparison operators.

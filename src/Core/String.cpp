@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdexcept>
 
 namespace Vortex {
 
@@ -16,24 +17,36 @@ static char* nullstr = (char*)(metaData + metaSize);
 
 void StrAlloc(char*& s, int n)
 {
-	int* cap = (int*)malloc(metaSize + n + 1);
-	cap[0] = cap[1] = n;
-	s = (char*)(cap + 2);
+	int* cap = static_cast<int*>(malloc(metaSize + n + 1));
+	if (!cap) {
+		throw std::bad_alloc();
+	}
+	cap[0] = n; // capacity
+	cap[1] = n; // length
+	s = reinterpret_cast<char*>(cap + 2);
+	s[n] = '\0'; // null-terminate
 }
 
 void StrRealloc(char*& s, int n)
 {
 	if(s != nullstr)
 	{
-		int* cap = (int*)s - 2;
-		if(*cap < n)
+		int* cap = reinterpret_cast<int*>(s) - 2;
+		if (cap[0] < n)
 		{
-			*cap = *cap << 1;
-			if(*cap < n) *cap = n;
-			cap = (int*)realloc(cap, metaSize + *cap + 1);
-			s = (char*)(cap + 2);
+			int newCapacity = cap[0] * 2;
+			if (newCapacity < n) {
+				newCapacity = n;
+			}
+			cap = static_cast<int*>(realloc(cap, metaSize + newCapacity + 1));
+			if (!cap) {
+				throw std::bad_alloc();
+			}
+			cap[0] = newCapacity;
+			s = reinterpret_cast<char*>(cap + 2);
 		}
-		cap[1] = n;
+		cap[1] = n; // length
+		s[n] = '\0'; // null-terminate
 	}
 	else
 	{
@@ -51,7 +64,8 @@ void StrFree(char* s)
 
 void StrSetLen(char* s, int n)
 {
-	*((int*)s - 1) = n;
+	reinterpret_cast<int*>(s)[-1] = n; // length
+	s[n] = '\0'; // null-terminate
 }
 
 const int String::npos = INT_MAX;
@@ -61,46 +75,46 @@ const int String::npos = INT_MAX;
 
 String::~String()
 {
-	StrFree(myStr);
+	StrFree(string_);
 }
 
 String::String()
-	: myStr(nullstr)
+	: string_(nullstr)
 {
 }
 
 String::String(String&& s)
-	: myStr(s.myStr)
+	: string_(s.string_)
 {
-	s.myStr = nullstr;
+	s.string_ = nullstr;
 }
 
 String::String(StringRef s)
 {
 	int n = s.len();
-	StrAlloc(myStr, n);
-	memcpy(myStr, s.myStr, n + 1);
+	StrAlloc(string_, n);
+	memcpy(string_, s.string_, n + 1);
 }
 
 String::String(int n, char c)
 {
-	StrAlloc(myStr, n);
-	memset(myStr, c, n);
-	myStr[n] = 0;
+	StrAlloc(string_, n);
+	memset(string_, c, n);
+	string_[n] = 0;
 }
 
 String::String(const char* s)
 {
 	int n = strlen(s);
-	StrAlloc(myStr, n);
-	memcpy(myStr, s, n + 1);
+	StrAlloc(string_, n);
+	memcpy(string_, s, n + 1);
 }
 
 String::String(const char* s, int n)
 {
-	StrAlloc(myStr, n);
-	memcpy(myStr, s, n);
-	myStr[n] = 0;
+	StrAlloc(string_, n);
+	memcpy(string_, s, n);
+	string_[n] = 0;
 }
 
 String& String::operator = (String&& s)
@@ -112,28 +126,28 @@ String& String::operator = (String&& s)
 String& String::operator = (StringRef s)
 {
 	int n = s.len();
-	StrRealloc(myStr, n);
-	memcpy(myStr, s.myStr, n + 1);
+	StrRealloc(string_, n);
+	memcpy(string_, s.string_, n + 1);
 	return *this;
 }
 
 void String::swap(String& s)
 {
-	char* tmp = myStr;
-	myStr = s.myStr;
-	s.myStr = tmp;
+	char* tmp = string_;
+	string_ = s.string_;
+	s.string_ = tmp;
 }
 
 void String::release()
 {
-	StrFree(myStr);
-	myStr = nullstr;
+	StrFree(string_);
+	string_ = nullstr;
 }
 
 void String::clear()
 {
-	StrSetLen(myStr, 0);
-	myStr[0] = 0;
+	StrSetLen(string_, 0);
+	string_[0] = 0;
 }
 
 }; // namespace Vortex

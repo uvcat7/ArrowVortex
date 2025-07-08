@@ -28,13 +28,13 @@
 #include <gl/gl.h>
 #undef ERROR
 
-#include <chrono>
 #include <thread>
 #include <numeric>
 #include <stdio.h>
 #include <ctime>
 #include <bitset>
 #include <list>
+#include <vector>
 
 #undef DELETE
 
@@ -45,7 +45,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 namespace Vortex {
 
-std::chrono::duration<double> deltaTime; // Defined in <Core/Core.h>
+float deltaTime; // Defined in <Core/Core.h>
 
 namespace {
 
@@ -222,7 +222,7 @@ struct SystemImpl : public System {
 
 wchar_t* myClassName;
 HINSTANCE myInstance;
-std::chrono::steady_clock::time_point myApplicationStartTime;
+double myApplicationStartTime;
 Cursor::Icon myCursor;
 Key::Code myKeyMap[256];
 InputEvents myEvents;
@@ -398,7 +398,6 @@ void createMenu()
 
 void CALLBACK messageLoop()
 {
-	using namespace std::chrono;
 	if(!myInitSuccesful) return;
 
 #ifdef DEBUG
@@ -412,13 +411,9 @@ void CALLBACK messageLoop()
 	forwardArgs();
 	createMenu();
 
-	// Non-vsync FPS max target
-	auto frameTarget = duration<double>(1.0/960.0);
-
 	// Enter the message loop.
 	MSG message;
-	auto prevTime = Debug::getElapsedTime();
-
+	double prevTime = Debug::getElapsedTime();
 	while(!myIsTerminated)
 	{
 
@@ -436,19 +431,11 @@ void CALLBACK messageLoop()
 		myIsInsideMessageLoop = false;
 
 		// Check if there were text input events.
-		if (myInput.size())
+		if (!myInput.empty())
 		{
-			String input = Narrow(myInput);
-			myEvents.addTextInput(input.str());
-			myInput = WideString();
+			myEvents.addTextInput(Narrow(myInput).str());
+			myInput.clear();
 		}
-
-		// Reset the mouse cursor.
-		myCursor = Cursor::ARROW;
-
-#ifdef DEBUG
-		auto inputTime = Debug::getElapsedTime();
-#endif
 
 		// Set up the OpenGL view.
 		glViewport(0, 0, mySize.x, mySize.y);
@@ -456,84 +443,18 @@ void CALLBACK messageLoop()
 		glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		VortexCheckGlError();
+		// Reset the mouse cursor.
+		myCursor = Cursor::ARROW;
+
+		// Tick function.
+		double curTime = Debug::getElapsedTime();
+		deltaTime = (float)min(max(0.00025, curTime - prevTime), 0.25);
+		prevTime = curTime;
 
 		gEditor->tick();
 
 		// Display.
 		SwapBuffers(myHDC);
-
-#ifdef DEBUG
-		auto renderTime = Debug::getElapsedTime();	
-#endif
-
-		// Tick function.
-		duration<double> frameTime = Debug::getElapsedTime() - prevTime;
-		auto waitTime = frameTarget.count() - frameTime.count();
-
-		if (wglSwapInterval)
-		{
-			while (Debug::getElapsedTime() - prevTime < frameTarget)
-			{
-				std::this_thread::yield();
-			}
-		}
-
-		// End of frame
-		auto curTime = Debug::getElapsedTime();
-		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
-		prevTime = curTime;
-
-#ifdef DEBUG
-
-		fpsList.push_front(deltaTime.count());
-		waitList.push_front(duration<double>(curTime - renderTime).count());
-		frameList.push_front(duration<double>(renderTime - inputTime).count());
-		inputList.push_front(duration<double>(inputTime - startTime).count());
-
-		if (abs(deltaTime.count() - 1.0/(double)frameGuess) / (1.0/(double)frameGuess) > 0.01)
-		{
-			lowcounts++;
-		}
-		if (fpsList.size() >= frameGuess * 2)
-		{
-			fpsList.pop_back();
-			frameList.pop_back();
-			inputList.pop_back();
-			waitList.pop_back();
-		}
-		auto min = *std::min_element(fpsList.begin(), fpsList.end());
-		auto max = *std::max_element(fpsList.begin(), fpsList.end());
-		auto maxIndex = std::distance(fpsList.begin(), std::max_element(fpsList.begin(), fpsList.end()));
-		auto siz = fpsList.size();
-		auto avg = std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
-		auto varianceFunc = [&avg, &siz](double accumulator, double val){
-			return accumulator + (val - avg) * (val - avg);
-		};
-		auto std = sqrt(std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) / siz);
-		auto frameAvg = std::accumulate(frameList.begin(), frameList.end(), 0.0) / frameList.size();
-		auto frameMax = frameList.begin();
-		std::advance(frameMax, maxIndex);
-		auto inputMax = inputList.begin();
-		std::advance(inputMax, maxIndex);
-		auto waitMax = waitList.begin();
-		std::advance(waitMax, maxIndex);
-		if (frames % (frameGuess * 2) == 0)
-		{
-			Debug::log("frame total average: %f, frame render average %f, std dev %f, lowest FPS %f, highest FPS %f, highest FPS render time %f, highest FPS input time %f, highest FPS wait time %f, lag frames %d\n",
-				avg,
-				frameAvg,
-				std,
-				1.0 / max,
-				1.0 / min,
-				*frameMax,
-				*inputMax,
-				*waitMax,
-				lowcounts);
-			lowcounts = 0;
-		}
-		frames++;
-#endif
 	}
 	Editor::destroy();
 }
@@ -580,6 +501,7 @@ String getClipboardText() const
 		{
 			str = Narrow(src, wcslen(src));
 			GlobalUnlock(hData);
+			Str::replace(str, "\n", "");
 		}
 		CloseClipboard();
 	}
@@ -791,23 +713,30 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 		{
 			POINT pos;
 			DragQueryPoint((HDROP)wp, &pos);
-			// Passing 0xFFFFFFFF will return the file count.
-			int numFiles = (int)DragQueryFileW((HDROP)wp, 0xFFFFFFFF, 0, 0);
-			char** files = (char**)malloc(sizeof(char*) * numFiles);
-			for(int i = 0; i < numFiles; ++i)
+
+			// Get the number of files dropped.
+			UINT numFiles = DragQueryFileW((HDROP)wp, 0xFFFFFFFF, nullptr, 0);
+			std::vector<String> files(numFiles);
+
+			for (UINT i = 0; i < numFiles; ++i)
 			{
+				// Get the length of the file path and retrieve it.
 				// Giving 0 for the stringbuffer returns path size without nullbyte.
-				int pathlen = (int)DragQueryFileW((HDROP)wp, i, 0, 0);
-				WideString wstr(pathlen, 0);
-				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathlen + 1);
-				String str = Narrow(wstr);
-				files[i] = (char*)malloc(str.len() + 1);
-				memcpy(files[i], str.begin(), str.len() + 1);
+				UINT pathLen = DragQueryFileW((HDROP)wp, i, nullptr, 0);
+				WideString wstr(pathLen, 0);
+				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathLen + 1);
+				files[i] = Narrow(wstr);
 			}
+
 			DragFinish((HDROP)wp);
-			myEvents.addFileDrop(files, numFiles, pos.x, pos.y);
-			for(int i = 0; i < numFiles; ++i) free(files[i]);
-			free(files);
+
+			// Pass the file drop event to the input handler.
+			std::vector<const char*> filePtrs;
+			for (const auto& file : files)
+			{
+				filePtrs.push_back(file.str());
+			}
+			myEvents.addFileDrop(filePtrs.data(), static_cast<int>(filePtrs.size()), pos.x, pos.y);
 		}
 		break;
 	}

@@ -151,7 +151,7 @@ static void DrawCurrentGlyphs()
 	{
 		if(Shader::isSupported())
 		{
-			if(RD->shadowColor & COLOR32_AMASK)
+			if(RD->shadowColor & kColor32_AlphaMask)
 			{
 				Shader::uniform4f(RD->shader->colorLoc, ToColorf(RD->shadowColor));
 				for(int i = 0; i < RD->glyphCount * 8; ++i) --RD->vpos[i];
@@ -321,6 +321,8 @@ void Text::draw(vec2i textPos)
 		}
 		batch.flush();
 	}
+
+	VortexCheckGlError();
 }
 
 };

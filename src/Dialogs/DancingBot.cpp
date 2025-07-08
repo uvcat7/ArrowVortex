@@ -15,8 +15,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#define Dlg DialogDancingBot
-
 namespace Vortex {
 
 enum TileType
@@ -334,11 +332,11 @@ void FeetPlanner::plan(int pn)
 // ================================================================================================
 // Dancing Bot Dialog.
 
-Dlg::~Dlg()
+DialogDancingBot::~DialogDancingBot()
 {
 }
 
-Dlg::Dlg()
+DialogDancingBot::DialogDancingBot()
 {
 	setTitle("DANCING BOT");
 
@@ -355,24 +353,24 @@ Dlg::Dlg()
 	onChanges(VCM_ALL_CHANGES);
 }
 
-void Dlg::myCreateWidgets()
+void DialogDancingBot::myCreateWidgets()
 {
 	myLayout.row().col(104).col(100);
 
 	WgCheckbox* footswitch = myLayout.add<WgCheckbox>();
 	footswitch->text.set("Footswitch");
 	footswitch->value.bind(&myDoFootswitches);
-	footswitch->onChange.bind(this, &Dlg::onDoFootswitchesChanged);
+	footswitch->onChange.bind(this, &DialogDancingBot::onDoFootswitchesChanged);
 	footswitch->setTooltip("If enabled, the dancing bot will attempt footswitches");
 
 	WgCheckbox* crossover = myLayout.add<WgCheckbox>();
 	crossover->text.set("Crossover");
 	crossover->value.bind(&myDoCrossovers);
-	crossover->onChange.bind(this, &Dlg::onDoCrossoversChanged);
+	crossover->onChange.bind(this, &DialogDancingBot::onDoCrossoversChanged);
 	crossover->setTooltip("If enabled, the dancing bot will attempt crossovers");
 }
 
-void Dlg::onUpdateSize()
+void DialogDancingBot::onUpdateSize()
 {
 	int w = 200, h = 64;
 	auto style = gStyle->get();
@@ -385,7 +383,7 @@ void Dlg::onUpdateSize()
 	setHeight(h);
 }
 
-void Dlg::onDraw()
+void DialogDancingBot::onDraw()
 {
 	EditorDialog::onDraw();
 
@@ -465,7 +463,7 @@ void Dlg::onDraw()
 	Renderer::popScissorRect();
 }
 
-void Dlg::onChanges(int changes)
+void DialogDancingBot::onChanges(int changes)
 {
 	if(changes & VCM_CHART_CHANGED)
 	{
@@ -495,17 +493,17 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onDoFootswitchesChanged()
+void DialogDancingBot::onDoFootswitchesChanged()
 {
 	myAssignFeetToNotes();
 }
 
-void Dlg::onDoCrossoversChanged()
+void DialogDancingBot::onDoCrossoversChanged()
 {
 	myAssignFeetToNotes();
 }
 
-void Dlg::myPushArrow(QuadBatchTC* batch, int x, int y)
+void DialogDancingBot::myPushArrow(QuadBatchTC* batch, int x, int y)
 {
 	static int spr[9]   = {0, 1, 0, 1, 2, 1, 0, 1, 0};
 	static float rot[9] = {2, 2, 3, 1, 0, 3, 1, 0, 0};
@@ -514,13 +512,13 @@ void Dlg::myPushArrow(QuadBatchTC* batch, int x, int y)
 	myPadSpr[spr[i] + 3].draw(batch, pos.x, pos.y, rot[i] * (float)(M_PI / 2.0), 1.f);
 }
 
-vec2i Dlg::myGetDrawPos(vec2i colRow)
+vec2i DialogDancingBot::myGetDrawPos(vec2i colRow)
 {
 	recti r = getInnerRect();
 	return{r.x + 36 + colRow.x * 64, r.y + 52 + colRow.y * 64};
 }
 
-void Dlg::myAssignFeetToNotes()
+void DialogDancingBot::myAssignFeetToNotes()
 {
 	myFeetBits.release();
 	int numNotes = gNotes->end() - gNotes->begin();
@@ -541,7 +539,7 @@ void Dlg::myAssignFeetToNotes()
 	}
 }
 
-void Dlg::myGetFeetPositions(vec3f* out, int pn)
+void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn)
 {
 	auto style = gStyle->get();
 

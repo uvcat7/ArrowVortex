@@ -14,8 +14,6 @@
 #include <Managers/StyleMan.h>
 #include <Managers/SimfileMan.h>
 
-#define Dlg DialogGenerateNotes
-
 namespace Vortex {
 
 static const char* SpacingStrings[] =
@@ -31,29 +29,29 @@ static SnapType SpacingTypes[] =
 static const int IFP_SIZE = 24;
 static const int IFP_SPACING = 4;
 
-Dlg::~Dlg()
+DialogGenerateNotes::~DialogGenerateNotes()
 {
 }
 
-Dlg::Dlg()
-	: myFootSelectorIndex(0)
-	, mySpacing(0)
+DialogGenerateNotes::DialogGenerateNotes()
+	: footSelectionIndex_(0)
+	, spacingValue_(0)
 {
 	setTitle("GENERATE NOTES");
 	myCreateWidgets();
 }
 
-void Dlg::myCreateWidgets()
+void DialogGenerateNotes::myCreateWidgets()
 {
 	myLayout.row().col(true);
 	myLayout.addBlank();
 
 	myLayout.row().col(60).col(116);
-	mySpacingList = myLayout.add<WgDroplist>("Spacing");
-	mySpacingList->value.bind(&mySpacing);
+	spacingDroplist_ = myLayout.add<WgDroplist>("Spacing");
+	spacingDroplist_->value.bind(&spacingValue_);
 	for(int i = 0; i < 6; ++i)
 	{
-		mySpacingList->addItem(SpacingStrings[i]);
+		spacingDroplist_->addItem(SpacingStrings[i]);
 	}
 
 	myLayout.row().col(180);
@@ -63,34 +61,34 @@ void Dlg::myCreateWidgets()
 	myLayout.row().col(116).col(60);
 
 	WgSpinner* scol = myLayout.add<WgSpinner>("Single column");
-	scol->value.bind(&myStream.maxColRep);
+	scol->value.bind(&streamGenerator_.maxColRep);
 	scol->setRange(1.0, 16.0);
 	scol->setPrecision(0, 0);
 
 	WgSpinner* pcol = myLayout.add<WgSpinner>("Paired columns");
-	pcol->value.bind(&myStream.maxBoxRep);
+	pcol->value.bind(&streamGenerator_.maxBoxRep);
 	pcol->setRange(1.0, 16.0);
 	pcol->setPrecision(0, 0);
 
 	myLayout.row().col(60).col(116);
 
 	WgSlider* sdiff = myLayout.add<WgSlider>("Difficulty");
-	sdiff->value.bind(&myStream.patternDifficulty);
+	sdiff->value.bind(&streamGenerator_.patternDifficulty);
 
 	myLayout.row().col(180);
 
 	WgCheckbox* cfoot = myLayout.add<WgCheckbox>();
 	cfoot->text.set("Start with right foot");
-	cfoot->value.bind(&myStream.startWithRight);
+	cfoot->value.bind(&streamGenerator_.startWithRight);
 
 	WgButton* generate = myLayout.add<WgButton>();
 	generate->text.set("Generate notes");
-	generate->onPress.bind(this, &Dlg::myGenerateNotes);
+	generate->onPress.bind(this, &DialogGenerateNotes::myGenerateNotes);
 
 	onChanges(VCM_ALL_CHANGES);
 }
 
-void Dlg::onChanges(int changes)
+void DialogGenerateNotes::onChanges(int changes)
 {
 	if(changes & VCM_CHART_CHANGED)
 	{
@@ -99,12 +97,12 @@ void Dlg::onChanges(int changes)
 		if(style && style->padWidth > 0)
 		{
 			w = max(w, gStyle->getNumCols() * (IFP_SIZE + IFP_SPACING));
-			myStream.feetCols = style->padInitialFeetCols[0];
+			streamGenerator_.feetCols = style->padInitialFeetCols[0];
 		}
 	}
 }
 
-void Dlg::myGenerateNotes()
+void DialogGenerateNotes::myGenerateNotes()
 {
 	auto region = gSelection->getSelectedRegion();
 	if(gSimfile->isClosed())
@@ -117,7 +115,7 @@ void Dlg::myGenerateNotes()
 	}
 	else
 	{
-		myStream.generate(region.beginRow, region.endRow, SpacingTypes[mySpacing]);
+		streamGenerator_.generate(region.beginRow, region.endRow, SpacingTypes[spacingValue_]);
 	}
 }
 

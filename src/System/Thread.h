@@ -30,9 +30,9 @@ public:
 	virtual void exec() = 0;
 
 protected:
-	uchar myTerminateFlag;
+	uchar terminationFlag_;
 private:
-	void* myData;
+	void* data_;  // TODO: replace with a more descriptive variable name.
 };
 
 /// A set of multiple threads that perform the same task, which split into items.
@@ -65,7 +65,7 @@ public:
 	void unlock();
 
 private:
-	void* myHandle;
+	void* criticalSectionHandle;
 };
 
 }; // namespace Vortex

@@ -27,34 +27,34 @@ namespace Vortex {
 
 namespace {
 
-static const int MAP_HEIGHT = 1024;
+static const int MAP_HEIGHT = 4096;
 static const int MAP_WIDTH = 16;
-static const int TEXTURE_SIZE = 128;
+static const int TEXTURE_SIZE = 256; //sqrt(MAP_HEIGHT_MAX * MAP_WIDTH)
 static const int NUM_PIECES = MAP_HEIGHT / TEXTURE_SIZE;
 
 static const color32 arrowcol[9] =
 {
-	COLOR32(255,   0,   0, 255), // Red.
-	COLOR32( 12,  74, 206, 255), // Blue.
-	COLOR32(145,  12, 206, 255), // Purple.
-	COLOR32(255, 255,   0, 255), // Yellow.
-	COLOR32(206,  12, 113, 255), // Pink.
-	COLOR32(247, 148,  29, 255), // Orange.
-	COLOR32(105, 231, 245, 255), // Teal.
-	COLOR32(  0, 198,   0, 255), // Green.
-	COLOR32(132, 132, 132, 255), // Gray.
+	RGBAtoColor32(255,   0,   0, 255), // Red.
+	RGBAtoColor32( 12,  74, 206, 255), // Blue.
+	RGBAtoColor32(145,  12, 206, 255), // Purple.
+	RGBAtoColor32(255, 255,   0, 255), // Yellow.
+	RGBAtoColor32(206,  12, 113, 255), // Pink.
+	RGBAtoColor32(247, 148,  29, 255), // Orange.
+	RGBAtoColor32(105, 231, 245, 255), // Teal.
+	RGBAtoColor32(  0, 198,   0, 255), // Green.
+	RGBAtoColor32(132, 132, 132, 255), // Gray.
 };
 static const color32 freezecol =
 {
-	COLOR32(64, 128, 0, 255) // Green
+	RGBAtoColor32(64, 128, 0, 255) // Green
 };
 static const color32 rollcol =
 {
-	COLOR32(96, 96, 128, 255), // Blue gray
+	RGBAtoColor32(96, 96, 128, 255), // Blue gray
 };
 static const color32 minecol =
 {
-	COLOR32(192, 192, 192, 255), // Light gray
+	RGBAtoColor32(192, 192, 192, 255), // Light gray
 };
 
 struct SetPixelData
@@ -89,7 +89,7 @@ static void SetPixels(const SetPixelData& spd, int x, double tor, double end, co
 
 struct MinimapImpl : public Minimap {
 
-recti myRect;
+recti rect_;
 Texture myImage;
 Mode myMode;
 int myNotesH;
@@ -113,7 +113,6 @@ MinimapImpl()
 	myIsDragging = false;
 
 	VortexAssert(TEXTURE_SIZE * TEXTURE_SIZE == MAP_HEIGHT * MAP_WIDTH);
-
 	// Split the texture area into vertical strips from left to right.
 	float u = 0.f, du = (float)MAP_WIDTH / (float)TEXTURE_SIZE;
 	for(int i = 0; i < NUM_PIECES; ++i, u += du)
@@ -141,7 +140,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			color32 color;
 			if(note.isSelected)
 			{
-				color = COLOR32(255, 255, 255, 255);
+				color = RGBAtoColor32(255, 255, 255, 255);
 			}
 			else
 			{
@@ -163,7 +162,7 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			color32 color;
 			if(note.isSelected)
 			{
-				color = COLOR32(255, 255, 255, 255);
+				color = RGBAtoColor32(255, 255, 255, 255);
 			}
 			else
 			{
@@ -251,28 +250,24 @@ void renderDensity(SetPixelData& spd, const int* colx)
 
 recti myGetMapRect()
 {
-	return {myRect.x + 2, myRect.y + 16, myRect.w - 4, myRect.h - 32};
+	vec2i size = gSystem->getWindowSize();
+	rect_ = { size.x - 32, 8, 24, size.y - 16 };
+	return {rect_.x + 2, rect_.y + 16, rect_.w - 4, rect_.h - 32};
 }
 
-recti myGetChartRect()
+bool updateMinimapHeight()
 {
 	recti rect = myGetMapRect();
-	if(myNotesH > rect.h)
-	{
-		double cursorOfsY = gView->getCursorOffset() - myChartBeginOfs;
-		double chartOfsH = myChartEndOfs - myChartBeginOfs;
-		double t = cursorOfsY / chartOfsH;
 
-		if(gView->hasReverseScroll()) t = 1.0 - t;
-
-		rect.y -= (int)((double)(myNotesH - rect.h) * t + 0.5);
-	}
-	else
+	//If the vertical size has changed, update the minimap
+	if (rect.h != myNotesH)
 	{
-		rect.y += rect.h / 2 - myNotesH / 2;
+		myNotesH = min(MAP_HEIGHT, rect.h);
+		onChanges(VCM_VIEW_CHANGED);
+		return true;
 	}
-	rect.h = myNotesH;
-	return rect;
+
+	return false;
 }
 
 double myGetMapOffset(int y)
@@ -281,18 +276,10 @@ double myGetMapOffset(int y)
 	if(myNotesH > 0)
 	{
 		int topY, bottomY;
-		recti mapRect = myGetMapRect();
-		if(myNotesH > mapRect.h)
-		{
-			topY = mapRect.y;
-			bottomY = mapRect.y + mapRect.h;
-		}
-		else
-		{
-			recti chartRect = myGetChartRect();
-			topY = chartRect.y;
-			bottomY = chartRect.y + chartRect.h;
-		}
+		recti chartRect = myGetMapRect();
+		updateMinimapHeight();
+		topY = chartRect.y;
+		bottomY = chartRect.y + chartRect.h;
 
 		double t = clamp((double)(y - topY) / (double)(bottomY - topY), 0.0, 1.0);
 		if(gView->hasReverseScroll()) t = 1.0 - t;
@@ -313,10 +300,8 @@ void onChanges(int changes)
 	Vector<uint> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
 
 	// The height of the chart region is based on the time elapsed between the first and last row.
-	// The full map height is only used if the chart length exceeds 4 minutes (aka 240 seconds).
 	double timeStart = gTempo->rowToTime(0);
 	double timeEnd = gTempo->rowToTime(gSimfile->getEndRow());
-	myNotesH = clamp((int)(MAP_HEIGHT * (timeEnd - timeStart) / 240.0), 0, MAP_HEIGHT);
 
 	if(gView->isTimeBased())
 	{
@@ -341,7 +326,8 @@ void onChanges(int changes)
 			colx[c] = MAP_WIDTH / 2 + (c - cols / 2) * coldx;
 		}
 
-		double pixPerOfs = (double)myNotesH / (myChartEndOfs - myChartBeginOfs);
+		auto rect = myGetMapRect();
+		double pixPerOfs = (double) rect.h / (myChartEndOfs - myChartBeginOfs);
 		SetPixelData spd = {buffer.data(), colw, pixPerOfs, myChartBeginOfs};
 
 		if(myMode == DENSITY)
@@ -367,7 +353,7 @@ void onMousePress(MousePress& evt)
 {
 	if(evt.button == Mouse::LMB && !gTextOverlay->isOpen() && evt.unhandled())
 	{
-		if(IsInside(myRect, evt.x, evt.y))
+		if(IsInside(rect_, evt.x, evt.y))
 		{
 			gView->setCursorOffset(myGetMapOffset(evt.y));
 			myIsDragging = true;
@@ -388,7 +374,7 @@ void onMouseRelease(MouseRelease& evt)
 void tick()
 {
 	vec2i size = gSystem->getWindowSize();
-	myRect = { size.x - 32, 8, 24, size.y - 16 };
+	rect_ = { size.x - 32, 8, 24, size.y - 16 };
 
 	if(myIsDragging)
 	{
@@ -399,7 +385,7 @@ void tick()
 
 void drawRegion(int x, int w, double ofsA, double ofsB, color32 color)
 {
-	recti chartRect = myGetChartRect();
+	recti chartRect = myGetMapRect();
 	double pixPerOfs = (double)chartRect.h / (myChartEndOfs - myChartBeginOfs);
 	int baseY = chartRect.y;
 	if(gView->hasReverseScroll())
@@ -419,8 +405,10 @@ void draw()
 	// If the text overlay is open, we hide the minimap to avoid clutter.
 	if(gTextOverlay->isOpen()) return;
 
+	updateMinimapHeight();
+
 	// Draw the minimap box outline.
-	recti rect(myRect);
+	recti rect(rect_);
 	Draw::fill(rect, Colors::white);
 	rect = Shrink(rect, 1);
 	Draw::fill(rect, Colors::black);
@@ -434,35 +422,34 @@ void draw()
 		auto region = gSelection->getSelectedRegion();
 		double top = gView->rowToOffset(region.beginRow);
 		double btm = gView->rowToOffset(region.endRow);
-		drawRegion(rect.x, rect.w, top, btm, COLOR32(153, 255, 153, 153));
+		drawRegion(rect.x, rect.w, top, btm, RGBAtoColor32(153, 255, 153, 153));
 	}
 
 	// Draw the marker lines for the first and last row.
-	recti chartRect = myGetChartRect();
-	Draw::fill(SideT(chartRect, 1), COLOR32(128, 128, 128, 255));
-	Draw::fill(SideB(chartRect, 1), COLOR32(128, 128, 128, 255));
+	Draw::fill(SideT(rect, 1), RGBAtoColor32(128, 128, 128, 255));
+	Draw::fill(SideB(rect, 1), RGBAtoColor32(128, 128, 128, 255));
 
 	// Draw the view range.
 	if(myNotesH > 0)
 	{
 		double top = gView->yToOffset(0);
 		double btm = gView->yToOffset(gView->getHeight());
-		drawRegion(rect.x, rect.w, top, btm, COLOR32(255, 204, 102, 128));
+		drawRegion(rect.x, rect.w, top, btm, RGBAtoColor32(255, 204, 102, 128));
 	}
 
 	// Draw the minimap image.
 	int vp[NUM_PIECES * 8], y, dy;
-	int xl = chartRect.x + chartRect.w / 2 - MAP_WIDTH / 2;
+	int xl = rect.x + rect.w / 2 - MAP_WIDTH / 2;
 	int xr = xl + MAP_WIDTH;
 
 	if(gView->hasReverseScroll())
 	{
-		y = chartRect.y + chartRect.h;
+		y = rect.y + rect.h;
 		dy = -TEXTURE_SIZE;
 	}
 	else
 	{
-		y = chartRect.y;
+		y = rect.y;
 		dy = TEXTURE_SIZE;
 	}
 

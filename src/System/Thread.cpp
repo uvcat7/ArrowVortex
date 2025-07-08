@@ -16,7 +16,7 @@ namespace Vortex {
 // ================================================================================================
 // BackgroundThread.
 
-#define BTDATA ((BackgroundThreadData*)myData)
+#define BTDATA ((BackgroundThreadData*)data_)
 
 struct BackgroundThreadData
 {
@@ -42,11 +42,11 @@ static DWORD WINAPI BackgroundThreadFunc(LPVOID lparam)
 BackgroundThread::BackgroundThread()
 {
 	auto data = new BackgroundThreadData;
-	myTerminateFlag = 0;
+	terminationFlag_ = 0;
 	data->owner = this;
 	data->done = 0;
 	data->handle = 0;
-	myData = data;
+	data_ = data;
 }
 
 BackgroundThread::~BackgroundThread()
@@ -67,7 +67,7 @@ void BackgroundThread::terminate()
 {
 	if(BTDATA->handle)
 	{
-		myTerminateFlag = 1;
+		terminationFlag_ = 1;
 		waitUntilDone();
 	}
 }
@@ -170,33 +170,33 @@ void ParallelThreads::run(int numItems, int numThreads)
 // CriticalSection.
 
 CriticalSection::CriticalSection()
-	: myHandle(malloc(sizeof(CRITICAL_SECTION)))
+	: criticalSectionHandle(malloc(sizeof(CRITICAL_SECTION)))
 {
-	if (!myHandle)
+	if (!criticalSectionHandle)
 		throw std::bad_alloc();
 
-	InitializeCriticalSection((LPCRITICAL_SECTION)myHandle);
+	InitializeCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
 }
 
 CriticalSection::~CriticalSection()
 {
-	if (myHandle) {
-		DeleteCriticalSection((LPCRITICAL_SECTION)myHandle);
-		free(myHandle);
-		myHandle = nullptr;
+	if (criticalSectionHandle) {
+		DeleteCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
+		free(criticalSectionHandle);
+		criticalSectionHandle = nullptr;
 	}
 }
 
 void CriticalSection::lock()
 {
-	if (myHandle)
-		EnterCriticalSection((LPCRITICAL_SECTION)myHandle);
+	if (criticalSectionHandle)
+		EnterCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
 }
 
 void CriticalSection::unlock()
 {
-	if (myHandle)
-		LeaveCriticalSection((LPCRITICAL_SECTION)myHandle);
+	if (criticalSectionHandle)
+		LeaveCriticalSection((LPCRITICAL_SECTION)criticalSectionHandle);
 }
 
 }; // namespace Vortex

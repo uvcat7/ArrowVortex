@@ -584,35 +584,35 @@ public:
 
 	void exec();
 
-	bool hasSamples() { return (myData.samples != nullptr); }
-	const char* getProgress() const { return sProgressText[myData.progress]; }
+	bool hasSamples() { return (data_.samples != nullptr); }
+	const char* getProgress() const { return sProgressText[data_.progress]; }
 	bool hasResult() const { return isDone(); }
-	const Vector<TempoResult>& getResult() const { return myData.result; }
+	const Vector<TempoResult>& getResult() const { return data_.result; }
 
 private:
-	SerializedTempo myData;
+	SerializedTempo data_;
 };
 
 TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames)
 {
 	auto& music = gMusic->getSamples();
 
-	myData.terminate = &myTerminateFlag;
-	myData.progress = 0;
+	data_.terminate = &terminationFlag_;
+	data_.progress = 0;
 	
-	myData.numThreads = ParallelThreads::concurrency();
-	myData.numFrames = numFrames;
-	myData.samplerate = music.getFrequency();
+	data_.numThreads = ParallelThreads::concurrency();
+	data_.numFrames = numFrames;
+	data_.samplerate = music.getFrequency();
 
-	myData.samples = AlignedMalloc<float>(numFrames);
-	if(!myData.samples) return;
+	data_.samples = AlignedMalloc<float>(numFrames);
+	if(!data_.samples) return;
 
 	// Copy the input samples.
 	const short* l = music.samplesL() + firstFrame;
 	const short* r = music.samplesR() + firstFrame;
 	for(int i = 0; i < numFrames; ++i, ++l, ++r)
 	{
-		myData.samples[i] = (float)((int)*l + (int)*r) / 65536.0f;
+		data_.samples[i] = (float)((int)*l + (int)*r) / 65536.0f;
 	}
 
 	start();
@@ -622,12 +622,12 @@ TempoDetectorImp::~TempoDetectorImp()
 {
 	terminate();
 
-	AlignedFree(myData.samples);
+	AlignedFree(data_.samples);
 }
 
 void TempoDetectorImp::exec()
 {
-	SerializedTempo* data = &myData;
+	SerializedTempo* data = &data_;
 
 	// Run the aubio onset tracker to find note onsets.
 	Vector<Onset> onsets;

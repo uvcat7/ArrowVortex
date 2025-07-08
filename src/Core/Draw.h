@@ -8,33 +8,40 @@ namespace Vortex {
 // ================================================================================================
 // Color utilities.
 
-#define COLOR32_RMASK 0xFF
-#define COLOR32_GMASK 0xFF00
-#define COLOR32_BMASK 0xFF0000
-#define COLOR32_AMASK 0xFF000000
+constexpr uint32_t kColor32_RedMask = 0xFF;
+constexpr uint32_t kColor32_GreenMask = 0xFF00;
+constexpr uint32_t kColor32_BlueMask = 0xFF0000;
+constexpr uint32_t kColor32_AlphaMask = 0xFF000000;
 
-#define COLOR32_RSHIFT 0
-#define COLOR32_GSHIFT 8
-#define COLOR32_BSHIFT 16
-#define COLOR32_ASHIFT 24
+constexpr int kColor32_RedShift = 0;
+constexpr int kColor32_GreenShift = 8;
+constexpr int kColor32_BlueShift = 16;
+constexpr int kColor32_AlphaShift = 24;
 
-// Macro to create a color32 from 8-bit RGBA values.
-#define COLOR32(r, g, b, a)\
-(color32)(((a)<<COLOR32_ASHIFT)|((b)<<COLOR32_BSHIFT)|((g)<<COLOR32_GSHIFT)|((r)<<COLOR32_RSHIFT))
+// Inline function to create a color32 from 8-bit RGBA values.
+inline color32 RGBAtoColor32(int r, int g, int b, int a)
+{
+    return static_cast<color32>(
+        ((a << kColor32_AlphaShift) & kColor32_AlphaMask) |
+        ((b << kColor32_BlueShift) & kColor32_BlueMask)   |
+        ((g << kColor32_GreenShift) & kColor32_GreenMask) |
+        ((r << kColor32_RedShift) & kColor32_RedMask)
+    );
+}
 
 inline color32 Color32(int r, int g, int b, int a = 255)
 {
-	return COLOR32(r, g, b, a);
+	return RGBAtoColor32(r, g, b, a);
 }
 
 inline color32 Color32(int lum, int a = 255)
 {
-	return COLOR32(lum, lum, lum, a);
+	return RGBAtoColor32(lum, lum, lum, a);
 }
 
 inline color32 Color32a(color32 rgb, int a)
 {
-	return (rgb & ~COLOR32_AMASK) | (a << COLOR32_ASHIFT);
+	return (rgb & ~kColor32_AlphaMask) | ((a << kColor32_AlphaShift) & kColor32_AlphaMask);
 }
 
 // Common colors (float RGBA).

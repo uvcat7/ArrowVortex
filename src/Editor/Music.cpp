@@ -3,7 +3,6 @@
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
-#include <chrono>
 
 #include <Core/Vector.h>
 #include <Core/Reference.h>
@@ -20,7 +19,6 @@
 
 #include <Editor/ConvertToOgg.h>
 #include <Editor/Editor.h>
-#include <Editor/View.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
 
@@ -50,7 +48,7 @@ struct MusicImpl : public Music, public MixSource {
 
 Mixer* myMixer;
 Sound mySamples;
-std::chrono::steady_clock::time_point myPlayTimer;
+double myPlayTimer;
 TickData myBeatTick, myNoteTick;
 String myTitle, myArtist;
 int myMusicSpeed;
@@ -671,18 +669,24 @@ void updateNoteTicks()
 
 void onChanges(int changes)
 {
-	const int bits = VCM_NOTES_CHANGED
-		| VCM_TEMPO_CHANGED
-		| VCM_END_ROW_CHANGED;
+	const int bits = VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED | VCM_CHART_CHANGED;
 
-	if((changes & bits) && !gMusic->isPaused() && gView->hasChartPreview())
+	if (changes & bits)
 	{
-		interruptStream();
-		if(changes & (VCM_TEMPO_CHANGED | VCM_NOTES_CHANGED))
+		if (changes & VCM_CHART_CHANGED) interruptStream();
+
+		if (changes & VCM_TEMPO_CHANGED)
+		{
 			updateNoteTicks();
-		if(changes & (VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED))
 			updateBeatTicks();
-		resumeStream();
+		}
+		else
+		{
+			if (changes & VCM_NOTES_CHANGED) updateNoteTicks();
+			if (changes & VCM_END_ROW_CHANGED) updateBeatTicks();
+		}
+    
+		if (changes & VCM_CHART_CHANGED) resumeStream();
 	}
 }
 
