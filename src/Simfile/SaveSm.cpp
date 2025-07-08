@@ -592,6 +592,7 @@ static void WriteSections(ExportData& data)
 					else
 					{
 						section[pos] = GetHoldChar(it->type);
+						quantVec.push_front(it->quant);
 						auto hold = holds[it->col];
 						if(hold)
 						{
@@ -635,23 +636,16 @@ static void WriteSections(ExportData& data)
 			quantVec.unique();
 			GetSectionCompression(m, numCols, quantVec, count, pitch);
 			quantVec.clear();
-			if (ROWS_PER_NOTE_SECTION % count == 0) 
+			if (ROWS_PER_NOTE_SECTION % count != 0)
 			{
-				for (int k = 0; k < count; ++k, m += pitch)
-				{
-					data.file.write(m, numCols, 1);
-					data.file.write("\n", 1, 1);
-				}
+				HudError("Bug: trying to save a non-supported number of rows. Data loss expected.");
 			}
-			else
+			for (int k = 0; k < count; ++k, m += pitch)
 			{
-				for (int k = 0; k < count; ++k, m += pitch)
-				{
-					data.file.write(m, numCols, 1);
-					data.file.write("\n", 1, 1);
-					pitch = ((int)round((float) ROWS_PER_NOTE_SECTION / count * (k + 1)) - (int)round((float)ROWS_PER_NOTE_SECTION / count * k)) * numCols;
-				}
+				data.file.write(m, numCols, 1);
+				data.file.write("\n", 1, 1);
 			}
+
 			// Write a comma if this is not the last section.
 			if(it != end || remainingHolds > 0) data.file.write(",\n", 2, 1);
 		}
