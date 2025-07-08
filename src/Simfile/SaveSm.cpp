@@ -514,8 +514,9 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 			float mod = (float) ROWS_PER_NOTE_SECTION / i;
 			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
 			{
+				float rem = round(fmod(j, mod));
 				// Check all the compressed rows and make sure they are empty
-				if ((int)(round(fmod(j, mod))) > 0 && (int)(round(fmod(j, mod))) < (int) mod
+				if (rem > 0 && rem < static_cast<int>(mod)
 					&& memcmp(section + j * width, zeroline.str(), width))
 				{ 
 					valid = false;
