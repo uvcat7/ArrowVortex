@@ -411,7 +411,7 @@ void tickHud()
 		{
 			fade += 0.5f;
 		}
-		float delta = clamp(deltaTime * fade, 0.0f, 1.0f);
+		float delta = clamp(deltaTime.count() * fade, 0.0, 1.0);
 
 		hudEntries_[i].timeLeft -= delta;
 		if(hudEntries_[i].timeLeft <= -0.5f) hudEntries_.erase(i);
@@ -625,7 +625,7 @@ void drawAbout()
 
 	DrawTitleText("ABOUT", "[ESC] close", nullptr);
 
-	auto fps = Str::fmt("%1 FPS").arg(1.0f / max(deltaTime, 0.0001f), 0, 0);
+	auto fps = Str::fmt("%1 FPS").arg(1.0f / max(deltaTime.count(), 0.0001), 0, 0);
 	Text::arrange(Text::TR, fps);
 	Text::draw(vec2i{size.x - 4, 4});
 }

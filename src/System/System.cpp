@@ -28,6 +28,7 @@
 #include <gl/gl.h>
 #undef ERROR
 
+#include <chrono>
 #include <thread>
 #include <numeric>
 #include <stdio.h>
@@ -45,7 +46,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 namespace Vortex {
 
-float deltaTime; // Defined in <Core/Core.h>
+std::chrono::duration<double> deltaTime; // Defined in <Core/Core.h>
 
 namespace {
 
@@ -222,7 +223,7 @@ struct SystemImpl : public System {
 
 wchar_t* myClassName;
 HINSTANCE myInstance;
-double myApplicationStartTime;
+std::chrono::steady_clock::time_point myApplicationStartTime;
 Cursor::Icon myCursor;
 Key::Code myKeyMap[256];
 InputEvents myEvents;
@@ -398,12 +399,15 @@ void createMenu()
 
 void CALLBACK messageLoop()
 {
+	using namespace std::chrono;
+
 	if(!myInitSuccesful) return;
 
 #ifdef DEBUG
 	long long frames = 0;
 	auto lowcounts = 0;
-	std::list<double> fpsList, sleepList, frameList, inputList, waitList; 
+	std::list<double> fpsList, sleepList, frameList, inputList, waitList;
+	// Adjust frameGuess to your VSync target if you are testing with VSync enabled
 	auto frameGuess = 960;
 #endif
 
@@ -411,9 +415,12 @@ void CALLBACK messageLoop()
 	forwardArgs();
 	createMenu();
 
+	// Non-vsync FPS max target
+	auto frameTarget = duration<double>(1.0 / 960.0);
+
 	// Enter the message loop.
 	MSG message;
-	double prevTime = Debug::getElapsedTime();
+	auto prevTime = Debug::getElapsedTime();
 	while(!myIsTerminated)
 	{
 
@@ -446,15 +453,88 @@ void CALLBACK messageLoop()
 		// Reset the mouse cursor.
 		myCursor = Cursor::ARROW;
 
-		// Tick function.
-		double curTime = Debug::getElapsedTime();
-		deltaTime = (float)min(max(0.00025, curTime - prevTime), 0.25);
-		prevTime = curTime;
+#ifdef DEBUG
+		auto inputTime = Debug::getElapsedTime();
+#endif
+
+		VortexCheckGlError();
 
 		gEditor->tick();
 
 		// Display.
 		SwapBuffers(myHDC);
+
+#ifdef DEBUG
+		auto renderTime = Debug::getElapsedTime();
+#endif
+		// Tick function.
+		duration<double> frameTime = Debug::getElapsedTime() - prevTime;
+		auto waitTime = frameTarget.count() - frameTime.count();
+
+		if (wglSwapInterval)
+		{
+			while (Debug::getElapsedTime() - prevTime < frameTarget)
+			{
+				std::this_thread::yield();
+			}
+		}
+
+		// End of frame
+		auto curTime = Debug::getElapsedTime();
+		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
+		prevTime = curTime;
+
+#ifdef DEBUG
+		// Do frame statistics
+		// Note that these will be wrong with VSync enabled.
+		fpsList.push_front(deltaTime.count());
+		waitList.push_front(duration<double>(curTime - renderTime).count());
+		frameList.push_front(duration<double>(renderTime - inputTime).count());
+		inputList.push_front(duration<double>(inputTime - startTime).count());
+
+		if (abs(deltaTime.count() - 1.0 / (double)frameGuess) / (1.0 / (double)frameGuess) > 0.01)
+		{
+			lowcounts++;
+		}
+		if (fpsList.size() >= frameGuess * 2)
+		{
+			fpsList.pop_back();
+			frameList.pop_back();
+			inputList.pop_back();
+			waitList.pop_back();
+		}
+		auto min = *std::min_element(fpsList.begin(), fpsList.end());
+		auto max = *std::max_element(fpsList.begin(), fpsList.end());
+		auto maxIndex = std::distance(fpsList.begin(), std::max_element(fpsList.begin(), fpsList.end()));
+		auto siz = fpsList.size();
+		auto avg = std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
+		auto varianceFunc = [&avg, &siz](double accumulator, double val) {
+			return accumulator + (val - avg) * (val - avg);
+			};
+		auto std = sqrt(std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) / siz);
+		auto frameAvg = std::accumulate(frameList.begin(), frameList.end(), 0.0) / frameList.size();
+		auto frameMax = frameList.begin();
+		std::advance(frameMax, maxIndex);
+		auto inputMax = inputList.begin();
+		std::advance(inputMax, maxIndex);
+		auto waitMax = waitList.begin();
+		std::advance(waitMax, maxIndex);
+		if (frames % (frameGuess * 2) == 0)
+		{
+			Debug::log("frame total average: %f, frame render average %f, std dev %f, lowest FPS %f, highest FPS %f, highest FPS render time %f, highest FPS input time %f, highest FPS wait time %f, lag frames %d\n",
+				avg,
+				frameAvg,
+				std,
+				1.0 / max,
+				1.0 / min,
+				*frameMax,
+				*inputMax,
+				*waitMax,
+				lowcounts);
+			lowcounts = 0;
+		}
+		frames++;
+#endif
 	}
 	Editor::destroy();
 }
