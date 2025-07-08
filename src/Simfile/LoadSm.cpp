@@ -526,7 +526,6 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 				}
 			}
 
-			Debug::log("quantization was %d", quantization);
 			line = measureText;
 			int ofs = ROWS_PER_NOTE_SECTION / numLines;
 			for (int i = 0; i < numLines; ++i)
