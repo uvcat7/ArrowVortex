@@ -4,6 +4,11 @@
 
 namespace Vortex {
 
+static const int sRowSnapTypes[NUM_SNAP_TYPES] =
+{
+	1, 48, 24, 16, 12, 8, 6, 4, 3, 2, 1, 0
+};
+
 // Represents a time stamp in time-based mode, and a row in row-based mode.
 typedef double ChartOffset;
 
