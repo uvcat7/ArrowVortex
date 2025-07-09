@@ -5,7 +5,7 @@
 #include <io.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <time.h>
+#include <chrono>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -17,22 +17,18 @@ namespace Debug {
 
 // ================================================================================================
 // Debug :: timing functions.
+using namespace std::chrono;
 
-double getElapsedTime()
+steady_clock::time_point getElapsedTime()
 {
-	static const double timer = []() {
-		LARGE_INTEGER freq;
-		return QueryPerformanceFrequency(&freq) ? 1.0 / static_cast<double>(freq.QuadPart) : 1.0;
-	}();
-
-	LARGE_INTEGER counter;
-	QueryPerformanceCounter(&counter);
-	return static_cast<double>(counter.QuadPart) * timer;
+	return std::chrono::steady_clock::now();
 }
 
-double getElapsedTime(double startTime)
+double getElapsedTime(steady_clock::time_point startTime)
 {
-	return getElapsedTime() - startTime;
+	auto currentTime = steady_clock::now();
+	const duration<double> deltaTime = currentTime - startTime;
+	return deltaTime.count();
 }
 
 // ================================================================================================
