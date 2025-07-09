@@ -279,6 +279,10 @@ void myQueueInsertRows(int startRow, int numRows, bool curChartOnly)
 			{
 				myWriteInsertRows(stream, myChart->tempo, startRow, numRows);
 			}
+			else
+			{
+				myWriteInsertRows(stream, mySimfile->tempo, startRow, numRows);
+			}
 		}
 		else
 		{
@@ -304,7 +308,7 @@ void myApplyInsertRowsOffset(Tempo* tempo, int startRow, int numRows)
 	{
 		for(auto seg = list->begin(), end = list->end(); seg != end; ++seg)
 		{
-			if(seg->row >= startRow)
+			if(seg->row >= startRow && seg->row > 0)
 			{
 				seg->row += numRows;
 			}
