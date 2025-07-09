@@ -95,14 +95,14 @@ void loadSettings(XmrNode& settings)
 		view->get("useReverseScroll", &myUseReverseScroll);
 		view->get("useChartPreview" , &myUseChartPreview);
 		view->get("customSnap", &myCustomSnap);
+		view->get("zoomLevel", &myZoomLevel);
+		view->get("scaleLevel", &myScaleLevel);
+		view->get("receptorX", &myReceptorX);
+		view->get("receptorY", &myReceptorY);
 
 		myCustomSnap = min(max(myCustomSnap, 1), 192);
-
-		// if myUseReverseScroll is set, the receptor Y position must be inverted.
-		if (myUseReverseScroll)
-		{
-			myReceptorY = rect_.h - myReceptorY;
-		}
+		myZoomLevel = min(max(myZoomLevel, -2.0), 16.0);
+		myScaleLevel = min(max(myScaleLevel, 1.0), 10.0);
 	}
 
 	updateScrollValues();
@@ -115,9 +115,13 @@ void saveSettings(XmrNode& settings)
 	if(!view) view = settings.addChild("view");
 
 	view->addAttrib("useTimeBasedView", myUseTimeBasedView);
-	view->addAttrib("customSnap", (long)myCustomSnap);
 	view->addAttrib("useReverseScroll", myUseReverseScroll);
 	view->addAttrib("useChartPreview", myUseChartPreview);
+	view->addAttrib("customSnap", (long)myCustomSnap);
+	view->addAttrib("zoomLevel", (long)myZoomLevel);
+	view->addAttrib("scaleLevel", (long)myScaleLevel);
+	view->addAttrib("receptorX", (long)myReceptorX);
+	view->addAttrib("receptorY", (long)myReceptorY);
 }
 
 // ================================================================================================
