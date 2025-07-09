@@ -1,8 +1,12 @@
-name: Windows Build
-
 on:
   push:
-    branches: ["main"]
+  pull_request:
+    branches:
+      - beta
+    paths-ignore:
+      - '**.md'
+
+name: Latest Beta
 
 jobs:
   windows:
