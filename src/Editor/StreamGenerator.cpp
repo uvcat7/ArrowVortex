@@ -28,11 +28,6 @@ enum Foot
 	FOOT_R = 1
 };
 
-static const int RowSnapTypes[NUM_SNAP_TYPES] =
-{
-	1, 48, 24, 16, 12, 10, 8, 6, 4, 3, 2, 1
-};
-
 static float GetPadDist(vec2i* pad, int colA, int colB)
 {
 	float dx = (float)(pad[colA].x - pad[colB].x);
@@ -280,7 +275,7 @@ void StreamGenerator::generate(int row, int endRow, SnapType spacing)
 
 	int facingLeft = 0;
 	int facingRight = 0;
-	int rowDelta = RowSnapTypes[spacing];
+	int rowDelta = sRowSnapTypes[spacing];
 	int rowDeltaIndex = 0;
 	while(row < endRow)
 	{
@@ -294,17 +289,7 @@ void StreamGenerator::generate(int row, int endRow, SnapType spacing)
 		facingLeft += yl < yr;
 		facingRight += yr < yl;
 
-		// Advance to the next row position.
-		if(rowDelta == 10)
-		{
-			static const int deltas[5] = {10, 9, 10, 9, 10};
-			row += deltas[rowDeltaIndex];
-			if(++rowDeltaIndex == 5) rowDeltaIndex = 0;
-		}
-		else
-		{
-			row += rowDelta;
-		}
+		row += rowDelta;
 	}
 
 	// Some debug statistics.
