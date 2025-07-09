@@ -165,7 +165,10 @@ void DialogAdjustTempo::onAction(int id)
 	switch(id)
 	{
 	case ACT_BPM_SET: {
-		gTempo->addSegment(BpmChange(row, myBPM));
+		if (myBPM != 0.0)
+		{
+			gTempo->addSegment(BpmChange(row, myBPM));
+		}
 	} break;
 	case ACT_BPM_HALVE:
 	case ACT_BPM_DOUBLE: {
