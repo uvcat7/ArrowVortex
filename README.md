@@ -83,7 +83,7 @@ Once you have those set up, run `export VCPKG_ROOT={where your vcpkg contents is
 
 This command is needed as to find and define vcpkg's root and use it when building with cmake.
 
-Now you may run this: `cmake -B build -DVCPKG_HOST_TRIPLET=x64-mingw-static -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake`
+Now you may run this: `cmake -B build -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake`
 
 This command specifies that you are using a MinGW environment that is statically linked and targets 64-bit, and for cmake to account for vcpkg.
 
