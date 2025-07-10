@@ -5,6 +5,7 @@
 #include <numeric>
 
 #include <Core/StringUtils.h>
+#include <Core/Utils.h>
 
 #include <System/Debug.h>
 #include <System/File.h>
@@ -376,26 +377,6 @@ struct ReadNoteData
 	Vector<int> quants;
 };
 
-static int gcd(int a, int b)
-{
-	if (a == 0)
-	{
-		return b;
-	}
-	if (b == 0)
-	{
-		return a;
-	}
-	if (a > b)
-	{
-		return gcd(a - b, b);
-	}
-	else
-	{
-		return gcd(a, b - a);
-	}
-}
-
 static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 {
 	for(int col = 0; col < data.numCols; ++col, ++p)
@@ -426,7 +407,7 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 				// Make sure we set the note to its largest quantization to avoid data loss
 				if (data.quants[col] > 0 && hold->quant > 0)
 				{
-					hold->quant = quantization * hold->quant / gcd(quantization, hold->quant);
+					hold->quant = min(192u, quantization * hold->quant / gcd(quantization, hold->quant));
 				}
 				else // There was some error, so always play safe and use 192
 				{

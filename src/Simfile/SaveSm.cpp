@@ -1,4 +1,5 @@
 ﻿#include <Core/StringUtils.h>
+#include <Core/Utils.h>
 
 #include <System/File.h>
 
@@ -450,24 +451,21 @@ static const char* GetDifficultyString(Difficulty difficulty)
 	return "Edit";
 }
 
-static int gcd(int a, int b)
+static inline bool TestSectionCompression(const char* section, int width, int quant)
 {
-	if (a == 0)
+	String zeroline(width, '0');
+	float mod = (float)ROWS_PER_NOTE_SECTION / quant;
+	for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j)
 	{
-		return b;
+		float rem = round(fmod(j, mod));
+		// Check all the compressed rows and make sure they are empty
+		if (rem > 0 && rem < static_cast<int>(mod)
+			&& memcmp(section + j * width, zeroline.str(), width))
+		{
+			return false;
+		}
 	}
-	if (b == 0)
-	{
-		return a;
-	}
-	if (a > b)
-	{
-		return gcd(a - b, b);
-	}
-	else
-	{
-		return gcd(a, b - a);
-	}
+	return quant >= MIN_SECTIONS_PER_MEASURE;
 }
 
 static bool GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
@@ -505,34 +503,33 @@ static bool GetSectionCompression(const char* section, int width, std::list<uint
 	// Determines the best compression for the given section.
     // Maybe lcm is the best factor, so just keep that.
 		count = lcm;
-		String zeroline(width, '0');
-
-		//The factor list is small, just check them all by hand
-		for (int i = lcm / 2; i >= 2; i--)
+		bool valid = false;
+		//The factor list is small, just check them all by hand, but only up to 96 at most since there won't be factors otherwise
+		for (int i = 4; i <= lcm / 2; i++)
 		{
 			// Skip anything that isn't a lcm factor
 			if (lcm % i > 0) continue;
 
-			bool valid = true;
-			float mod = (float) ROWS_PER_NOTE_SECTION / i;
-			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
+			// The first (smallest) match is always the best
+			if (TestSectionCompression(section, width, i))
 			{
-				float rem = round(fmod(j, mod));
-				// Check all the compressed rows and make sure they are empty
-				if (rem > 0 && rem < static_cast<int>(mod)
-					&& memcmp(section + j * width, zeroline.str(), width))
-				{ 
-					valid = false;
-					break;
-				}
-			}
-
-			// The first (largest) match is always the best
-			if (valid && i >= MIN_SECTIONS_PER_MEASURE)
-			{
+				valid = true;
 				count = i;
 				break;
 			}
+		}
+
+		// If no factor was found, double-check we won't have any data loss from our lcm guess
+		// Why not check all factors? Saving files would be several times slower otherwise
+		if (!valid)
+		{
+			valid = TestSectionCompression(section, width, lcm);
+		}
+		if (!valid)
+		{
+			// Okay, we WOULD have had data loss, so set the rows to 192 and error
+			error = true;
+			count = ROWS_PER_NOTE_SECTION;
 		}
 	}
 	// Is our factor a standard snap? If so, use it.
@@ -641,7 +638,7 @@ static void WriteSections(ExportData& data)
 			quantVec.unique();
 			if (GetSectionCompression(m, numCols, quantVec, count, pitch))
 			{
-				HudError("Bug: zero or negative quantization recorded in chart in measure starting at row %d, quantization %d", startRow, it->quant);
+				HudError("Bug: invalid quantization recorded in chart in measure starting at row %d", startRow);
 			}
 			quantVec.clear();
 			if (ROWS_PER_NOTE_SECTION % count != 0)
