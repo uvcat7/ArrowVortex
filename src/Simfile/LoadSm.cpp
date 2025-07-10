@@ -2,6 +2,7 @@
 
 #include <map>
 #include <algorithm>
+#include <numeric>
 
 #include <Core/StringUtils.h>
 
@@ -372,7 +373,28 @@ struct ReadNoteData
 	NoteList* notes;
 	Vector<int> holdPos;
 	Vector<NoteType> holdType;
+	Vector<int> quants;
 };
+
+static int gcd(int a, int b)
+{
+	if (a == 0)
+	{
+		return b;
+	}
+	if (b == 0)
+	{
+		return a;
+	}
+	if (a > b)
+	{
+		return gcd(a - b, b);
+	}
+	else
+	{
+		return gcd(a, b - a);
+	}
+}
 
 static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 {
@@ -391,6 +413,7 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
 			data.holdType[col] = (*p == '2') ? NOTE_STEP_OR_HOLD : NOTE_ROLL;
 			data.holdPos[col] = data.notes->size();
+			data.quants[col] = quantization;
 		}
 		else if(*p == '3')
 		{
@@ -400,7 +423,18 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 				auto* hold = data.notes->begin() + holdPos - 1;
 				hold->endrow = row;
 				hold->type = data.holdType[col];
+				// Make sure we set the note to its largest quantization to avoid data loss
+				if (data.quants[col] > 0 && hold->quant > 0)
+				{
+					hold->quant = quantization * hold->quant / gcd(quantization, hold->quant);
+				}
+				else // There was some error, so always play safe and use 192
+				{
+					HudError("Bug: couldn't get hold quantization in row %d", row);
+					hold->quant = 192;
+				}
 				data.holdPos[col] = 0;
+				data.quants[col] = 0;
 			}
 		}
 		else if(*p == 'M')
@@ -448,6 +482,7 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 	readNoteData.numCols = numCols;
 	readNoteData.notes = &chart->notes;
 	readNoteData.holdPos.resize(numCols, 0);
+	readNoteData.quants.resize(numCols, 0);
 	readNoteData.holdType.resize(numCols, NOTE_STEP_OR_HOLD);
 
 	int numSections = 0;
