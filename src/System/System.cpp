@@ -36,6 +36,7 @@
 #include <bitset>
 #include <list>
 #include <vector>
+#include <exception>
 
 #undef DELETE
 
@@ -639,6 +640,81 @@ void handleKeyPress(Key::Code kc, bool repeated)
 	myKeyState.set(kc);
 }
 
+void handleFileDrop(HDROP hDrop, InputEvents& events, bool isInsideMessageLoop)
+{
+	if (!isInsideMessageLoop)
+	{
+		DragFinish(hDrop);
+		return;
+	}
+
+	POINT pos;
+	UINT numFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, nullptr, 0);
+
+	if (!DragQueryPoint(hDrop, &pos) || numFiles == 0)
+	{
+		DragFinish(hDrop);
+		return;
+	}
+
+	std::vector<String> files;
+	files.reserve(numFiles);
+
+	// Process all dropped files
+	for (UINT i = 0; i < numFiles; ++i)
+	{
+		// Get required buffer size
+		UINT pathLen = DragQueryFileW(hDrop, i, nullptr, 0);
+		if (pathLen == 0) continue;
+
+		// Get file path
+		WideString wstr(pathLen + 1, 0);
+		if (DragQueryFileW(hDrop, i, wstr.begin(), pathLen + 1) == 0) continue;
+
+		try
+		{
+			if (wstr.length() > MAX_PATH)
+			{
+				// Prefix it with \\?\ to allow longer paths.
+				WideString prefix(L"\\\\?\\");
+				prefix.append(wstr);
+				wstr = prefix;
+			}
+
+			String narrow = Narrow(wstr);
+			if (!narrow.empty())
+			{
+				files.push_back(std::move(narrow));
+			}
+		}
+		catch (const std::exception&)
+		{
+			continue;
+		}
+	}
+
+	DragFinish(hDrop);
+
+	if (!files.empty())
+	{
+		try
+		{
+			std::vector<const char*> filePtrs;
+			filePtrs.reserve(files.size());
+			for (const auto& file : files)
+			{
+				filePtrs.push_back(file.str());
+			}
+
+			events.addFileDrop(filePtrs.data(), static_cast<int>(filePtrs.size()), pos.x, pos.y);
+		}
+		catch (const std::exception& e)
+		{
+			Debug::log("handleFileDrop: Exception while adding file drop event: %s\n", e.what());
+		}
+	}
+}
+
 bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 {
 	static const Mouse::Code mcodes[4] = {Mouse::NONE, Mouse::LMB, Mouse::MMB, Mouse::RMB};
@@ -789,35 +865,7 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 	}
 	case WM_DROPFILES:
 	{
-		if(myIsInsideMessageLoop)
-		{
-			POINT pos;
-			DragQueryPoint((HDROP)wp, &pos);
-
-			// Get the number of files dropped.
-			UINT numFiles = DragQueryFileW((HDROP)wp, 0xFFFFFFFF, nullptr, 0);
-			std::vector<String> files(numFiles);
-
-			for (UINT i = 0; i < numFiles; ++i)
-			{
-				// Get the length of the file path and retrieve it.
-				// Giving 0 for the stringbuffer returns path size without nullbyte.
-				UINT pathLen = DragQueryFileW((HDROP)wp, i, nullptr, 0);
-				WideString wstr(pathLen, 0);
-				DragQueryFileW((HDROP)wp, i, wstr.begin(), pathLen + 1);
-				files[i] = Narrow(wstr);
-			}
-
-			DragFinish((HDROP)wp);
-
-			// Pass the file drop event to the input handler.
-			std::vector<const char*> filePtrs;
-			for (const auto& file : files)
-			{
-				filePtrs.push_back(file.str());
-			}
-			myEvents.addFileDrop(filePtrs.data(), static_cast<int>(filePtrs.size()), pos.x, pos.y);
-		}
+		handleFileDrop((HDROP)wp, myEvents, myIsInsideMessageLoop);
 		break;
 	}
 	case WM_SETCURSOR:
