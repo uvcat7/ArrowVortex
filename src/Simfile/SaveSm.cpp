@@ -258,7 +258,7 @@ static void WriteTimeSignatures(ExportData& data, const Tempo* tempo)
 
 static void WriteLabels(ExportData& data, const Tempo* tempo)
 {
-	WriteSegments<Label>(data, "LABELS", tempo, END_OF_LINE, ',', NEVER, false,
+	WriteSegments<Label>(data, "LABELS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Label& label)
 	{
 		data.file.printf("%.3f=%s",
