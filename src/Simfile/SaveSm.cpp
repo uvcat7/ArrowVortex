@@ -480,10 +480,12 @@ static bool GetSectionCompression(const char* section, int width, std::list<uint
 	int lcm = 1;
 	for (it = quantVec.begin(); it != quantVec.end(); it++)
 	{
-		if (*it <= 0)
+		if (*it <= 0 || *it > 192)
 		{
+			// If there's a quantization error assume nothing
 			error = true;
-			continue;
+			lcm = ROWS_PER_NOTE_SECTION;
+			break;
 		}
 		lcm = lcm * *it / gcd(lcm, *it);
 		if (lcm > ROWS_PER_NOTE_SECTION)
