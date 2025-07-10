@@ -470,9 +470,10 @@ static int gcd(int a, int b)
 	}
 }
 
-static void GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
+static bool GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
 {
 	// Determines the best compression for the given section.
+	bool error = false;
 	int best = ROWS_PER_NOTE_SECTION;
 	String zeroline(width, '0');
 	std::list<uint>::iterator it;
@@ -481,7 +482,7 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 	{
 		if (*it <= 0)
 		{
-			HudError("Bug: zero or negative quantization recorded in chart.");
+			error = true;
 			continue;
 		}
 		lcm = lcm * *it / gcd(lcm, *it);
@@ -539,6 +540,7 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 		count = ROWS_PER_NOTE_SECTION;
 	}
 	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
+	return error;
 }
 
 static void WriteSections(ExportData& data)
@@ -601,7 +603,7 @@ static void WriteSections(ExportData& data)
 							{
 								int pos = ((int)hold->endrow - startRow) * numCols + (int)hold->col;
 								section[pos] = '3';
-								quantVec.push_front(it->quant);
+								quantVec.push_front(holds[it->col]->quant);
 								--remainingHolds;
 							}
 						}
@@ -623,8 +625,8 @@ static void WriteSections(ExportData& data)
 						{
 							int pos = (hold->endrow - startRow) * numCols + hold->col;
 							section[pos] = '3';
+							quantVec.push_front(holds[col]->quant);
 							holds[col] = nullptr;
-							quantVec.push_front(it->quant);
 							--remainingHolds;
 						}
 					}
@@ -635,7 +637,10 @@ static void WriteSections(ExportData& data)
 			int count, pitch;
 			const char* m = section;
 			quantVec.unique();
-			GetSectionCompression(m, numCols, quantVec, count, pitch);
+			if (GetSectionCompression(m, numCols, quantVec, count, pitch))
+			{
+				HudError("Bug: zero or negative quantization recorded in chart in measure starting at row %d, quantization %d", startRow, it->quant);
+			}
 			quantVec.clear();
 			if (ROWS_PER_NOTE_SECTION % count != 0)
 			{
