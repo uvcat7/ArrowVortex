@@ -508,8 +508,7 @@ static bool GetSectionCompression(const char* section, int width, std::list<uint
 		for (int i = 4; i <= lcm / 2; i++)
 		{
 			// Skip anything that isn't a lcm factor
-			// Skipping 6 is a special case, since it's a factor of 192 but not a standard snap
-			if (lcm % i > 0 || i == 6) continue;
+			if (lcm % i > 0) continue;
 
 			// The first (smallest) match is always the best
 			if (TestSectionCompression(section, width, i))
@@ -538,6 +537,11 @@ static bool GetSectionCompression(const char* section, int width, std::list<uint
 	if (ROWS_PER_NOTE_SECTION % count != 0)
 	{
 		count = ROWS_PER_NOTE_SECTION;
+	}
+	// Yes it is weird... but we don't save 6ths even though they factor into 192 evenly.
+	if (count == 6)
+	{
+		count = 12;
 	}
 	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
 	return error;
