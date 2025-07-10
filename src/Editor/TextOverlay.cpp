@@ -30,8 +30,8 @@ struct Shortcut { String a, b; bool isHeader; };
 
 static const int NUM_ICONS = 16;
 
-static uchar supportLink[] = "https://discord.gg/GCNAyDmjqy";
-static uchar githubLink[] = "https://github.com/uvcat7/ArrowVortex";
+static uint8_t supportLink[] = "https://discord.gg/GCNAyDmjqy";
+static uint8_t githubLink[] = "https://github.com/uvcat7/ArrowVortex";
 
 static const char* iconNames[NUM_ICONS] = {
 	"up one",

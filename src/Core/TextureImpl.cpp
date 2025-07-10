@@ -94,7 +94,7 @@ Texture::Data* TextureManager::load(const char* path, Texture::Format fmt, bool 
 	return out;
 }
 
-Texture::Data* TextureManager::load(int w, int h, Texture::Format fmt, bool mipmap, const uchar* pixels)
+Texture::Data* TextureManager::load(int w, int h, Texture::Format fmt, bool mipmap, const uint8_t* pixels)
 {
 	// If textures are created before goo is initialized, just return null.
 	if(!TM) return nullptr;
@@ -136,11 +136,11 @@ static int NextPowerOfTwo(int v)
 	return v;
 }
 
-static const uchar* ConvertAlphaToLuma(Vector<uchar>& out, const uchar* in, int width, int height)
+static const uint8_t* ConvertAlphaToLuma(Vector<uint8_t>& out, const uint8_t* in, int width, int height)
 {
 	int numPixels = width * height;
 	out.resize(numPixels * 2);
-	uchar* dst = out.begin();
+	uint8_t* dst = out.begin();
 	for(auto end = in + numPixels; in != end; ++in)
 	{
 		*dst++ = 255;
@@ -155,7 +155,7 @@ static const int sIntFmtGL[4] = { GL_RGBA8, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE8,
 static const int sNumChannels[4] = { 4, 2, 1, 1 };
 
 // Downsamples the source image to half size.
-static void GenerateMipmapLevel(const uchar* src, uchar* dst, int w, int h, Texture::Format fmt)
+static void GenerateMipmapLevel(const uint8_t* src, uint8_t* dst, int w, int h, Texture::Format fmt)
 {
 	int ch = sNumChannels[fmt];
 	if(ch == 4)
@@ -209,11 +209,11 @@ static void GenerateMipmapLevel(const uchar* src, uchar* dst, int w, int h, Text
 }
 
 // Generates additional mipmap levels for the current openGL texture.
-static void GenerateMipmaps(int w, int h, const uchar* pixeldata, Texture::Format fmt)
+static void GenerateMipmaps(int w, int h, const uint8_t* pixeldata, Texture::Format fmt)
 {
 	int ch = sNumChannels[fmt];
-	uchar* tmpA = (uchar*)malloc((w / 2) * (h / 2) * ch);
-	uchar* tmpB = (uchar*)malloc((w / 4) * (h / 4) * ch);
+	uint8_t* tmpA = (uint8_t*)malloc((w / 2) * (h / 2) * ch);
+	uint8_t* tmpB = (uint8_t*)malloc((w / 4) * (h / 4) * ch);
 
 	// The first mipmap level is generated from the source buffer.
 	GenerateMipmapLevel(pixeldata, tmpA, w, h, fmt);
@@ -233,14 +233,14 @@ static void GenerateMipmaps(int w, int h, const uchar* pixeldata, Texture::Forma
 }
 
 // Tries to load the texture as a power-of-two texture.
-static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h, const uchar* pixels)
+static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h, const uint8_t* pixels)
 {
 	int channels = sNumChannels[fmt];
 	int nw = NextPowerOfTwo(w);
 	int nh = NextPowerOfTwo(h);
 	if(nw == w && nh == h) return false;
 
-	uchar* buffer = (uchar*)malloc(nw * nh * channels), *dst = buffer;
+	uint8_t* buffer = (uint8_t*)malloc(nw * nh * channels), *dst = buffer;
 	int maxIndex = w * h - w - 1;
 	int x, y;
 	float sx, sy;
@@ -253,10 +253,10 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h, const uchar*
 		{
 			int px = (int)sx;
 
-			const uchar* p1 = pixels + clamp(py * w + px, 0, maxIndex) * channels;
-			const uchar* p2 = p1 + channels;
-			const uchar* p3 = p1 + w * channels;
-			const uchar* p4 = p3 + channels;
+			const uint8_t* p1 = pixels + clamp(py * w + px, 0, maxIndex) * channels;
+			const uint8_t* p2 = p1 + channels;
+			const uint8_t* p3 = p1 + w * channels;
+			const uint8_t* p4 = p3 + channels;
 
 			for(int ch = 0; ch < channels; ++ch)
 			{
@@ -268,7 +268,7 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h, const uchar*
 				float w3 = fx0 * fy1;
 				float w4 = fx1 * fy1;
 
-				dst[ch] = (uchar)(p1[ch] * w1 + p2[ch] * w2 + p3[ch] * w3 + p4[ch] * w4);
+				dst[ch] = (uint8_t)(p1[ch] * w1 + p2[ch] * w2 + p3[ch] * w3 + p4[ch] * w4);
 			}
 		}
 	}
@@ -288,7 +288,7 @@ Texture::Data::~Data()
 	clear();
 }
 
-Texture::Data::Data(int inW, int inH, Texture::Format inFmt, const uchar* pixels, bool mipmap)
+Texture::Data::Data(int inW, int inH, Texture::Format inFmt, const uint8_t* pixels, bool mipmap)
 {
 	w = inW;
 	h = inH;
@@ -299,7 +299,7 @@ Texture::Data::Data(int inW, int inH, Texture::Format inFmt, const uchar* pixels
 	VortexCheckGlError();
 
 	Format usedFmt = fmt;
-	Vector<uchar> tempPixels;
+	Vector<uint8_t> tempPixels;
 	if(fmt == Texture::ALPHA && !Shader::isSupported())
 	{
 		pixels = ConvertAlphaToLuma(tempPixels, pixels, inW, inH);
@@ -352,12 +352,12 @@ void Texture::Data::clear()
 	cached = false;
 }
 
-void Texture::Data::modify(int mx, int my, int mw, int mh, const uchar* pixels)
+void Texture::Data::modify(int mx, int my, int mw, int mh, const uint8_t* pixels)
 {
 	if(handle && mx >= 0 && my >= 0 && mx + mw <= w && my + mh <= h)
 	{
 		Format usedFmt = fmt;
-		Vector<uchar> tempPixels;
+		Vector<uint8_t> tempPixels;
 		if(fmt == Texture::ALPHA && !Shader::isSupported())
 		{
 			pixels = ConvertAlphaToLuma(tempPixels, pixels, mw, mh);
@@ -387,7 +387,7 @@ void Texture::Data::increaseHeight(int newHeight)
 		}
 
 		int channels = sNumChannels[usedFmt];
-		uchar* pixels = (uchar*)malloc(w * newHeight * channels);
+		uint8_t* pixels = (uint8_t*)malloc(w * newHeight * channels);
 		memset(pixels + w * h * channels, 0, w * (newHeight - h) * channels);
 
 		glBindTexture(GL_TEXTURE_2D, handle);
@@ -449,7 +449,7 @@ Texture::Texture(int w, int h, Format fmt)
 {
 	w = max(w, 1);
 	h = max(h, 1);
-	Vector<uchar> pixels;
+	Vector<uint8_t> pixels;
 	pixels.resize(w * h * sNumChannels[fmt], 0);
 	data_ = TexMan::load(w, h, fmt, false, pixels.begin());
 }
@@ -460,7 +460,7 @@ Texture::Texture(const char* path, bool mipmap, Format fmt)
 	data_ = TexMan::load(path, fmt, mipmap);
 }
 
-Texture::Texture(int w, int h, const uchar* pixels, bool mipmap, Format fmt)
+Texture::Texture(int w, int h, const uint8_t* pixels, bool mipmap, Format fmt)
 	: data_(nullptr)
 {
 	data_ = TexMan::load(w, h, fmt, mipmap, pixels);
@@ -494,7 +494,7 @@ Texture& Texture::operator = (const Texture& tex)
 	return *this;
 }
 
-void Texture::modify(int x, int y, int w, int h, const uchar* pixels)
+void Texture::modify(int x, int y, int w, int h, const uint8_t* pixels)
 {
 	if(data_) TEXDATA->modify(x, y, w, h, pixels);
 }
@@ -563,9 +563,9 @@ int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
 	ImageLoader::Data image = ImageLoader::load(path, TexLoadFormats[fmt]);
 	int ch = sNumChannels[fmt];
 
-	Vector<uchar> pixelData;
+	Vector<uint8_t> pixelData;
 	pixelData.resize(tileW * tileH * ch, 0);
-	uchar* dst = pixelData.begin();
+	uint8_t* dst = pixelData.begin();
 	int tileIndex = 0;
 
 	for(int y = 0; y + tileH <= image.height; y += tileH)
@@ -574,7 +574,7 @@ int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
 		{
 			if(tileIndex < numTiles)
 			{
-				uchar* src = image.pixels + ((y * image.width) + x) * ch;
+				uint8_t* src = image.pixels + ((y * image.width) + x) * ch;
 				for(int line = 0; line < tileH; ++line)
 				{
 					memcpy(dst + line * tileW * ch, src + line * image.width * ch, tileW * ch);

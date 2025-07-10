@@ -25,9 +25,9 @@ public:
 
 	// Functions that bind a read-only value to a slot.
 	virtual bool bind(StringRef slot, const int* v) = 0;
-	virtual bool bind(StringRef slot, const uint* v) = 0;
+	virtual bool bind(StringRef slot, const uint32_t* v) = 0;
 	virtual bool bind(StringRef slot, const long* v) = 0;
-	virtual bool bind(StringRef slot, const ulong* v) = 0;
+	virtual bool bind(StringRef slot, const uint64_t* v) = 0;
 	virtual bool bind(StringRef slot, const float* v) = 0;
 	virtual bool bind(StringRef slot, const double* v) = 0;
 	virtual bool bind(StringRef slot, const bool* v) = 0;
@@ -36,9 +36,9 @@ public:
 
 	// Functions that bind a read-write value to a slot.
 	virtual bool bind(StringRef slot, int* v) = 0;
-	virtual bool bind(StringRef slot, uint* v) = 0;
+	virtual bool bind(StringRef slot, uint32_t* v) = 0;
 	virtual bool bind(StringRef slot, long* v) = 0;
-	virtual bool bind(StringRef slot, ulong* v) = 0;
+	virtual bool bind(StringRef slot, uint64_t* v) = 0;
 	virtual bool bind(StringRef slot, float* v) = 0;
 	virtual bool bind(StringRef slot, double* v) = 0;
 	virtual bool bind(StringRef slot, bool* v) = 0;
@@ -147,7 +147,7 @@ protected:
 	recti rect_;
 	int width_;
 	int height_;
-	uint flags_;
+	uint32_t flags_;
 };
 
 // Base class for dialog objects.

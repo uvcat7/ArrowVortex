@@ -546,7 +546,7 @@ void WgSpinner::onDraw()
 		}
 	}
 
-	color32 col = Color32(isEnabled() ? 255 : 128);
+	uint32_t col = Color32(isEnabled() ? 255 : 128);
 	
 	Draw::sprite(icons.arrow, {r.x + r.w / 2, r.y + r.h * 1 / 4}, col, Draw::ROT_90 | Draw::FLIP_H);
 	Draw::sprite(icons.arrow, {r.x + r.w / 2, r.y + r.h * 3 / 4}, col, Draw::ROT_90);

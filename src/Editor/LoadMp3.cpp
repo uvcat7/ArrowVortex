@@ -13,7 +13,7 @@ namespace {
 // ================================================================================================
 // ID3 tag parsing.
 
-typedef ulong id3_length_t;
+typedef uint64_t id3_length_t;
 
 enum ID3Tagtype
 {
@@ -23,7 +23,7 @@ enum ID3Tagtype
 	TAGTYPE_ID3V2_FOOTER
 };
 
-static ID3Tagtype ID3GetTagtype(const uchar *data, id3_length_t length)
+static ID3Tagtype ID3GetTagtype(const uint8_t *data, id3_length_t length)
 {
 	if(length >= 3 &&
 		data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
@@ -39,9 +39,9 @@ static ID3Tagtype ID3GetTagtype(const uchar *data, id3_length_t length)
 	return TAGTYPE_NONE;
 }
 
-static ulong ID3ParseUint(const uchar **ptr, uint bytes)
+static uint64_t ID3ParseUint(const uint8_t **ptr, uint32_t bytes)
 {
-	ulong value = 0;
+	uint64_t value = 0;
 	switch(bytes)
 	{
 		case 4: value = (value << 8) | *(*ptr)++;
@@ -52,9 +52,9 @@ static ulong ID3ParseUint(const uchar **ptr, uint bytes)
 	return value;
 }
 
-static ulong ID3ParseSyncsafe(const uchar **ptr, uint bytes)
+static uint64_t ID3ParseSyncsafe(const uint8_t **ptr, uint32_t bytes)
 {
-	ulong value = 0;
+	uint64_t value = 0;
 	switch(bytes)
 	{
 	case 5:
@@ -68,7 +68,7 @@ static ulong ID3ParseSyncsafe(const uchar **ptr, uint bytes)
 	return value;
 }
 
-static void ID3ParseHeader(const uchar **ptr, uint *version, int *flags, id3_length_t *size)
+static void ID3ParseHeader(const uint8_t **ptr, uint32_t *version, int *flags, id3_length_t *size)
 {
 	*ptr += 3;
 	*version = ID3ParseUint(ptr, 2);
@@ -76,9 +76,9 @@ static void ID3ParseHeader(const uchar **ptr, uint *version, int *flags, id3_len
 	*size = ID3ParseSyncsafe(ptr, 4);
 }
 
-static long ID3TagQuery(const uchar *data, id3_length_t length)
+static long ID3TagQuery(const uint8_t *data, id3_length_t length)
 {
-	uint version;
+	uint32_t version;
 	int flags;
 	id3_length_t size;
 	switch(ID3GetTagtype(data, length))
@@ -124,8 +124,8 @@ enum XingFlags
 
 static int XingParse(XingHeader* xing, struct mad_bitptr ptr, unsigned int bitlen)
 {
-	const uint XING_MAGIC = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
-	const uint INFO_MAGIC = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
+	const uint32_t XING_MAGIC = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
+	const uint32_t INFO_MAGIC = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
 	unsigned data;
 	if(bitlen < 64)
 		goto fail;
@@ -213,7 +213,7 @@ struct MP3Loader : public SoundSource
 	int numChannels;
 	int frequency;
 
-	uchar fileBuf[16384];
+	uint8_t fileBuf[16384];
 	short synthBuf[8192];
 	int synthNumSamples;
 	int synthBufPos;

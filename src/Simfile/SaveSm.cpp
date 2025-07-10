@@ -393,7 +393,7 @@ static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgCha
 // ================================================================================================
 // Chart writing functions.
 
-static char GetNoteChar(uint type)
+static char GetNoteChar(uint32_t type)
 {
 	if(type == NOTE_STEP_OR_HOLD)
 	{
@@ -414,7 +414,7 @@ static char GetNoteChar(uint type)
 	return '0';
 }
 
-static char GetHoldChar(uint type)
+static char GetHoldChar(uint32_t type)
 {
 	return (type == NOTE_STEP_OR_HOLD) ? '2' : '4';
 }
@@ -470,12 +470,12 @@ static int gcd(int a, int b)
 	}
 }
 
-static void GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
+static void GetSectionCompression(const char* section, int width, std::list<uint32_t> quantVec, int& count, int& pitch)
 {
 	// Determines the best compression for the given section.
 	int best = ROWS_PER_NOTE_SECTION;
 	String zeroline(width, '0');
-	std::list<uint>::iterator it;
+	std::list<uint32_t>::iterator it;
 	int lcm = 1;
 	for (it = quantVec.begin(); it != quantVec.end(); it++)
 	{
@@ -565,7 +565,7 @@ static void WriteSections(ExportData& data)
 		Vector<const Note*> holdVec(numCols, nullptr);
 		const Note** holds = holdVec.begin();
 
-		std::list<uint> quantVec;
+		std::list<uint32_t> quantVec;
 
 		const Note* it = chart->notes.begin();
 		const Note* end = chart->notes.end();

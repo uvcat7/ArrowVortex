@@ -144,7 +144,7 @@ static char* ReadNoteRow(char* p, NoteList& out, int row, const int* map, int* h
 			}
 			else
 			{
-				out.append({row, row, (uint)col, 0, NOTE_STEP_OR_HOLD, (uint) quantization});
+				out.append({row, row, (uint32_t)col, 0, NOTE_STEP_OR_HOLD, (uint32_t) quantization});
 				if(cols[col] & HOLD_BIT)
 				{
 					holds[col] = out.size();

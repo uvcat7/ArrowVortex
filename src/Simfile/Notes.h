@@ -37,31 +37,31 @@ struct ExpandedNote
 	double endtime;
 
 	/// 1 indicates a mine, 0 indicates a step or hold. 
-	uint isMine : 1;
+	uint32_t isMine : 1;
 
 	/// 1 indicates a roll, 0 indicates a freeze.
-	uint isRoll : 1;
+	uint32_t isRoll : 1;
 
 	/// 1 indicates a warped note, 0 indicates a regular note.
-	uint isWarped : 1;
+	uint32_t isWarped : 1;
 
 	/// 1 indicates selected, 0 indicates not selected.
-	uint isSelected : 1;
+	uint32_t isSelected : 1;
 
 	/// One of the values in NoteType, indicates what kind of note it is.
-	uint type : 4;
+	uint32_t type : 4;
 
 	/// Indicates which player the note belongs to in routine modes.
-	uint player : 24;
+	uint32_t player : 24;
 
 	/// Indicates the quantization of the note, if it is nonstandard
-	uint quant : 8;
+	uint32_t quant : 8;
 };
 
 // Converts and expanded note to a compact note.
 inline Note CompressNote(const ExpandedNote& note)
 {
-	return {note.row, note.endrow, (uint)note.col, (uint)note.player, (uint)note.type, (uint) note.quant};
+	return {note.row, note.endrow, (uint32_t)note.col, (uint32_t)note.player, (uint32_t)note.type, (uint32_t) note.quant};
 }
 
 // Encodes a single note and writes it to a bytestream.

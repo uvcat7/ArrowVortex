@@ -5,12 +5,6 @@
 
 namespace Vortex {
 
-typedef uint64_t  ulong;
-typedef uint32_t   uint;
-typedef uint16_t ushort;
-typedef uint8_t  uchar;
-typedef uint32_t   color32;
-
 template <typename T> struct vec2t { T x, y; };
 template <typename T> struct vec3t { T x, y, z; };
 template <typename T> struct rectt { T x, y, w, h; };
