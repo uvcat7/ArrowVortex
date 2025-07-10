@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace {
 
@@ -524,8 +526,8 @@ static void ApplyQuantOffset(Note& out, int offsetRows)
 	// then make this the new measure offset
 	if (192 % out.quant > 0 && startingOffset != endingOffset)
 	{
-		out.row = out.row - endingOffset + (int) round(192.0f / out.quant * round(endingOffset / 192.0f * out.quant));
-		out.endrow = out.endrow - endingRowOffset + (int) round(192.0f / out.quant * round(endingRowOffset / 192.0f * out.quant));
+		out.row = out.row - endingOffset + (int) std::round(192.0f / out.quant * std::round(endingOffset / 192.0f * out.quant));
+		out.endrow = out.endrow - endingRowOffset + (int) std::round(192.0f / out.quant * std::round(endingRowOffset / 192.0f * out.quant));
 	}
 }
 

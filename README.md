@@ -69,9 +69,29 @@ Some new features were introduced as well when preparing this release, and some 
 
 ## Building ArrowVortex
 
+### Windows
+
 In order to compile ArrowVortex on your own PC, Visual Studio is required. It is recommended to use Visual Studio 2022 with the "Desktop development for C++" components installed.
 
 Simply open `build/VisualStudio/ArrowVortex.sln` in Visual Studio, and build the project.
+
+### Linux
+
+Compiling for Linux requires that you have `vcpkg`, `powershell`, and `cmake`.
+
+Once you have those set up, run `export VCPKG_ROOT={where your vcpkg contents is}`.
+
+This command is needed as to find and define vcpkg's root and use it when building with cmake.
+
+Now you may run this: `cmake -B build -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake`
+
+This command specifies that you are using a MinGW environment that is statically linked and targets 64-bit, and for cmake to account for vcpkg.
+
+This command also requires powershell as it is used for vcpkg's copy tools, and will fail to compile if it isn't installed.
+
+Now enter your build directory with `cd build`.
+
+Finally, build ArrowVortex with `cmake --build .`.
 
 ## License
 

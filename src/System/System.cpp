@@ -1,4 +1,4 @@
-#ifdef _DEBUG
+#ifndef NDEBUG
 #define CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -25,9 +25,10 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
-#include <gl/gl.h>
+#include <GL/gl.h>
 #undef ERROR
 
+#include <algorithm>
 #include <chrono>
 #include <thread>
 #include <numeric>
@@ -194,14 +195,14 @@ void MItem::addItem(int item, StringRef text)
 void MItem::addSubmenu(MItem* submenu, StringRef text, bool grayed)
 {
 	int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-	AppendMenuW((HMENU)this, MF_STRING | MF_POPUP, (UINT_PTR)submenu, Widen(text).str());
+	AppendMenuW((HMENU)this, MF_STRING | MF_POPUP, reinterpret_cast<UINT_PTR>(submenu), Widen(text).str());
 }
 
 void MItem::replaceSubmenu(int pos, MItem* submenu, StringRef text, bool grayed)
 {
 	int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
 	DeleteMenu((HMENU)this, pos, MF_BYPOSITION);
-	InsertMenuW((HMENU)this, pos, flags, (UINT_PTR)submenu, Widen(text).str());
+	InsertMenuW((HMENU)this, pos, flags, reinterpret_cast<UINT_PTR>(submenu), Widen(text).str());
 }
 
 void MItem::setChecked(int item, bool state)
@@ -359,10 +360,10 @@ SystemImpl()
 	// Make sure the window is centered on the desktop.
 	mySize = {900, 900};
 	RECT wr;
-	wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
-	wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
-	wr.right = wr.left + max(mySize.x, 0);
-	wr.bottom = wr.top + max(mySize.y, 0);
+	wr.left = std::max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
+	wr.top = std::max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
+	wr.right = wr.left + std::max(mySize.x, 0);
+	wr.bottom = wr.top + std::max(mySize.y, 0);
 	AdjustWindowRectEx(&wr, myStyle, FALSE, myExStyle);
 	int flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
 	SetWindowPos(myHWND, nullptr, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top, flags);
@@ -481,7 +482,7 @@ void CALLBACK messageLoop()
 
 		// End of frame
 		auto curTime = Debug::getElapsedTime();
-		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
+		deltaTime = duration<double>(std::min(std::max(0.0, duration<double>(curTime - prevTime).count()), 0.25));
 		prevTime = curTime;
 
 #ifdef DEBUG
@@ -600,7 +601,7 @@ LPCWSTR getCursorResource()
 	{
 		IDC_ARROW, IDC_HAND, IDC_IBEAM, IDC_SIZEALL, IDC_SIZEWE, IDC_SIZENS, IDC_SIZENESW, IDC_SIZENWSE,
 	};
-	return cursorMap[min(max(0, myCursor), Cursor::NUM_CURSORS - 1)];
+	return cursorMap[std::min(std::max(0, static_cast<int>(myCursor)), Cursor::NUM_CURSORS - 1)];
 }
 
 int getKeyFlags() const
@@ -1107,7 +1108,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, char*, int)
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF);
 
 	ApplicationStart();
-#ifdef DEBUG
+#ifndef NDEBUG
 	Debug::openConsole();
 #endif
 	gSystem = new SystemImpl;

@@ -156,7 +156,7 @@ struct GetPolyDist : public DistanceFunc
 
 struct Canvas::Data
 {
-	Canvas::Data();
+	Data();
 	void draw(float* buf, int w, int h, const areaf& area, DistanceFunc* func);
 
 	areai mask;

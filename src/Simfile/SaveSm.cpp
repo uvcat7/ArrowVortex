@@ -10,6 +10,8 @@
 #include <Simfile/TimingData.h>
 
 #include <Managers/StyleMan.h>
+
+#include <cmath>
 #include <list>
 
 namespace Vortex {
@@ -514,7 +516,7 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 			float mod = (float) ROWS_PER_NOTE_SECTION / i;
 			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
 			{
-				float rem = round(fmod(j, mod));
+				float rem = std::round(std::fmod(j, mod));
 				// Check all the compressed rows and make sure they are empty
 				if (rem > 0 && rem < static_cast<int>(mod)
 					&& memcmp(section + j * width, zeroline.str(), width))

@@ -5,6 +5,8 @@
 
 #include <math.h>
 
+#include <algorithm>
+
 namespace mathalgo {
 
 template <typename T>

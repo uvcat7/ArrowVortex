@@ -485,7 +485,7 @@ ShortcutsImpl()
 // ================================================================================================
 // ShortcutsImpl :: API functions.
 
-String Shortcuts::getNotation(Action::Type action, bool fullList = false)
+String getNotation(Action::Type action, bool fullList = false)
 {
 	String out;
 	for(auto& shortcut : shortcutMappings_)
@@ -531,7 +531,7 @@ String Shortcuts::getNotation(Action::Type action, bool fullList = false)
 	return out;
 }
 
-Action::Type Shortcuts::getAction(int keyflags, Code key)
+Action::Type getAction(int keyflags, Code key)
 {
 	for(auto& shortcut : shortcutMappings_)
 	{
