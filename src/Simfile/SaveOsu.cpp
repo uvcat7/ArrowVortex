@@ -20,6 +20,8 @@
 
 #include <Managers/StyleMan.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace Osu {
 namespace {
@@ -148,7 +150,7 @@ static void WriteTimingPoints(FileWriter& out, const Chart* chart, const TimingD
 		if(time < 0)
 		{
 			double secPerMeasure = (msPerBeat / 1000.0) * 4.0;
-			time = secPerMeasure - fmod(-time, secPerMeasure);
+			time = secPerMeasure - std::fmod(-time, secPerMeasure);
 		}
 		out.printf("%i,%f,4,1,0,100,1,0\n", ToMilliseconds(time), msPerBeat);
 	}

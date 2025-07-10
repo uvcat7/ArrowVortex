@@ -18,6 +18,8 @@
 
 #include <Managers/StyleMan.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace Osu {
 namespace {
@@ -251,14 +253,14 @@ static void ParseTimingPoints(OsuFile& out, Parser& parser)
 			if(spb > 0)
 			{
 				double bpm = 60.0 / spb;
-				double roundBPM = round(bpm);
-				if(abs(bpm - roundBPM) < 0.001) bpm = roundBPM;
+				double roundBPM = std::round(bpm);
+				if(std::abs(bpm - roundBPM) < 0.001) bpm = roundBPM;
 				out.timingPoints[time] = {bpm, 1.0};
 				parser.bpm = bpm;
 			}
 			else
 			{
-				double velocity = 0.1 / abs(spb);
+				double velocity = 0.1 / std::abs(spb);
 				out.timingPoints[time] = {parser.bpm, velocity};
 			}
 		}

@@ -51,6 +51,8 @@
 #include <Dialogs/Zoom.h>
 #include <Dialogs/CustomSnap.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 extern String VerifySaveLoadIdentity(const Simfile& simfile);

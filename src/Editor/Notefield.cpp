@@ -795,25 +795,25 @@ void drawSongPreviewArea()
 // ================================================================================================
 // NotefieldImpl :: toggle/check functions.
 
-void NotefieldImpl::toggleShowWaveform()
+void toggleShowWaveform()
 {
 	myShowWaveform = !myShowWaveform;
 	gMenubar->update(Menubar::SHOW_WAVEFORM);
 }
 
-void NotefieldImpl::toggleShowBeatLines()
+void toggleShowBeatLines()
 {
 	myShowBeatLines = !myShowBeatLines;
 	gMenubar->update(Menubar::SHOW_BEATLINES);
 }
 
-void NotefieldImpl::toggleShowNotes()
+void toggleShowNotes()
 {
 	myShowNotes = !myShowNotes;
 	gMenubar->update(Menubar::SHOW_NOTES);
 }
 
-void NotefieldImpl::toggleShowSongPreview()
+void toggleShowSongPreview()
 {
 	myShowSongPreview = !myShowSongPreview;
 }

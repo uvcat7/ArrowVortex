@@ -28,6 +28,8 @@
 
 #include <Core/Draw.h>
 
+#include <cmath>
+
 namespace Vortex {
 
 enum TweakMode { TWEAK_NONE, TWEAK_BPM, TWEAK_OFS };
@@ -305,8 +307,8 @@ void onMouseScroll(MouseScroll& evt) override
 		double d = evt.up ? (-deltas[m]) : deltas[m];
 		if(evt.keyflags & Keyflag::ALT) d *= 0.01;
 
-		double r = fabs(d);
-		double v = floor((gTempo->getTweakValue() + d) / r + 0.5) * r;
+		double r = std::abs(d);
+		double v = std::floor((gTempo->getTweakValue() + d) / r + 0.5) * r;
 		gTempo->setTweakValue(v);
 
 		evt.handled = true;

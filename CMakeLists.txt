@@ -7,6 +7,8 @@ if (LINUX)
 	set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
 
 	set(CMAKE_FIND_ROOT_PATH /usr/x86_64-w64-mingw32)
+
+	option(VCPKG "Use vcpkg for dependencies" ON)
 endif()
 
 if(WIN32)

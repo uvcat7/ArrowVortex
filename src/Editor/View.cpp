@@ -28,6 +28,8 @@
 #include <Editor/Common.h>
 #include <Editor/Waveform.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace {
 
@@ -354,18 +356,18 @@ void tick()
 	// Store the y-position of time zero.
 	if(myUseTimeBasedView)
 	{
-		myChartTopY = floor((double)myReceptorY - myCursorTime * myPixPerSec);
+		myChartTopY = std::floor((double)myReceptorY - myCursorTime * myPixPerSec);
 	}
 	else
 	{
-		myChartTopY = floor((double)myReceptorY - myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
+		myChartTopY = std::floor((double)myReceptorY - myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
 	}
 }
 
 void updateScrollValues()
 {
-	myPixPerSec = round(21.077 * pow(1.518, myZoomLevel));
-	myPixPerRow = round(11.588 * pow(1.48, myZoomLevel)) * BEATS_PER_ROW;
+	myPixPerSec = std::round(21.077 * std::pow(1.518, myZoomLevel));
+	myPixPerRow = std::round(11.588 * std::pow(1.48, myZoomLevel)) * BEATS_PER_ROW;
 	if(myUseReverseScroll)
 	{
 		myPixPerSec = -myPixPerSec;
@@ -378,7 +380,7 @@ void updateCustomSnapSteps()
 	double inc = 192.0 / myCustomSnap;
 	for (int i = 0; i <= myCustomSnap; ++i)
 	{
-		myCustomSnapSteps[i] = static_cast<int>(round(inc * i));
+		myCustomSnapSteps[i] = static_cast<int>(std::round(inc * i));
 	}
 }
 
@@ -454,9 +456,11 @@ void setCustomSnap(int size)
 	}
 	if (myCustomSnap != size)
 	{
+		String snap = OrdinalSuffix(myCustomSnap);
+
 		myCustomSnap = size;
 		updateCustomSnapSteps();
-		HudNote("Custom Snap: %s", OrdinalSuffix(myCustomSnap));
+		HudNote("Custom Snap: %s", &snap);
 		setSnapType(ST_CUSTOM);
 	}
 }

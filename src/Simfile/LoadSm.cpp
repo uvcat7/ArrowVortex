@@ -19,6 +19,8 @@
 
 #include <Managers/StyleMan.h>
 
+#include <cmath>
+
 namespace Vortex {
 namespace Sm {
 
@@ -508,7 +510,7 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 					float mod = (float) ROWS_PER_NOTE_SECTION / i;
 					for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j, line += numCols)
 					{
-						float rem = round(fmod(j, mod));
+						float rem = std::round(std::fmod(j, mod));
 						// Check all the compressed rows and make sure they are empty
 						if (rem > 0 && rem < static_cast<int>(mod)
 							&& memcmp(line, emptyline, numCols) != 0)
@@ -538,7 +540,7 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 				// Handle abnormal numbers of lines loading
 				if (ROWS_PER_NOTE_SECTION % numLines != 0)
 				{
-					ofs = ((int)round(192.0f / numLines * (i + 1)) - (int)round(192.0f / numLines * i));
+					ofs = (static_cast<int>(std::round(192.0f / numLines * (i + 1))) - static_cast<int>(std::round(192.0f / numLines * i)));
 				}
 				line += numCols;
 				row += ofs;

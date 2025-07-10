@@ -10,4 +10,5 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 		${PROJECT_SOURCE_DIR}/bin
 		$<TARGET_FILE_DIR:ArrowVortex>)
-target_link_libraries(ArrowVortex PRIVATE System)
+target_link_libraries(ArrowVortex PRIVATE System ${CMAKE_FIND_ROOT_PATH}/lib/libgcc_s.a ${CMAKE_FIND_ROOT_PATH}/lib/libwinpthread.a ${CMAKE_FIND_ROOT_PATH}/lib/libstdc++.a)
+file(COPY ${CMAKE_FIND_ROOT_PATH}/bin/libgcc_s_seh-1.dll ${CMAKE_FIND_ROOT_PATH}/bin/libwinpthread-1.dll DESTINATION .)

@@ -9,6 +9,9 @@
 
 #include <System/OpenGL.h>
 
+#include <algorithm>
+#include <vector>
+
 namespace Vortex {
 
 static const int PADDING = 1;
@@ -59,7 +62,7 @@ static GlyphCache* CreateCache(FT_Face face, int size)
 {
 	int texW = 128, texH = 128;
 	while(texW < 1024 && texW < size * 8 + 64) texW *= 2;
-	std::vector<uchar> pixels(texW * texH, 0);
+	std::vector<uchar> pixels(texW * texH);
 
 	auto* cache = new GlyphCache;
 	cache->tex = TextureManager::load(texW, texH, FORMAT, false, pixels.data());
@@ -217,7 +220,7 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot)
 		// Copy the glyph pixels to the cache texture.
 		uchar* pixels = CopyGlyphBitmap(bitmapW, bitmapH, bitmap);
 		cache->tex->modify(glyph->box.x, glyph->box.y, bitmapW, bitmapH, pixels);
-		cache->shelfH = max(cache->shelfH, bitmapH);
+		cache->shelfH = std::max(cache->shelfH, bitmapH);
 		free(pixels);
 
 		// Set the glyph uvs.
