@@ -13,8 +13,6 @@
 
 #include <Simfile/SegmentGroup.h>
 
-#define Dlg DialogLabelBreakdown
-
 namespace Vortex {
 
 // ================================================================================================
@@ -25,7 +23,7 @@ enum DisplayType {
 	ROW
 };
 
-struct Dlg::LabelButton : public GuiWidget {
+struct DialogLabelBreakdown::LabelButton : public GuiWidget {
 
 LabelButton(GuiContext* gui, TileRect2* bar, int row, String time, String text)
 	: GuiWidget(gui)
@@ -68,7 +66,7 @@ void onTick() override
 
 void onDraw() override
 {
-	recti r = myRect;
+	recti r = rect_;
 
 	TextStyle textStyle;
 	textStyle.textFlags = Text::ELLIPSES;
@@ -78,9 +76,9 @@ void onDraw() override
 	button.base.draw(r, 0);
 
 	// Draw the button text.
-	recti left = { myRect.x, myRect.y, 74, 20 };
+	recti left = { rect_.x, rect_.y, 74, 20 };
 
-	color32 color = COLOR32(139, 148, 148, 255);
+	color32 color = RGBAtoColor32(139, 148, 148, 255);
 	myBar->draw(left, 0, color);
 
 	Text::arrange(Text::MR, myDisplayTime.str());
@@ -109,7 +107,7 @@ TileRect2* myBar;
 // ================================================================================================
 // LabelList
 
-struct Dlg::LabelList : public WgScrollRegion {
+struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
 
 Vector<LabelButton*> myButtons;
 TileRect2 myButtonTex;
@@ -145,27 +143,27 @@ LabelList(GuiContext* gui)
 
 void onUpdateSize() override
 {
-	myScrollH = max(24, myButtons.size() * 21);
-	myClampScrollValues();
+	scroll_height_ = max(24, myButtons.size() * 21);
+	ClampScrollPositions();
 }
 
 void onTick() override
 {
-	myPreTick();
+	PreTick();
 
-	int viewW = getViewWidth() - 2 * myScrollbarActiveV;
+	int viewW = getViewWidth() - 2 * is_vertical_scrollbar_active_;
 
 	// Update the properties of each button.
-	int y = myRect.y - myScrollY;
+	int y = rect_.y - scroll_position_y_;
 	for(int i = 0; i < myButtons.size(); ++i)
 	{
 		auto button = myButtons[i];
-		button->arrange({myRect.x, y, viewW, 20});
+		button->arrange({rect_.x, y, viewW, 20});
 		button->tick();
 		y += 21;
 	}
 
-	myPostTick();
+	PostTick();
 }
 
 void onDraw() override
@@ -173,14 +171,14 @@ void onDraw() override
 	if (gSimfile->isClosed()) return;
 
 	TextStyle textStyle;
-	int w = getViewWidth() - 2 * myScrollbarActiveV;
+	int w = getViewWidth() - 2 * is_vertical_scrollbar_active_;
 	int h = getViewHeight();
-	int x = myRect.x;
-	int y = myRect.y - myScrollY;
+	int x = rect_.x;
+	int y = rect_.y - scroll_position_y_;
 	const Style* style = nullptr;
 	int chartIndex = 0;
 
-	Renderer::pushScissorRect({myRect.x, myRect.y, w, h});
+	Renderer::pushScissorRect({rect_.x, rect_.y, w, h});
 	if(myButtons.empty())
 	{
 		Text::arrange(Text::MC, textStyle, "- no labels -");
@@ -262,11 +260,11 @@ void copyLabels()
 // ================================================================================================
 // DialogLabelList
 
-Dlg::~Dlg()
+DialogLabelBreakdown::~DialogLabelBreakdown()
 {
 }
 
-Dlg::Dlg()
+DialogLabelBreakdown::DialogLabelBreakdown()
 {
 	setTitle("LABELS");
 
@@ -283,19 +281,19 @@ Dlg::Dlg()
 	clear();
 }
 
-void Dlg::clear()
+void DialogLabelBreakdown::clear()
 {
 	myLabelText.clear();
 }
 
-void Dlg::myCreateWidgets()
+void DialogLabelBreakdown::myCreateWidgets()
 {
 	myLayout.row().col(44).col(234, true);
 
 	WgLineEdit* text = myLayout.add<WgLineEdit>("Label");
 	text->text.bind(&myLabelText);
 	text->setMaxLength(1000);
-	text->onChange.bind(this, &Dlg::onChange);
+	text->onChange.bind(this, &DialogLabelBreakdown::onChange);
 	text->setTooltip("Label text");
 
 	myLayout.row().col(284, true);
@@ -307,16 +305,16 @@ void Dlg::myCreateWidgets()
 	myDisplayTypeList->addItem("Beat");
 	myDisplayTypeList->addItem("Row");
 	myDisplayTypeList->value.bind(&myDisplayType);
-	myDisplayTypeList->onChange.bind(this, &Dlg::mySetDisplayType);
+	myDisplayTypeList->onChange.bind(this, &DialogLabelBreakdown::mySetDisplayType);
 	myDisplayTypeList->setTooltip("Change the unit used for timestamps.");
 
 	WgButton* copy = myLayout.add<WgButton>();
 	copy->text.set("{g:copy}");
 	copy->setTooltip("Copy labels to clipboard");
-	copy->onPress.bind(this, &Dlg::myCopyLabels);
+	copy->onPress.bind(this, &DialogLabelBreakdown::myCopyLabels);
 }
 
-void Dlg::onChanges(int changes)
+void DialogLabelBreakdown::onChanges(int changes)
 {
 	if (changes & VCM_FILE_CHANGED)
 	{
@@ -336,12 +334,12 @@ void Dlg::onChanges(int changes)
 	}
 }
 
-void Dlg::onUpdateSize()
+void DialogLabelBreakdown::onUpdateSize()
 {
 	myLayout.onUpdateSize();
 }
 
-void Dlg::onTick()
+void DialogLabelBreakdown::onTick()
 {
 	recti bounds = getInnerRect();
 	myList->setHeight(bounds.h - 58);
@@ -357,7 +355,7 @@ void Dlg::onTick()
 	EditorDialog::onTick();
 }
 
-void Dlg::onChange()
+void DialogLabelBreakdown::onChange()
 {
 	if (gSimfile->isClosed()) return;
 
@@ -371,13 +369,13 @@ void Dlg::onChange()
 	gTempo->addSegment(Label(row, myLabelText));
 }
 
-void Dlg::mySetDisplayType()
+void DialogLabelBreakdown::mySetDisplayType()
 {
 	myList->setDisplayType(myDisplayType);
 }
 
 
-void Dlg::myCopyLabels()
+void DialogLabelBreakdown::myCopyLabels()
 {
 	myList->copyLabels();
 }
