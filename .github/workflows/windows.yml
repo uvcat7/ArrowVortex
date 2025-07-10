@@ -1,8 +1,12 @@
-name: Windows Build
-
 on:
   push:
-    branches: ["main"]
+  pull_request:
+    branches:
+      - beta
+    paths-ignore:
+      - '**.md'
+
+name: Latest Beta
 
 jobs:
   windows:
@@ -24,7 +28,7 @@ jobs:
           unzip oggenc.zip -d .
       - name: Build AV
         run: msbuild build\VisualStudio\ArrowVortex.vcxproj /p:Configuration=Release /p:Platform=x64         
-      - name: Collect into a zip
+      - name: Collect into a directory
         run: |
           mkdir AV
           cd AV
@@ -33,12 +37,9 @@ jobs:
           cp -r ../bin/settings .
           cp ../bin/ArrowVortex.exe .
           cp ../oggenc2.exe .
-          cd ..
-          7z.exe a -tzip av.zip AV
-      - name: Upload to Delta VPS
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DROPLET_SSH }}" > ~/.ssh/arrow_vortex
-          chmod 400 ~/.ssh/arrow_vortex
-          echo "arrowvortex@167.71.33.176:~/av/ArrowVortex-$(date +'%Y-%m-%d %H-%M-%S').zip" > DROPLET_PATH
-          scp -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i ~/.ssh/arrow_vortex av.zip $(cat DROPLET_PATH)
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AV
+          path: main/AV/
+          if-no-files-found: error

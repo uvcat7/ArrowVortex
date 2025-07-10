@@ -457,6 +457,12 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 		return;
 	}
 
+	// A crash can occur if another thread is loading the audio. Just do nothing if it is.
+	if (!music.isAllocated())
+	{
+		return;
+	}
+
 	double sampleSkip = max(0.001, (samplesPerPixel / 200.0));
 	int wh = w / 2 - 1;
 
