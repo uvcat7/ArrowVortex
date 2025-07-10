@@ -22,7 +22,7 @@ struct BackgroundThreadData
 {
 	BackgroundThread* owner;
 	HANDLE handle;
-	uchar done;
+	uint8_t done;
 };
 
 struct BackgroundThreadParam

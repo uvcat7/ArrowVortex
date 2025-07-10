@@ -45,7 +45,7 @@ struct SerializedTempo
 	int samplerate;
 	int numFrames;
 	int numThreads;
-	uchar* terminate;
+	uint8_t* terminate;
 	std::atomic_int progress;
 	TempoResults result;
 };

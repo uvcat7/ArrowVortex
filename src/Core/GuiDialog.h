@@ -51,19 +51,19 @@ public:
 	GuiDialog* dialog_ptr_;
 	GuiContext* gui_;
 
-	uint is_pinnable_ : 1;
-	uint is_closeable_ : 1;
-	uint is_minimizable_ : 1;
-	uint is_horizontally_resizable_ : 1;
-	uint is_vertically_resizable_ : 1;
+	uint32_t is_pinnable_ : 1;
+	uint32_t is_closeable_ : 1;
+	uint32_t is_minimizable_ : 1;
+	uint32_t is_horizontally_resizable_ : 1;
+	uint32_t is_vertically_resizable_ : 1;
 
-	uint request_close_ : 1;
-	uint request_pin_ : 1;
-	uint request_minimize_ : 1;
-	uint request_move_to_top_ : 1;
+	uint32_t request_close_ : 1;
+	uint32_t request_pin_ : 1;
+	uint32_t request_minimize_ : 1;
+	uint32_t request_move_to_top_ : 1;
 
-	uint pinned_state_ : 1;
-	uint minimized_state_ : 1;
+	uint32_t pinned_state_ : 1;
+	uint32_t minimized_state_ : 1;
 
 private:
 	friend class GuiDialog;

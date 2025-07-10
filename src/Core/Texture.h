@@ -33,10 +33,10 @@ public:
 	Texture(const char* path, bool mipmap = false, Format fmt = RGBA);
 
 	/// Creates a texture from a buffer of [w * h * channels] pixel values.
-	Texture(int w, int h, const uchar* pixeldata, bool mipmap = false, Format fmt = RGBA);
+	Texture(int w, int h, const uint8_t* pixeldata, bool mipmap = false, Format fmt = RGBA);
 
 	/// Updates a region of the texture with a buffer of [w * h * channels] pixel values.
-	void modify(int x, int y, int w, int h, const uchar* pixeldata);
+	void modify(int x, int y, int w, int h, const uint8_t* pixeldata);
 
 	/// Sets UV wrapping mode to repeat on true, or clamp on false; default is clamp.
 	void setWrapping(bool repeat);

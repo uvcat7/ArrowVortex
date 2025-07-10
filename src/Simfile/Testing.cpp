@@ -33,7 +33,7 @@ static bool Check(const char* name, int a, int b)
 	return (a == b);
 }
 
-static bool Check(const char* name, uint a, uint b)
+static bool Check(const char* name, uint32_t a, uint32_t b)
 {
 	if(a != b) HudError("%s: %i | %i", name, (int)a, (int)b);
 	return (a == b);

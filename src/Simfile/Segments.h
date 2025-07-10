@@ -26,7 +26,7 @@ struct SegmentMeta
 	const char* singular;
 	const char* plural;
 	const char* help;
-	color32 color;
+	uint32_t color;
 	DisplaySide side;
 
 	New construct;

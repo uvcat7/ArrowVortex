@@ -43,7 +43,7 @@ static void CreatePlaceholderGlyphs(Glyph* out)
 	static const int b[8] = {1, 1,  1,  2,  2,  3,  3,  4};
 	static const int bufferSize = (22 + padding) * (44 + padding);
 
-	uchar tmp[bufferSize];
+	uint8_t tmp[bufferSize];
 	for(int i = 0; i < 8; ++i)
 	{
 		memset(tmp, 0, bufferSize);

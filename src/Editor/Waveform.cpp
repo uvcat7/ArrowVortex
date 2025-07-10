@@ -99,7 +99,7 @@ struct WaveformImpl : public Waveform {
 Vector<WaveBlock*> waveformBlocks_;
 
 WaveFilter* waveformFilter_;
-Vector<uchar> waveformTextureBuffer_;
+Vector<uint8_t> waveformTextureBuffer_;
 
 int waveformBlockWidth_, waveformSpacing_;
 
@@ -326,7 +326,7 @@ int getAntiAliasing()
 // ================================================================================================
 // Waveform :: luminance functions.
 
-struct WaveEdge { int l, r; uchar lum; };
+struct WaveEdge { int l, r; uint8_t lum; };
 
 void edgeLumUniform(WaveEdge* edge, int h)
 {
@@ -349,7 +349,7 @@ void edgeLumAmplitude(WaveEdge* edge, int w, int h)
 // ================================================================================================
 // Waveform :: edge shape functions.
 
-void edgeShapeRectified(uchar* dst, const WaveEdge* edge, int w, int h)
+void edgeShapeRectified(uint8_t* dst, const WaveEdge* edge, int w, int h)
 {
 	int cx = w / 2;
 	for(int y = 0; y < h; ++y, dst += w, ++edge)
@@ -361,7 +361,7 @@ void edgeShapeRectified(uchar* dst, const WaveEdge* edge, int w, int h)
 	}
 }
 
-void edgeShapeSigned(uchar* dst, const WaveEdge* edge, int w, int h)
+void edgeShapeSigned(uint8_t* dst, const WaveEdge* edge, int w, int h)
 {
 	int cx = w / 2;
 	for(int y = 0; y < h; ++y, dst += w, ++edge)
@@ -375,15 +375,15 @@ void edgeShapeSigned(uchar* dst, const WaveEdge* edge, int w, int h)
 // ================================================================================================
 // Waveform :: anti-aliasing functions.
 
-void antiAlias2x(uchar* dst, int w, int h)
+void antiAlias2x(uint8_t* dst, int w, int h)
 {
 	int newW = w / 2, newH = h / 2;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = waveformTextureBuffer_.begin() + (y * 2) * w;
+		uint8_t* line = waveformTextureBuffer_.begin() + (y * 2) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
-			uchar* a = line + (x * 2), *b = a + w;
+			uint8_t* a = line + (x * 2), *b = a + w;
 			int sum = 0;
 			sum += a[0] + a[1];
 			sum += b[0] + b[1];
@@ -392,16 +392,16 @@ void antiAlias2x(uchar* dst, int w, int h)
 	}
 }
 
-void antiAlias3x(uchar* dst, int w, int h)
+void antiAlias3x(uint8_t* dst, int w, int h)
 {
 	int newW = w / 3, newH = h / 3;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = waveformTextureBuffer_.begin() + (y * 3) * w;
+		uint8_t* line = waveformTextureBuffer_.begin() + (y * 3) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
-			uchar* a = line + (x * 3);
-			uchar* b = a + w, *c = b + w;
+			uint8_t* a = line + (x * 3);
+			uint8_t* b = a + w, *c = b + w;
 			int sum = 0;
 			sum += a[0] + a[1] + a[2];
 			sum += b[0] + b[1] + b[2];
@@ -411,16 +411,16 @@ void antiAlias3x(uchar* dst, int w, int h)
 	}
 }
 
-void antiAlias4x(uchar* dst, int w, int h)
+void antiAlias4x(uint8_t* dst, int w, int h)
 {
 	int newW = w / 4, newH = h / 4;
 	for(int y = 0; y < newH; ++y)
 	{
-		uchar* line = waveformTextureBuffer_.begin() + (y * 4) * w;
+		uint8_t* line = waveformTextureBuffer_.begin() + (y * 4) * w;
 		for(int x = 0; x < newW; ++x, ++dst)
 		{
-			uchar* a = line + (x * 4), *b = a + w;
-			uchar* c = b + w, *d = c + w;
+			uint8_t* a = line + (x * 4), *b = a + w;
+			uint8_t* c = b + w, *d = c + w;
 			int sum = 0;
 			sum += a[0] + a[1] + a[2] + a[3];
 			sum += b[0] + b[1] + b[2] + b[3];
@@ -504,7 +504,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 
 void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h, int blockId, bool filtered)
 {
-	uchar* texBuf = waveformTextureBuffer_.begin();
+	uint8_t* texBuf = waveformTextureBuffer_.begin();
 	for(int channel = 0; channel < 2; ++channel)
 	{
 		memset(texBuf, 0, w * h);
@@ -672,7 +672,7 @@ void drawPeaks()
 		TextureHandle texL = block->tex[0].handle();
 		TextureHandle texR = block->tex[1].handle();
 
-		color32 waveCol = ToColor32(waveformColorScheme_.wave);
+		uint32_t waveCol = ToColor32(waveformColorScheme_.wave);
 		Draw::fill({xl - pw, y, pw * 2, TEX_H}, waveCol, texL, uvs, Texture::ALPHA);
 		Draw::fill({xr - pw, y, pw * 2, TEX_H}, waveCol, texR, uvs, Texture::ALPHA);
 
@@ -681,7 +681,7 @@ void drawPeaks()
 			TextureHandle texL = block->tex[2].handle();
 			TextureHandle texR = block->tex[3].handle();
 
-			color32 filterCol = ToColor32(waveformColorScheme_.filter);
+			uint32_t filterCol = ToColor32(waveformColorScheme_.filter);
 			Draw::fill({xl - pw, y, pw * 2, TEX_H}, filterCol, texL, uvs, Texture::ALPHA);
 			Draw::fill({xr - pw, y, pw * 2, TEX_H}, filterCol, texR, uvs, Texture::ALPHA);
 		}

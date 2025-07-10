@@ -509,11 +509,11 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart)
 		if(hitObject.endtime > hitObject.time)
 		{
 			int endrow = timing.timeToRow(hitObject.endtime);
-			chart.notes.append({row, endrow, (uint)col, 0, NOTE_STEP_OR_HOLD, 192});
+			chart.notes.append({row, endrow, (uint32_t)col, 0, NOTE_STEP_OR_HOLD, 192});
 		}
 		else
 		{
-			chart.notes.append({row, row, (uint)col, 0, NOTE_STEP_OR_HOLD, 192});
+			chart.notes.append({row, row, (uint32_t)col, 0, NOTE_STEP_OR_HOLD, 192});
 		}
 	}
 }
@@ -545,7 +545,7 @@ static bool ParseOsz(Vector<OsuFile*>& out, StringRef path, String& err)
 	// Read the files.
 	String str;
 	char buffer[512];
-	for(uint i = 0; i < global_info.number_entry; ++i)
+	for(uint32_t i = 0; i < global_info.number_entry; ++i)
 	{
 		unz_file_info file_info;
 		if(unzGetCurrentFileInfo(zip, &file_info, buffer, 512, 0, 0, 0, 0) == UNZ_OK)

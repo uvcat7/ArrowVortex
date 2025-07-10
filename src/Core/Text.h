@@ -138,9 +138,9 @@ struct TextStyle
 
 	Font font;
 	int fontSize;
-	uint textFlags;
-	color32 textColor;
-	color32 shadowColor;
+	uint32_t textFlags;
+	uint32_t textColor;
+	uint32_t shadowColor;
 };
 
 }; // namespace Vortex
