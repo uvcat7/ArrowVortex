@@ -508,7 +508,8 @@ static bool GetSectionCompression(const char* section, int width, std::list<uint
 		for (int i = 4; i <= lcm / 2; i++)
 		{
 			// Skip anything that isn't a lcm factor
-			if (lcm % i > 0) continue;
+			// Skipping 6 is a special case, since it's a factor of 192 but not a standard snap
+			if (lcm % i > 0 || i == 6) continue;
 
 			// The first (smallest) match is always the best
 			if (TestSectionCompression(section, width, i))
