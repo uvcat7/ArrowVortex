@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
+#include <chrono>
 
 #include <Core/Vector.h>
 #include <Core/Reference.h>
@@ -48,7 +49,7 @@ struct MusicImpl : public Music, public MixSource {
 
 Mixer* myMixer;
 Sound mySamples;
-double myPlayTimer;
+std::chrono::steady_clock::time_point myPlayTimer;
 TickData myBeatTick, myNoteTick;
 String myTitle, myArtist;
 int myMusicSpeed;

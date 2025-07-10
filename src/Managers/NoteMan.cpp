@@ -505,6 +505,9 @@ String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 			myUpdateNotes();
 		}
 
+		// Jump to start row.
+		gView->setCursorRow(startRow);
+
 		target = in.read<Chart*>();
 	}
 	return String();

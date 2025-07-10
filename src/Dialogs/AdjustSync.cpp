@@ -192,7 +192,10 @@ void DialogAdjustSync::onAction(int id)
 		gTempo->setOffset(myOffset);
 	} break;
 	case ACT_SET_BPM: {
-		gTempo->addSegment(BpmChange(0, myInitialBPM));
+		if (myInitialBPM != 0.0)
+		{
+			gTempo->addSegment(BpmChange(0, myInitialBPM));
+		}
 	} break;
 	case ACT_TWEAK_BPM: {
 		gTempo->startTweakingBpm(0);

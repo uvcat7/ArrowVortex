@@ -79,28 +79,4 @@ ArrowVortex is provided under the GPLv3 license, or at your option, any later ve
 
 The original author provided the volunteer developers with an archive of the source code, which did not include a formal license. The original author explicitly requested that any new code developed by the volunteer developers be released under a license which prevents the code from being used in closed source software. The volunteer developers, as a separate party, have acted in good faith to comply with this request and bear no liability for the licensing status of the original code as provided to them.
 
-Code from the following projects is included in this repository:
-- [freetype](https://freetype.org/license.html), using the FreeType License, which is compatible with GPLv3
-   - See  `lib/freetype/` for more info.
-- [libogg & libvorbis](https://gitlab.xiph.org/xiph), using its BSD-style license, which is compatible with GPLv3
-   - See  `lib/libvorbis/license` for more info.
-- [libmad](https://www.underbit.com/products/mad/), using the GPL license (libmad allows for GPLv2 or any later version)
-   - See  `lib/freetype/` for more info.
-- [lua](https://www.lua.org/license.html), using its GPLv3-compatible permissive license
-   - See  `lib/lua/` for more info.
-- Code from [liir.c](https://www.exstrom.com/journal/sigproc/dsigproc.html) by Exstrom Labratories, which is GPL, is present in `src/Editor/Butterworth.cpp`
-- Code from [Takuya OOURA's General Purpose FFT Package](https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html), which is released freely, is present in `src/Editor/FFT.cpp` 
-- Code from the [aubio](https://github.com/aubio/aubio) library, which is also GPLv3, is present in `src/Editor/Aubio.h` and `src/Editor/FindOnsets.cpp`
-
-
-## Contributors
-
-Original author:
-- Bram 'Fietsemaker' van de Wetering
-
-The following people helped prepare the initial public release of the open sourced ArrowVortex:
-- @uvcat7
-- @sukibaby
-- @Psycast
-- @DeltaEpsilon7787
-- @DolphinChips
+For licensing info on the dependent projects and a list of contributors, see the CREDITS file.

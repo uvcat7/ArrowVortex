@@ -514,8 +514,9 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 			float mod = (float) ROWS_PER_NOTE_SECTION / i;
 			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
 			{
+				float rem = round(fmod(j, mod));
 				// Check all the compressed rows and make sure they are empty
-				if ((int)(round(fmod(j, mod))) > 0 && (int)(round(fmod(j, mod))) < (int) mod
+				if (rem > 0 && rem < static_cast<int>(mod)
 					&& memcmp(section + j * width, zeroline.str(), width))
 				{ 
 					valid = false;
@@ -530,6 +531,12 @@ static void GetSectionCompression(const char* section, int width, std::list<uint
 				break;
 			}
 		}
+	}
+	// Is our factor a standard snap? If so, use it.
+	// If not, save the measure as 192nds for SM5 Editor compatibility.
+	if (ROWS_PER_NOTE_SECTION % count != 0)
+	{
+		count = ROWS_PER_NOTE_SECTION;
 	}
 	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
 }
@@ -586,6 +593,7 @@ static void WriteSections(ExportData& data)
 					else
 					{
 						section[pos] = GetHoldChar(it->type);
+						quantVec.push_front(it->quant);
 						auto hold = holds[it->col];
 						if(hold)
 						{
@@ -629,23 +637,16 @@ static void WriteSections(ExportData& data)
 			quantVec.unique();
 			GetSectionCompression(m, numCols, quantVec, count, pitch);
 			quantVec.clear();
-			if (ROWS_PER_NOTE_SECTION % count == 0) 
+			if (ROWS_PER_NOTE_SECTION % count != 0)
 			{
-				for (int k = 0; k < count; ++k, m += pitch)
-				{
-					data.file.write(m, numCols, 1);
-					data.file.write("\n", 1, 1);
-				}
+				HudError("Bug: trying to save a non-supported number of rows. Data loss expected.");
 			}
-			else
+			for (int k = 0; k < count; ++k, m += pitch)
 			{
-				for (int k = 0; k < count; ++k, m += pitch)
-				{
-					data.file.write(m, numCols, 1);
-					data.file.write("\n", 1, 1);
-					pitch = ((int)round((float) ROWS_PER_NOTE_SECTION / count * (k + 1)) - (int)round((float)ROWS_PER_NOTE_SECTION / count * k)) * numCols;
-				}
+				data.file.write(m, numCols, 1);
+				data.file.write("\n", 1, 1);
 			}
+
 			// Write a comma if this is not the last section.
 			if(it != end || remainingHolds > 0) data.file.write(",\n", 2, 1);
 		}

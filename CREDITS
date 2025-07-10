@@ -1,0 +1,50 @@
+Original author:
+
+ Bram 'Fietsemaker' van de Wetering
+
+The following people helped prepare the initial public release of the open-
+sourced ArrowVortex:
+
+ uvcat7 (https://github.com/uvcat7)
+ sukibaby (https://github.com/sukibaby)
+ Psycast (https://github.com/Psycast)
+ DeltaEpsilon7787 (https://github.com/DeltaEpsilon7787)
+ DolphinChips (https://github.com/DolphinChips)
+ StarbotArc (https://github.com/StarbotArc)
+
+-----------------------------------------------------------------------------------------
+
+ArrowVortex is provided under the GPLv3 license, or at your option, any later
+version.
+
+The original author provided the volunteer developers with an archive of the
+source code, which did not include a formal license. The original author
+explicitly requested that any new code developed by the volunteer developers
+be released under a license which prevents the code from being used in closed
+source software. The volunteer developers, as a separate party, have acted in
+good faith to comply with this request and bear no liability for the licensing
+status of the original code as provided to them.
+
+Code from the following projects is included in this repository:
+
+ 1. freetype, using the FreeType License, which is compatible with GPLv3
+    See lib/freetype/ for more info.
+
+ 2. libogg & libvorbis, using its BSD-style license, which is compatible with
+    GPLv3. See lib/libvorbis/license for more info.
+
+ 3. libmad, using the GPL license (libmad allows for GPLv2 or any later version)
+    See lib/freetype/ for more info.
+
+ 4. lua, using its GPLv3-compatible permissive license
+    See lib/lua/ for more info.
+
+ 5. Code from liir.c by Exstrom Labratories, which is GPL, is present in
+    src/Editor/Butterworth.cpp
+
+ 6. Code from Takuya OOURA's General Purpose FFT Package, which is released
+    freely, is present in src/Editor/FFT.cpp
+
+ 7. Code from the aubio library, which is also GPLv3, is present in
+    src/Editor/Aubio.h and src/Editor/FindOnsets.cpp
+
