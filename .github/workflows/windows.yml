@@ -1,10 +1,8 @@
-name: Latest Beta
+name: Build & Latest Beta
 
 on:
   push:
   pull_request:
-    branches:
-      - beta
     paths-ignore:
       - '**.md'
 
@@ -31,6 +29,7 @@ jobs:
       - name: Build AV
         run: msbuild build\VisualStudio\ArrowVortex.vcxproj /p:Configuration=Release /p:Platform=x64         
       - name: Collect into a directory
+        if: github.ref_name == 'beta'
         run: |
           mkdir AV
           cd AV
@@ -40,6 +39,7 @@ jobs:
           cp ../bin/ArrowVortex.exe .
           cp ../oggenc2.exe .
       - name: Upload artifact
+        if: github.ref_name == 'beta'
         uses: actions/upload-artifact@v4
         with:
           name: AV
