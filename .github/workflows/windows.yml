@@ -38,6 +38,8 @@ jobs:
           cp -r ../bin/settings .
           cp ../bin/ArrowVortex.exe .
           cp ../oggenc2.exe .
+          cd ..
+          7z.exe a -tzip av.zip AV
       - name: Upload artifact
         if: github.ref_name == 'beta'
         uses: actions/upload-artifact@v4
