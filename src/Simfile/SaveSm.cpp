@@ -473,7 +473,7 @@ static void GetSectionCompression(const char* section, int width, int& count, in
 	count = ROWS_PER_NOTE_SECTION;
 	// Determines the best compression for the given section.
 	// We actually don't care about custom snaps for this at all, since we want to save 192nds for non-standard-compressible snaps.
-	for (int i = 1; i < NUM_MEASURE_SUBDIV - 1; i++)
+	for (int i = 0; i < NUM_MEASURE_SUBDIV - 1; i++)
 	{
 		if (TestSectionCompression(section, width, MEASURE_SUBDIV[i]))
 		{
