@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "arrowvortex",
+  "version": "2025-03-04",
+  "builtin-baseline": "566f9496b7e00ee0cc00aca0ab90493d122d148a",
+  "dependencies": [
+    "freetype",
+    "libmad",
+    "libogg",
+    "libvorbis",
+    "opengl"
+  ]
+}
