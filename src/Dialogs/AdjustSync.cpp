@@ -69,12 +69,10 @@ void DialogAdjustSync::myCreateWidgets()
 	WgSpinner* offset = myCreateWidgetRow("Music offset", myOffset, ACT_SET_OFS, ACT_TWEAK_OFS,
 		"Music start time relative to the first beat, in seconds", "Tweak the music offset");
 	offset->setRange(-100.0, 100.0);
-	offset->setPrecision(3, 6);
 	offset->setStep(0.001);
 
 	WgSpinner* bpm = myCreateWidgetRow("Initial BPM", myInitialBPM, ACT_SET_BPM, ACT_TWEAK_BPM,
 		"Music tempo at the first beat, in beats per minute", "Tweak the initial BPM");
-	bpm->setPrecision(3, 6);
 	bpm->setRange(VC_MIN_BPM, VC_MAX_BPM);
 	bpm->setStep(1.0);
 

@@ -81,7 +81,7 @@ static void WriteTag(ExportData& data, const char* tag, double value, ForceWrite
 {
 	if(ShouldWrite(data, when, value != 0, sscOnly))
 	{
-		data.file.printf("#%s:%.3f;\n", tag, value);
+		data.file.printf("#%s:%.6f;\n", tag, value);
 	}
 }
 
@@ -182,7 +182,7 @@ static void WriteBpms(ExportData& data, const Tempo* tempo)
 	WriteSegments<BpmChange>(data, "BPMS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
 	[&](const BpmChange& change)
 	{
-		data.file.printf("%.3f=%.6f",
+		data.file.printf("%.6f=%.6f",
 			ToBeat(change.row), change.bpm);
 	});
 }
@@ -192,7 +192,7 @@ static void WriteStops(ExportData& data, const Tempo* tempo)
 	WriteSegments<Stop>(data, "STOPS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
 	[&](const Stop& stop)
 	{
-		data.file.printf("%.3f=%.3f",
+		data.file.printf("%.6f=%.6f",
 			ToBeat(stop.row), stop.seconds);
 	});
 }
@@ -202,7 +202,7 @@ static void WriteDelays(ExportData& data, const Tempo* tempo)
 	WriteSegments<Delay>(data, "DELAYS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Delay& delay)
 	{
-		data.file.printf("%.3f=%.3f",
+		data.file.printf("%.6f=%.6f",
 			ToBeat(delay.row), delay.seconds);
 	});
 }
@@ -212,7 +212,7 @@ static void WriteWarps(ExportData& data, const Tempo* tempo)
 	WriteSegments<Warp>(data, "WARPS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Warp& warp)
 	{
-		data.file.printf("%.3f=%.3f",
+		data.file.printf("%.6f=%.6f",
 			ToBeat(warp.row), ToBeat(warp.numRows));
 	});
 }
@@ -222,7 +222,7 @@ static void WriteSpeeds(ExportData& data, const Tempo* tempo)
 	WriteSegments<Speed>(data, "SPEEDS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Speed& speed)
 	{
-		data.file.printf("%.3f=%.3f=%.3f=%i",
+		data.file.printf("%.6f=%.6f=%.6f=%i",
 			ToBeat(speed.row), speed.ratio, speed.delay, speed.unit);
 	});
 }
@@ -232,7 +232,7 @@ static void WriteScrolls(ExportData& data, const Tempo* tempo)
 	WriteSegments<Scroll>(data, "SCROLLS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Scroll& scroll)
 	{
-		data.file.printf("%.3f=%.3f",
+		data.file.printf("%.6f=%.6f",
 			ToBeat(scroll.row), scroll.ratio);
 	});
 }
@@ -242,7 +242,7 @@ static void WriteTickCounts(ExportData& data, const Tempo* tempo)
 	WriteSegments<TickCount>(data, "TICKCOUNTS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const TickCount& tick)
 	{
-		data.file.printf("%.3f=%i",
+		data.file.printf("%.6f=%i",
 			ToBeat(tick.row), tick.ticks);
 	});
 }
@@ -252,7 +252,7 @@ static void WriteTimeSignatures(ExportData& data, const Tempo* tempo)
 	WriteSegments<TimeSignature>(data, "TIMESIGNATURES", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const TimeSignature& sig)
 	{
-		data.file.printf("%.3f=%i=%i",
+		data.file.printf("%.6f=%i=%i",
 			ToBeat(sig.row), (int)ToBeat(sig.rowsPerMeasure), sig.beatNote);
 	});
 }
@@ -262,7 +262,7 @@ static void WriteLabels(ExportData& data, const Tempo* tempo)
 	WriteSegments<Label>(data, "LABELS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Label& label)
 	{
-		data.file.printf("%.3f=%s",
+		data.file.printf("%.6f=%s",
 			ToBeat(label.row), label.str.str());
 	});
 }
@@ -272,8 +272,8 @@ static void WriteAttacks(ExportData& data, const Tempo* tempo)
 	WriteTag(data, "ATTACKS", tempo->attacks, START_OF_LINE, ':', NEVER, true,
 	[&](const Attack& attack)
 	{
-		data.file.printf("TIME=%.3f:", attack.time);
-		data.file.printf((attack.unit == ATTACK_END) ? "END=%.3f:" : "LEN=%.3f:", attack.duration);
+		data.file.printf("TIME=%.6f:", attack.time);
+		data.file.printf((attack.unit == ATTACK_END) ? "END=%.6f:" : "LEN=%.6f:", attack.duration);
 		data.file.printf("MODS=%s", attack.mods.str());
 	});
 }
@@ -292,7 +292,7 @@ static void WriteCombos(ExportData& data, const Tempo* tempo)
 	WriteSegments<Combo>(data, "COMBOS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Combo& combo)
 	{
-		data.file.printf("%.3f=%i", ToBeat(combo.row), combo.hitCombo);
+		data.file.printf("%.6f=%i", ToBeat(combo.row), combo.hitCombo);
 		if(combo.hitCombo != combo.missCombo)
 		{
 			data.file.printf("=%i", combo.missCombo);
@@ -305,7 +305,7 @@ static void WriteFakes(ExportData& data, const Tempo* tempo)
 	WriteSegments<Fake>(data, "FAKES", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Fake& fake)
 	{
-		data.file.printf("%.3f=%.3f",
+		data.file.printf("%.6f=%.6f",
 			ToBeat(fake.row), ToBeat(fake.numRows));
 	});
 }
@@ -368,14 +368,14 @@ static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgCha
 	{
 		if(bg.effect.empty() && bg.file2.empty() && bg.transition.empty() && bg.color.empty() && bg.color2.empty())
 		{
-			data.file.printf("%.3f=%s=%.3f=0=0=1",
+			data.file.printf("%.6f=%s=%.6f=0=0=1",
 				bg.startBeat,
 				bg.file.str(),
 				bg.rate);
 		}
 		else
 		{
-			data.file.printf("%.3f=%s=%.3f=%d=%d=%d=%s=%s=%s=%s=%s",
+			data.file.printf("%.6f=%s=%.6f=%d=%d=%d=%s=%s=%s=%s=%s",
 				bg.startBeat,
 				bg.file.str(),
 				bg.rate,
