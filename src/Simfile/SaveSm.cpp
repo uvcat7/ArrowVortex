@@ -468,83 +468,20 @@ static inline bool TestSectionCompression(const char* section, int width, int qu
 	return quant >= MIN_SECTIONS_PER_MEASURE;
 }
 
-static bool GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
+static void GetSectionCompression(const char* section, int width, int& count, int& pitch)
 {
+	count = ROWS_PER_NOTE_SECTION;
 	// Determines the best compression for the given section.
-	bool error = false;
-	int best = ROWS_PER_NOTE_SECTION;
-	String zeroline(width, '0');
-	std::list<uint>::iterator it;
-	int lcm = 1;
-	for (it = quantVec.begin(); it != quantVec.end(); it++)
+	// We actually don't care about custom snaps for this at all, since we want to save 192nds for non-standard-compressible snaps.
+	for (int i = 1; i < NUM_MEASURE_SUBDIV - 1; i++)
 	{
-		if (*it <= 0 || *it > 192)
+		if (TestSectionCompression(section, width, MEASURE_SUBDIV[i]))
 		{
-			// If there's a quantization error assume nothing
-			error = true;
-			lcm = ROWS_PER_NOTE_SECTION;
+			count = MEASURE_SUBDIV[i];
 			break;
 		}
-		lcm = lcm * *it / gcd(lcm, *it);
-		if (lcm > ROWS_PER_NOTE_SECTION)
-		{
-			lcm = ROWS_PER_NOTE_SECTION;
-			break;
-		}
-	}
-
-	// Set whole and half step measures to be quarter notes by default
-	if (lcm <= MIN_SECTIONS_PER_MEASURE)
-	{
-		count = MIN_SECTIONS_PER_MEASURE;
-	}
-	else
-	{
-	// Determines the best compression for the given section.
-    // Maybe lcm is the best factor, so just keep that.
-		count = lcm;
-		bool valid = false;
-		//The factor list is small, just check them all by hand, but only up to 96 at most since there won't be factors otherwise
-		for (int i = 4; i <= lcm / 2; i++)
-		{
-			// Skip anything that isn't a lcm factor
-			if (lcm % i > 0) continue;
-
-			// The first (smallest) match is always the best
-			if (TestSectionCompression(section, width, i))
-			{
-				valid = true;
-				count = i;
-				break;
-			}
-		}
-
-		// If no factor was found, double-check we won't have any data loss from our lcm guess
-		// Why not check all factors? Saving files would be several times slower otherwise
-		if (!valid)
-		{
-			valid = TestSectionCompression(section, width, lcm);
-		}
-		if (!valid)
-		{
-			// Okay, we WOULD have had data loss, so set the rows to 192 and error
-			error = true;
-			count = ROWS_PER_NOTE_SECTION;
-		}
-	}
-	// Is our factor a standard snap? If so, use it.
-	// If not, save the measure as 192nds for SM5 Editor compatibility.
-	if (ROWS_PER_NOTE_SECTION % count != 0)
-	{
-		count = ROWS_PER_NOTE_SECTION;
-	}
-	// Yes it is weird... but we don't save 6ths even though they factor into 192 evenly.
-	if (count == 6)
-	{
-		count = 12;
 	}
 	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
-	return error;
 }
 
 static void WriteSections(ExportData& data)
@@ -594,12 +531,10 @@ static void WriteSections(ExportData& data)
 					if(it->row == it->endrow)
 					{
 						section[pos] = GetNoteChar(it->type);
-						quantVec.push_front(it->quant);
 					}
 					else
 					{
 						section[pos] = GetHoldChar(it->type);
-						quantVec.push_front(it->quant);
 						auto hold = holds[it->col];
 						if(hold)
 						{
@@ -607,7 +542,6 @@ static void WriteSections(ExportData& data)
 							{
 								int pos = ((int)hold->endrow - startRow) * numCols + (int)hold->col;
 								section[pos] = '3';
-								quantVec.push_front(holds[it->col]->quant);
 								--remainingHolds;
 							}
 						}
@@ -629,7 +563,6 @@ static void WriteSections(ExportData& data)
 						{
 							int pos = (hold->endrow - startRow) * numCols + hold->col;
 							section[pos] = '3';
-							quantVec.push_front(holds[col]->quant);
 							holds[col] = nullptr;
 							--remainingHolds;
 						}
@@ -641,10 +574,7 @@ static void WriteSections(ExportData& data)
 			int count, pitch;
 			const char* m = section;
 			quantVec.unique();
-			if (GetSectionCompression(m, numCols, quantVec, count, pitch))
-			{
-				HudError("Bug: invalid quantization recorded in chart in measure starting at row %d", startRow);
-			}
+			GetSectionCompression(m, numCols, count, pitch);
 			quantVec.clear();
 			if (ROWS_PER_NOTE_SECTION % count != 0)
 			{
