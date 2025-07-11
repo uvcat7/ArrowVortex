@@ -14,17 +14,17 @@ namespace {
 #pragma pack(1)
 struct WaveHeader
 {
-	uint8_t chunkId[4];
+	uint8_t chunkId[4];         // "RIFF"
 	uint32_t chunkSize;
-	uint8_t format[4];
-	uint8_t subChunkId[4];
-	uint32_t subChunkSize;
+	uint8_t format[4];          // "WAVE"
+	uint8_t subchunk1Id[4];     // "fmt "
+	uint32_t subchunk1Size;
 	uint16_t audioFormat;
 	uint16_t numChannels;
 	uint32_t sampleRate;
 	uint32_t byteRate;
 	uint16_t blockAlign;
-	uint16_t bps;
+	uint16_t bitsPerSample;
 };
 struct WaveData
 {
@@ -72,24 +72,30 @@ SoundSource* LoadWav(FileReader* file, String& title, String& artist)
 	if(file->read(&header, sizeof(WaveHeader), 1) == 0
 		|| memcmp(header.chunkId, "RIFF", 4) != 0
 		|| memcmp(header.format, "WAVE", 4) != 0
-		|| memcmp(header.subChunkId, "fmt ", 4) != 0
+		|| memcmp(header.subchunk1Id, "fmt ", 4) != 0
 		|| header.audioFormat != 1
 		|| header.sampleRate == 0
 		|| header.numChannels == 0
-		|| (header.bps != 8 && header.bps != 16 && header.bps != 24))
+		|| (header.bitsPerSample != 8 && header.bitsPerSample != 16 && header.bitsPerSample != 24))
 	{
 		return nullptr;
 	}
 
 	// Skip over additional parameters at the end of the format chunk.
-	file->skip(header.subChunkSize - 16);
+	if (header.subchunk1Size > 16)
+	{
+		size_t extraBytes = static_cast<size_t>(header.subchunk1Size) - 16;
+		file->skip(extraBytes);
+	}
 
 	// Read the start of the data chunk.
 	WaveData data;
-	if(file->read(&data, sizeof(WaveData), 1) == 0
-		|| memcmp(data.chunkId, "data", 4) != 0)
-	{
-		return nullptr;
+	while (true) {
+		if (file->read(&data, sizeof(WaveData), 1) == 0)
+			return nullptr;
+		if (memcmp(data.chunkId, "data", 4) == 0)
+			break;
+		file->skip(data.chunkSize);
 	}
 
 	// Create a wav loader that will read the contents of the data chunk.
@@ -97,7 +103,7 @@ SoundSource* LoadWav(FileReader* file, String& title, String& artist)
 
 	loader->frequency = header.sampleRate;
 	loader->numChannels = header.numChannels;
-	loader->bytesPerSample = header.bps / 8;
+	loader->bytesPerSample = header.bitsPerSample / 8;
 	loader->numFrames = data.chunkSize / (loader->bytesPerSample * loader->numChannels);
 	loader->numFramesLeft = loader->numFrames;
 	loader->file = file;
