@@ -326,6 +326,25 @@ inline color32 ToColor32(float r, float g, float b, float a)
 	return u32;
 }
 
+static int gcd(int a, int b)
+{
+	if (a == 0)
+	{
+		return b;
+	}
+	if (b == 0)
+	{
+		return a;
+	}
+	if (a > b)
+	{
+		return gcd(a - b, b);
+	}
+	else
+	{
+		return gcd(a, b - a);
+	}
+}
 }; // namespace Vortex
 
 #undef TT

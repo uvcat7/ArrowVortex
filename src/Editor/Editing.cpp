@@ -327,6 +327,26 @@ void onChanges(int changes)
 // ================================================================================================
 // EditingImpl :: member functions.
 
+static int gcd(int a, int b)
+{
+	if (a == 0)
+	{
+		return b;
+	}
+	if (b == 0)
+	{
+		return a;
+	}
+	if (a > b)
+	{
+		return gcd(a - b, b);
+	}
+	else
+	{
+		return gcd(a, b - a);
+	}
+}
+
 void finishNotePlacement(int col)
 {
 	auto& pnote = myPlacingNotes[col];
@@ -348,6 +368,14 @@ void finishNotePlacement(int col)
 			}
 		}
 
+		if (note.quant > 0 && note.quant <= 192)
+		{
+			note.quant = min(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
+		}
+		else
+		{
+			note.quant = 192;
+		}
 		NoteEdit edit;
 		edit.add.append(note);
 		gNotes->modify(edit, false);
