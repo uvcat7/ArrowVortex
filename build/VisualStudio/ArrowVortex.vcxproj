@@ -166,7 +166,7 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>mad_debug.lib;libogg_debug.lib;libvorbis_debug.lib;libvorbisfile_debug.lib;freetype_debug.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
