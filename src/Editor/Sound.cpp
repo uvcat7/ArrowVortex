@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include <chrono>
+#include <fstream>
 
 namespace Vortex {
 
@@ -31,7 +32,7 @@ static void ConvertSamples(int numFrames, int16_t* dstL, int16_t* dstR, const vo
 {
 	if(bytesPerSample == 2)
 	{
-		const int16_t* src = (const int16_t*)source;
+		const int16_t* src = static_cast<const int16_t*>(source);
 		if(numChannels == 1)
 		{
 			memcpy(dstL, src, numFrames * 2);
@@ -48,23 +49,23 @@ static void ConvertSamples(int numFrames, int16_t* dstL, int16_t* dstR, const vo
 	}
 	else
 	{
-		const uint8_t* l = (const uint8_t*)source;
+		const uint8_t* l = static_cast<const uint8_t*>(source);
 		const uint8_t* r = l + ((numChannels > 1) ? bytesPerSample : 0);
-		const int ofs = bytesPerSample * numChannels;
+		const size_t ofs = bytesPerSample * numChannels;
 		if(bytesPerSample == 1)
 		{
-			for(int i = 0; i < numFrames; ++i, ++dstL, ++dstR, l += ofs, r += ofs)
+			for(size_t i = 0; i < numFrames; ++i, ++dstL, ++dstR, l += ofs, r += ofs)
 			{
-				*dstL = (int16_t)(((int)*l - 128) * 256);
-				*dstR = (int16_t)(((int)*r - 128) * 256);
+				*dstL = static_cast<int16_t>((static_cast<int>(*l) - 128) * 256);
+				*dstR = static_cast<int16_t>((static_cast<int>(*r) - 128) * 256);
 			}
 		}
 		else if(bytesPerSample == 3)
 		{
 			for(int i = 0; i < numFrames; ++i, ++dstL, ++dstR, l += ofs, r += ofs)
 			{
-				*dstL = (int16_t)(Int24(l) / 256);
-				*dstR = (int16_t)(Int24(r) / 256);
+				*dstL = static_cast<int16_t>(Int24(l) / 256);
+				*dstR = static_cast<int16_t>(Int24(r) / 256);
 			}
 		}
 	}
@@ -144,8 +145,8 @@ bool Sound::Thread::readBlock()
 			{
 				myReservedFrames = max(myReservedFrames * 2, myCurrentFrame + framesRead);
 
-				short* newBufferL = (short*)realloc(mySound->mySamplesL, myReservedFrames * sizeof(short));
-				short* newBufferR = (short*)realloc(mySound->mySamplesR, myReservedFrames * sizeof(short));
+				short* newBufferL = static_cast<short*>(realloc(mySound->mySamplesL, myReservedFrames * sizeof(short)));
+				short* newBufferR = static_cast<short*>(realloc(mySound->mySamplesR, myReservedFrames * sizeof(short)));
 
 				if(newBufferL && newBufferR)
 				{
@@ -200,9 +201,9 @@ void Sound::Thread::cleanup()
 // ================================================================================================
 // Sound
 
-SoundSource* LoadOgg(FileReader* file, String& title, String& artist); // Defined in "load_ogg.cpp".
-SoundSource* LoadMP3(FileReader* file, String& title, String& artist); // Defined in "load_mp3.cpp".
-SoundSource* LoadWav(FileReader* file, String& title, String& artist); // Defined in "load_wav.cpp".
+SoundSource* LoadOgg(std::ifstream&& file, String& title, String& artist); // Defined in "LoadOgg.cpp".
+SoundSource* LoadMP3(std::ifstream&& file, String& title, String& artist); // Defined in "LoadMp3.cpp".
+SoundSource* LoadWav(std::ifstream&& file, String& title, String& artist); // Defined in "LoadWav.cpp".
 
 Sound::Sound()
 	: myThread(nullptr)
@@ -247,15 +248,14 @@ bool Sound::load(const char* path, bool threaded, String& title, String& artist)
 	SoundSource* source = nullptr;
 
 	// Try to open the file.
-	FileReader* file = new FileReader;
-	if(file->open(path))
+    if (std::ifstream file(path, std::ios::in | std::ios::binary); file.good())
 	{
 		// Call the load function associated with the extension.
 		String ext = Path(path).ext();
 		Str::toLower(ext);
-		     if(ext == "ogg") source = LoadOgg(file, title, artist);
-		else if(ext == "mp3") source = LoadMP3(file, title, artist);
-		else if(ext == "wav") source = LoadWav(file, title, artist);
+		     if(ext == "ogg") source = LoadOgg(std::move(file), title, artist);
+		else if(ext == "mp3") source = LoadMP3(std::move(file), title, artist);
+		else if(ext == "wav") source = LoadWav(std::move(file), title, artist);
 		else
 		{
 			Debug::blockBegin(Debug::ERROR, "could not load audio file");
@@ -265,12 +265,8 @@ bool Sound::load(const char* path, bool threaded, String& title, String& artist)
 		}
 	}
 
-	// The source taken ownership of the file, but if we have no source, then we delete the file.
 	if(!source)
-	{
-		delete file;
 		return false;
-	}
 
 	// Start a thread that reads samples from the source.
 	myFrequency = source->getFrequency();
@@ -285,13 +281,13 @@ bool Sound::load(const char* path, bool threaded, String& title, String& artist)
 
 		if(threaded)
 		{
-			mySamplesL = (short*)calloc(numBytes, 1);
-			mySamplesR = (short*)calloc(numBytes, 1);
+			mySamplesL = static_cast<short*>(calloc(numBytes, 1));
+			mySamplesR = static_cast<short*>(calloc(numBytes, 1));
 		}
 		else
 		{
-			mySamplesL = (short*)malloc(numBytes);
-			mySamplesR = (short*)malloc(numBytes);
+			mySamplesL = static_cast<short*>(malloc(numBytes));
+			mySamplesR = static_cast<short*>(malloc(numBytes));
 		}
 
 		if(!mySamplesL || !mySamplesR)

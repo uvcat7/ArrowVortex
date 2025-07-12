@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
 
 #include <Core/Utils.h>
 
@@ -35,15 +36,13 @@ struct WaveData
 
 struct WavLoader : public SoundSource
 {
-	~WavLoader();
-
 	int getFrequency() override { return frequency; }
 	int getNumFrames() override { return numFrames; }
 	int getNumChannels() override { return numChannels; }
 	int getBytesPerSample() override { return bytesPerSample; }
 	int readFrames(int frames, short* buffer) override;
 
-	FileReader* file;
+	std::ifstream file;
 	int numFrames;
 	int numFramesLeft;
 	int numChannels;
@@ -51,25 +50,23 @@ struct WavLoader : public SoundSource
 	int frequency;
 };
 
-WavLoader::~WavLoader()
-{
-	delete file;
-}
 
 int WavLoader::readFrames(int frames, short* buffer)
 {
 	int numFramesToRead = min(numFramesLeft, frames);
 	numFramesLeft -= numFramesToRead;
-	return file->read(buffer, bytesPerSample * numChannels, numFramesToRead);
+	file.read(reinterpret_cast<char*>(buffer), bytesPerSample * numChannels * numFramesToRead);
+    return static_cast<int>(file.gcount());
 }
 
 }; // anonymous namespace
 
-SoundSource* LoadWav(FileReader* file, String& title, String& artist)
+SoundSource* LoadWav(std::ifstream&& file, String& title, String& artist)
 {
 	// Read the wave header.
 	WaveHeader header;
-	if(file->read(&header, sizeof(WaveHeader), 1) == 0
+    file.read(reinterpret_cast<char*>(&header), sizeof(header));
+	if(file.fail()
 		|| memcmp(header.chunkId, "RIFF", 4) != 0
 		|| memcmp(header.format, "WAVE", 4) != 0
 		|| memcmp(header.subChunkId, "fmt ", 4) != 0
@@ -82,11 +79,12 @@ SoundSource* LoadWav(FileReader* file, String& title, String& artist)
 	}
 
 	// Skip over additional parameters at the end of the format chunk.
-	file->skip(header.subChunkSize - 16);
+	file.ignore(header.subChunkSize - 16);
 
 	// Read the start of the data chunk.
 	WaveData data;
-	if(file->read(&data, sizeof(WaveData), 1) == 0
+    file.read(reinterpret_cast<char*>(&data), sizeof(WaveData));
+	if(file.fail()
 		|| memcmp(data.chunkId, "data", 4) != 0)
 	{
 		return nullptr;
@@ -100,7 +98,7 @@ SoundSource* LoadWav(FileReader* file, String& title, String& artist)
 	loader->bytesPerSample = header.bps / 8;
 	loader->numFrames = data.chunkSize / (loader->bytesPerSample * loader->numChannels);
 	loader->numFramesLeft = loader->numFrames;
-	loader->file = file;
+	loader->file = std::move(file);
 
 	return loader;
 }

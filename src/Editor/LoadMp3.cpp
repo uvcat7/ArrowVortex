@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
 
 #include <System/File.h>
 
@@ -223,7 +224,7 @@ struct MP3Loader : public SoundSource
 
 	XingHeader xing;
 
-	FileReader* file;
+	std::ifstream file;
 };
 
 MP3Loader::MP3Loader()
@@ -250,27 +251,26 @@ MP3Loader::~MP3Loader()
 	mad_synth_finish(&madSynth);
 	mad_frame_finish(&madFrame);
  	mad_stream_finish(&madStream);
-
-	delete file;
 }
 
 int MP3Loader::fillInputBuffer()
 {
 	// Mad needs more data from the input file.
 	int inbytes = 0;
-	if(madStream.next_frame != NULL)
+	if(madStream.next_frame != nullptr)
 	{
 		// Pull out remaining data from the last buffer.
 		inbytes = madStream.bufend - madStream.next_frame;
 		memmove(fileBuf, madStream.next_frame, inbytes);
 	}
 
-	bool eofBeforeReading = file->eof();
+	bool eofBeforeReading = file.eof();
 
-	int rc = file->read(fileBuf + inbytes, 1, sizeof(fileBuf) - inbytes - MAD_BUFFER_GUARD);
+	file.read(reinterpret_cast<char*>(fileBuf + inbytes), sizeof(fileBuf) - inbytes - MAD_BUFFER_GUARD);
+    std::streamsize rc = file.gcount();
 	if(rc < 0) return -1;
 
-	if(file->eof() && !eofBeforeReading)
+	if(file.eof() && !eofBeforeReading)
 	{
 		/* We just reached EOF.  Append MAD_BUFFER_GUARD bytes of NULs to the
 		* buffer, to ensure that the last frame is flushed. */
@@ -308,7 +308,7 @@ int MP3Loader::decodeNextFrame()
 		if(ret == -1 && (madStream.error == MAD_ERROR_BUFLEN || madStream.error == MAD_ERROR_BUFPTR))
 		{
 			if(bytes_read > 25000) return -1; // We've read this much without actually getting a frame; error.
-			int ret = fillInputBuffer();
+			ret = fillInputBuffer();
 			if(ret <= 0) return ret;
 			bytes_read += ret;
 			continue;
@@ -429,10 +429,10 @@ int MP3Loader::readFrames(int frames, short* buffer)
 
 }; // anonymous namespace.
 
-SoundSource* LoadMP3(FileReader* file, String& title, String& artist)
+SoundSource* LoadMP3(std::ifstream&& file, String& title, String& artist)
 {
 	MP3Loader* loader = new MP3Loader;
-	loader->file = file;
+	loader->file = std::move(file);
 
 	// Decode and synth the first frame to check if the file is valid.
 	if(!loader->decodeFirstFrame())

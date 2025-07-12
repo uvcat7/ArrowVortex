@@ -77,40 +77,6 @@ struct Path
 	String str;
 };
 
-/// Reads data from a file.
-struct FileReader
-{
-	FileReader();
-	~FileReader();
-
-	bool open(StringRef path);
-	void close();
-
-	size_t size() const;
-	long tell() const;
-	size_t read(void* ptr, size_t size, size_t count);
-	int seek(long offset, int origin);
-	void skip(size_t n);
-	bool eof();	
-
-	void* file;
-};
-
-/// Writes data to a file.
-struct FileWriter
-{
-	FileWriter();
-	~FileWriter();
-
-	bool open(StringRef path);
-	void close();
-
-	size_t write(const void* ptr, size_t size, size_t count);
-	void printf(const char* format, ...);
-
-	void* file;
-};
-
 namespace File
 {
 	/// Enumeration of file/directory attributes.

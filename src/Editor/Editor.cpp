@@ -52,6 +52,7 @@
 #include <Dialogs/CustomSnap.h>
 
 #include <algorithm>
+#include <fstream>
 
 namespace Vortex {
 
@@ -322,8 +323,11 @@ void loadSettings(XmrDoc& settings)
 		interface->get("fontSize", &myFontSize);
 
 		const char* path = interface->get("fontPath");
-		FileReader testPath;
-		if(path && testPath.open(path)) myFontPath = path;
+	    if (path == nullptr)
+	        return;
+
+        if (std::ifstream testPath(path); testPath.good())
+            myFontPath = path;
 	}
 }
 
@@ -378,17 +382,15 @@ void loadRecentFiles()
 
 void saveRecentFiles()
 {
-	FileWriter out;
-	if(out.open("settings/recent files.txt"))
+	std::ofstream out("settings/recent files.txt");
+	if(out.good())
 	{
 		for(int i = 0; i < myRecentFiles.size(); ++i)
 		{
 			auto& file = myRecentFiles[i];
-			out.write(file.str(), 1, file.len());
+			out.write(file.str(), file.len());
 			if(i != myRecentFiles.size() - 1)
-			{
-				out.write("\n", 1, 1);
-			}
+			    out << '\n';
 		}
 	}
 }
