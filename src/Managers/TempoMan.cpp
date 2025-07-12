@@ -470,7 +470,7 @@ static bool Differs(const BpmRange& a, const BpmRange& b)
 
 static double ClampAndRound(double val, double min, double max)
 {
-	return round(clamp(val, min, max) * 1000.0) / 1000.0;
+	return round(clamp(val, min, max) * 1000000.0) / 1000000.0;
 }
 
 void modify(const SegmentEdit& edit)

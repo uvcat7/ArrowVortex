@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <memory>
 
 #include <System/File.h>
 
@@ -431,19 +432,18 @@ int MP3Loader::readFrames(int frames, short* buffer)
 
 SoundSource* LoadMP3(FileReader* file, String& title, String& artist)
 {
-	MP3Loader* loader = new MP3Loader;
+	std::unique_ptr<MP3Loader> loader = std::make_unique<MP3Loader>();
 	loader->file = file;
 
 	// Decode and synth the first frame to check if the file is valid.
 	if(!loader->decodeFirstFrame())
 	{
 		loader->file = nullptr;
-		delete loader;
 		return nullptr;
 	}
 
 	// The file is valid, return the MP3 loader.
-	return loader;
+	return loader.release();
 }
 
 }; // namespace Vortex
