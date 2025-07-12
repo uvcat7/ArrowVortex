@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fstream>
+#include <filesystem>
 
 namespace Vortex {
 namespace {
@@ -915,8 +917,8 @@ XmrResult XmrDoc::loadFile(const char* path)
 	SetError(this, nullptr);
 
 	// Open the XMR file.
-	FileReader file;
-	if(!file.open(path))
+	std::ifstream file(path);
+	if(file.bad())
 	{
 		xstring err(16);
 		err.append("could not open file");
@@ -925,9 +927,10 @@ XmrResult XmrDoc::loadFile(const char* path)
 	}
 
 	// Read the file contents into a buffer.
-	size_t size = file.size();
-	char* buffer = (char*)malloc(size + 1);
-	size = file.read(buffer, 1, size);
+	size_t size = std::filesystem::file_size(path);
+	char* buffer = static_cast<char*>(malloc(size + 1));
+    file.read(buffer, size);
+	size = file.gcount();
 	buffer[size] = 0;
 	file.close();
 
@@ -956,8 +959,8 @@ XmrResult XmrDoc::saveFile(const char* path, XmrSaveSettings settings)
 	SetError(this, nullptr);
 
 	// Open the output file.
-	FileWriter file;
-	if(!file.open(path))
+	std::ofstream file(path);
+	if(file.bad())
 	{
 		xstring err(16);
 		err.append("could not open file");
@@ -967,7 +970,7 @@ XmrResult XmrDoc::saveFile(const char* path, XmrSaveSettings settings)
 
 	// Write the string to the output file.
 	String str = saveString(settings);
-	file.write(str.begin(), 1, str.len());
+	file.write(str.begin(), str.len());
 
 	return XMR_SUCCESS;
 }

@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h> // ptrdiff_t on osx
+#include <fstream>
 
 #define STBI_ASSERT(x) assert(x)
 #define STBI_VERSION 1
@@ -61,17 +62,18 @@ struct stbi_io_callbacks
 {
 	int read(char* p, int n)
 	{
-		return (int)file.read(p, 1, n);
+	    file.read(p, n);
+		return static_cast<int>(file.gcount());
 	}
 	void skip(int n)
 	{
-		file.skip(n);
+		file.ignore(n);
 	}
-	bool eof()
-	{
+	bool eof() const
+    {
 		return file.eof();
 	}
-	FileReader file;
+	std::ifstream file;
 };
 
 // stbi__context structure is our basic context used by all images, so it
@@ -2120,7 +2122,8 @@ ImageLoader::Data ImageLoader::load(const char* path, ImageLoader::Format fmt)
 	int cmp = 0, w = 0, h = 0;
 	ImageLoader::Data out = {nullptr, 0, 0};
 	stbi_io_callbacks callback;
-	if(callback.file.open(path))
+    callback.file.open(path, std::ios::in | std::ios::binary);
+	if(callback.file.good())
 	{
 		stbi_uc* pixels = stbi_load_from_callbacks(callback, &w, &h, &cmp);
 		if(pixels && w > 0 && h > 0)
