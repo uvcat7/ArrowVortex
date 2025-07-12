@@ -50,7 +50,7 @@ WgSpinner* DialogAdjustSync::myCreateWidgetRow(StringRef label, double& val, int
 {
 	WgSpinner* spinner = myLayout.add<WgSpinner>(label);
 	spinner->value.bind(&val);
-	spinner->setPrecision(3, 3);
+	spinner->setPrecision(3, 6);
 	spinner->onChange.bind(this, &DialogAdjustSync::onAction, setAction);
 	spinner->setTooltip(tooltip1);
 
