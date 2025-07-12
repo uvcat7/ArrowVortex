@@ -262,6 +262,7 @@ void init(Item* menu)
 	add(hTempo, OPEN_DIALOG_ADJUST_TEMPO_SM5, "Adjust tempo SM5...");
 	sep(hTempo);
 	add(hTempo, SWITCH_TO_SYNC_MODE, "Sync mode");
+	add(hTempo, OPEN_DIALOG_LABEL_BREAKDOWN, "Labels...");
 	add(hTempo, OPEN_DIALOG_TEMPO_BREAKDOWN, "Breakdown...");
 	sub(hTempo, myVisualSyncMenu, "Visual sync anchor");
 
