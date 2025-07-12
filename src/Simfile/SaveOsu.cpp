@@ -50,9 +50,9 @@ static void Write(std::ofstream& out, const char* name, const char* val)
     out << name << ':' << val << '\n';
 }
 
-static void Write(std::ofstream& out, const char* name, StringRef val)
+static void Write(std::ofstream& out, const char* name, const std::string& val)
 {
-	Write(out, name, val.str());
+	Write(out, name, val.c_str());
 }
 
 static void Write(std::ofstream& out, const char* name, int val)
@@ -193,7 +193,7 @@ static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData&
 // ===================================================================================
 // Chart exporting.
 
-static void SaveChart(StringRef path, const Simfile* sim, const Chart* chart)
+static void SaveChart(const std::string& path, const Simfile* sim, const Chart* chart)
 {
 	// Open the output file.
 	std::ofstream out(path.str());
@@ -225,9 +225,9 @@ static void SaveChart(StringRef path, const Simfile* sim, const Chart* chart)
 	// Write metadata.
 	WriteBlock(out, "Metadata");
 
-	Write(out, "Title", sim->titleTr.len() ? sim->titleTr : sim->title);
+	Write(out, "Title", sim->titleTr.length() ? sim->titleTr : sim->title);
 	Write(out, "TitleUnicode", sim->title);
-	Write(out, "Artist", sim->artistTr.len() ? sim->artistTr : sim->artist);
+	Write(out, "Artist", sim->artistTr.length() ? sim->artistTr : sim->artist);
 	Write(out, "ArtistUnicode", sim->artist);
 	Write(out, "Creator", chart ? chart->artist : "Unknown");
 	Write(out, "Version", chart ? GetDifficultyName(chart->difficulty) : "Normal");
@@ -289,10 +289,10 @@ bool SaveOsu(const Simfile* sim, bool backup)
 	}
 	else
 	{
-		std::map<String, int> duplicateCounters;
+		std::map<std::string, int> duplicateCounters;
 		for(auto chart : sim->charts)
 		{
-			String path = sim->dir + sim->file;
+			std::string path = sim->dir + sim->file;
 			path += " [";
 			path += GetDifficultyName(chart->difficulty);
 			int& counter = duplicateCounters[path];

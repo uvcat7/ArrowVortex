@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Core/String.h>
-
 namespace Vortex {
 
 /// Determines how the selection is modified.
@@ -37,7 +35,7 @@ enum Difficulty
 struct RowCol { int row, col; };
 
 // Represents a generic tag/value property.
-struct Property { String tag, val; };
+struct Property { std::string tag, val; };
 
 /// Represents a single note.
 struct Note { int row, endrow; uint32_t col : 8; uint32_t player : 4; uint32_t type : 4; uint32_t quant : 8; };

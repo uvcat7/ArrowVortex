@@ -46,18 +46,18 @@ struct ExportData
 // ================================================================================================
 // Generic write functions.
 
-static void GiveUnicodeWarning(StringRef path, StringRef name)
+static void GiveUnicodeWarning(const std::string& path, const std::string& name)
 {
 	if(Str::isUnicode(path))
 	{
 		HudWarning("The %s path contains unicode characters,\n"
-			"which might not work on some versions of Stepmania/ITG.", name.str());
+			"which might not work on some versions of Stepmania/ITG.", name.c_str());
 	}
 }
 
-static String Escape(const char* name, const char* str)
+static std::string Escape(const char* name, const char* str)
 {
-	String s = (String)str;
+	std::string s = (std::string)str;
 	//These characters must be escaped in the .sm/.ssc file
 	Str::replace(s, "\\", "\\\\");
 	Str::replace(s, ":", "\\:");
@@ -73,11 +73,11 @@ static bool ShouldWrite(ExportData& data, ForceWrite when, bool hasValue, bool s
 	return versionOk && writeOk;
 }
 
-static void WriteTag(ExportData& data, const char* tag, StringRef value, ForceWrite when, bool sscOnly)
+static void WriteTag(ExportData& data, const char* tag, const std::string& value, ForceWrite when, bool sscOnly)
 {
-	if(ShouldWrite(data, when, value.len() != 0, sscOnly))
+	if(ShouldWrite(data, when, value.length() != 0, sscOnly))
 	{
-	    data.file << "#" << tag << ':' << value.str() << ";\n";
+		data.file.printf("#%s:%s;\n", tag, value.c_str());
 	}
 }
 
@@ -98,7 +98,7 @@ static void WriteTag(ExportData& data, const char* tag, int value, ForceWrite wh
 	}
 }
 
-static void WriteTextTag(ExportData& data, const char* tag, StringRef value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
+static void WriteTextTag(ExportData& data, const char* tag, const std::string& value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
 {
 	if(alt && value.empty())
 	{
@@ -107,11 +107,11 @@ static void WriteTextTag(ExportData& data, const char* tag, StringRef value, For
 	else
 	{
 
-		WriteTag(data, tag, Escape(tag, value.str()), when, sscOnly);
+		WriteTag(data, tag, Escape(tag, value.c_str()), when, sscOnly);
 	}
 }
 
-static void WritePathTag(ExportData& data, const char* tag, StringRef value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
+static void WritePathTag(ExportData& data, const char* tag, const std::string& value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
 {
 	GiveUnicodeWarning(value, tag);
 	WriteTextTag(data, tag, value, when, sscOnly, alt);
@@ -299,9 +299,9 @@ static void WriteAttacks(ExportData& data, const Tempo* tempo)
 static void WriteKeySounds(ExportData& data, const Tempo* tempo)
 {
 	WriteTag(data, "KEYSOUNDS", tempo->keysounds, END_OF_LINE, ',', NEVER, true,
-	[&](StringRef str)
+	[&](const std::string& str)
 	{
-	    data.file << str.str();
+		data.file.printf("%s", str.c_str());
 	});
 }
 
@@ -440,9 +440,9 @@ static char GetHoldChar(uint32_t type)
 	return (type == NOTE_STEP_OR_HOLD) ? '2' : '4';
 }
 
-static String RadarToString(const Vector<double>& list)
+static std::string RadarToString(const Vector<double>& list)
 {
-	String out;
+	std::string out;
 	if(list.empty())
 	{
 		out = "0,0,0,0,0";
@@ -451,7 +451,7 @@ static String RadarToString(const Vector<double>& list)
 	{
 		for(auto it = list.begin(); it != list.end(); ++it)
 		{
-			if(out.len()) Str::append(out, ',');
+			if(out.length()) Str::append(out, ',');
 			Str::appendVal(out, *it, 0, 6);
 		}
 	}
@@ -473,14 +473,14 @@ static const char* GetDifficultyString(Difficulty difficulty)
 
 static inline bool TestSectionCompression(const char* section, int width, int quant)
 {
-	String zeroline(width, '0');
+	std::string zeroline(width, '0');
 	float mod = (float)ROWS_PER_NOTE_SECTION / quant;
 	for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j)
 	{
 		float rem = round(fmod(j, mod));
 		// Check all the compressed rows and make sure they are empty
 		if (rem > 0 && rem < static_cast<int>(mod)
-			&& memcmp(section + j * width, zeroline.str(), width))
+			&& memcmp(section + j * width, zeroline.c_str(), width))
 		{
 			return false;
 		}
@@ -629,12 +629,12 @@ static void WriteChart(ExportData& data)
 	if(data.diffs.find(sd) != data.diffs.size())
 	{
 		Difficulty oldDiff = diff;
-		String oldDesc = chart->description();
+		std::string oldDesc = chart->description();
 		diff = DIFF_EDIT;
-		String newDesc = chart->description();
+		std::string newDesc = chart->description();
 
 		HudWarning("Duplicate difficulties, saving (%s) as (%s) instead",
-			oldDesc.str(), newDesc.str());
+			oldDesc.c_str(), newDesc.c_str());
 	}
 	else if(chart->difficulty != DIFF_EDIT)
 	{
@@ -642,19 +642,20 @@ static void WriteChart(ExportData& data)
 	}
 
 	// Write the output chart data.
-    data.file << "//--------------- " << chart->style->id.str() << " - " << chart->artist.str() << " ----------------\n";
+	data.file.printf("//--------------- %s - %s ----------------\n",
+		chart->style->id.c_str(), chart->artist.c_str());
 
-	String chartStyle = Escape("chart style", chart->style->id.str());
-	String chartArtist = Escape("chart artist", chart->artist.str());
+	std::string chartStyle = Escape("chart style", chart->style->id.c_str());
+	std::string chartArtist = Escape("chart artist", chart->artist.c_str());
 
 	if(data.ssc)
 	{
-		WriteTag(data, "NOTEDATA", String(), ALWAYS, true);
-		WriteTag(data, "STEPSTYPE", chartStyle.str(), ALWAYS, true);
-		WriteTag(data, "DESCRIPTION", chartArtist.str(), ALWAYS, true);
+		WriteTag(data, "NOTEDATA", std::string(), ALWAYS, true);
+		WriteTag(data, "STEPSTYPE", chartStyle.c_str(), ALWAYS, true);
+		WriteTag(data, "DESCRIPTION", chartArtist.c_str(), ALWAYS, true);
 		WriteTag(data, "DIFFICULTY", GetDifficultyString(diff), ALWAYS, true);
 		WriteTag(data, "METER", chart->meter, ALWAYS, true);
-		WriteTag(data, "RADARVALUES", RadarToString(chart->radar).str(), ALWAYS, true);
+		WriteTag(data, "RADARVALUES", RadarToString(chart->radar).c_str(), ALWAYS, true);
 
 		if(chart->tempo) WriteTempo(data, chart->tempo);
 
@@ -662,12 +663,12 @@ static void WriteChart(ExportData& data)
 	}
 	else
 	{
-	    data.file << "#NOTES:\n";
-	    data.file << "     " << chartStyle.str() << ":\n";
-	    data.file << "     " << chartArtist.str() << ":\n";
-	    data.file << "     " << GetDifficultyString(diff) << ":\n";
-	    data.file << "     " << chart->meter << ":\n";
-	    data.file << "     " << RadarToString(chart->radar).str() << ":\n";
+		data.file.printf("#NOTES:\n");
+		data.file.printf("     %s:\n", chartStyle.c_str());
+		data.file.printf("     %s:\n", chartArtist.c_str());
+		data.file.printf("     %s:\n", GetDifficultyString(diff));
+		data.file.printf("     %i:\n", chart->meter);
+		data.file.printf("     %s:\n", RadarToString(chart->radar).c_str());
 	}
 
 	WriteSections(data);
@@ -690,8 +691,8 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	{
 		if(!File::moveFile(path.str, path.str + ".old", true))
 		{
-			String name = path.filename();
-			HudError("Could not backup \"%s\".", name.str());
+			std::string name = path.filename();
+			HudError("Could not backup \"%s\".", name.c_str());
 		}
 	}
 

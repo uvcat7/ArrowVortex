@@ -26,12 +26,12 @@ extern void StrSetLen(char* s, int n);
 
 struct Str2 {
 
-static inline int cap(StringRef s)
+static inline int cap(const std::string& s)
 {
 	return *((int*)s.string_ - 2);
 }
 
-static String cat(const char* a, int n, const char* b, int m)
+static std::string cat(const char* a, int n, const char* b, int m)
 {
 	char* mem;
 	int len = n + m;
@@ -40,12 +40,12 @@ static String cat(const char* a, int n, const char* b, int m)
 	memcpy(mem + n, b, m);
 	mem[len] = 0;
 
-	String out;
+	std::string out;
 	out.string_ = mem;
 	return out;
 }
 
-static void reallocate(String& s, int n)
+static void reallocate(std::string& s, int n)
 {
 	if(n > cap(s))
 	{
@@ -57,14 +57,14 @@ static void reallocate(String& s, int n)
 	}
 }
 
-static void createGap(String& s, int pos, int size)
+static void createGap(std::string& s, int pos, int size)
 {
 	int len = s.len();
 	StrRealloc(s.string_, len + size);
 	memmove(s.string_ + pos + size, s.string_ + pos, len + 1 - pos);
 }
 
-static void closeGap(String& s, int pos, int size)
+static void closeGap(std::string & s, int pos, int size)
 {
 	int len = s.len();
 	memmove(s.string_ + pos, s.string_ + pos + size, len + 1 - pos - size);
@@ -76,12 +76,12 @@ static void closeGap(String& s, int pos, int size)
 // ================================================================================================
 // Str :: assign functions.
 
-String Str::create(const char* begin, const char* end)
+std::string Str::create(const char* begin, const char* end)
 {
-	return String(begin, end - begin);
+	return std::string(begin, end - begin);
 }
 
-void Str::assign(String& s, int n, char c)
+void Str::assign(std::string& s, int n, char c)
 {
 	if(n > 0)
 	{
@@ -95,17 +95,17 @@ void Str::assign(String& s, int n, char c)
 	}
 }
 
-void Str::assign(String& s, String&& str)
+void Str::assign(std::string& s, std::string&& str)
 {
 	s.swap(str);
 }
 
-void Str::assign(String& s, StringRef str)
+void Str::assign(std::string& s, const std::string& str)
 {
 	assign(s, str.string_, str.len());
 }
 
-void Str::assign(String& s, const char* str)
+void Str::assign(std::string& s, const char* str)
 {
 	assign(s, str, strlen(str));
 }
@@ -120,7 +120,7 @@ void Str::assign(String& s, const char* str, int n)
 // ================================================================================================
 // Str :: append functions.
 
-void Str::append(String& s, char c)
+void Str::append(std::string& s, char c)
 {
 	int len = s.len();
 	int n = len + 1;
@@ -129,17 +129,17 @@ void Str::append(String& s, char c)
 	s.string_[n] = 0;
 }
 
-void Str::append(String& s, StringRef str)
+void Str::append(std::string& s, const std::string& str)
 {
 	append(s, str.string_, str.len());
 }
 
-void Str::append(String& s, const char* str)
+void Str::append(std::string& s, const char* str)
 {
 	append(s, str, strlen(str));
 }
 
-void Str::append(String& s, const char* str, int n)
+void Str::append(std::string& s, const char* str, int n)
 {
 	if(n > 0)
 	{
@@ -154,7 +154,7 @@ void Str::append(String& s, const char* str, int n)
 // ================================================================================================
 // Str :: insert functions.
 
-void Str::insert(String& s, int pos, char c)
+void Str::insert(std::string& s, int pos, char c)
 {
 	int len = s.len();
 	if(pos >= len)
@@ -168,17 +168,17 @@ void Str::insert(String& s, int pos, char c)
 	}
 }
 
-void Str::insert(String& s, int pos, StringRef str)
+void Str::insert(std::string& s, int pos, const std::string& str)
 {
 	insert(s, pos, str.string_, str.len());
 }
 
-void Str::insert(String& s, int pos, const char* str)
+void Str::insert(std::string& s, int pos, const char* str)
 {
 	insert(s, pos, str, strlen(str));
 }
 
-void Str::insert(String& s, int pos, const char* str, int n)
+void Str::insert(std::string& s, int pos, const char* str, int n)
 {
 	int len = s.len();
 	if(pos >= len)
@@ -195,7 +195,7 @@ void Str::insert(String& s, int pos, const char* str, int n)
 // ================================================================================================
 // Str :: resize functions.
 
-void Str::truncate(String& s, int n)
+void Str::truncate(std::string& s, int n)
 {
 	if(n < s.len())
 	{
@@ -211,7 +211,7 @@ void Str::truncate(String& s, int n)
 	}
 }
 
-void Str::extend(String& s, int n, char c)
+void Str::extend(std::string& s, int n, char c)
 {
 	int len = s.len();
 	if(n > len)
@@ -222,7 +222,7 @@ void Str::extend(String& s, int n, char c)
 	}
 }
 
-void Str::resize(String& s, int n, char c)
+void Str::resize(std::string& s, int n, char c)
 {
 	if(n > s.len())
 	{
@@ -237,37 +237,37 @@ void Str::resize(String& s, int n, char c)
 // ================================================================================================
 // Str :: value conversion.
 
-int Str::readInt(StringRef s, int alt)
+int Str::readInt(const std::string& s, int alt)
 {
 	read(s, &alt);
 	return alt;
 }
 
-uint32_t Str::readUint(StringRef s, uint32_t alt)
+uint32_t Str::readUint(const std::string& s, uint32_t alt)
 {
 	read(s, &alt);
 	return alt;
 }
 
-float Str::readFloat(StringRef s, float alt)
+float Str::readFloat(const std::string& s, float alt)
 {
 	read(s, &alt);
 	return alt;
 }
 
-double Str::readDouble(StringRef s, double alt)
+double Str::readDouble(const std::string& s, double alt)
 {
 	read(s, &alt);
 	return alt;
 }
 
-bool Str::readBool(StringRef s, bool alt)
+bool Str::readBool(const std::string& s, bool alt)
 {
 	read(s, &alt);
 	return alt;
 }
 
-double Str::readTime(StringRef s, double alt)
+double Str::readTime(const std::string& s, double alt)
 {
 	auto time = Str::split(s, ":", false, false);
 	double v = 0.0;
@@ -290,7 +290,7 @@ double Str::readTime(StringRef s, double alt)
 	return alt;
 }
 
-bool Str::read(StringRef s, int* out)
+bool Str::read(const std::string& s, int* out)
 {
 	char* end;
 	int v = strtol(s.string_, &end, 10);
@@ -299,7 +299,7 @@ bool Str::read(StringRef s, int* out)
 	return true;
 }
 
-bool Str::read(StringRef s, uint32_t* out)
+bool Str::read(const std::string& s, uint32_t* out)
 {
 	char* end;
 	uint32_t v = strtoul(s.string_, &end, 10);
@@ -308,7 +308,7 @@ bool Str::read(StringRef s, uint32_t* out)
 	return true;
 }
 
-bool Str::read(StringRef s, float* out)
+bool Str::read(const std::string& s, float* out)
 {
 	char* end;
 	float v = strtof(s.string_, &end);
@@ -317,7 +317,7 @@ bool Str::read(StringRef s, float* out)
 	return true;
 }
 
-bool Str::read(StringRef s, double* out)
+bool Str::read(const std::string& s, double* out)
 {
 	char* end;
 	double v = strtod(s.string_, &end);
@@ -326,7 +326,7 @@ bool Str::read(StringRef s, double* out)
 	return true;
 }
 
-bool Str::read(StringRef s, bool* out)
+bool Str::read(const std::string& s, bool* out)
 {
 	if(stricmp(s.string_, "true") == 0 || stricmp(s.string_, "yes") == 0)
 	{
@@ -358,7 +358,7 @@ static bool IsWhiteSpace(char c)
 	return c == 0x20 || c == 0x9 || c == 0xA || c == 0xD;
 }
 
-void Str::trim(String& s)
+void Str::trim(std::string& s)
 {
 	int n = 0, m = 0, len = s.len();
 	while(IsWhiteSpace(s.string_[m])) ++m;
@@ -370,10 +370,10 @@ void Str::trim(String& s)
 	StrSetLen(s.string_, n);
 }
 
-void Str::simplify(String& s)
+void Str::simplify(std::string& s)
 {
 	trim(s);
-	int n = 0, m = 0, w = 0, len = s.len();
+	int n = 0, m = 0, w = 0, len = s.length();
 	while(m < len)
 	{
 		w = m;
@@ -385,9 +385,9 @@ void Str::simplify(String& s)
 	StrSetLen(s.string_, n);
 }
 
-void Str::erase(String& s, int pos, int n)
+void Str::erase(std::string& s, int pos, int n)
 {
-	int len = s.len();
+	int len = s.length();
 	if(pos < 0)	{ n += pos, pos = 0; }
 	if(pos == 0 && n >= len)
 	{
@@ -400,9 +400,9 @@ void Str::erase(String& s, int pos, int n)
 	}
 }
 
-void Str::pop_back(String& s)
+void Str::pop_back(std::string& s)
 {
-	int len = s.len();
+	int len = s.length();
 	if(len)
 	{
 		s.string_[--len] = 0;
@@ -410,32 +410,32 @@ void Str::pop_back(String& s)
 	}
 }
 
-void Str::replace(String& s, char find, char replace)
+void Str::replace(std::string& s, char find, char replace)
 {
 	char* c = s.string_;
-	for(int i = 0, len = s.len(); i < len; ++i, ++c)
+	for(int i = 0, len = s.length(); i < len; ++i, ++c)
 	{
 		if(*c == find) *c = replace;
 	}
 }
 
-void Str::replace(String& s, const char* fnd, const char* rep)
+void Str::replace(std::string& s, const char* fnd, const char* rep)
 {
 	if(*fnd == 0) return;
 
 	int pos = find(s, fnd);
-	if(pos == String::npos) return;
+	if(pos == std::string::npos) return;
 
 	int fndlen = strlen(fnd);
 	int replen = strlen(rep);
-	String out(s.string_, pos);
+	std::string out(s.string_, pos);
 	
-	while(pos != String::npos)
+	while(pos != std::string::npos)
 	{
 		pos += fndlen;
 		append(out, rep, replen);
 		int next = find(s, fnd, pos);
-		int end = (next != String::npos) ? next : s.len();
+		int end = (next != std::string::npos) ? next : s.length();
 		append(out, s.string_ + pos, end - pos);
 		pos = next;
 	}
@@ -443,17 +443,17 @@ void Str::replace(String& s, const char* fnd, const char* rep)
 	s.swap(out);
 }
 
-void Str::toUpper(String& s)
+void Str::toUpper(std::string& s)
 {
-	for(int i = 0, len = s.len(); i < len; ++i)
+	for(int i = 0, len = s.length(); i < len; ++i)
 	{
 		s.string_[i] = ToUpper(s.string_[i]);
 	}
 }
 
-void Str::toLower(String& s)
+void Str::toLower(std::string& s)
 {
-	for(int i = 0, len = s.len(); i < len; ++i)
+	for(int i = 0, len = s.length(); i < len; ++i)
 	{
 		s.string_[i] = ToLower(s.string_[i]);
 	}
@@ -462,9 +462,9 @@ void Str::toLower(String& s)
 // ================================================================================================
 // Information functions
 
-String Str::substr(StringRef s, int pos, int n)
+std::string Str::substr(const std::string& s, int pos, int n)
 {
-	int len = s.len();
+	int len = s.length();
 	if(pos < 0) { n += pos, pos = 0; }
 	if(pos == 0 && n >= len)
 	{
@@ -473,41 +473,41 @@ String Str::substr(StringRef s, int pos, int n)
 	else if(pos < len && n > 0)
 	{
 		n = min(n, len - pos);
-		return String(s.string_ + pos, n);
+		return std::string(s.string_ + pos, n);
 	}
 	return {};
 }
 
-int Str::nextChar(StringRef s, int pos)
+int Str::nextChar(const std::string& s, int pos)
 {
-	int len = s.len();
-	if(pos >= len) return String::npos;
+	int len = s.length();
+	if(pos >= len) return std::string::npos;
 	do { ++pos; } while(pos < len && (s.string_[pos] & 0xC0) == 0x80);
 	return pos;
 }
 
-int Str::prevChar(StringRef s, int pos)
+int Str::prevChar(const std::string& s, int pos)
 {
 	if(pos <= 0) return -1;
 	do { --pos; } while(pos >= 0 && (s.string_[pos] & 0xC0) == 0x80);
 	return pos;
 }
 
-bool Str::isUnicode(StringRef s)
+bool Str::isUnicode(const std::string& s)
 {
 	for(char c : s) { if(c & 0x80) return true; }
 	return false;
 }
 
-int Str::find(StringRef s, char c, int pos)
+int Str::find(const std::string& s, char c, int pos)
 {
-	int len = s.len();
+	int len = s.length();
 	pos = max(pos, 0);
 	while(pos < len && s.string_[pos] != c) ++pos;
-	return (pos < len) ? pos : String::npos;
+	return (pos < len) ? pos : std::string::npos;
 }
 
-int Str::find(StringRef s, const char* str, int pos)
+int Str::find(const std::string& s, const char* str, int pos)
 {
 	pos = max(pos, 0);
 	int len = s.len();
@@ -525,20 +525,20 @@ int Str::find(StringRef s, const char* str, int pos)
 		}
 	}
 
-	return String::npos;
+	return std::string::npos;
 }
 
-int Str::findLast(StringRef s, char c, int pos)
+int Str::findLast(const std::string& s, char c, int pos)
 {
-	int len = s.len();
+	int len = s.length();
 	pos = min(pos, len - 1);
 	while(pos >= 0 && s.string_[pos] != c) --pos;
 	return (pos >= 0) ? pos : -1;
 }
 
-int Str::findAnyOf(StringRef s, const char* c, int pos)
+int Str::findAnyOf(const std::string& s, const char* c, int pos)
 {
-	int len = s.len();
+	int len = s.length();
 	pos = max(pos, 0);
 	while(pos < len)
 	{
@@ -547,12 +547,12 @@ int Str::findAnyOf(StringRef s, const char* c, int pos)
 		if(*b) break;
 		++pos;
 	}
-	return (pos < len) ? pos : String::npos;
+	return (pos < len) ? pos : std::string::npos;
 }
 
-int Str::findLastOf(StringRef s, const char* c, int pos)
+int Str::findLastOf(const std::string& s, const char* c, int pos)
 {
-	int len = s.len();
+	int len = s.length();
 	pos = min(pos, len - 1);
 	while(pos >= 0)
 	{
@@ -579,28 +579,28 @@ static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
 	}
 }
 
-bool Str::endsWith(StringRef s, const char* suffix, bool useCase)
+bool Str::endsWith(const std::string& s, const char* suffix, bool useCase)
 {
-	int len = s.len(), n = strlen(suffix), res = 1;
+	int len = s.length(), n = strlen(suffix), res = 1;
 	if(len >= n) return Equals(s.string_ + len - n, suffix, n, useCase);
 	return false;
 }
 
-bool Str::startsWith(StringRef s, const char* prefix, bool useCase)
+bool Str::startsWith(const std::string& s, const char* prefix, bool useCase)
 {
 	int len = s.len(), n = strlen(prefix), res = 1;
 	if(len >= n) return Equals(s.string_, prefix, n, useCase);
 	return false;
 }
 
-int Str::compare(StringRef a, StringRef b)
+int Str::compare(const std::string& a, const std::string& b)
 {
-	return strcmp(a.str(), b.str());
+	return strcmp(a.c_str(), b.c_str());
 }
 
-int Str::compare(StringRef a, const char* b)
+int Str::compare(const std::string& a, const char* b)
 {
-	return strcmp(a.str(), b);
+	return strcmp(a.c_str(), b);
 }
 
 int Str::compare(const char* a, const char* b)
@@ -608,14 +608,14 @@ int Str::compare(const char* a, const char* b)
 	return strcmp(a, b);
 }
 
-int Str::icompare(StringRef a, StringRef b)
+int Str::icompare(const std::string& a, const std::string& b)
 {
-	return stricmp(a.str(), b.str());
+	return stricmp(a.c_str(), b.c_str());
 }
 
-int Str::icompare(StringRef a, const char* b)
+int Str::icompare(const std::string& a, const char* b)
 {
-	return stricmp(a.str(), b);
+	return stricmp(a.c_str(), b);
 }
 
 int Str::icompare(const char* a, const char* b)
@@ -623,14 +623,14 @@ int Str::icompare(const char* a, const char* b)
 	return stricmp(a, b);
 }
 
-bool Str::equal(StringRef a, StringRef b)
+bool Str::equal(const std::string& a, const std::string& b)
 {
-	return strcmp(a.str(), b.str()) == 0;
+	return strcmp(a.c_str(), b.c_str()) == 0;
 }
 
-bool Str::equal(StringRef a, const char* b)
+bool Str::equal(const std::string& a, const char* b)
 {
-	return strcmp(a.str(), b) == 0;
+	return strcmp(a.c_str(), b) == 0;
 }
 
 bool Str::equal(const char* a, const char* b)
@@ -638,14 +638,14 @@ bool Str::equal(const char* a, const char* b)
 	return strcmp(a, b) == 0;
 }
 
-bool Str::iequal(StringRef a, StringRef b)
+bool Str::iequal(const std::string& a, const std::string& b)
 {
-	return stricmp(a.str(), b.str()) == 0;
+	return stricmp(a.c_str(), b.c_str()) == 0;
 }
 
-bool Str::iequal(StringRef a, const char* b)
+bool Str::iequal(const std::string& a, const char* b)
 {
-	return stricmp(a.str(), b) == 0;
+	return stricmp(a.c_str(), b) == 0;
 }
 
 bool Str::iequal(const char* a, const char* b)
@@ -721,56 +721,56 @@ static int PrintDouble(char* buf, double v, int minDec, int maxDec)
 	return len;
 }
 
-String Str::val(int v, int minDig, bool hex)
+std::string Str::val(int v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
-	return String(buf, PrintInt(buf, v, minDig, hex));
+	return std::string(buf, PrintInt(buf, v, minDig, hex));
 }
 
-String Str::val(uint32_t v, int minDig, bool hex)
+std::string Str::val(uint32_t v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
-	return String(buf, PrintUint(buf, v, minDig, hex));
+	return std::string(buf, PrintUint(buf, v, minDig, hex));
 }
 
-String Str::val(float v, int minDec, int maxDec)
+std::string Str::val(float v, int minDec, int maxDec)
 {
 	char buf[DBL_BUFLEN];
-	return String(buf, PrintDouble(buf, v, minDec, maxDec));
+	return std::string(buf, PrintDouble(buf, v, minDec, maxDec));
 }
 
-String Str::val(double v, int minDec, int maxDec)
+std::string Str::val(double v, int minDec, int maxDec)
 {
 	char buf[DBL_BUFLEN];
-	return String(buf, PrintDouble(buf, v, minDec, maxDec));
+	return std::string(buf, PrintDouble(buf, v, minDec, maxDec));
 }
 
-void Str::appendVal(String& s, int v, int minDig, bool hex)
+void Str::appendVal(std::string& s, int v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	append(s, buf, PrintInt(buf, v, minDig, hex));
 }
 
-void Str::appendVal(String& s, uint32_t v, int minDig, bool hex)
+void Str::appendVal(std::string& s, uint32_t v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	append(s, buf, PrintUint(buf, v, minDig, hex));
 }
 
-void Str::appendVal(String& s, float v, int minDec, int maxDec)
+void Str::appendVal(std::string& s, float v, int minDec, int maxDec)
 {
 	char buf[DBL_BUFLEN];
 	append(s, buf, PrintDouble(buf, v, minDec, maxDec));
 }
 
-void Str::appendVal(String& s, double v, int minDec, int maxDec)
+void Str::appendVal(std::string& s, double v, int minDec, int maxDec)
 {
 	char buf[DBL_BUFLEN];
 	append(s, buf, PrintDouble(buf, v, minDec, maxDec));
 }
 
 
-Fmt::fmt(StringRef format) : str(format)
+Fmt::fmt(const std::string& format) : str(format)
 {
 }
 
@@ -807,9 +807,9 @@ Fmt& Fmt::arg(char c)
 	return arg(&c, 1);
 }
 
-Fmt& Fmt::arg(StringRef s)
+Fmt& Fmt::arg(const std::string& s)
 {
-	return arg(s.string_, s.len());
+	return arg(s.data(), s.length());
 }
 
 Fmt& Fmt::arg(const char* s)
@@ -819,7 +819,7 @@ Fmt& Fmt::arg(const char* s)
 
 Fmt& Fmt::arg(const char* s, int n)
 {
-	int fmtLen = str.len();
+	int fmtLen = str.length();
 
 	// find the lowest marker position.
 	int markerPos = fmtLen;
@@ -827,7 +827,7 @@ Fmt& Fmt::arg(const char* s, int n)
 	if(fmtLen > 0)
 	{
 		int lowestMarker = 100;
-		const char* p = str.str();
+		const char* p = str.c_str();
 		for(int i = 0; i < fmtLen; ++i)
 		{
 			if(p[i] == '%')
@@ -1001,66 +1001,66 @@ bool Str::parse(const char* expr, double& out)
 // ================================================================================================
 // Str :: string splitting and joining.
 
-Vector<String> Str::split(StringRef s)
+Vector<std::string> Str::split(const std::string& s)
 {
-	Vector<String> out;
+	Vector<std::string> out;
 	const char* p = s.begin();
 	while(IsWhiteSpace(*p)) ++p;
 	while(*p)
 	{
 		const char* start = p;
 		while(*p && !IsWhiteSpace(*p)) ++p;
-		out.push_back(String(start, p - start));
+		out.push_back(std::string(start, p - start));
 		while(IsWhiteSpace(*p)) ++p;
 	}
 	return out;
 }
 
-Vector<String> Str::split(StringRef s, const char* lim, bool trim, bool skip)
+Vector<std::string> Str::split(const std::string& s, const char* lim, bool trim, bool skip)
 {
-	Vector<String> out;
+	Vector<std::string> out;
 	int limlen = strlen(lim);
-	int slen = s.len() - limlen, start = 0;
+	int slen = s.length() - limlen, start = 0;
 	for(int i = 0; i <= slen;)
 	{
 		if(memcmp(s.begin() + i, lim, limlen) == 0)
 		{
-			String sub = Str::substr(s, start, i - start);
+			std::string sub = Str::substr(s, start, i - start);
 			if(trim) Str::trim(sub);
 			if(sub.len() || !skip) out.push_back(sub);
 			i += limlen, start = i;
 		}
 		else ++i;
 	}
-	String sub = Str::substr(s, start, String::npos);
+	std::string sub = Str::substr(s, start, std::string::npos);
 	if(trim) Str::trim(sub);
 	if(sub.len() || !skip) out.push_back(sub);
 	return out;
 }
 
-String Str::join(const Vector<String>& list, const char* lim)
+std::string Str::join(const Vector<std::string>& list, const char* lim)
 {
 	if(list.empty()) return {};
 
 	// Determine the total String length and allocate the output string.
 	int limlen = strlen(lim);
 	int len = (list.size() - 1) * limlen;
-	for(auto& s : list) len += s.len();
-	String out(len, 0);
+	for(auto& s : list) len += s.length();
+	std::string out(len, 0);
 
 	// Copy the first item without the delimiter.
 	char* p = out.begin();
 	auto it = list.begin(), end = list.end();
-	memcpy(p, it->begin(), it->len());
-	p += it->len();
+	memcpy(p, it->begin(), it->length());
+	p += it->length();
 
 	// Copy each additional item with a delimiter.
 	for(++it; it != end; ++it)
 	{
 		memcpy(p, lim, limlen);
 		p += limlen;
-		memcpy(p, it->begin(), it->len());
-		p += it->len();
+		memcpy(p, it->begin(), it->length());
+		p += it->length();
 	}
 
 	return out;
@@ -1069,7 +1069,7 @@ String Str::join(const Vector<String>& list, const char* lim)
 // ================================================================================================
 // Str :: time formatting.
 
-String Str::formatTime(double seconds, bool precise)
+std::string Str::formatTime(double seconds, bool precise)
 {
 	bool negative = false;
 	if(seconds < 0.0)
@@ -1108,107 +1108,107 @@ String Str::formatTime(double seconds, bool precise)
 // ================================================================================================
 // Global string operators.
 
-String operator + (StringRef a, char b)
+std::string operator + (const std::string& a, char b)
 {
-	return Str2::cat(a.begin(), a.len(), &b, 1);
+	return Str2::cat(a.begin(), a.length(), &b, 1);
 }
 
-String operator + (char a, StringRef b)
+std::string operator + (char a, const std::string& b)
 {
-	return Str2::cat(&a, 1, b.begin(), b.len());
+	return Str2::cat(&a, 1, b.begin(), b.length());
 }
 
-String operator + (StringRef a, const char* b)
+std::string operator + (const std::string& a, const char* b)
 {
-	return Str2::cat(a.begin(), a.len(), b, strlen(b));
+	return Str2::cat(a.begin(), a.length(), b, strlen(b));
 }
 
-String operator + (const char* a, StringRef b)
+std::string operator + (const char* a, const std::string& b)
 {
-	return Str2::cat(a, strlen(a), b.begin(), b.len());
+	return Str2::cat(a, strlen(a), b.begin(), b.length());
 }
 
-String operator + (StringRef a, StringRef b)
+std::string operator + (const std::string& a, const std::string& b)
 {
-	return Str2::cat(a.begin(), a.len(), b.begin(), b.len());
+	return Str2::cat(a.begin(), a.length(), b.begin(), b.length());
 }
 
-String& operator += (String& a, char b)
+std::string& operator += (std::string& a, char b)
 {
 	Str::append(a, b);
 	return a;
 }
 
-String& operator += (String& a, const char* b)
+std::string& operator += (std::string& a, const char* b)
 {
 	Str::append(a, b, strlen(b));
 	return a;
 }
 
-String& operator += (String& a, StringRef b)
+std::string& operator += (std::string& a, const std::string& b)
 {
-	Str::append(a, b.begin(), b.len());
+	Str::append(a, b.begin(), b.length());
 	return a;
 }
 
-bool operator < (StringRef a, const char* b)
+bool operator < (const std::string& a, const char* b)
 {
 	return strcmp(a.str(), b) < 0;
 }
 
-bool operator < (const char* a, StringRef b)
+bool operator < (const char* a, const std::string& b)
 {
 	return strcmp(a, b.str()) < 0;
 }
 
-bool operator < (StringRef a, StringRef b)
+bool operator < (const std::string& a, const std::string& b)
 {
 	return strcmp(a.str(), b.str()) < 0;
 }
 
-bool operator > (StringRef a, const char* b)
+bool operator > (const std::string& a, const char* b)
 {
 	return strcmp(a.str(), b) > 0;
 }
 
-bool operator > (const char* a, StringRef b)
+bool operator > (const char* a, const std::string& b)
 {
 	return strcmp(a, b.str()) > 0;
 }
 
-bool operator > (StringRef a, StringRef b)
+bool operator > (const std::string& a, const std::string& b)
 {
 	return strcmp(a.str(), b.str()) > 0;
 }
 
-bool operator == (StringRef a, const char* b)
+bool operator == (const std::string& a, const char* b)
 {
 	return strcmp(a.str(), b) == 0;
 }
 
-bool operator == (const char* a, StringRef b)
+bool operator == (const char* a, const std::string& b)
 {
 	return strcmp(a, b.str()) == 0;
 }
 
-bool operator == (StringRef a, StringRef b)
+bool operator == (const std::string& a, const std::string& b)
 {
 	int len1 = a.len(), len2 = b.len();
 	if(len1 != len2) return false;
 	return memcmp(a.str(), b.str(), len1) == 0;
 }
 
-bool operator != (StringRef a, const char* b)
+bool operator != (const std::string& a, const char* b)
 {
 	return strcmp(a.str(), b) != 0;
 }
 
-bool operator != (const char* a, StringRef b)
+bool operator != (const char* a, const std::string& b)
 {
 	return strcmp(a, b.str()) != 0;
 }
 
-bool operator != (StringRef a, StringRef b)
+bool operator != (const std::string& a, const std::string& b)
 {
 	return !(a == b);
 }

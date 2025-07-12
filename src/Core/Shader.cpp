@@ -51,7 +51,7 @@ EXT(glGetProgramInfoLog, void)(GLuint program, GLsizei bufSize, GLsizei* len, ch
 
 void Shader::initExtension()
 {
-	Vector<String> missing;
+	Vector<std::string> missing;
 	int numMissing = 0;
 
 	PROC(glCreateShader);
@@ -84,7 +84,7 @@ void Shader::initExtension()
 	else
 	{
 		Debug::blockBegin(sSupported ? Debug::WARNING : Debug::ERROR, "some shader extensions are not supported");
-		for(auto& s : missing) Debug::log("missing: %s\n", s.str());
+		for(auto& s : missing) Debug::log("missing: %s\n", s.c_str());
 		Debug::log("shader support :: MISSING\n");
 		Debug::blockEnd();
 	}
@@ -98,10 +98,10 @@ bool Shader::isSupported()
 // ================================================================================================
 // Shader :: implementation.
 
-static bool Error(String& log, const char* desc, const char* name, const char* f1, const char* f2)
+static bool Error(std::string& log, const char* desc, const char* name, const char* f1, const char* f2)
 {
 	Debug::blockBegin(Debug::ERROR, desc);
-	while(log.len() && (log.back() == '\0' || log.back() == '\n')) Str::pop_back(log);
+	while(log.length() && (log.back() == '\0' || log.back() == '\n')) Str::pop_back(log);
 	if(name) Debug::log("shader: %s\n", name);
 	if(f1 && f2)
 	{
@@ -112,7 +112,7 @@ static bool Error(String& log, const char* desc, const char* name, const char* f
 	{
 		Debug::log("file: %s\n", f1);
 	}
-	Debug::log("log:\n%s\n", log.str());
+	Debug::log("log:\n%s\n", log.c_str());
 	Debug::blockEnd();
 	return false;
 }
@@ -136,7 +136,7 @@ static void Destroy(uint32_t& program, uint32_t& vert, uint32_t& frag)
 	}
 }
 
-static GLuint Compile(int type, const char* code, String& log)
+static GLuint Compile(int type, const char* code, std::string& log)
 {
 	GLint compiled = 0;
 	GLuint shader = glCreateShader(type);
@@ -149,7 +149,7 @@ static GLuint Compile(int type, const char* code, String& log)
 		{
 			int size = 1;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
-			log = String(size, 0);
+			log = std::string(size, 0);
 			glGetShaderInfoLog(shader, size, nullptr, log.begin());
 		}
 		glDeleteShader(shader);
@@ -158,7 +158,7 @@ static GLuint Compile(int type, const char* code, String& log)
 	return shader;
 }
 
-static GLuint Link(GLuint vert, GLuint frag, String& log)
+static GLuint Link(GLuint vert, GLuint frag, std::string& log)
 {
 	GLint linked = 0;
 	GLuint program = glCreateProgram();
@@ -172,7 +172,7 @@ static GLuint Link(GLuint vert, GLuint frag, String& log)
 		{
 			int size = 1;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &size);
-			log = String(size, 0);
+			log = std::string(size, 0);
 			glGetProgramInfoLog(program, size, 0, log.begin());
 		}
 		glDeleteProgram(program);
@@ -195,7 +195,7 @@ bool Shader::load(const char* vertexCode, const char* fragmentCode, const char* 
 {
 	Destroy(program_id_, vertex_shader_id_, fragment_shader_id_);
 
-	String log;
+	std::string log;
 
 	vertex_shader_id_ = Compile(GL_VERTEX_SHADER, vertexCode, log);
 	if(!vertex_shader_id_) return Error(log, "could not compile vertex shader",

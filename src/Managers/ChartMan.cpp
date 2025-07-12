@@ -54,7 +54,7 @@ void update(Chart* chart)
 // ================================================================================================
 // ChartManImpl :: step artist editing.
 
-void myQueueStepArtist(String artist)
+void myQueueStepArtist(std::string artist)
 {
 	WriteStream stream;
 	stream.writeStr(myChart->artist);
@@ -62,14 +62,14 @@ void myQueueStepArtist(String artist)
 	gHistory->addEntry(myApplyStepArtistId, stream.data(), stream.size(), myChart);
 }
 
-static String ApplyStepArtist(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyStepArtist(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
-	String before = in.readStr();
-	String after = in.readStr();
+	std::string msg;
+	std::string before = in.readStr();
+	std::string after = in.readStr();
 	if(in.success())
 	{
-		StringRef newVal = undo ? before : after;
+		const std::string& newVal = undo ? before : after;
 
 		msg = bound.chart->description();
 		msg += " :: ";
@@ -95,9 +95,9 @@ void myQueueMeter(int meter)
 	gHistory->addEntry(myApplyMeterId, stream.data(), stream.size(), myChart);
 }
 
-static String ApplyMeter(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyMeter(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	int before = in.read<int>();
 	int after = in.read<int>();
 	if(in.success())
@@ -128,9 +128,9 @@ void myQueueDifficulty(Difficulty difficulty)
 	gHistory->addEntry(myApplyDifficultyId, stream.data(), stream.size(), myChart);
 }
 
-static String ApplyDifficulty(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyDifficulty(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	int before = in.read<int>();
 	int after = in.read<int>();
 	if(in.success())
@@ -161,7 +161,7 @@ void setDifficulty(Difficulty difficulty)
 	}
 }
 
-void setStepArtist(String artist)
+void setStepArtist(std::string artist)
 {
 	if(myChart && myChart->artist != artist)
 	{
@@ -190,9 +190,9 @@ bool isClosed() const
 	return (myChart == nullptr);
 }
 
-String getStepArtist() const
+std::string getStepArtist() const
 {
-	return myChart ? myChart->artist : String();
+	return myChart ? myChart->artist : std::string();
 }
 
 Difficulty getDifficulty() const
@@ -205,9 +205,9 @@ int getMeter() const
 	return myChart ? myChart->meter : 1;
 }
 
-String getDescription() const
+std::string getDescription() const
 {
-	return myChart ? myChart->description() : String();
+	return myChart ? myChart->description() : std::string();
 }
 
 const Chart* get() const

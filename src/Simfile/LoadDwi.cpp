@@ -155,7 +155,7 @@ static char* ReadNoteRow(char* p, NoteList& out, int row, const int* map, int* h
 	return p;
 }
 
-static Difficulty ConvertDifficulty(StringRef str)
+static Difficulty ConvertDifficulty(const std::string& str)
 {
 	if(str == "BEGINNER") return DIFF_BEGINNER;
 	if(str == "BASIC")    return DIFF_EASY;
@@ -287,7 +287,7 @@ static void ParseDisplayBpm(Tempo* tempo, char* bpm)
 	}
 }
 
-static void ParseTag(Simfile* sim, String tag, char* val)
+static void ParseTag(Simfile* sim, std::string tag, char* val)
 {
 	if(tag == "SINGLE")
 	{
@@ -354,10 +354,10 @@ static void ParseTag(Simfile* sim, String tag, char* val)
 // ===================================================================================
 // File loading.
 
-bool LoadDwi(StringRef path, Simfile* sim)
+bool LoadDwi(const std::string& path, Simfile* sim)
 {
 	// Read the file.
-	String str;
+	std::string str;
 	if(!ParseSimfile(str, path)) return false;
 
 	// Read the tags.

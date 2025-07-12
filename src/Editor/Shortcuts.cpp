@@ -485,14 +485,14 @@ ShortcutsImpl()
 // ================================================================================================
 // ShortcutsImpl :: API functions.
 
-String Shortcuts::getNotation(Action::Type action, bool fullList = false)
+std::string Shortcuts::getNotation(Action::Type action, bool fullList = false)
 {
-	String out;
+	std::string out;
 	for(auto& shortcut : shortcutMappings_)
 	{
 		if(shortcut.action->code == action)
 		{
-			if (out.len())
+			if (out.length())
 			{
 				out += ", ";
 			}

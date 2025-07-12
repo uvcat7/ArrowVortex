@@ -157,9 +157,9 @@ void myQueueSegments(const SegmentEdit& edit, bool clearRegion)
 	}
 }
 
-String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
+std::string myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	SegmentGroup add, rem;
 	add.decode(in);
 	rem.decode(in);
@@ -196,8 +196,8 @@ String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 			}
 		}
 
-		String remove = rem.descriptionValues();
-		String after = add.descriptionValues();
+		std::string remove = rem.descriptionValues();
+		std::string after = add.descriptionValues();
 
 		if(addMatchesRem)
 		{
@@ -211,7 +211,7 @@ String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 			}
 			if(numRem > 0)
 			{
-				if(msg.len()) msg += ", ";
+				if(msg.length()) msg += ", ";
 				msg += "Removed " + rem.description() + ": " + remove;
 			}
 		}
@@ -233,7 +233,7 @@ String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 	return msg;
 }
 
-static String ApplySegments(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplySegments(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplySegments(bound.tempo, in, undo, redo);
 }
@@ -316,7 +316,7 @@ void myApplyInsertRowsOffset(Tempo* tempo, int startRow, int numRows)
 	}
 }
 
-String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
+std::string myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 {
 	auto startRow = in.read<int>();
 	auto numRows = in.read<int>();
@@ -355,10 +355,10 @@ String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 		
 		target = in.read<Tempo*>();
 	}
-	return String();
+	return std::string();
 }
 
-static String ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplyInsertRows(in, undo, redo);
 }
@@ -374,9 +374,9 @@ void myQueueOffset(double offset)
 	gHistory->addEntry(myApplyOffsetId, stream.data(), stream.size(), myTempo);
 }
 
-String myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
+std::string myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	auto before = in.read<double>();
 	auto after = in.read<double>();
 	if(in.success())
@@ -395,7 +395,7 @@ String myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 	return msg;
 }
 
-static String ApplyOffset(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyOffset(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplyOffset(bound.tempo, in, undo, redo);
 }
@@ -413,9 +413,9 @@ void myQueueDisplayBpm(const DisplayBpmEdit& change)
 	gHistory->addEntry(myApplyDisplayBpmId, stream.data(), stream.size(), myTempo);
 }
 
-String myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo)
+std::string myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	auto before = in.read<DisplayBpmEdit>();
 	auto after = in.read<DisplayBpmEdit>();
 	if(in.success())
@@ -434,7 +434,7 @@ String myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo)
 	return msg;
 }
 
-void myApplyDisplayBpmMessage(String &msg, DisplayBpmEdit &edit)
+void myApplyDisplayBpmMessage(std::string &msg, DisplayBpmEdit &edit)
 {
 	if (edit.type == BPM_ACTUAL)
 	{
@@ -455,7 +455,7 @@ void myApplyDisplayBpmMessage(String &msg, DisplayBpmEdit &edit)
 	}
 }
 
-static String ApplyDisplayBpm(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyDisplayBpm(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplyDisplayBpm(bound.tempo, in, undo, redo);
 }
@@ -596,7 +596,7 @@ void copyToClipboard()
 		WriteStream stream;
 		clipboard.encode(stream);
 		SetClipboardData(clipboardTag, stream.data(), stream.size());
-		HudNote("Copied %s", clipboard.description().str());
+		HudNote("Copied %s", clipboard.description().c_str());
 	}
 }
 

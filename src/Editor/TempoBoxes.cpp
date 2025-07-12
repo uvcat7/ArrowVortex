@@ -97,7 +97,7 @@ void update()
 		auto meta = Segment::meta[type];
 		for(auto seg = it->begin(), segEnd = it->end(); seg != segEnd; ++seg)
 		{
-			String desc = meta->getDescription(seg.ptr);
+			std::string desc = meta->getDescription(seg.ptr);
 			myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
 		}
 	}

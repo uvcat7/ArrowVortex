@@ -382,7 +382,7 @@ struct StringVal : public BaseStr
 {
 	void set(const char* s) { str = s; }
 	const char* get() const { return str.str(); }
-	String str;
+	std::string str;
 };
 
 struct ConstCharPtr : public BaseStr
@@ -394,17 +394,17 @@ struct ConstCharPtr : public BaseStr
 
 struct StringPtr : public BaseStr
 {
-	StringPtr(String* s) : str(s) {}
+	StringPtr(std::string* s) : str(s) {}
 	void set(const char* s) { *str = s; }
 	const char* get() const { return str->str(); }
-	String* str;
+	std::string* str;
 };
 
 struct ConstStringPtr : public BaseStr
 {
-	ConstStringPtr(const String* s) : str(s) {}
+	ConstStringPtr(const std::string* s) : str(s) {}
 	const char* get() const { return str->str(); }
-	const String* str;
+	const std::string* str;
 };
 
 static void ReferenceStr(void* data)
@@ -453,13 +453,13 @@ void TextSlot::bind(const char* str)
 	data_ = new ConstCharPtr(str);
 }
 
-void TextSlot::bind(const String* str)
+void TextSlot::bind(const std::string* str)
 {
 	ReleaseStr(data_);
 	data_ = new ConstStringPtr(str);
 }
 
-void TextSlot::bind(String* str)
+void TextSlot::bind(std::string* str)
 {
 	ReleaseStr(data_);
 	data_ = new StringPtr(str);
@@ -470,9 +470,9 @@ void TextSlot::set(const char* str)
 	((BaseStr*)data_)->set(str);
 }
 
-void TextSlot::set(StringRef str)
+void TextSlot::set(const std::string& str)
 {
-	((BaseStr*)data_)->set(str.str());
+	((BaseStr*)data_)->set(str.c_str());
 }
 
 const char* TextSlot::get() const

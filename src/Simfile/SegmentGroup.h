@@ -98,10 +98,10 @@ public:
 	void decode(ReadStream& in);
 
 	// Returns a description of the segments (e.g. "2 stops", "3 timing segments").
-	String description() const;
+	std::string description() const;
 
 	// Returns a description of the segment values.
-	String descriptionValues() const;
+	std::string descriptionValues() const;
 
 	/// Returns the total number of segments contained in the group.
 	int numSegments() const;

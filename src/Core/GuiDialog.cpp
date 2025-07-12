@@ -381,7 +381,7 @@ void DialogData::draw()
 	// Draw the title text.
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	Text::arrange(Text::MC, style, titleTextW - 8, dialog_title_.str());
+	Text::arrange(Text::MC, style, titleTextW - 8, dialog_title_.c_str());
 	Text::draw({r.x, r.y, titleTextW, FRAME_TITLEBAR_H});
 
 	// Draw inner dialog area.
@@ -511,7 +511,7 @@ void GuiDialog::setPosition(int x, int y)
 	DATA->rect_.y = y;
 }
 
-void GuiDialog::setTitle(StringRef str)
+void GuiDialog::setTitle(const std::string& str)
 {
 	DATA->dialog_title_ = str;
 }

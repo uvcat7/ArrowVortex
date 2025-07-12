@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Core/String.h>
-
 namespace Vortex {
 
 // Wide string, stores UTF-16.
@@ -84,13 +82,13 @@ bool operator < (const WideString& a, const WideString& b);
 bool operator == (const WideString& a, const WideString& b);
 
 // Converts a wide String (UTF-16/UTF-32) to a string (UTF-8).
-extern String Narrow(const wchar_t* str, int len);
-extern String Narrow(const wchar_t* str);
-extern String Narrow(const WideString& str);
+extern std::string Narrow(const wchar_t* str, int len);
+extern std::string Narrow(const wchar_t* str);
+extern std::string Narrow(const WideString& str);
 
 // Converts a string (UTF-8) to a wide String (UTF-16/UTF-32).
 extern WideString Widen(const char* str, int len);
 extern WideString Widen(const char* str);
-extern WideString Widen(StringRef str);
+extern WideString Widen(const std::string& str);
 
 }; // namespace Vortex

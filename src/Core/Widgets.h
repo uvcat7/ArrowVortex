@@ -2,7 +2,6 @@
 
 #include <Core/Slot.h>
 #include <Core/Vector.h>
-#include <Core/String.h>
 #include <Core/Draw.h>
 #include <Core/Text.h>
 #include <Core/Gui.h>
@@ -196,7 +195,7 @@ public:
 	void onDraw() override;
 
 	void hideBackground();
-	void addItem(StringRef text);
+	void addItem(const std::string& text);
 	void clearItems();	
 
 	void scroll(bool up);
@@ -211,7 +210,7 @@ protected:
 	recti ItemRect() const;
 
 	WgScrollbarV* scrollbar_;
-	Vector<String> selectlist_items_;
+	Vector<std::string> selectlist_items_;
 	int scroll_position_;
 	uint32_t is_interacted_ : 1;
 	uint32_t show_background_ : 1;
@@ -231,7 +230,7 @@ public:
 	void onTick() override;
 	void onDraw() override;
 
-	void addItem(StringRef text);
+	void addItem(const std::string& text);
 	void clearItems();
 
 	IntSlot value;
@@ -241,7 +240,7 @@ protected:
 	void CloseDroplist();
 
 	WgSelectList* selectlist_widget_;
-	Vector<String> droplist_items_;
+	Vector<std::string> droplist_items_;
 	int selected_index_;
 };
 
@@ -256,14 +255,14 @@ public:
 	void onMouseRelease(MouseRelease& evt) override;
 	void onDraw() override;
 
-	void addItem(StringRef text);
+	void addItem(const std::string& text);
 	void clearItems();
 
 	IntSlot value;
 	CallSlot onChange;
 
 protected:
-	Vector<String> cycle_items_;
+	Vector<std::string> cycle_items_;
 };
 
 /// Single Line Text Editor GuiWidget.
@@ -296,7 +295,7 @@ private:
 	void DeleteSection();
 	vec2i TextPosition() const;
 
-	String lineedit_text_;
+	std::string lineedit_text_;
 	int lineedit_max_length_, lineedit_drag_;
 	vec2i lineedit_cursor_;
 	float lineedit_blink_time_, lineedit_scroll_offset_;
@@ -340,7 +339,7 @@ private:
 	double spinner_display_value_;
 	int spinner_min_decimal_places_;
 	int spinner_max_decimal_places_;
-	String spinner_text_;
+	std::string spinner_text_;
 };
 
 /// Color picker widget.

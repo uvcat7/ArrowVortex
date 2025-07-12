@@ -33,7 +33,7 @@ struct Parser
 {
 	double bpm;
 	const char* line;
-	String prop, tag;
+	std::string prop, tag;
 };
 
 struct OsuFile
@@ -43,15 +43,15 @@ struct OsuFile
 	int gameMode;
 	int numCols;
 	int overallDifficulty;
-	String chartVersion;
-	String musicPath;
-	String songArtist;
-	String songArtistUnicode;
-	String songTitle;
-	String songTitleUnicode;
-	String stepArtist;
-	String artwork;
-	String filename;
+	std::string chartVersion;
+	std::string musicPath;
+	std::string songArtist;
+	std::string songArtistUnicode;
+	std::string songTitle;
+	std::string songTitleUnicode;
+	std::string stepArtist;
+	std::string artwork;
+	std::string filename;
 
 	std::map<double, TimingPoint> timingPoints;
 	Vector<HitObject> hitObjects;
@@ -65,9 +65,9 @@ static bool IsSpace(char c)
 	return c == ' ' || c == '\n';
 }
 
-static String Unquote(StringRef s)
+static std::string Unquote(const std::string& s)
 {
-	if(s.len() >= 2 && s.back() == '"' && s.front() == '"')
+	if(s.length() >= 2 && s.back() == '"' && s.front() == '"')
 	{
 		return Str::create(s.begin() + 1, s.end() - 1);
 	}
@@ -118,14 +118,14 @@ static bool ReadTag(Parser& parser)
 	return true;
 }
 
-static bool IsProp(StringRef prop, const char* name)
+static bool IsProp(const std::string& prop, const char* name)
 {
 	const char* p = prop.begin();
 	while(*name && *p == *name) ++p, ++name;
 	return (*name == 0 && (*p == ':' || *p == ' ' || *p == '\n'));
 }
 
-static String PropVal(StringRef prop)
+static std::string PropVal(const std::string& prop)
 {
 	const char* p = prop.begin();
 	while(*p != ':') ++p;
@@ -166,7 +166,7 @@ static void ParseGeneral(OsuFile& out, Parser& parser)
 {
 	while(ReadProperty(parser))
 	{
-		StringRef prop = parser.prop;
+		const std::string& prop = parser.prop;
 		if(IsProp(prop, "AudioFilename"))
 		{
 			out.musicPath = PropVal(prop);
@@ -182,7 +182,7 @@ static void ParseMetaData(OsuFile& out, Parser& parser)
 {
 	while(ReadProperty(parser))
 	{
-		StringRef prop = parser.prop;
+		const std::string& prop = parser.prop;
 		if(IsProp(prop, "Title"))
 		{
 			out.songTitle = PropVal(prop);
@@ -214,7 +214,7 @@ static void ParseDifficulty(OsuFile& out, Parser& parser)
 {
 	while(ReadProperty(parser))
 	{
-		StringRef prop = parser.prop;
+		const std::string& prop = parser.prop;
 		if(IsProp(prop, "OverallDifficulty"))
 		{
 			out.overallDifficulty = Str::readInt(PropVal(prop));
@@ -323,7 +323,7 @@ static void ParseTag(OsuFile& osu, Parser& parser)
 	}
 }
 
-static bool ParseFile(OsuFile& out, String str)
+static bool ParseFile(OsuFile& out, std::string str)
 {
 	// Convert all comments and whitespace to space characters.
 	for(char* p = str.begin(), *e = str.end(); p < e; ++p)
@@ -363,7 +363,7 @@ static const char* difficultyStrings[][5] = {
 
 };
 
-static void AssignDifficulties(Simfile* sim, const Vector<String>& versions)
+static void AssignDifficulties(Simfile* sim, const Vector<std::string>& versions)
 {
 	if(sim->charts.empty()) return;
 
@@ -529,7 +529,7 @@ static void DestroyFiles(Vector<OsuFile*>& files)
 }; // anonymous namespace.
 
 /*
-static bool ParseOsz(Vector<OsuFile*>& out, StringRef path, String& err)
+static bool ParseOsz(Vector<OsuFile*>& out, const std::string& path, std::string& err)
 {
 	unzFile zip = unzOpen(path.str());
 
@@ -543,7 +543,7 @@ static bool ParseOsz(Vector<OsuFile*>& out, StringRef path, String& err)
 	}
 
 	// Read the files.
-	String str;
+	std::string str;
 	char buffer[512];
 	for(uint32_t i = 0; i < global_info.number_entry; ++i)
 	{
@@ -579,12 +579,12 @@ static bool ParseOsz(Vector<OsuFile*>& out, StringRef path, String& err)
 }
 */
 
-static bool ParseDir(Vector<OsuFile*>& out, StringRef dir, String& err)
+static bool ParseDir(Vector<OsuFile*>& out, const std::string& dir, std::string& err)
 {
 	for(auto& file : File::findFiles(dir, false, "osu"))
 	{
 		bool success;
-		String str = File::getText(file, &success);
+		std::string str = File::getText(file, &success);
 		if(str.empty() || !success) continue;
 
 		out.push_back(new OsuFile);
@@ -594,13 +594,13 @@ static bool ParseDir(Vector<OsuFile*>& out, StringRef dir, String& err)
 	return true;
 }
 
-bool LoadOsu(StringRef path, Simfile* sim)
+bool LoadOsu(const std::string& path, Simfile* sim)
 {
 	bool result = true;
 	bool isZip = Path(path).hasExt("osz");
 
 	// Parse all osu files in the current directory.
-	String err;
+	std::string err;
 	Vector<OsuFile*> files;
 	if(isZip)
 	{
@@ -650,7 +650,7 @@ bool LoadOsu(StringRef path, Simfile* sim)
 	ConvertTimingPoints(sim, *mainFile);
 
 	// Convert the hit objects to DDR/ITG charts.
-	Vector<String> versions;
+	Vector<std::string> versions;
 	for(auto file : files)
 	{
 		if(file->gameMode == OSUMANIA && file->hitObjects.size())
@@ -675,7 +675,7 @@ bool LoadOsu(StringRef path, Simfile* sim)
 	sim->file = mainFile->filename;
 	int begin = Str::findLast(sim->file, '[');
 	int end = Str::find(sim->file, ']', begin);
-	if(begin >= 0 && end != String::npos)
+	if(begin >= 0 && end != std::string::npos)
 	{
 		Str::erase(sim->file, begin, end + 1 - begin);
 		if(sim->file.len() && sim->file.back() == ' ')

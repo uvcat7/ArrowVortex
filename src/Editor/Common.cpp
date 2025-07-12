@@ -19,7 +19,7 @@ namespace Vortex {
 static const int a85shift[4] = {24, 16, 8, 0};
 static const uint32_t a85div[5] = {85 * 85 * 85 * 85, 85 * 85 * 85, 85 * 85, 85, 1};
 
-static void Ascii85enc(String& out, const uint8_t* in, int size)
+static void Ascii85enc(std::string& out, const uint8_t* in, int size)
 {
 	// Convert to 32-bit integers (big endian) and pad with zeroes.
 	Vector<uint32_t> blocks((size + 3) / 4, 0);
@@ -43,7 +43,7 @@ static void Ascii85enc(String& out, const uint8_t* in, int size)
 
 	// Remove padded bytes from output.
 	int padding = blocks.size() * 4 - size;
-	Str::truncate(out, out.len() - padding);
+	Str::truncate(out, out.length() - padding);
 }
 
 static void Ascii85dec(Vector<uint8_t>& out, const char* in)
@@ -78,28 +78,28 @@ static void Ascii85dec(Vector<uint8_t>& out, const char* in)
 	out.resize(out.size() - padding);
 }
 
-bool HasClipboardData(StringRef tag)
+bool HasClipboardData(const std::string& tag)
 {
-	String text = gSystem->getClipboardText();
-	String prefix = "ArrowVortex:" + tag + ":";
-	return Str::startsWith(text, prefix.str());
+	std::string text = gSystem->getClipboardText();
+	std::string prefix = "ArrowVortex:" + tag + ":";
+	return Str::startsWith(text, prefix.c_str());
 }
 
-void SetClipboardData(StringRef tag, const uint8_t* data, int size)
+void SetClipboardData(const std::string& tag, const uint8_t* data, int size)
 {
-	String text = "ArrowVortex:" + tag + ":";
+	std::string text = "ArrowVortex:" + tag + ":";
 	Ascii85enc(text, data, size);
 	gSystem->setClipboardText(text);
 }
 
-Vector<uint8_t> GetClipboardData(StringRef tag)
+Vector<uint8_t> GetClipboardData(const std::string& tag)
 {
-	Vector<uint8_t> buffer;
-	String text = gSystem->getClipboardText();
-	String prefix = "ArrowVortex:" + tag + ":";
-	if(Str::startsWith(text, prefix.str()))
+	Vector<uchar> buffer;
+	std::string text = gSystem->getClipboardText();
+	std::string prefix = "ArrowVortex:" + tag + ":";
+	if(Str::startsWith(text, prefix.c_str()))
 	{
-		Ascii85dec(buffer, text.begin() + prefix.len());
+		Ascii85dec(buffer, text.begin() + prefix.length());
 	}
 	return buffer;
 }
@@ -129,11 +129,11 @@ const char* ToString(SnapType st)
 	return (st >= 0 && st < NUM_SNAP_TYPES) ? text[st] : text[0];
 }
 
-const String OrdinalSuffix(int i)
+const std::string OrdinalSuffix(int i)
 {
 	int j = i % 10, k = i % 100;
 
-	String out = Str::val(i, 0);
+	std::string out = Str::val(i, 0);
 
 	if (j == 1 && k != 11)
 	{
