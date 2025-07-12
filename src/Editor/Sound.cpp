@@ -201,9 +201,9 @@ void Sound::Thread::cleanup()
 // ================================================================================================
 // Sound
 
-SoundSource* LoadOgg(std::ifstream&& file, String& title, String& artist); // Defined in "LoadOgg.cpp".
-SoundSource* LoadMP3(std::ifstream&& file, String& title, String& artist); // Defined in "LoadMp3.cpp".
-SoundSource* LoadWav(std::ifstream&& file, String& title, String& artist); // Defined in "LoadWav.cpp".
+SoundSource* LoadOgg(std::ifstream&& file, std::string& title, std::string& artist); // Defined in "load_ogg.cpp".
+SoundSource* LoadMP3(std::ifstream&& file, std::string& title, std::string& artist); // Defined in "load_mp3.cpp".
+SoundSource* LoadWav(std::ifstream&& file, std::string& title, std::string& artist); // Defined in "load_wav.cpp".
 
 Sound::Sound()
 	: myThread(nullptr)
@@ -241,7 +241,7 @@ void Sound::clear()
 	myIsCompleted = true;
 }
 
-bool Sound::load(const char* path, bool threaded, String& title, String& artist)
+bool Sound::load(const char* path, bool threaded, std::string& title, std::string& artist)
 {
 	clear();
 
@@ -251,7 +251,7 @@ bool Sound::load(const char* path, bool threaded, String& title, String& artist)
     if (std::ifstream file(path, std::ios::in | std::ios::binary); file.good())
 	{
 		// Call the load function associated with the extension.
-		String ext = Path(path).ext();
+		std::string ext = Path(path).ext();
 		Str::toLower(ext);
 		     if(ext == "ogg") source = LoadOgg(std::move(file), title, artist);
 		else if(ext == "mp3") source = LoadMP3(std::move(file), title, artist);

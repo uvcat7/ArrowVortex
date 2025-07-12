@@ -17,8 +17,8 @@ namespace {
 
 struct FontManagerInstance
 {
-	typedef std::map<String, FontData*> FontMap;
-	typedef std::map<String, Glyph> GlyphMap;
+	typedef std::map<std::string, FontData*> FontMap;
+	typedef std::map<std::string, Glyph> GlyphMap;
 
 	FontMap fonts;
 	void* ftLib;
@@ -136,13 +136,13 @@ void FontManager::release(FontData* font)
 	}
 }
 
-FontData* FontManager::find(StringRef path)
+FontData* FontManager::find(const std::string& path)
 {
 	auto it = Map::findVal(FM->fonts, path);
 	return it ? *it : nullptr;
 }
 
-FontData* FontManager::load(StringRef path, Text::Hinting hinting)
+FontData* FontManager::load(const std::string& path, Text::Hinting hinting)
 {
 	// If fonts are created before goo is initialized, just return null.
 	if(!FM) return nullptr;
@@ -158,17 +158,17 @@ FontData* FontManager::load(StringRef path, Text::Hinting hinting)
 
 	// If not, try to load the font.
 	FT_Face face;
-	int result = FT_New_Face((FT_Library)(FM->ftLib), path.str(), 0, &face);
+	int result = FT_New_Face((FT_Library)(FM->ftLib), path.c_str(), 0, &face);
 	if(result == FT_Err_Ok)
 	{
-		FontData* font = new FontData(face, path.str(), hinting);
+		FontData* font = new FontData(face, path.c_str(), hinting);
 		FM->fonts[path] = font;
 		return font;
 	}
 	else 
 	{
 		Debug::blockBegin(Debug::ERROR, "could not load font file");
-		Debug::log("file: %s\n", path.str());
+		Debug::log("file: %s\n", path.c_str());
 		switch(result)
 		{
 		case FT_Err_Cannot_Open_Resource:
@@ -197,7 +197,7 @@ void FontManager::cache(FontData* font)
 	}
 }
 
-bool FontManager::loadGlyph(StringRef name, const Texture& texture, int dx, int dy, int advance)
+bool FontManager::loadGlyph(const std::string& name, const Texture& texture, int dx, int dy, int advance)
 {
 	auto tex = (Texture::Data*)texture.data();
 	if(tex)
@@ -221,7 +221,7 @@ bool FontManager::loadGlyph(StringRef name, const Texture& texture, int dx, int 
 	return false;
 }
 
-Glyph* FontManager::getGlyph(StringRef name)
+Glyph* FontManager::getGlyph(const std::string& name)
 {
 	return Map::findVal(FM->specialGlyphs, name);
 }
@@ -232,10 +232,10 @@ void FontManager::log()
 	Debug::log("amount: %i\n", FM->fonts.size());
 	for(auto& font : FM->fonts)
 	{
-		String path = font.second->path;
+		auto& path = font.second->path;
 		if(path.empty()) path = "-- no path --";
 
-		Debug::log("\npath: %s\n", path.str());
+		Debug::log("\npath: %s\n", path.c_str());
 		Debug::log("refs: %i\n", font.second->refs);
 		Debug::log("cached: %i\n", font.second->cached);
 	}

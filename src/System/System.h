@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Core/String.h>
 #include <Core/Input.h>
 
 namespace Vortex {
@@ -17,9 +16,9 @@ struct System
 		static MenuItem* create();
 
 		void addSeperator();
-		void addItem(int item, StringRef text);
-		void addSubmenu(MenuItem* submenu, StringRef text, bool grayed = false);
-		void replaceSubmenu(int pos, MenuItem* submenu, StringRef text, bool grayed = false);
+		void addItem(int item, const std::string& text);
+		void addSubmenu(MenuItem* submenu, const std::string& text, bool grayed = false);
+		void replaceSubmenu(int pos, MenuItem* submenu, const std::string& text, bool grayed = false);
 
 		void setChecked(int item, bool checked);
 		void setEnabled(int item, bool checked);
@@ -41,31 +40,31 @@ struct System
 	enum Result { R_CANCEL, R_OK, R_YES, R_NO, NUM_RESULTS };
 
 	/// Shows a message box dialog.
-	virtual Result showMessageDlg(StringRef title, StringRef text, Buttons buttons = T_OK,
+	virtual Result showMessageDlg(const std::string& title, const std::string& text, Buttons buttons = T_OK,
 		Icon icon = I_INFO) = 0;
 
 	/// Shows an open file dialog, see class description.
-	virtual String openFileDlg(StringRef title, StringRef initialPath = String(),
-		StringRef extFilters = String()) = 0;
+	virtual std::string openFileDlg(const std::string& title, const std::string& initialPath = std::string(),
+		const std::string& extFilters = std::string()) = 0;
 
 	/// Shows a save file dialog, see class description.
-	virtual String saveFileDlg(StringRef title, StringRef initialPath = String(),
-		StringRef extFilters = String(), int* outFilterIndex = nullptr) = 0;
+	virtual std::string saveFileDlg(const std::string& title, const std::string& initialPath = std::string(),
+		const std::string& extFilters = std::string(), int* outFilterIndex = nullptr) = 0;
 
 	/// Runs a system command.
-	virtual bool runSystemCommand(StringRef cmd) = 0;
+	virtual bool runSystemCommand(const std::string& cmd) = 0;
 
 	/// Runs a system command and pipes data to it.
-	virtual bool runSystemCommand(StringRef cmd, CommandPipe* pipe, void* buffer) = 0;
+	virtual bool runSystemCommand(const std::string& cmd, CommandPipe* pipe, void* buffer) = 0;
 
 	/// Opens a link to a webpage in the default browser.
-	virtual void openWebpage(StringRef link) = 0;
+	virtual void openWebpage(const std::string& link) = 0;
 
 	/// Sets the current working directory to the given path.
-	virtual void setWorkingDir(StringRef path) = 0;
+	virtual void setWorkingDir(const std::string& path) = 0;
 
 	/// Sends the given text to the clipboard.
-	virtual bool setClipboardText(StringRef text) = 0;
+	virtual bool setClipboardText(const std::string& text) = 0;
 
 	/// Sets the icon type of the application's mouse cursor.
 	virtual void setCursor(Cursor::Icon c) = 0;
@@ -80,13 +79,13 @@ struct System
 	virtual void* getHWND() const = 0;
 
 	/// Returns the current clipboard text.
-	virtual String getClipboardText() const = 0;
+	virtual std::string getClipboardText() const = 0;
 
 	/// Returns the directory of the executable.
-	virtual String getExeDir() const = 0;
+	virtual std::string getExeDir() const = 0;
 
 	/// Returns the directory from which the program was run.
-	virtual String getRunDir() const = 0;
+	virtual std::string getRunDir() const = 0;
 
 	/// Returns the current mouse cursor icon.
 	virtual Cursor::Icon getCursor() const = 0;
@@ -104,13 +103,13 @@ struct System
 	virtual int getKeyFlags() const = 0;
 
 	/// Sets the window title text.
-	virtual void setWindowTitle(StringRef text) = 0;
+	virtual void setWindowTitle(const std::string& text) = 0;
 
 	/// Returns the current window size.
 	virtual vec2i getWindowSize() const = 0;
 
 	/// Returns the current window title.
-	virtual StringRef getWindowTitle() const = 0;
+	virtual const std::string& getWindowTitle() const = 0;
 
 	/// Returns the list of input events for the current frame.
 	virtual InputEvents& getEvents() = 0;
@@ -122,10 +121,10 @@ struct System
 	virtual void terminate() = 0;
 
 	/// Returns the current local time.
-	static String getLocalTime();
+	static std::string getLocalTime();
 
 	/// Returns the build date of the application.
-	static String getBuildData();
+	static std::string getBuildData();
 };
 
 extern System* gSystem;

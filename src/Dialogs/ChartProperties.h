@@ -41,7 +41,7 @@ private:
 	WgLabel* myNoteDensity;
 	WgLabel* myStreamMeasureCount;
 	WgDroplist* myStyleList;
-	String myStepArtist;
+	std::string myStepArtist;
 
 	int myRating, myDifficulty, myStyle;
 };

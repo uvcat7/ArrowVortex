@@ -39,9 +39,9 @@ static bool Check(const char* name, uint32_t a, uint32_t b)
 	return (a == b);
 }
 
-static bool Check(const char* name, StringRef a, StringRef b)
+static bool Check(const char* name, const std::string& a, const std::string& b)
 {
-	if(a != b) HudError("%s: %s | %s", name, a.str(), b.str());
+	if(a != b) HudError("%s: %s | %s", name, a.c_str(), b.c_str());
 	return (a == b);
 }
 
@@ -64,11 +64,11 @@ void VerifyVector(const Vector<T>& a, const Vector<T>& b, const char* name, cons
 	}
 }
 
-static void VerifyStr(StringRef a, StringRef b, const char* name, const char* subname)
+static void VerifyStr(const std::string& a, const std::string& b, const char* name, const char* subname)
 {
 	if(a != b)
 	{
-		HudError("%s :: %s mismatch (%s | %s)", name, subname, a.str(), b.str());
+		HudError("%s :: %s mismatch (%s | %s)", name, subname, a.c_str(), b.c_str());
 	}
 }
 
@@ -144,7 +144,7 @@ static void VerifyShared(const char* name, const Shared& a, const Shared& b)
 
 	VERIFY_VECTOR(labels, Label){ return CHECK(row) && CHECK(str); });
 	VERIFY_VECTOR(attacks, Attack){ return CHECK(duration) && CHECK(mods) && CHECK(time) && CHECK(unit); });
-	VERIFY_VECTOR(keysounds, String){ return CHECK_SELF; });
+	VERIFY_VECTOR(keysounds, std::string){ return CHECK_SELF; });
 	VERIFY_VECTOR(combos, Combo){ return CHECK(row) && CHECK(hitCombo) && CHECK(missCombo); });
 	VERIFY_VECTOR(fakes, Fake){ return CHECK(row) && CHECK(beats); });
 
@@ -183,8 +183,8 @@ static void VerifyMetadata(const char* name, const Metadata& a, const Metadata& 
 
 static void VerifyChart(const Chart& a, const Chart& b)
 {
-	String nameStr = a.description();
-	const char* name = nameStr.str();
+	std::string nameStr = a.description();
+	const char* name = nameStr.c_str();
 
 	VERIFY_BASIC(style);
 	VERIFY_STR(artist);
@@ -214,9 +214,9 @@ static void VerifyChart(const Chart& a, const Chart& b)
 // ================================================================================================
 // Main function.
 
-String VerifySaveLoadIdentity(const Simfile& simfile)
+std::string VerifySaveLoadIdentity(const Simfile& simfile)
 {
-	String error;
+	std::string error;
 	Simfile a = simfile, b;
 
 	a.dir = "verify";
@@ -224,7 +224,7 @@ String VerifySaveLoadIdentity(const Simfile& simfile)
 	a.dir += "\\";
 	a.file += ".verify";
 
-	String path;
+	std::string path;
 	switch(simfile.loadFormat)
 	{
 	case LOAD_SSC:

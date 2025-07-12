@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Core/String.h>
-
 namespace Vortex {
 
 struct Segment;
@@ -18,7 +16,7 @@ struct SegmentMeta
 
 	typedef bool (*Red)(const Segment* seg, const Segment* prev);
 	typedef bool (*Equ)(const Segment* seg, const Segment* other);
-	typedef String (*Dsc)(const Segment* seg);
+	typedef std::string (*Dsc)(const Segment* seg);
 
 	enum DisplaySide { LEFT, RIGHT };
 
@@ -185,9 +183,9 @@ struct Label : public Segment
 	enum { TYPE = LABEL };
 
 	Label();
-	Label(int row, String str);
+	Label(int row, std::string str);
 
-	String str;
+	std::string str;
 };
 
 }; // namespace Vortex

@@ -180,7 +180,7 @@ void SegmentList::sanitize(const Chart* owner)
 	if(numOverlap + numUnsorted + numRedundant > 0)
 	{
 		cleanup();
-		String suffix;
+		std::string suffix;
 		if(owner)
 		{
 			Str::append(suffix, " from ");
@@ -189,17 +189,17 @@ void SegmentList::sanitize(const Chart* owner)
 		if(numOverlap > 0)
 		{
 			const char* segName = (numOverlap > 1 ? meta->plural : meta->singular);
-			HudNote("Removed %i overlapping %s%s.", numOverlap, segName, suffix.str());
+			HudNote("Removed %i overlapping %s%s.", numOverlap, segName, suffix.c_str());
 		}
 		if(numRedundant > 0)
 		{
 			const char* segName = (numRedundant > 1 ? meta->plural : meta->singular);
-			HudNote("Removed %i redundant %s%s.", numRedundant, segName, suffix.str());
+			HudNote("Removed %i redundant %s%s.", numRedundant, segName, suffix.c_str());
 		}
 		if(numUnsorted > 0)
 		{
 			const char* segName = (numUnsorted > 1 ? meta->plural : meta->singular);
-			HudNote("Removed %i out of order %s%s.", numUnsorted, segName, suffix.str());
+			HudNote("Removed %i out of order %s%s.", numUnsorted, segName, suffix.c_str());
 		}
 	}
 }

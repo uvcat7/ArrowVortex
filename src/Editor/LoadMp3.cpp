@@ -430,7 +430,7 @@ int MP3Loader::readFrames(int frames, short* buffer)
 
 }; // anonymous namespace.
 
-SoundSource* LoadMP3(std::ifstream&& file, String& title, String& artist)
+SoundSource* LoadMP3(FileReader* file, std::string& title, std::string& artist)
 {
 	std::unique_ptr<MP3Loader> loader = std::make_unique<MP3Loader>();
 	loader->file = std::move(file);
