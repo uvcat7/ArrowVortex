@@ -69,23 +69,34 @@ Some new features were introduced as well when preparing this release, and some 
 
 ## Building ArrowVortex
 
-### Windows
+### Windows:
 
 In order to compile ArrowVortex on your own PC, Visual Studio is required. It is recommended to use Visual Studio 2022 with the "Desktop development for C++" components installed.
 
 Simply open `build/VisualStudio/ArrowVortex.sln` in Visual Studio, and build the project.
 
-### Linux
+### Linux:
 
-Compiling for Linux requires that you have `vcpkg`, `powershell`, and `cmake`.
+Compiling for Linux requires that you have `vcpkg`, `powershell`, `cmake`, and most importantly `w64-mingw32`.
 
-Once you have those set up, run `export VCPKG_ROOT={where your vcpkg contents is}`.
+You may find `w64-mingw32` for your Linux distribution at:
+* AUR, as `mingw-w64-tools`
+* Debian/Ubuntu, as `g++-mingw-w64-x86-64` and `gcc-mingw-w64-x86-64`
+* Fedora, as `mingw64-gcc-c++`
 
-This command is needed as to find and define vcpkg's root and use it when building with cmake.
+You may find installation info of `vcpkg` at [vcpkg's getting-started documentation](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-bash).
+
+You may find binaries of `powershell` at [PowerShell's repository](https://github.com/PowerShell/PowerShell) or the AUR.
+
+You will likely already have `cmake`, but if needed, you will find it in your package manager.
+
+Once you have those set up, run `export VCPKG_ROOT=[where your vcpkg directory is]`.
+
+This command is needed to define vcpkg's root directory and use it when building with cmake.
 
 Now you may run this: `cmake -B build -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake`
 
-This command specifies that you are using a MinGW environment that is statically linked and targets 64-bit, and for cmake to account for vcpkg.
+This command specifies that you are using a MinGW environment that is statically linked and targets 64-bit, and for CMake to use vcpkg's buildsystem.
 
 This command also requires powershell as it is used for vcpkg's copy tools, and will fail to compile if it isn't installed.
 
