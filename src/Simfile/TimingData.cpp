@@ -111,7 +111,7 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end, in
 		// Check if the warp ended before the current segments.
 		if(spr > 0 && time > targetTime && warpRows == 0)
 		{
-			int warpEndRow = (int)(row - (time - targetTime) / spr);
+			int warpEndRow = (int)(row - round((time - targetTime) / spr));
 			if(warpEndRow <= entry->row)
 			{
 				entry->endTime = time;
@@ -164,7 +164,7 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end, in
 	// If we reach this point, none of the segments caused the warp to end.
 	spr = fabs(spr);
 	int row = prevRow + warpRows;
-	if(time < targetTime) row += (int)((targetTime - time) / spr);
+	if(time < targetTime) row += (int) round((targetTime - time) / spr);
 	out.push_back({row, targetTime, targetTime, targetTime, spr});
 	return {row, targetTime, it};
 }

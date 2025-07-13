@@ -32,7 +32,7 @@ public:
 	static void uniform4f(int loc, float x, float y, float z, float w);
 	static void uniform4f(int loc, const colorf& color);
 	
-	uint program_id_, vertex_shader_id_, fragment_shader_id_;
+	uint32_t program_id_, vertex_shader_id_, fragment_shader_id_;
 };
 
 }; // namespace Vortex

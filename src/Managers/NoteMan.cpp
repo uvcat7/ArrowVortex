@@ -132,7 +132,7 @@ void myUpdateNoteTimes()
 
 void myUpdateWarpedNotes()
 {
-	uint insideWarp = 0;
+	uint32_t insideWarp = 0;
 	auto note = myNotes.begin(), noteEnd = myNotes.end();
 	auto& events = gTempo->getTimingData().events;
 	auto it = events.begin(), end = events.end();
@@ -557,7 +557,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; note != end; ++note)
 		{
-			uint set = pred(note);
+			uint32_t set = pred(note);
 			numSelected += set;
 			note->isSelected = set;
 		}
@@ -566,7 +566,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; note != end; ++note)
 		{
-			uint set = pred(note);
+			uint32_t set = pred(note);
 			numSelected += set & (note->isSelected ^ 1);
 			note->isSelected |= set;
 		}
@@ -575,7 +575,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; note != end; ++note)
 		{
-			uint set = pred(note);
+			uint32_t set = pred(note);
 			numSelected += set & note->isSelected;
 			note->isSelected &= set ^ 1;
 		}
@@ -791,7 +791,7 @@ void copyToClipboard(bool timeBased)
 	if(numNotes > 0)
 	{
 		WriteStream stream;
-		stream.write<uchar>(timeBased);
+		stream.write<uint8_t>(timeBased);
 		if(timeBased)
 		{
 			notes.encode(stream, gTempo->getTimingData(), true);
@@ -807,11 +807,11 @@ void copyToClipboard(bool timeBased)
 
 void pasteFromClipboard(bool insert)
 {
-	Vector<uchar> buffer = GetClipboardData(clipboardTag);
+	Vector<uint8_t> buffer = GetClipboardData(clipboardTag);
 	ReadStream stream(buffer.data(), buffer.size());
 
 	// Check if the note data is time-based.
-	bool timeBased = (stream.read<uchar>() != 0);
+	bool timeBased = (stream.read<uint8_t>() != 0);
 
 	// Read the note data.
 	NoteEdit edit;

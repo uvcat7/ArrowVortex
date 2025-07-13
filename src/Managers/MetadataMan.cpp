@@ -300,7 +300,7 @@ String findBackgroundFile()
 
 String findCdTitleFile()
 {
-	return findImageFile("cd", "cdtitle");
+	return findImageFile("cd", "title");
 }
 
 // ================================================================================================

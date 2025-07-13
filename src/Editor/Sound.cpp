@@ -85,7 +85,7 @@ public:
 	void exec();
 	bool readBlock();
 	void cleanup();
-	uchar progress() { return myProgress; }
+	uint8_t progress() { return myProgress; }
 	double elapsedTime() { return Debug::getElapsedTime(myStartTime); }
 
 private:
@@ -94,7 +94,7 @@ private:
 	short* myBuffer;
 	int myCurrentFrame;
 	int myReservedFrames;
-	uchar myProgress;
+	uint8_t myProgress;
 	std::chrono::steady_clock::time_point myStartTime;
 };
 
@@ -176,7 +176,7 @@ bool Sound::Thread::readBlock()
 
 		if(mySound->myIsAllocated)
 		{
-			myProgress = (uchar)((uint64_t)100 * myCurrentFrame / mySound->myNumFrames);
+			myProgress = (uint8_t)((uint64_t)100 * myCurrentFrame / mySound->myNumFrames);
 		}
 	}
 

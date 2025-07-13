@@ -15,9 +15,9 @@ namespace Vortex {
 
 static const int BATCH_QUAD_LIMIT = 256;
 
-static const int VB_POS_STRIDE = sizeof(uint) * 8;
+static const int VB_POS_STRIDE = sizeof(uint32_t) * 8;
 static const int VB_UVS_STRIDE = sizeof(float) * 8;
-static const int VB_COL_STRIDE = sizeof(uint) * 4;
+static const int VB_COL_STRIDE = sizeof(uint32_t) * 4;
 
 static const int VB_POS_SIZE = VB_POS_STRIDE * BATCH_QUAD_LIMIT;
 static const int VB_UVS_SIZE = VB_UVS_STRIDE * BATCH_QUAD_LIMIT;
@@ -32,11 +32,11 @@ struct RendererInstance
 {
 	Shader shaders[4];
 	Vector<recti> scissorStack;
-	uint* quadIndices;
+	uint32_t* quadIndices;
 
-	uchar* batchPos;
-	uchar* batchCol;
-	uchar* batchUvs;
+	uint8_t* batchPos;
+	uint8_t* batchCol;
+	uint8_t* batchUvs;
 	int quadsLeft;
 
 	TileRect roundedBox;
@@ -51,7 +51,7 @@ static RendererInstance* RI;
 
 static void createBatchData()
 {
-	RI->batchPos = (uchar*)malloc(VB_POS_SIZE + VB_UVS_SIZE + VB_COL_SIZE);
+	RI->batchPos = (uint8_t*)malloc(VB_POS_SIZE + VB_UVS_SIZE + VB_COL_SIZE);
 	RI->batchUvs = RI->batchPos + VB_POS_SIZE;
 	RI->batchCol = RI->batchUvs + VB_UVS_SIZE;
 	RI->quadsLeft = BATCH_QUAD_LIMIT;
@@ -59,8 +59,8 @@ static void createBatchData()
 
 static void createQuadIndices()
 {
-	RI->quadIndices = (uint*)malloc(sizeof(uint) * BATCH_QUAD_LIMIT * 6);
-	for(uint* p = RI->quadIndices, i = 0; i < BATCH_QUAD_LIMIT * 4; i += 4)
+	RI->quadIndices = (uint32_t*)malloc(sizeof(uint32_t) * BATCH_QUAD_LIMIT * 6);
+	for(uint32_t* p = RI->quadIndices, i = 0; i < BATCH_QUAD_LIMIT * 4; i += 4)
 	{
 		*p = i + 0; ++p;
 		*p = i + 3; ++p;
@@ -189,9 +189,9 @@ void Renderer::setColor(colorf color)
 	glColor4f(color.r, color.g, color.b, color.a);
 }
 
-void Renderer::setColor(color32 color)
+void Renderer::setColor(uint32_t color)
 {
-	uchar* c = (uchar*)&color;
+	uint8_t* c = (uint8_t*)&color;
 	glColor4ub(c[0], c[1], c[2], c[3]);
 }
 
@@ -252,7 +252,7 @@ void Renderer::popScissorRect()
 // Core rendering functions.
 
 static int FlushQuads(GLint vertexType, const void* pos,
-	const float* uvs = nullptr, const color32* col = nullptr)
+	const float* uvs = nullptr, const uint32_t* col = nullptr)
 {
 	glDrawElements(GL_TRIANGLES, BATCH_QUAD_LIMIT * 6, GL_UNSIGNED_INT, RI->quadIndices);
 	pos = (int*)pos + BATCH_QUAD_LIMIT * 8;
@@ -281,7 +281,7 @@ void Renderer::drawQuads(int numQuads, const int* pos)
 	glDrawElements(GL_TRIANGLES, numQuads * 6, GL_UNSIGNED_INT, RI->quadIndices);
 }
 
-void Renderer::drawQuads(int numQuads, const int* pos, const color32* col)
+void Renderer::drawQuads(int numQuads, const int* pos, const uint32_t* col)
 {
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -305,7 +305,7 @@ void Renderer::drawQuads(int numQuads, const int* pos, const float* uvs)
 	glDrawElements(GL_TRIANGLES, numQuads * 6, GL_UNSIGNED_INT, RI->quadIndices);
 }
 
-void Renderer::drawQuads(int numQuads, const int* pos, const float* uvs, const color32* col)
+void Renderer::drawQuads(int numQuads, const int* pos, const float* uvs, const uint32_t* col)
 {
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -318,7 +318,7 @@ void Renderer::drawQuads(int numQuads, const int* pos, const float* uvs, const c
 	glDrawElements(GL_TRIANGLES, numQuads * 6, GL_UNSIGNED_INT, RI->quadIndices);
 }
 
-void Renderer::drawQuads(int numQuads, const float* pos, const float* uvs, const color32* col)
+void Renderer::drawQuads(int numQuads, const float* pos, const float* uvs, const uint32_t* col)
 {
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -331,7 +331,7 @@ void Renderer::drawQuads(int numQuads, const float* pos, const float* uvs, const
 	glDrawElements(GL_TRIANGLES, numQuads * 6, GL_UNSIGNED_INT, RI->quadIndices);
 }
 
-void Renderer::drawTris(int numTris, const uint* indices, const int* pos)
+void Renderer::drawTris(int numTris, const uint32_t* indices, const int* pos)
 {
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -341,7 +341,7 @@ void Renderer::drawTris(int numTris, const uint* indices, const int* pos)
 	glDrawElements(GL_TRIANGLES, numTris * 3, GL_UNSIGNED_INT, indices);
 }
 
-void Renderer::drawTris(int numTris, const uint* indices, const int* pos, const float* uvs)
+void Renderer::drawTris(int numTris, const uint32_t* indices, const int* pos, const float* uvs)
 {
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -358,7 +358,7 @@ void Renderer::drawTris(int numTris, const uint* indices, const int* pos, const 
 static void FlushIC()
 {
 	Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft,
-		(int*)RI->batchPos, (color32*)RI->batchCol);
+		(int*)RI->batchPos, (uint32_t*)RI->batchCol);
 	RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
@@ -372,7 +372,7 @@ static void FlushIT()
 static void FlushITC()
 {
 	Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft,
-		(int*)RI->batchPos, (float*)RI->batchUvs, (color32*)RI->batchCol);
+		(int*)RI->batchPos, (float*)RI->batchUvs, (uint32_t*)RI->batchCol);
 	RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
@@ -383,7 +383,7 @@ void QuadBatchC::push(int numQuads)
 	RI->quadsLeft -= numQuads;
 
 	pos = (int*)(RI->batchPos + offset * VB_POS_STRIDE);
-	col = (color32*)(RI->batchCol + offset * VB_COL_STRIDE);
+	col = (uint32_t*)(RI->batchCol + offset * VB_COL_STRIDE);
 }
 
 void QuadBatchT::push(int numQuads)
@@ -404,7 +404,7 @@ void QuadBatchTC::push(int numQuads)
 
 	pos = (int*)(RI->batchPos + offset * VB_POS_STRIDE);
 	uvs = (float*)(RI->batchUvs + offset * VB_UVS_STRIDE);
-	col = (color32*)(RI->batchCol + offset * VB_COL_STRIDE);
+	col = (uint32_t*)(RI->batchCol + offset * VB_COL_STRIDE);
 }
 
 void QuadBatchC::flush()
@@ -424,7 +424,7 @@ void QuadBatchTC::flush()
 
 QuadBatchC Renderer::batchC()
 {
-	return {(int*)RI->batchPos, (color32*)RI->batchCol};
+	return {(int*)RI->batchPos, (uint32_t*)RI->batchCol};
 }
 
 QuadBatchT Renderer::batchT()
@@ -434,7 +434,7 @@ QuadBatchT Renderer::batchT()
 
 QuadBatchTC Renderer::batchTC()
 {
-	return {(int*)RI->batchPos, (float*)RI->batchUvs, (color32*)RI->batchCol};
+	return {(int*)RI->batchPos, (float*)RI->batchUvs, (uint32_t*)RI->batchCol};
 }
 
 const TileRect& Renderer::getRoundedBox()

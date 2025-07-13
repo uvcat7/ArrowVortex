@@ -33,11 +33,11 @@ struct Entry
 
 struct EntryData
 {
-	uint id;
+	uint32_t id;
 	Chart* chart;
 	Tempo* tempo;
-	uint size;
-	const uchar* data;
+	uint32_t size;
+	const uint8_t* data;
 };
 
 struct EntryList
@@ -76,7 +76,7 @@ struct EntryList
 // ================================================================================================
 // HistoryImpl :: helper functions.
 
-static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Tempo* t)
+static Entry* CreateEntry(EditId id, const void* data, uint32_t size, Chart* c, Tempo* t)
 {
 	bool hasChart = (c != nullptr);
 	bool hasTempo = (t != nullptr);
@@ -84,7 +84,7 @@ static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Temp
 	WriteStream header;
 	header.write<Entry>({nullptr});
 
-	uint flags = (id << 2) | (hasTempo << 1) | (hasChart << 0);
+	uint32_t flags = (id << 2) | (hasTempo << 1) | (hasChart << 0);
 	header.writeNum(flags);
 	if(hasChart) header.write(c);
 	if(hasTempo) header.write(t);
@@ -97,7 +97,7 @@ static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Temp
 		hasTempo ? 'y' : 'n');
 #endif
 
-	uchar* mem = (uchar*)malloc(header.size() + size);
+	uint8_t* mem = (uint8_t*)malloc(header.size() + size);
 	memcpy(mem, header.data(), header.size());
 	memcpy(mem + header.size(), data, size);
 
@@ -112,7 +112,7 @@ static EntryData DecodeEntry(const Entry* in)
 
 	EntryData out = {0, nullptr, nullptr, 0, nullptr};
 
-	uint flags;
+	uint32_t flags;
 	header.readNum(flags);
 	if(flags & 1) header.read(out.chart);
 	if(flags & 2) header.read(out.tempo);
@@ -128,7 +128,7 @@ static Entry* Advance(Entry* it, Bindings& bound)
 {
 	ReadStream header(it + 1, INT_MAX);
 
-	uint flags;
+	uint32_t flags;
 	header.readNum(flags);
 	if(flags & 1) header.read(bound.chart);
 	if(flags & 2) header.read(bound.tempo);
@@ -221,7 +221,7 @@ void pushEntry(Entry* entry)
 	if(msg.len()) HudNote("%s", msg.str());
 }
 
-void addEntry(EditId id, const void* data, uint size, Chart* targetChart, Tempo* targetTempo)
+void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart, Tempo* targetTempo)
 {
 	if(id == 0 || id > (size_t)myCallbacks.size())
 	{
@@ -251,17 +251,17 @@ void addEntry(EditId id, const void* data, uint size, Chart* targetChart, Tempo*
 	}
 }
 
-void addEntry(EditId id, const void* data, uint size)
+void addEntry(EditId id, const void* data, uint32_t size)
 {
 	addEntry(id, data, size, nullptr, nullptr);
 }
 
-void addEntry(EditId id, const void* data, uint size, Tempo* targetTempo)
+void addEntry(EditId id, const void* data, uint32_t size, Tempo* targetTempo)
 {
 	addEntry(id, data, size, nullptr, targetTempo);
 }
 
-void addEntry(EditId id, const void* data, uint size, Chart* targetChart)
+void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart)
 {
 	addEntry(id, data, size, targetChart, nullptr);
 }

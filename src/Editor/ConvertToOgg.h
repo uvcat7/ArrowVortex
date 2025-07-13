@@ -10,7 +10,7 @@ namespace Vortex {
 struct OggConversionThread : public BackgroundThread
 {
 	OggConversionThread();
-	uchar progress;
+	uint8_t progress;
 	String outPath, error;
 	void exec() override;
 };

@@ -244,7 +244,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; box != end; ++box)
 		{
-			uint set = pred(box);
+			uint32_t set = pred(box);
 			numSelected += set;
 			box->isSelected = set;
 		}
@@ -253,7 +253,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; box != end; ++box)
 		{
-			uint set = pred(box);
+			uint32_t set = pred(box);
 			numSelected += set & (box->isSelected ^ 1);
 			box->isSelected |= set;
 		}
@@ -262,7 +262,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; box != end; ++box)
 		{
-			uint set = pred(box);
+			uint32_t set = pred(box);
 			numSelected += set & box->isSelected;
 			box->isSelected &= set ^ 1;
 		}
@@ -374,7 +374,7 @@ void draw()
 		int flags = side * TileBar::FLIP_H;
 		recti r = {x, y - 16, (int)box.width, 32};
 
-		color32 color = Segment::meta[box.type]->color;
+		uint32_t color = Segment::meta[box.type]->color;
 		myBoxBar.draw(&batch, r, color, flags);
 		if(box.isSelected) myBoxHl.draw(&batch, r, Colors::white, flags);
 

@@ -42,7 +42,7 @@ static bool LoadTexture(StringRef path, StringRef dir, Texture& out)
 	out = Texture((dir + path).str());
 	if(out.handle()) return true;
 
-	uchar dummyTex[4] = {255, 0, 255, 255};
+	uint8_t dummyTex[4] = {255, 0, 255, 255};
 	out = Texture(1, 1, dummyTex);
 	return false;
 }

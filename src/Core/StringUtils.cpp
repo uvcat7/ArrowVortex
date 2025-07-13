@@ -243,7 +243,7 @@ int Str::readInt(StringRef s, int alt)
 	return alt;
 }
 
-uint Str::readUint(StringRef s, uint alt)
+uint32_t Str::readUint(StringRef s, uint32_t alt)
 {
 	read(s, &alt);
 	return alt;
@@ -299,10 +299,10 @@ bool Str::read(StringRef s, int* out)
 	return true;
 }
 
-bool Str::read(StringRef s, uint* out)
+bool Str::read(StringRef s, uint32_t* out)
 {
 	char* end;
-	uint v = strtoul(s.string_, &end, 10);
+	uint32_t v = strtoul(s.string_, &end, 10);
 	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
 	*out = v;
 	return true;
@@ -675,7 +675,7 @@ static int PrintInt(char* buf, int v, int minDig, bool hex)
 	return (len < 0) ? DBL_BUFLEN : len;
 }
 
-static int PrintUint(char* buf, uint v, int minDig, bool hex)
+static int PrintUint(char* buf, uint32_t v, int minDig, bool hex)
 {
 	int len;
 	if(minDig <= 0)
@@ -727,7 +727,7 @@ String Str::val(int v, int minDig, bool hex)
 	return String(buf, PrintInt(buf, v, minDig, hex));
 }
 
-String Str::val(uint v, int minDig, bool hex)
+String Str::val(uint32_t v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	return String(buf, PrintUint(buf, v, minDig, hex));
@@ -751,7 +751,7 @@ void Str::appendVal(String& s, int v, int minDig, bool hex)
 	append(s, buf, PrintInt(buf, v, minDig, hex));
 }
 
-void Str::appendVal(String& s, uint v, int minDig, bool hex)
+void Str::appendVal(String& s, uint32_t v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	append(s, buf, PrintUint(buf, v, minDig, hex));
@@ -784,7 +784,7 @@ Fmt& Fmt::arg(int v, int minDig, bool hex)
 	return arg(buf, PrintInt(buf, v, minDig, hex));
 }
 
-Fmt& Fmt::arg(uint v, int minDig, bool hex)
+Fmt& Fmt::arg(uint32_t v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	return arg(buf, PrintUint(buf, v, minDig, hex));
@@ -872,15 +872,15 @@ Fmt& Fmt::arg(const char* s, int n)
 // ================================================================================================
 // Str:: expression parsing.
 
-static const uchar* ParseNestedExpression(const uchar* p, double& out);
+static const uint8_t* ParseNestedExpression(const uint8_t* p, double& out);
 
-inline const uchar* SkipWs(const uchar* p)
+inline const uint8_t* SkipWs(const uint8_t* p)
 {
 	while(*p == ' ' || *p == '\t') ++p;
 	return p;
 }
 
-static const uchar* ParseNumber(const uchar* p, double& out)
+static const uint8_t* ParseNumber(const uint8_t* p, double& out)
 {
 	// Digits leading up to the decimal-point.
 	uint64_t sum = 0;
@@ -928,7 +928,7 @@ static const uchar* ParseNumber(const uchar* p, double& out)
 	return SkipWs(p);
 }
 
-static const uchar* ParseOperandWithSign(const uchar* p, double& out)
+static const uint8_t* ParseOperandWithSign(const uint8_t* p, double& out)
 {
 	char sign = *p;
 	p = SkipWs(++p);
@@ -945,7 +945,7 @@ static const uchar* ParseOperandWithSign(const uchar* p, double& out)
 	return p;
 }
 
-static const uchar* ParseMultiplicationOperand(const uchar* p, double& out)
+static const uint8_t* ParseMultiplicationOperand(const uint8_t* p, double& out)
 {
 	if(*p == '(')
 	{
@@ -963,7 +963,7 @@ static const uchar* ParseMultiplicationOperand(const uchar* p, double& out)
 	return p;
 }
 
-static const uchar* ParseAdditionOperand(const uchar* p, double& out)
+static const uint8_t* ParseAdditionOperand(const uint8_t* p, double& out)
 {
 	p = ParseMultiplicationOperand(p, out);
 	while(*p == '*' || *p == '/')
@@ -976,7 +976,7 @@ static const uchar* ParseAdditionOperand(const uchar* p, double& out)
 	return p;
 }
 
-static const uchar* ParseNestedExpression(const uchar* p, double& out)
+static const uint8_t* ParseNestedExpression(const uint8_t* p, double& out)
 {
 	p = ParseAdditionOperand(p, out);
 	while(*p == '+' || *p == '-')
@@ -992,8 +992,8 @@ static const uchar* ParseNestedExpression(const uchar* p, double& out)
 bool Str::parse(const char* expr, double& out)
 {
 	double tmp = 0.0;
-	const uchar* begin = SkipWs((const uchar*)expr);
-	const uchar* p = ParseNestedExpression(begin, tmp);
+	const uint8_t* begin = SkipWs((const uint8_t*)expr);
+	const uint8_t* p = ParseNestedExpression(begin, tmp);
 	if(p > begin) out = tmp;
 	return (p > begin);
 }

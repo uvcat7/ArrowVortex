@@ -152,7 +152,7 @@ bool GuiContextImpl::bind(StringRef slot, const int* v)
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const uint* v)
+bool GuiContextImpl::bind(StringRef slot, const uint32_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
@@ -166,7 +166,7 @@ bool GuiContextImpl::bind(StringRef slot, const long* v)
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const ulong* v)
+bool GuiContextImpl::bind(StringRef slot, const uint64_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
@@ -215,7 +215,7 @@ bool GuiContextImpl::bind(StringRef slot, int* v)
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, uint* v)
+bool GuiContextImpl::bind(StringRef slot, uint32_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
@@ -229,7 +229,7 @@ bool GuiContextImpl::bind(StringRef slot, long* v)
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, ulong* v)
+bool GuiContextImpl::bind(StringRef slot, uint64_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);

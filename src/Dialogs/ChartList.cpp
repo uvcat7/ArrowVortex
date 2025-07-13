@@ -74,7 +74,7 @@ void onDraw() override
 	{
 		// Draw the left-side colored bar with difficulty and meter.
 		recti left = {rect_.x, rect_.y, min(r.w, 128), 20};
-		color32 color = ToColor(chart->difficulty);
+		uint32_t color = ToColor(chart->difficulty);
 		myBar->draw(left, 0, color);
 
 		Text::arrange(Text::ML, textStyle, GetDifficultyName(chart->difficulty));

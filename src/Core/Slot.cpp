@@ -200,10 +200,10 @@ void ValueSlot::bind(const int* v)
 	data_ = new ConstIntPtr<int>(v);
 }
 
-void ValueSlot::bind(const uint* v)
+void ValueSlot::bind(const uint32_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new ConstIntPtr<uint>(v);
+	data_ = new ConstIntPtr<uint32_t>(v);
 }
 
 void ValueSlot::bind(const long* v)
@@ -212,10 +212,10 @@ void ValueSlot::bind(const long* v)
 	data_ = new ConstIntPtr<long>(v);
 }
 
-void ValueSlot::bind(const ulong* v)
+void ValueSlot::bind(const uint64_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new ConstIntPtr<ulong>(v);
+	data_ = new ConstIntPtr<uint64_t>(v);
 }
 
 void ValueSlot::bind(const float* v)
@@ -242,10 +242,10 @@ void ValueSlot::bind(int* v)
 	data_ = new IntPtr<int>(v);
 }
 
-void ValueSlot::bind(uint* v)
+void ValueSlot::bind(uint32_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new IntPtr<uint>(v);
+	data_ = new IntPtr<uint32_t>(v);
 }
 
 void ValueSlot::bind(long* v)
@@ -254,10 +254,10 @@ void ValueSlot::bind(long* v)
 	data_ = new IntPtr<long>(v);
 }
 
-void ValueSlot::bind(ulong* v)
+void ValueSlot::bind(uint64_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new IntPtr<ulong>(v);
+	data_ = new IntPtr<uint64_t>(v);
 }
 
 void ValueSlot::bind(float* v)

@@ -234,18 +234,18 @@ void NoteList::sanitize(const Chart* chart)
 
 	Vector<int> endrowVec(numCols, -1);
 	int* endrows = endrowVec.data();
-	uint col = -1;
+	uint32_t col = -1;
 	int row = -1;
 
 	// Make sure all notes are valid, sorted, and do not overlap.
 	for(auto& note : *this)
 	{
-		if(note.col >= (uint)numCols)
+		if(note.col >= (uint32_t)numCols)
 		{
 			++numInvalidCols;
 			note.row = -1;
 		}
-		else if(note.player >= (uint)numPlayers)
+		else if(note.player >= (uint32_t)numPlayers)
 		{
 			++numInvalidPlayers;
 			note.row = -1;
@@ -475,17 +475,17 @@ static void EncodeNote(WriteStream& out, const Note& in, int offsetRows)
 {
 	if(in.row == in.endrow && in.player == 0 && in.type == 0)
 	{
-		out.write<uchar>(in.col);
+		out.write<uint8_t>(in.col);
 		out.writeNum(in.row + offsetRows);
-		out.write<uchar>(in.quant);
+		out.write<uint8_t>(in.quant);
 	}
 	else
 	{
-		out.write<uchar>(in.col | 0x80);
+		out.write<uint8_t>(in.col | 0x80);
 		out.writeNum(in.row + offsetRows);
 		out.writeNum(in.endrow + offsetRows);
-		out.write<uchar>((in.player << 4) | in.type);
-		out.write<uchar>(in.quant);
+		out.write<uint8_t>((in.player << 4) | in.type);
+		out.write<uint8_t>(in.quant);
 	}
 }
 
@@ -494,17 +494,17 @@ static void EncodeNote(WriteStream& out, const Note& in, TempoTimeTracker& track
 	double time = tracker.advance(in.row);
 	if(in.row == in.endrow && in.player == 0 && in.type == 0)
 	{
-		out.write<uchar>(in.col);
+		out.write<uint8_t>(in.col);
 		out.write<double>(time + offsetTime);
-		out.write<uchar>(in.quant);
+		out.write<uint8_t>(in.quant);
 	}
 	else
 	{
-		out.write<uchar>(in.col | 0x80);
+		out.write<uint8_t>(in.col | 0x80);
 		out.write<double>(time + offsetTime);
 		out.write<double>(tracker.lookAhead(in.endrow) + offsetTime);
-		out.write<uchar>((in.player << 4) | in.type);
-		out.write<uchar>(in.quant);
+		out.write<uint8_t>((in.player << 4) | in.type);
+		out.write<uint8_t>(in.quant);
 	}
 }
 
@@ -533,11 +533,11 @@ static void ApplyQuantOffset(Note& out, int offsetRows)
 
 static void DecodeNote(ReadStream& in, Note& out, int offsetRows)
 {
-	uchar col = in.read<uchar>();
+	uint8_t col = in.read<uint8_t>();
 	if((col & 0x80) == 0)
 	{
 		int row = in.readNum() + offsetRows;
-		uchar quant = in.read<uchar>();
+		uint8_t quant = in.read<uint8_t>();
 		out = { row, row, col, 0, 0, quant };
 	}
 	else
@@ -545,23 +545,23 @@ static void DecodeNote(ReadStream& in, Note& out, int offsetRows)
 		out.col = col & 0x7F;
 		out.row = in.readNum() + offsetRows;
 		out.endrow = in.readNum() + offsetRows;
-		uint v = in.read<uchar>();
+		uint32_t v = in.read<uint8_t>();
 		out.player = v >> 4;
 		out.type = v & 0xF;
-		out.quant = in.read<uchar>();
+		out.quant = in.read<uint8_t>();
 	}
 	ApplyQuantOffset(out, offsetRows);
 }
 
 static void DecodeNote(ReadStream& in, Note& out, TempoRowTracker& tracker, double offsetTime)
 {
-	uchar col = in.read<uchar>();
+	uint8_t col = in.read<uint8_t>();
 	int offsetRows = tracker.lookAhead(offsetTime);
 	if((col & 0x80) == 0)
 	{
 		double time = in.read<double>() + offsetTime;
 		int row = tracker.advance(time);
-		uchar quant = in.read<uchar>();
+		uint8_t quant = in.read<uint8_t>();
 		out = {row, row, col, 0, 0, quant};
 	}
 	else
@@ -571,10 +571,10 @@ static void DecodeNote(ReadStream& in, Note& out, TempoRowTracker& tracker, doub
 		out.row = tracker.advance(time);
 		double endTime = in.read<double>() + offsetTime;
 		out.endrow = tracker.lookAhead(time);
-		uint v = in.read<uchar>();
+		uint32_t v = in.read<uint8_t>();
 		out.player = v >> 4;
 		out.type = v & 0xF;
-		out.quant = in.read<uchar>();
+		out.quant = in.read<uint8_t>();
 	}
 	ApplyQuantOffset(out, offsetRows);
 }
@@ -611,8 +611,8 @@ void NoteList::encode(WriteStream& out, const TimingData& timing, bool removeOff
 void NoteList::decode(ReadStream& in, int offsetRows)
 {
 	Note note;
-	uint num = in.readNum();
-	for(uint i = 0; i < num; ++i)
+	uint32_t num = in.readNum();
+	for(uint32_t i = 0; i < num; ++i)
 	{
 		DecodeNote(in, note, offsetRows);
 		append(note);
@@ -623,8 +623,8 @@ void NoteList::decode(ReadStream& in, const TimingData& timing, double offsetTim
 {
 	TempoRowTracker tracker(timing);
 	Note note;
-	uint num = in.readNum();
-	for(uint i = 0; i < num; ++i)
+	uint32_t num = in.readNum();
+	for(uint32_t i = 0; i < num; ++i)
 	{
 		DecodeNote(in, note, tracker, offsetTime);
 		append(note);
