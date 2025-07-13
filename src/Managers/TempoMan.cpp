@@ -471,7 +471,7 @@ static bool Differs(const BpmRange& a, const BpmRange& b)
 
 static double ClampAndRound(double val, double min, double max)
 {
-	return round(clamp(val, min, max) * 1000.0) / 1000.0;
+	return round(clamp(val, min, max) * 1000000.0) / 1000000.0;
 }
 
 void modify(const SegmentEdit& edit)
@@ -606,7 +606,7 @@ void pasteFromClipboard(bool insert)
 	SegmentEdit clipboard;
 
 	// Decode the clipboard data.	
-	Vector<uchar> data = GetClipboardData(clipboardTag);
+	Vector<uint8_t> data = GetClipboardData(clipboardTag);
 	ReadStream stream(data.begin(), data.size());
 	clipboard.add.decode(stream);
 	if(stream.success() == false || stream.bytesleft() > 0)

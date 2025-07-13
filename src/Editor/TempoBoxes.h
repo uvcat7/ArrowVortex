@@ -11,8 +11,8 @@ struct TempoBox
 	int row;
 	Segment::Type type;
 	signed int x : 16;
-	uint width : 15;
-	uint isSelected : 1;
+	uint32_t width : 15;
+	uint32_t isSelected : 1;
 };
 
 struct TempoBoxes

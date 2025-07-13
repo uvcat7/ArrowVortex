@@ -132,7 +132,7 @@ void WgScrollbar::onMousePress(MousePress& evt)
 	{
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
-			uint action = GetScrollbarActionAtPosition(evt.x, evt.y);
+			uint32_t action = GetScrollbarActionAtPosition(evt.x, evt.y);
 			if(action)
 			{
 				startCapturingMouse();
@@ -178,7 +178,7 @@ void WgScrollbar::onTick()
 void WgScrollbar::onDraw()
 {
 	vec2i mpos = gui_->getMousePos();
-	uint action = GetScrollbarActionAtPosition(mpos.x, mpos.y);
+	uint32_t action = GetScrollbarActionAtPosition(mpos.x, mpos.y);
 
 	if(isVertical())
 	{
@@ -200,7 +200,7 @@ void WgScrollbar::ScrollbarUpdateValue(int v)
 	if(value.get() != prev) onChange.call();
 }
 
-uint WgScrollbar::GetScrollbarActionAtPosition(int x, int y)
+uint32_t WgScrollbar::GetScrollbarActionAtPosition(int x, int y)
 {
 	if(scrollbar_action_) return scrollbar_action_;
 	if(!IsInside(rect_, x, y)) return ACT_NONE;
@@ -290,7 +290,7 @@ void WgScrollRegion::onMousePress(MousePress& evt)
 	{
 		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
 		{
-			uint action = getScrollRegionActionAt_(evt.x, evt.y);
+			uint32_t action = getScrollRegionActionAt_(evt.x, evt.y);
 			if(action)
 			{
 				startCapturingMouse();
@@ -329,7 +329,7 @@ void WgScrollRegion::onTick()
 void WgScrollRegion::onDraw()
 {
 	vec2i mpos = gui_->getMousePos();
-	uint action = getScrollRegionActionAt_(mpos.x, mpos.y);
+	uint32_t action = getScrollRegionActionAt_(mpos.x, mpos.y);
 
 	int viewW = getViewWidth();
 	int viewH = getViewHeight();
@@ -420,7 +420,7 @@ void WgScrollRegion::PostTick()
 	GuiWidget::onTick();
 }
 
-uint WgScrollRegion::getScrollRegionActionAt_(int x, int y)
+uint32_t WgScrollRegion::getScrollRegionActionAt_(int x, int y)
 {
 	if(scroll_region_action_) return scroll_region_action_;
 

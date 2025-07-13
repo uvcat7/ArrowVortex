@@ -21,7 +21,7 @@ static LLayout* LD = nullptr;
 // ================================================================================================
 // Utility functions
 
-const uchar utf8TrailingBytes[256] =
+const uint8_t utf8TrailingBytes[256] =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -33,7 +33,7 @@ const uchar utf8TrailingBytes[256] =
 	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
 };
 
-const uint utf8MultibyteResidu[6] =
+const uint32_t utf8MultibyteResidu[6] =
 {
 	0x0, 0x3080, 0xE2080, 0x3C82080, 0xFA082080, 0x82082080
 };
@@ -50,7 +50,7 @@ static const Glyph* GetGlyph(int charcode);
 #define ID4(a, b, c, d)    ((ID3(a, b, c) << 8) | d)
 #define ID5(a, b, c, d, e) ((ID4(a, b, c, d) << 8) | e)
 
-static double ReadNumber(const uchar* p, int len)
+static double ReadNumber(const uint8_t* p, int len)
 {
 	bool negative = false;
 	double out = 0.0;
@@ -102,7 +102,7 @@ static int HexDigit(int c)
 	return 0;
 }
 
-static int ReadHexColor(uchar* out, const uchar* p, int n)
+static int ReadHexColor(uint8_t* out, const uint8_t* p, int n)
 {
 	int numComponents = 0;
 	switch(n)
@@ -129,9 +129,9 @@ static int ReadHexColor(uchar* out, const uchar* p, int n)
 	return numComponents;
 }
 
-static void ReadMarkupColor(color32& out, const uchar* param, int len, color32 base)
+static void ReadMarkupColor(uint32_t& out, const uint8_t* param, int len, uint32_t base)
 {
-	uchar channels[4];
+	uint8_t channels[4];
 	switch(ReadHexColor(channels, param, len))
 	{
 	case 2:
@@ -146,7 +146,7 @@ static void ReadMarkupColor(color32& out, const uchar* param, int len, color32 b
 	};
 }
 
-static void ReadTextColor(const uchar* param, int len)
+static void ReadTextColor(const uint8_t* param, int len)
 {
 	ReadMarkupColor(LD->textColor, param, len, LD->baseTextColor);
 	auto& item = LD->markup.append();
@@ -155,7 +155,7 @@ static void ReadTextColor(const uchar* param, int len)
 	item.setTextColor = LD->textColor;
 }
 
-static void ReadShadowColor(const uchar* param, int len)
+static void ReadShadowColor(const uint8_t* param, int len)
 {
 	ReadMarkupColor(LD->shadowColor, param, len, LD->baseShadowColor);
 	auto& item = LD->markup.append();
@@ -164,7 +164,7 @@ static void ReadShadowColor(const uchar* param, int len)
 	item.setShadowColor = LD->shadowColor;
 }
 
-static void ReadFontSize(const uchar* param, int len)
+static void ReadFontSize(const uint8_t* param, int len)
 {
 	int fontSize = (int)(ReadNumber(param, len) + 0.5);
 
@@ -184,7 +184,7 @@ static void ReadFontSize(const uchar* param, int len)
 	SetLineMetrics();
 }
 
-static void ReadFontChange(const uchar* param, int len)
+static void ReadFontChange(const uint8_t* param, int len)
 {
 	// Resolve the path of the font file (could be an asset name).
 	String path((const char*)param, len);
@@ -196,7 +196,7 @@ static void ReadFontChange(const uchar* param, int len)
 	SetLineMetrics();
 }
 
-static void ReadFgColor(const uchar* param, int len)
+static void ReadFgColor(const uint8_t* param, int len)
 {
 	if(LD->fgQuad.enabled)
 	{
@@ -207,7 +207,7 @@ static void ReadFgColor(const uchar* param, int len)
 		quad.w = LD->lineW - LD->fgQuad.x;
 		LD->fgQuad.enabled = false;
 	}
-	union { color32 color; uchar channels[4]; };
+	union { uint32_t color; uint8_t channels[4]; };
 	if(ReadHexColor(channels, param, len))
 	{
 		LD->fgQuad.enabled = true;
@@ -216,7 +216,7 @@ static void ReadFgColor(const uchar* param, int len)
 	}
 }
 
-static void ReadBgColor(const uchar* param, int len)
+static void ReadBgColor(const uint8_t* param, int len)
 {
 	if(LD->bgQuad.enabled)
 	{
@@ -227,7 +227,7 @@ static void ReadBgColor(const uchar* param, int len)
 		quad.w = LD->lineW - LD->bgQuad.x;
 		LD->bgQuad.enabled = false;
 	}
-	union { color32 color; uchar channels[4]; };
+	union { uint32_t color; uint8_t channels[4]; };
 	if(ReadHexColor(channels, param, len))
 	{
 		LD->bgQuad.enabled = true;
@@ -236,10 +236,10 @@ static void ReadBgColor(const uchar* param, int len)
 	}
 }
 
-static const Glyph* ReadMarkup(const uchar* str)
+static const Glyph* ReadMarkup(const uint8_t* str)
 {
 	// Keep reading tags until a glyph is returned.
-	const uchar* p = str + LD->nextCharIndex;
+	const uint8_t* p = str + LD->nextCharIndex;
 	while(p[0] == '{')
 	{
 		LD->charIndex = LD->nextCharIndex;
@@ -249,13 +249,13 @@ static const Glyph* ReadMarkup(const uchar* str)
 		if(undo) ++p;
 
 		// Read the tag name.
-		const uchar* name = ++p;
+		const uint8_t* name = ++p;
 		while(*p && *p != '}' && *p != ':') ++p;
 		int nameLen = p - name;
 		if(*p == ':') ++p;
 
 		// Read the tag parameters.
-		const uchar* param = p;
+		const uint8_t* param = p;
 		while(*p && *p != '}') ++p;
 		int paramLen = p - param;
 		if(*p == '}') ++p;
@@ -335,7 +335,7 @@ static void SetLineMetrics()
 	LD->lineBottom = max(LD->lineBottom, LD->fontSize / 4);
 }
 
-static const Glyph* ReadGlyph(const uchar* str)
+static const Glyph* ReadGlyph(const uint8_t* str)
 {
 	int charcode = str[LD->nextCharIndex];
 
@@ -357,7 +357,7 @@ static const Glyph* ReadGlyph(const uchar* str)
 	// Keep reading if the current character is multibyte UTF-8.
 	if(charcode >= 0x80)
 	{
-		const uchar* p = str + LD->nextCharIndex;
+		const uint8_t* p = str + LD->nextCharIndex;
 		int tb = utf8TrailingBytes[charcode];
 		for(int i = 0; i < tb && *p; ++i, ++p) charcode = (charcode << 6) + *p;
 		charcode -= utf8MultibyteResidu[tb];
@@ -536,7 +536,7 @@ static void CreateLayout(const char* str)
 	bool isMultiline = !(LD->flags & Text::SINGLE_LINE);
 	while(true)
 	{
-		auto glyph = ReadGlyph((const uchar*)str);
+		auto glyph = ReadGlyph((const uint8_t*)str);
 		if(!glyph) break;
 
 		// Apply glyph advance.

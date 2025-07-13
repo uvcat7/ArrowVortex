@@ -30,8 +30,8 @@ struct Shortcut { String a, b; bool isHeader; };
 
 static const int NUM_ICONS = 16;
 
-static uchar supportLink[] = "https://discord.gg/GCNAyDmjqy";
-static uchar githubLink[] = "https://github.com/uvcat7/ArrowVortex";
+static uint8_t supportLink[] = "https://discord.gg/GCNAyDmjqy";
+static uint8_t githubLink[] = "https://github.com/uvcat7/ArrowVortex";
 
 static const char* iconNames[NUM_ICONS] = {
 	"up one",
@@ -591,7 +591,7 @@ void drawAbout()
 {
 	vec2i size = gSystem->getWindowSize();
 
-	Text::arrange(Text::BC, "ArrowVortex release v1.0.0");
+	Text::arrange(Text::BC, "ArrowVortex release v1.0.1");
 	Text::draw(vec2i{size.x / 2, size.y / 2 - 128});
 	String buildDate = "Build date: " + System::getBuildData();
 	Text::arrange(Text::TC, buildDate.str());
@@ -618,6 +618,7 @@ void drawAbout()
 		"@Psycast/Velocity\n"
 		"@DeltaEpsilon7787/Delta Epsilon\n"
 	    "@DolpinChips/insep\n"
+		"@ScottBrenner/bren\n"
 		"\n"
 		"Original program and many thanks to : \n"
 		"Bram 'Fietsemaker' van de Wetering\n");

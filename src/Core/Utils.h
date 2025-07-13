@@ -299,33 +299,52 @@ inline colorf ToColor(float l, float a = 1.0f)
 	return {l, l, l, a};
 }
 
-inline colorf ToColorf(color32 color)
+inline colorf ToColorf(uint32_t color)
 {
-	union { uchar c[4]; color32 c32; };
+	union { uint8_t c[4]; uint32_t c32; };
 	c32 = color;
 	return{c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f};
 }
 
-inline color32 ToColor32(const colorf& c)
+inline uint32_t ToColor32(const colorf& c)
 {
-	union { uchar u8[4]; color32 u32; };
-	u8[0] = (uchar)min(max(0, (int)(c.r * 255.0f)), 255);
-	u8[1] = (uchar)min(max(0, (int)(c.g * 255.0f)), 255);
-	u8[2] = (uchar)min(max(0, (int)(c.b * 255.0f)), 255);
-	u8[3] = (uchar)min(max(0, (int)(c.a * 255.0f)), 255);
+	union { uint8_t u8[4]; uint32_t u32; };
+	u8[0] = (uint8_t)min(max(0, (int)(c.r * 255.0f)), 255);
+	u8[1] = (uint8_t)min(max(0, (int)(c.g * 255.0f)), 255);
+	u8[2] = (uint8_t)min(max(0, (int)(c.b * 255.0f)), 255);
+	u8[3] = (uint8_t)min(max(0, (int)(c.a * 255.0f)), 255);
 	return u32;
 }
 
-inline color32 ToColor32(float r, float g, float b, float a)
+inline uint32_t ToColor32(float r, float g, float b, float a)
 {
-	union { uchar u8[4]; color32 u32; };
-	u8[0] = (uchar)min(max(0, (int)(r * 255.0f)), 255);
-	u8[1] = (uchar)min(max(0, (int)(g * 255.0f)), 255);
-	u8[2] = (uchar)min(max(0, (int)(b * 255.0f)), 255);
-	u8[3] = (uchar)min(max(0, (int)(a * 255.0f)), 255);
+	union { uint8_t u8[4]; uint32_t u32; };
+	u8[0] = (uint8_t)min(max(0, (int)(r * 255.0f)), 255);
+	u8[1] = (uint8_t)min(max(0, (int)(g * 255.0f)), 255);
+	u8[2] = (uint8_t)min(max(0, (int)(b * 255.0f)), 255);
+	u8[3] = (uint8_t)min(max(0, (int)(a * 255.0f)), 255);
 	return u32;
 }
 
+static int gcd(int a, int b)
+{
+	if (a == 0)
+	{
+		return b;
+	}
+	if (b == 0)
+	{
+		return a;
+	}
+	if (a > b)
+	{
+		return gcd(a - b, b);
+	}
+	else
+	{
+		return gcd(a, b - a);
+	}
+}
 }; // namespace Vortex
 
 #undef TT

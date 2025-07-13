@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BackendCodeEditorMiscSettings">
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="20" type="long" />
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
+    <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
+  </component>
+  <component name="CMakePresetLoader"><![CDATA[{
+  "useNewFormat": true
+}]]></component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeReloadState">
+    <option name="reloaded" value="true" />
+  </component>
+  <component name="CMakeRunConfigurationManager">
+    <generated>
+      <config projectName="ArrowVortex" targetName="Simfile" />
+      <config projectName="ArrowVortex" targetName="Core" />
+      <config projectName="ArrowVortex" targetName="System" />
+      <config projectName="ArrowVortex" targetName="ArrowVortex" />
+      <config projectName="ArrowVortex" targetName="Editor" />
+      <config projectName="ArrowVortex" targetName="Dialogs" />
+      <config projectName="ArrowVortex" targetName="Managers" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" GENERATION_DIR="build" CONFIG_NAME="Debug" TOOLCHAIN_NAME="Default" GENERATION_OPTIONS="-DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_TOOLCHAIN_FILE=/home/nobbele/.local/share/vcpkg/scripts/buildsystems/vcpkg.cmake" BUILD_OPTIONS="-j 12" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e237f3f4-561a-4702-89f6-d8b0c27e36a8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.github/dependabot.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/windows.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/windows.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/ByteStream.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/ByteStream.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/ByteStream.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/ByteStream.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Canvas.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Canvas.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Core.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Core.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Draw.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Draw.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Draw.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Draw.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/FontData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/FontData.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/FontData.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/FontData.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/FontManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/FontManager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Gui.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Gui.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiContext.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiContext.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiContext.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiContext.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiDialog.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiDialog.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiDialog.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiDialog.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiDraw.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiDraw.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiDraw.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiDraw.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/GuiWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/GuiWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/ImageLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/ImageLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/QuadBatch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/QuadBatch.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/QuadBatch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/QuadBatch.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Renderer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Renderer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Renderer.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Renderer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Shader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Shader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Shader.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Shader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Slot.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Slot.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Slot.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Slot.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/StringUtils.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/StringUtils.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/StringUtils.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/StringUtils.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Text.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Text.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/TextDraw.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/TextDraw.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/TextLayout.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/TextLayout.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/TextLayout.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/TextLayout.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Texture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Texture.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/TextureImpl.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/TextureImpl.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/TextureImpl.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/TextureImpl.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Utils.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Utils.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/WideString.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/WideString.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Widgets.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Widgets.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/WidgetsColor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/WidgetsColor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/WidgetsLayout.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/WidgetsLayout.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/WidgetsScroll.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/WidgetsScroll.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/WidgetsSelect.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/WidgetsSelect.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/WidgetsText.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/WidgetsText.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Core/Xmr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Core/Xmr.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/AdjustSync.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/AdjustSync.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/AdjustTempo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/AdjustTempo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/AdjustTempoSM5.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/AdjustTempoSM5.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/ChartList.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/ChartList.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/CustomSnap.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/CustomSnap.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/DancingBot.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/DancingBot.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Dialogs/DancingBot.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Dialogs/DancingBot.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Common.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Common.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Common.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/ConvertToOgg.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/ConvertToOgg.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/ConvertToOgg.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/ConvertToOgg.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Editing.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Editing.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/FindTempo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/FindTempo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/History.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/History.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/History.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/History.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/LoadMp3.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/LoadMp3.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/LoadWav.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/LoadWav.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Minimap.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Minimap.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Notefield.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Notefield.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Selection.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Selection.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Sound.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Sound.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/StreamGenerator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/StreamGenerator.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/TempoBoxes.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/TempoBoxes.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/TempoBoxes.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/TempoBoxes.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/TextOverlay.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/TextOverlay.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/View.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/View.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Editor/Waveform.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Editor/Waveform.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Managers/MetadataMan.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Managers/MetadataMan.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Managers/NoteMan.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Managers/NoteMan.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Managers/NoteskinMan.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Managers/NoteskinMan.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Managers/TempoMan.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Managers/TempoMan.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Common.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Encoding.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Encoding.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/LoadDwi.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/LoadDwi.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/LoadOsu.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/LoadOsu.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/LoadSm.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/LoadSm.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/NoteList.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/NoteList.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Notes.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Notes.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Notes.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Notes.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/SaveSm.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/SaveSm.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/SegmentGroup.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/SegmentGroup.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/SegmentList.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/SegmentList.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/SegmentList.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/SegmentList.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Segments.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Segments.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Segments.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Segments.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/Testing.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/Testing.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Simfile/TimingData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Simfile/TimingData.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/System/Thread.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/System/Thread.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/System/Thread.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/System/Thread.h" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ByteStream.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/FontData.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/FontData.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/FontData.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/FontData.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/FontData.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/ImageLoader.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/String.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/StringUtils.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/Xmr.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Core/Xmr.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Dialogs/SongProperties.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Editor.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Editor.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Editor.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Editor.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Editor.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Editor.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/LoadMp3.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/LoadOgg.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/LoadWav.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Music.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Notefield.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Sound.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Sound.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Editor/Sound.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/MetadataMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/MetadataMan.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/NoteskinMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Managers/SimfileMan.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/LoadDwi.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/LoadOsu.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/LoadSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/Parsing.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/Parsing.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveOsu.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveOsu.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/Simfile/SaveSm.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/File.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/System.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/System.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///home/nobbele/Projects/ArrowVortex/src/System/System.h" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="ProblemsViewState">
+    <hideBySeverity>
+      <option value="11" />
+      <option value="12" />
+      <option value="13" />
+      <option value="14" />
+      <option value="15" />
+      <option value="16" />
+      <option value="200" />
+      <option value="300" />
+    </hideBySeverity>
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectApplicationVersion">
+    <option name="ide" value="CLion" />
+    <option name="majorVersion" value="2025" />
+    <option name="minorVersion" value="1.3" />
+    <option name="productBranch" value="Classic" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="2zmQdC0vhiF7FQMvYDwLk5tzg6R" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "CMake Application.ArrowVortex.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.west.config.association.type.startup.service": "true",
+    "cf.advertisement.text.has.clang-format": "true",
+    "cf.advertisement.text.overridden": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "Merging linux-4-mingw32",
+    "last_opened_file_path": "/home/nobbele/Projects/ArrowVortex",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.smartKeys",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="CMake Application.ArrowVortex">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ArrowVortex" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="ArrowVortex" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="ArrowVortex" RUN_TARGET_NAME="ArrowVortex">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Core" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="Core" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Dialogs" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="Dialogs" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Editor" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="Editor" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Managers" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="Managers" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Simfile" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="Simfile" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="System" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="ArrowVortex" TARGET_NAME="System" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="CMake Application.ArrowVortex" />
+      <item itemvalue="CMake Application.Core" />
+      <item itemvalue="CMake Application.Dialogs" />
+      <item itemvalue="CMake Application.Editor" />
+      <item itemvalue="CMake Application.Managers" />
+      <item itemvalue="CMake Application.Simfile" />
+      <item itemvalue="CMake Application.System" />
+    </list>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e237f3f4-561a-4702-89f6-d8b0c27e36a8" name="Changes" comment="" />
+      <created>1752333854001</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1752333854001</updated>
+      <workItem from="1752333855857" duration="27773000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VCPKGProject">
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticReloadCMake value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/Core/Core.h</url>
+          <line>2</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

@@ -1,25 +1,20 @@
+name: Build & Latest Beta
+
 on:
   push:
   pull_request:
-    branches:
-      - beta
     paths-ignore:
       - '**.md'
-
-name: Latest Beta
 
 jobs:
   windows:
     name: "Build Windows x64"
     runs-on: windows-2022
-    defaults:
-      run:
-        working-directory: ${{github.workspace}}/main
+    permissions:
+      contents: read
     steps:
       - name: Get AV
         uses: actions/checkout@v4
-        with:
-          path: main
       - name: Get MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Obtain oggenc2.exe
@@ -31,13 +26,15 @@ jobs:
       - name: Build AV
         run: cmake --build build --config Release
       - name: Collect into a directory
+        if: github.ref_name == 'beta'
         run: |
           mkdir AV
           cmake --install build --config Release --prefix ./AV
           mv oggenc2.exe AV/bin
       - name: Upload artifact
+        if: github.ref_name == 'beta'
         uses: actions/upload-artifact@v4
         with:
           name: AV
-          path: main/AV/bin
+          path: AV/bin
           if-no-files-found: error
