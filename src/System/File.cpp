@@ -60,29 +60,6 @@ static const char* GetDirStart(const std::string& path)
 	return p;
 }
 
-static std::string::const_iterator GetDirStartIt(const std::string& path)
-{
-	if (path.empty()) {
-		return path.cbegin();
-	}
-	auto it = path.cbegin();
-	if (*it == '\\') {
-		if (*(it + 1) == '\\') {
-			it += 2;
-			if ((*it == '?' || *it == '.') && (*(it + 1) == '\\')) {
-				it += 2;
-			}
-		}
-	}
-	if (it != path.end() && *(it + 1) == ':') {
-		it += 2;
-		if (*it == '\\') {
-			++it;
-		}
-	}
-	return it;
-}
-
 // Returns true if the path is an absolute path, false otherwise.
 static bool IsAbsolutePath(const std::string& path)
 {
@@ -201,11 +178,11 @@ static std::string Concatenate(const std::string& first, const std::string& seco
 	}
 
 	// First, copy the characters in the path prefix.
-	auto dirBegin = GetDirStartIt(*pathBegin);
-	std::string out(pathBegin->begin(), dirBegin);
+	auto dirBeginP = GetDirStart(*pathBegin);
+	std::string out(pathBegin->data(), dirBeginP);
 
 	// If the first character after the prefix was a slash, append a slash.
-	if(dirBegin != pathBegin->end() && (*dirBegin == '\\' || *dirBegin == '/')) Str::append(out, '\\');
+	if(dirBeginP && (*dirBeginP == '\\' || *dirBeginP == '/')) Str::append(out, '\\');
 
 	// If the path is empty, we're done.
 	if(items.empty()) return out;
