@@ -62,6 +62,9 @@ static const char* GetDirStart(const std::string& path)
 
 static std::string::const_iterator GetDirStartIt(const std::string& path)
 {
+	if (path.empty()) {
+		return path.cbegin();
+	}
 	auto it = path.cbegin();
 	if (*it == '\\') {
 		if (*(it + 1) == '\\') {
@@ -202,7 +205,7 @@ static std::string Concatenate(const std::string& first, const std::string& seco
 	std::string out(pathBegin->begin(), dirBegin);
 
 	// If the first character after the prefix was a slash, append a slash.
-	if(*dirBegin == '\\' || *dirBegin == '/') Str::append(out, '\\');
+	if(dirBegin != pathBegin->end() && (*dirBegin == '\\' || *dirBegin == '/')) Str::append(out, '\\');
 
 	// If the path is empty, we're done.
 	if(items.empty()) return out;
