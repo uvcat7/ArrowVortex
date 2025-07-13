@@ -372,7 +372,7 @@ void finishNotePlacement(int col)
 
 		if (note.quant > 0 && note.quant <= 192)
 		{
-			note.quant = min(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
+			note.quant = min<uint32_t>(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
 		}
 		else
 		{
