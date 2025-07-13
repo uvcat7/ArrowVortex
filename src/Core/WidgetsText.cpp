@@ -92,7 +92,7 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 		else if(key == Key::A)
 		{
 			lineedit_cursor_.x = 0;
-			lineedit_cursor_.y = lineedit_text_.length();
+			lineedit_cursor_.y = static_cast<int>(lineedit_text_.length());
 			evt.handled = true;
 		}
 	}
@@ -100,7 +100,7 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 	{
 		int& cy = lineedit_cursor_.y;
 		if(key == Key::HOME) cy = 0;
-		if(key == Key::END) cy = lineedit_text_.length();
+		if(key == Key::END) cy = static_cast<int>(lineedit_text_.length());
 		if(key == Key::LEFT) cy = Str::prevChar(lineedit_text_, cy);
 		if(key == Key::RIGHT) cy = Str::nextChar(lineedit_text_, cy);
 	}
@@ -108,7 +108,7 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 	{
 		int& cy = lineedit_cursor_.y, &cx = lineedit_cursor_.x;
 		if(key == Key::HOME) cx = cy = 0;
-		if(key == Key::END) cx = cy = lineedit_text_.length();
+		if(key == Key::END) cx = cy = static_cast<int>(lineedit_text_.length());
 		if(cx != cy)
 		{
 			if(key == Key::LEFT) cx = cy = min(cx, cy); 
@@ -137,7 +137,7 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 		DeleteSection();
 	}
 
-	int len = lineedit_text_.length();
+	int len = static_cast<int>(lineedit_text_.length());
 	lineedit_cursor_.x = clamp(lineedit_cursor_.x, 0, len);
 	lineedit_cursor_.y = clamp(lineedit_cursor_.y, 0, len);
 }
@@ -157,7 +157,7 @@ void WgLineEdit::onMousePress(MousePress& evt)
 			if(isCapturingText() && evt.doubleClick)
 			{
 				lineedit_cursor_.x = 0;
-				lineedit_cursor_.y = lineedit_text_.length();
+				lineedit_cursor_.y = static_cast<int>(lineedit_text_.length());
 			}
 			else
 			{
@@ -197,7 +197,7 @@ void WgLineEdit::onMouseRelease(MouseRelease& evt)
 		if(is_numerical_ && lineedit_drag_ == DT_INITIAL_DRAG && lineedit_cursor_.x == lineedit_cursor_.y)
 		{
 			lineedit_cursor_.x = 0;
-			lineedit_cursor_.y = lineedit_text_.length();
+			lineedit_cursor_.y = static_cast<int>(lineedit_text_.length());
 		}
 		lineedit_drag_ = DT_NOT_DRAGGING;
 	}
@@ -225,19 +225,19 @@ void WgLineEdit::onTextInput(TextInput& evt)
 			// truncate input
 			if (input.length() > MaximumPastedTextLength)
 			{
-				Str::erase(input, MaximumPastedTextLength, input.length() - MaximumPastedTextLength);
+				Str::erase(input, MaximumPastedTextLength, static_cast<int>(input.length()) - MaximumPastedTextLength);
 			}
 
 			// ensure total length does not exceed max length
 			int maxInputLen = std::min(MaximumPastedTextLength, static_cast<int>(lineedit_max_length_ - lineedit_text_.length()));
 			if (input.length() > maxInputLen)
 			{
-				Str::erase(input, maxInputLen, input.length() - maxInputLen);
+				Str::erase(input, maxInputLen, static_cast<int>(input.length()) - maxInputLen);
 			}
 
 			Str::insert(lineedit_text_, lineedit_cursor_.y, input);
 
-			lineedit_cursor_.y += input.length();
+			lineedit_cursor_.y += static_cast<int>(input.length());
 			lineedit_cursor_.x = lineedit_cursor_.y;
 		}
 		force_scroll_update_ = true;

@@ -73,7 +73,7 @@ bool ParseSimfile(std::string& out, const std::string& path)
 			++read, ++write;
 		}
 	}
-	Str::truncate(out, write - &out[0]);
+	Str::truncate(out, static_cast<int>(write - &out[0]));
 
 	return true;
 }

@@ -48,12 +48,12 @@ void Str::assign(std::string& s, std::string&& str)
 
 void Str::assign(std::string& s, const std::string& str)
 {
-	assign(s, str.data(), str.length());
+	assign(s, str.data(), static_cast<int>(str.length()));
 }
 
 void Str::assign(std::string& s, const char* str)
 {
-	assign(s, str, strlen(str));
+	assign(s, str, static_cast<int>(strlen(str)));
 }
 
 void Str::assign(std::string& s, const char* str, int n)
@@ -102,12 +102,12 @@ void Str::insert(std::string& s, int pos, char c)
 
 void Str::insert(std::string& s, int pos, const std::string& str)
 {
-	insert(s, pos, str.c_str(), str.length());
+	insert(s, pos, str.c_str(), static_cast<int>(str.length()));
 }
 
 void Str::insert(std::string& s, int pos, const char* str)
 {
-	insert(s, pos, str, strlen(str));
+	insert(s, pos, str, static_cast<int>(strlen(str)));
 }
 
 void Str::insert(std::string& s, int pos, const char* str, int n)
@@ -330,7 +330,7 @@ void Str::simplify(std::string& s)
 
 void Str::erase(std::string& s, int pos, int n)
 {
-	int len = s.length();
+	auto len = s.length();
 	if(pos < 0)	{ n += pos, pos = 0; }
 	if(pos == 0 && n >= len)
 	{
@@ -345,7 +345,7 @@ void Str::erase(std::string& s, int pos, int n)
 
 void Str::pop_back(std::string& s)
 {
-	int len = s.length();
+	auto len = s.length();
 	if(len)
 	{
 		s.pop_back();
@@ -388,7 +388,7 @@ void Str::toLower(std::string& s)
 
 std::string Str::substr(const std::string& s, int pos, int n)
 {
-	int len = s.length();
+	auto len = s.length();
 	if(pos < 0) { n += pos, pos = 0; }
 	if(pos == 0 && n >= len)
 	{
@@ -404,7 +404,7 @@ std::string Str::substr(const std::string& s, int pos, int n)
 
 int Str::nextChar(const std::string& s, int pos)
 {
-	int len = s.length();
+	auto len = s.length();
 	if(pos >= len) return std::string::npos;
 	do { ++pos; } while(pos < len && (s.at(pos) & 0xC0) == 0x80);
 	return pos;
@@ -425,7 +425,7 @@ bool Str::isUnicode(const std::string& s)
 
 int Str::find(const std::string& s, char c, int pos)
 {
-	int len = s.length();
+	auto len = s.length();
 	pos = max(pos, 0);
 	pos = s.find(c, pos);
 	return (pos < len) ? pos : std::string::npos;
@@ -444,7 +444,7 @@ int Str::find(const std::string& s, const char* str, int pos)
 
 int Str::findLast(const std::string& s, char c, int pos)
 {
-	int len = s.length();
+	auto len = s.length();
 	pos = min(pos, len - 1);
 	pos = s.find_last_of(c, pos);
 
@@ -457,7 +457,7 @@ int Str::findLast(const std::string& s, char c, int pos)
 
 int Str::findAnyOf(const std::string& s, const char* c, int pos)
 {
-	int len = s.length();
+	auto len = s.length();
 	pos = max(pos, 0);
 	while(pos < len)
 	{
@@ -471,7 +471,7 @@ int Str::findAnyOf(const std::string& s, const char* c, int pos)
 
 int Str::findLastOf(const std::string& s, const char* c, int pos)
 {
-	int len = s.length();
+	auto len = s.length();
 	pos = min(pos, len - 1);
 	while(pos >= 0)
 	{
@@ -500,14 +500,14 @@ static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
 
 bool Str::endsWith(const std::string& s, const char* suffix, bool useCase)
 {
-	int len = s.length(), n = strlen(suffix), res = 1;
+	auto len = s.length(), n = strlen(suffix);
 	if(len >= n) return Equals(s.data() + len - n, suffix, n, useCase);
 	return false;
 }
 
 bool Str::startsWith(const std::string& s, const char* prefix, bool useCase)
 {
-	int len = s.length(), n = strlen(prefix), res = 1;
+	auto len = s.length(), n = strlen(prefix);
 	if(len >= n) return Equals(s.data(), prefix, n, useCase);
 	return false;
 }
@@ -736,7 +736,7 @@ Fmt& Fmt::arg(const char* s)
 	return arg(s, strlen(s));
 }
 
-Fmt& Fmt::arg(const char* s, int n)
+Fmt& Fmt::arg(const char* s, size_t n)
 {
 	int fmtLen = str.length();
 
@@ -934,8 +934,9 @@ Vector<std::string> Str::split(const std::string& s)
 Vector<std::string> Str::split(const std::string& s, const char* lim, bool trim, bool skip)
 {
 	Vector<std::string> out;
-	int limlen = strlen(lim);
-	int slen = s.length() - limlen, start = 0;
+	auto limlen = strlen(lim);
+	auto slen = s.length() - limlen;
+	auto start = 0;
 	for(int i = 0; i <= slen;)
 	{
 		if(memcmp(s.data() + i, lim, limlen) == 0)
@@ -958,8 +959,8 @@ std::string Str::join(const Vector<std::string>& list, const char* lim)
 	if(list.empty()) return {};
 
 	// Determine the total String length and allocate the output string.
-	int limlen = strlen(lim);
-	int len = (list.size() - 1) * limlen;
+	auto limlen = strlen(lim);
+	auto len = (list.size() - 1) * limlen;
 	for(auto& s : list) len += s.length();
 	std::string out;
 	out.reserve(len);

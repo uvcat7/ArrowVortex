@@ -546,7 +546,7 @@ void Texture::LogInfo()
 	for(auto tex : TM->textures)
 	{
 		const std::string* key = Map::findKey(TM->files, tex);
-		std::string path = key ? Str::substr(*key, 0, key->length() - 2) : "-- no path --";
+		std::string path = key ? Str::substr(*key, 0, static_cast<int>(key->length()) - 2) : "-- no path --";
 
 		Debug::log("\npath   : %s\n", path.c_str());
 		Debug::log("size   : %i x %i\n", tex->w, tex->h);

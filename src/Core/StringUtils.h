@@ -210,7 +210,7 @@ struct Str
 		fmt& arg(char c);
 		fmt& arg(const std::string& s);
 		fmt& arg(const char* s);
-		fmt& arg(const char* s, int n);
+		fmt& arg(const char* s, size_t n);
 		fmt& arg(int v, int minDigits = 0, bool hex = false);
 		fmt& arg(uint32_t v, int minDigits = 0, bool hex = false);
 		fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);

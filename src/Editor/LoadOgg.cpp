@@ -74,14 +74,14 @@ static long OvTell(void* loader)
 static void ReadComment(const char* str, int len, const char* tag, std::string& out)
 {
 	const char* end = str + len;
-	int taglen = strlen(tag);
+	int taglen = static_cast<int>(strlen(tag));
 	if(taglen < len && memcmp(str, tag, taglen) == 0)
 	{
 		str += taglen;
 		while(str != end && (*str == ' ' || *str == '\t')) ++str;
 		if(str != end && *str == '=') ++str;
 		while(str != end && (*str == ' ' || *str == '\t')) ++str;
-		Str::assign(out, str, end - str);
+		Str::assign(out, str, static_cast<int>(end - str));
 	}
 }
 

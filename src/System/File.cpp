@@ -349,7 +349,7 @@ std::string Path::brief() const
 	std::string out = top();
 	if(out.length() > 20)
 	{
-		Str::erase(out, 3, out.length() - 16);
+		Str::erase(out, 3, static_cast<int>(out.length()) - 16);
 		Str::insert(out, 3, '~');
 	}
 	return out;
