@@ -16,29 +16,12 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <string>
+#include <fstream>
+#include <filesystem>
 
 namespace Vortex {
 namespace {
-
-// ================================================================================================
-// Utility functions.
-
-static FILE* OpenFile(StringRef path, bool write)
-{
-	FILE* file;
-	WideString wpath = Widen(path);
-	if(!(file = _wfopen(wpath.str(), write ? L"wb" : L"rb")))
-	{
-		const char* reason = "file not found";
-		if(errno == EACCES) reason = "permission denied, file might be read only";
-		else if(write) reason = "unable to create file";
-		Debug::blockBegin(Debug::ERROR, "could not open file");
-		Debug::log("file: %s\n", path.str());
-		Debug::log("reason: %s\n", reason);
-		Debug::blockEnd();
-	}
-	return (FILE*)file;
-}
 
 // ================================================================================================
 // Path iteration functions.
@@ -372,74 +355,45 @@ static bool isNewline(char c)
 	return (c == '\n' || c == '\r');
 }
 
-long getSize(StringRef path)
-{
-	FILE* fp = OpenFile(path, false);
-	if(!fp) return 0;
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	fclose(fp);
-	return size;
-}
-
 String getText(StringRef path, bool* success)
 {
-	FILE* fp = OpenFile(path, false);
-	if(!fp) { if(success) *success = false;  return String(); }
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	String out(size, 0);
-	fseek(fp, 0, SEEK_SET);
-	fread(out.begin(), 1, size, fp);
-	fclose(fp);
-	if(success) *success = true;
-	return out;
+	size_t size = std::filesystem::file_size(path.str());
+	String str(static_cast<int>(size) + 1, '\0');
+	std::ifstream in(path.str());
+	if (in.fail()) 
+	{
+		HudError("Failed to open file: %s", strerror(errno));
+		if (success != nullptr)
+			*success = false;
+		return {};
+	}
+
+	in.read(str.begin(), size);
+	if (success != nullptr)
+		*success = true;
+	return str;
 }
 
 Vector<String> getLines(StringRef path, bool* success)
 {
-	constexpr size_t kBufferSize = 256;
-	constexpr size_t kNumberOne = 1;
+	std::ifstream in(path.str());
+	if (in.fail())
+	{
+		HudError("Failed to open file: %s", strerror(errno));
+		if (success != nullptr)
+			*success = false;
+		return {};
+	}
 
-	Vector<String> out;
-	FILE* fp = OpenFile(path, false);
-	if(!fp) { if(success) *success = false; return out; }
-	out.append();
-	std::array<char, kBufferSize> buffer;
-	for (size_t bytesRead; bytesRead = fread(buffer.data(), kNumberOne, buffer.size(), fp);)
-	{
-		if(bytesRead > 0 && isNewline(buffer[0]) && out.back().len())
-		{
-			out.append();
-		}
-		for (size_t pos = 0, end = 0; pos < bytesRead;)
-		{
-			while(pos < bytesRead && isNewline(buffer[pos]))
-			{
-				++pos, ++end;
-			}
-			while(end < bytesRead && !isNewline(buffer[end]))
-			{
-				++end;
-			}
-			if(end > pos)
-			{
-				Str::append(out.back(), buffer.data() + pos, static_cast<int>(end - pos));
-			}
-			if(end < bytesRead && isNewline(buffer[end]))
-			{
-				out.append();
-			}
-			pos = end;
-		}
-	}
-	if(out.back().empty())
-	{
-		out.pop_back();
-	}
-	fclose(fp);
-	if(success) *success = true;
-	return out;
+	Vector<String> v;
+	std::string line;
+
+	while (std::getline(in, line))
+		v.push_back(line.c_str());
+
+	if (success != nullptr)
+		*success = true;
+	return v;
 }
 
 static void LogMoveFileError(StringRef path, StringRef newPath)
