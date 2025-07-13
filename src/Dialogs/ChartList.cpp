@@ -94,7 +94,7 @@ void onDraw() override
 			Text::draw(vec2i{right.x + right.w - 6, right.y + 10});
 
 			maxW = right.w - Text::getSize().x - 16;
-			Text::arrange(Text::ML, textStyle, maxW, chart->artist.str());
+			Text::arrange(Text::ML, textStyle, maxW, chart->artist.c_str());
 			Text::draw(vec2i{right.x + 6, right.y + 10});
 		}
 	}

@@ -51,7 +51,7 @@ static void CreateShaders()
 {
 	VortexCheckGlError();
 
-	String err;
+	std::string err;
 
 	const char* textShaderVert =
 		"varying vec2 uvs;"

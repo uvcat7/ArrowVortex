@@ -420,7 +420,7 @@ NoteskinManImpl()
 
 		// Capitalize the first letter.
 		type.name = skin.name();
-		char* c = type.name.begin();
+		char* c = &type.name[0];
 		if(*c >= 'a' && *c <= 'z') *c += 'A' - 'a';
 
 		// Make a list of available noteskin files.

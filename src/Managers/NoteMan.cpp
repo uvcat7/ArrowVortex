@@ -299,7 +299,7 @@ static std::string ApplyAddNote(ReadStream& in, History::Bindings bound, bool un
 			msg = "Added ";
 			NOTE_MAN->myApplyNotes(bound.chart, add, dummy, !redo);
 		}
-		msg += GetNoteName(note);
+		msg = msg + GetNoteName(note);
 	}
 	return msg;
 }
@@ -333,7 +333,7 @@ static std::string ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool
 			msg = "Removed ";
 			NOTE_MAN->myApplyNotes(bound.chart, dummy, rem, !redo);
 		}
-		msg += GetNoteName(note);
+		msg = msg + GetNoteName(note);
 	}
 	return msg;
 }
@@ -365,7 +365,7 @@ static std::string ApplyChangeNotes(ReadStream& in, History::Bindings bound, boo
 		{
 			int numNotes = max(add.size(), rem.size());
 			const char* format = (numNotes > 1) ? desc->plural : desc->singular;
-			msg = Str::fmt(format).arg(numNotes);
+			msg = Str::fmt(format).arg(numNotes).str;
 		}
 		else
 		{

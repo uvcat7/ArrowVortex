@@ -201,18 +201,18 @@ std::string myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 
 		if(addMatchesRem)
 		{
-			msg += "Changed " + add.description() + ": " + remove + " {g:arrow right} " + after;
+			msg = msg + "Changed " + add.description() + ": " + remove + " {g:arrow right} " + after;
 		}
 		else
 		{
 			if(numAdd > 0)
 			{
-				msg += "Added " + add.description() + ": " + after;
+				msg = msg + "Added " + add.description() + ": " + after;
 			}
 			if(numRem > 0)
 			{
-				if(msg.length()) msg += ", ";
-				msg += "Removed " + rem.description() + ": " + remove;
+				if(msg.length()) msg = msg + ", ";
+				msg = msg + "Removed " + rem.description() + ": " + remove;
 			}
 		}
 
@@ -385,7 +385,7 @@ std::string myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 
 		msg = "Changed offset: ";
 		Str::appendVal(msg, before);
-		msg += " {g:arrow right} ";
+		msg = msg + " {g:arrow right} ";
 		Str::appendVal(msg, after);
 
 		myStartEdit(out);
@@ -424,7 +424,7 @@ std::string myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo
 
 		msg = "Changed display BPM: ";
 		myApplyDisplayBpmMessage(msg, before);
-		msg += " {g:arrow right} ";
+		msg = msg + " {g:arrow right} ";
 		myApplyDisplayBpmMessage(msg, after);
 		
 		tempo->displayBpmType = value.type;
@@ -438,18 +438,18 @@ void myApplyDisplayBpmMessage(std::string &msg, DisplayBpmEdit &edit)
 {
 	if (edit.type == BPM_ACTUAL)
 	{
-		msg += "default";
+		msg = msg + "default";
 	}
 	else if (edit.type == BPM_RANDOM)
 	{
-		msg += "random";
+		msg = msg + "random";
 	}
 	else
 	{
 		Str::appendVal(msg, edit.range.min);
 		if (edit.range.min != edit.range.max)
 		{
-			msg += "-";
+			msg = msg + "-";
 			Str::appendVal(msg, edit.range.max);
 		}
 	}

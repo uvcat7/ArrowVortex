@@ -361,7 +361,7 @@ bool LoadDwi(const std::string& path, Simfile* sim)
 	if(!ParseSimfile(str, path)) return false;
 
 	// Read the tags.
-	char* tag, *val, *p = str.begin();
+	char* tag, *val, *p = &str[0];
 	while(ParseNextTag(p, tag, val))
 	{
 		ParseTag(sim, tag, val);

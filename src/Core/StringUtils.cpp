@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
+#include <algorithm>
 
 # pragma warning(disable : 4996) // stricmp.
 
@@ -17,77 +18,22 @@ inline char ToUpper(char c) { return (c >= 'a' && c <= 'z') ? (c & ~0x20) : c; }
 inline char ToLower(char c) { return (c >= 'A' && c <= 'Z') ? (c | 0x20) : c; }
 
 // ================================================================================================
-// Helper functions.
-
-extern void StrAlloc(char*& s, int newLen);
-extern void StrRealloc(char*& s, int newLen);
-extern void StrFree(char*& s);
-extern void StrSetLen(char* s, int n);
-
-struct Str2 {
-
-static inline int cap(const std::string& s)
-{
-	return *((int*)s.string_ - 2);
-}
-
-static std::string cat(const char* a, int n, const char* b, int m)
-{
-	char* mem;
-	int len = n + m;
-	StrAlloc(mem, len);
-	memcpy(mem, a, n);
-	memcpy(mem + n, b, m);
-	mem[len] = 0;
-
-	std::string out;
-	out.string_ = mem;
-	return out;
-}
-
-static void reallocate(std::string& s, int n)
-{
-	if(n > cap(s))
-	{
-		StrRealloc(s.string_, n);
-	}
-	else if(n <= 0)
-	{
-		s.clear();
-	}
-}
-
-static void createGap(std::string& s, int pos, int size)
-{
-	int len = s.len();
-	StrRealloc(s.string_, len + size);
-	memmove(s.string_ + pos + size, s.string_ + pos, len + 1 - pos);
-}
-
-static void closeGap(std::string & s, int pos, int size)
-{
-	int len = s.len();
-	memmove(s.string_ + pos, s.string_ + pos + size, len + 1 - pos - size);
-	StrSetLen(s.string_, len - size);
-}
-
-}; // Str2
-
-// ================================================================================================
 // Str :: assign functions.
 
 std::string Str::create(const char* begin, const char* end)
 {
-	return std::string(begin, end - begin);
+	std::string o;
+	while (begin != end) {
+		o.append(1, *begin++);
+	}
+	return o;
 }
 
 void Str::assign(std::string& s, int n, char c)
 {
 	if(n > 0)
 	{
-		StrRealloc(s.string_, n);
-		memset(s.string_, c, n);
-		s.string_[n] = 0;
+		s = std::string(c, n);
 	}
 	else
 	{
@@ -102,7 +48,7 @@ void Str::assign(std::string& s, std::string&& str)
 
 void Str::assign(std::string& s, const std::string& str)
 {
-	assign(s, str.string_, str.len());
+	assign(s, str.data(), str.length());
 }
 
 void Str::assign(std::string& s, const char* str)
@@ -110,11 +56,9 @@ void Str::assign(std::string& s, const char* str)
 	assign(s, str, strlen(str));
 }
 
-void Str::assign(String& s, const char* str, int n)
+void Str::assign(std::string& s, const char* str, int n)
 {
-	StrRealloc(s.string_, n);
-	memcpy(s.string_, str, n);
-	s.string_[n] = 0;
+	s = std::string(str, n);
 }
 
 // ================================================================================================
@@ -122,32 +66,24 @@ void Str::assign(String& s, const char* str, int n)
 
 void Str::append(std::string& s, char c)
 {
-	int len = s.len();
-	int n = len + 1;
-	StrRealloc(s.string_, n);
-	s.string_[len] = c;
-	s.string_[n] = 0;
+	s.append(1, c);
 }
 
 void Str::append(std::string& s, const std::string& str)
 {
-	append(s, str.string_, str.len());
+	s.append(str);
 }
 
 void Str::append(std::string& s, const char* str)
 {
-	append(s, str, strlen(str));
+	s.append(str);
 }
 
 void Str::append(std::string& s, const char* str, int n)
 {
 	if(n > 0)
 	{
-		int len = s.len();
-		int newlen = len + n;
-		StrRealloc(s.string_, newlen);
-		memcpy(s.string_ + len, str, n);
-		s.string_[newlen] = 0;
+		s.append(str, n);
 	}
 }
 
@@ -156,21 +92,17 @@ void Str::append(std::string& s, const char* str, int n)
 
 void Str::insert(std::string& s, int pos, char c)
 {
-	int len = s.len();
-	if(pos >= len)
-	{
-		append(s, c);
+	if (pos >= s.length()) {
+		s.append(1, c);
 	}
-	else if(pos >= 0)
-	{
-		Str2::createGap(s, pos, 1);
-		s.string_[pos] = c;
+	else {
+		s.insert(s.begin() + pos, c);
 	}
 }
 
 void Str::insert(std::string& s, int pos, const std::string& str)
 {
-	insert(s, pos, str.string_, str.len());
+	insert(s, pos, str.c_str(), str.length());
 }
 
 void Str::insert(std::string& s, int pos, const char* str)
@@ -180,15 +112,15 @@ void Str::insert(std::string& s, int pos, const char* str)
 
 void Str::insert(std::string& s, int pos, const char* str, int n)
 {
-	int len = s.len();
-	if(pos >= len)
-	{
-		append(s, str, n);
+
+	if (pos >= s.length()) {
+		s.append(str, n);
 	}
-	else if(n > 0)
-	{
-		Str2::createGap(s, pos, n);
-		memcpy(s.string_ + pos, str, n);
+	else if (pos + n > static_cast<int>(s.length())) {
+		s = s.substr(0, pos) + std::string(str, n) + s.substr(pos);
+	}
+	else {
+		s.insert(pos, str, n);
 	}
 }
 
@@ -197,7 +129,7 @@ void Str::insert(std::string& s, int pos, const char* str, int n)
 
 void Str::truncate(std::string& s, int n)
 {
-	if(n < s.len())
+	if(n < s.length())
 	{
 		if(n <= 0)
 		{
@@ -205,26 +137,23 @@ void Str::truncate(std::string& s, int n)
 		}
 		else
 		{
-			s.string_[n] = 0;
-			StrSetLen(s.string_, n);
+			s = s.substr(0, n);
 		}
 	}
 }
 
 void Str::extend(std::string& s, int n, char c)
 {
-	int len = s.len();
+	const auto len = s.length();
 	if(n > len)
 	{
-		StrRealloc(s.string_, n);
-		memset(s.string_ + len, c, n - len);
-		s.string_[n] = 0;
+		s.append(n - len, c);
 	}
 }
 
 void Str::resize(std::string& s, int n, char c)
 {
-	if(n > s.len())
+	if(n > s.length())
 	{
 		extend(s, n, c);
 	}
@@ -243,7 +172,7 @@ int Str::readInt(const std::string& s, int alt)
 	return alt;
 }
 
-uint32_t Str::readUint(const std::string& s, uint32_t alt)
+uint Str::readUint(const std::string& s, uint alt)
 {
 	read(s, &alt);
 	return alt;
@@ -285,55 +214,70 @@ double Str::readTime(const std::string& s, double alt)
 		break;
 	}
 
-	if (v == 0 && *s.string_ == 0) return alt;
+	if (v == 0 && s.empty()) return alt;
 	alt = v;
 	return alt;
 }
 
 bool Str::read(const std::string& s, int* out)
 {
-	char* end;
-	int v = strtol(s.string_, &end, 10);
-	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
-	*out = v;
-	return true;
+	try {
+		int v = static_cast<int>(std::stol(s));
+		*out = v;
+		return true;
+	} catch (std::exception& e) {
+		// probably want to log the error here
+		return false;
+	}
 }
 
-bool Str::read(const std::string& s, uint32_t* out)
+bool Str::read(const std::string& s, uint* out)
 {
-	char* end;
-	uint32_t v = strtoul(s.string_, &end, 10);
-	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
-	*out = v;
-	return true;
+	try {
+		uint v = std::stoul(s);
+		*out = v;
+		return true;
+	}
+	catch (std::exception& e) {
+		// probably want to log the error here
+		return false;
+	}
 }
 
 bool Str::read(const std::string& s, float* out)
 {
-	char* end;
-	float v = strtof(s.string_, &end);
-	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
-	*out = v;
-	return true;
+	try {
+		float v = std::stof(s);
+		*out = v;
+		return true;
+	}
+	catch (std::exception& e) {
+		// probably want to log the error here
+		return false;
+	}
 }
 
 bool Str::read(const std::string& s, double* out)
 {
-	char* end;
-	double v = strtod(s.string_, &end);
-	if(v == 0 && (*s.string_ == 0 || *end != 0)) return false;
-	*out = v;
-	return true;
+	try {
+		double v = std::stod(s);
+		*out = v;
+		return true;
+	}
+	catch (std::exception& e) {
+		// probably want to log the error here
+		return false;
+	}
 }
 
 bool Str::read(const std::string& s, bool* out)
 {
-	if(stricmp(s.string_, "true") == 0 || stricmp(s.string_, "yes") == 0)
+	if (icompare(s, "true") == 0 || icompare(s, "yes") == 0)
 	{
 		*out = true;
 		return true;
 	}
-	else if(stricmp(s.string_, "false") == 0 || stricmp(s.string_, "no") == 0)
+	else if (icompare(s, "false") == 0 || icompare(s, "no") == 0)
 	{
 		*out = false;
 		return true;
@@ -360,29 +304,28 @@ static bool IsWhiteSpace(char c)
 
 void Str::trim(std::string& s)
 {
-	int n = 0, m = 0, len = s.len();
-	while(IsWhiteSpace(s.string_[m])) ++m;
-	if(s.string_[m] == 0) { s.clear(); return; }
+	// from the front
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) {
+		return !IsWhiteSpace(c);
+	}));
 
-	while(m < len) s.string_[n++] = s.string_[m++];
-	while(IsWhiteSpace(s.string_[n - 1])) --n;
-	s.string_[n] = 0;
-	StrSetLen(s.string_, n);
+	// from the back
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char c) {
+		return !IsWhiteSpace(c);
+	}).base(), s.end());
 }
 
 void Str::simplify(std::string& s)
 {
 	trim(s);
-	int n = 0, m = 0, w = 0, len = s.length();
-	while(m < len)
-	{
-		w = m;
-		while(IsWhiteSpace(s.string_[m])) ++m;
-		if(m > w) s.string_[n++] = ' ';
-		s.string_[n++] = s.string_[m++];
-	}
-	s.string_[n] = 0;
-	StrSetLen(s.string_, n);
+	
+	// remove duplicates in the string, but only adjacent duplicate spaces
+	// get an iterator for that
+	auto it = std::unique(s.begin(), s.end(), [](char a, char b) {
+		return a == b && IsWhiteSpace(a);
+	});
+	// and then erase everything in the iterator
+	s.erase(it, s.end());
 }
 
 void Str::erase(std::string& s, int pos, int n)
@@ -396,7 +339,7 @@ void Str::erase(std::string& s, int pos, int n)
 	else if(pos < len && n > 0)
 	{
 		n = min(n, len - pos);
-		Str2::closeGap(s, pos, n);
+		s.erase(s.begin() + pos, s.begin() + n);
 	}
 }
 
@@ -405,18 +348,13 @@ void Str::pop_back(std::string& s)
 	int len = s.length();
 	if(len)
 	{
-		s.string_[--len] = 0;
-		StrSetLen(s.string_, len);
+		s.pop_back();
 	}
 }
 
 void Str::replace(std::string& s, char find, char replace)
 {
-	char* c = s.string_;
-	for(int i = 0, len = s.length(); i < len; ++i, ++c)
-	{
-		if(*c == find) *c = replace;
-	}
+	std::replace(s.begin(), s.end(), find, replace);
 }
 
 void Str::replace(std::string& s, const char* fnd, const char* rep)
@@ -425,38 +363,24 @@ void Str::replace(std::string& s, const char* fnd, const char* rep)
 
 	int pos = find(s, fnd);
 	if(pos == std::string::npos) return;
+	const auto replen = strlen(rep);
+	const auto fndlen = strlen(fnd);
 
-	int fndlen = strlen(fnd);
-	int replen = strlen(rep);
-	std::string out(s.string_, pos);
-	
-	while(pos != std::string::npos)
-	{
-		pos += fndlen;
-		append(out, rep, replen);
-		int next = find(s, fnd, pos);
-		int end = (next != std::string::npos) ? next : s.length();
-		append(out, s.string_ + pos, end - pos);
-		pos = next;
+	while (pos != std::string::npos) {
+		s.erase(s.begin() + pos, s.begin() + pos + fndlen);
+		insert(s, pos, rep);
+		pos = find(s, fnd);
 	}
-
-	s.swap(out);
 }
 
 void Str::toUpper(std::string& s)
 {
-	for(int i = 0, len = s.length(); i < len; ++i)
-	{
-		s.string_[i] = ToUpper(s.string_[i]);
-	}
+	std::transform(s.begin(), s.end(), s.begin(), ToUpper);
 }
 
 void Str::toLower(std::string& s)
 {
-	for(int i = 0, len = s.length(); i < len; ++i)
-	{
-		s.string_[i] = ToLower(s.string_[i]);
-	}
+	std::transform(s.begin(), s.end(), s.begin(), ToLower);
 }
 
 // ================================================================================================
@@ -473,7 +397,7 @@ std::string Str::substr(const std::string& s, int pos, int n)
 	else if(pos < len && n > 0)
 	{
 		n = min(n, len - pos);
-		return std::string(s.string_ + pos, n);
+		return s.substr(pos, n);
 	}
 	return {};
 }
@@ -482,14 +406,14 @@ int Str::nextChar(const std::string& s, int pos)
 {
 	int len = s.length();
 	if(pos >= len) return std::string::npos;
-	do { ++pos; } while(pos < len && (s.string_[pos] & 0xC0) == 0x80);
+	do { ++pos; } while(pos < len && (s.at(pos) & 0xC0) == 0x80);
 	return pos;
 }
 
 int Str::prevChar(const std::string& s, int pos)
 {
 	if(pos <= 0) return -1;
-	do { --pos; } while(pos >= 0 && (s.string_[pos] & 0xC0) == 0x80);
+	do { --pos; } while(pos >= 0 && (s.at(pos) & 0xC0) == 0x80);
 	return pos;
 }
 
@@ -503,36 +427,31 @@ int Str::find(const std::string& s, char c, int pos)
 {
 	int len = s.length();
 	pos = max(pos, 0);
-	while(pos < len && s.string_[pos] != c) ++pos;
+	pos = s.find(c, pos);
 	return (pos < len) ? pos : std::string::npos;
 }
 
 int Str::find(const std::string& s, const char* str, int pos)
 {
 	pos = max(pos, 0);
-	int len = s.len();
+	int len = s.length();
 
 	if(*str == 0 && pos <= len)
 		return pos;
 
-	for(int i = pos; i < len; ++i)
-	{
-		if(s.string_[i] == *str)
-		{
-			const char* a = str, *b = s.string_ + i;
-			while(*a && *a == *b) ++a, ++b;
-			if(*a == 0) return i;
-		}
-	}
-
-	return std::string::npos;
+	return s.find(str, pos);
 }
 
 int Str::findLast(const std::string& s, char c, int pos)
 {
 	int len = s.length();
 	pos = min(pos, len - 1);
-	while(pos >= 0 && s.string_[pos] != c) --pos;
+	pos = s.find_last_of(c, pos);
+
+	if (pos == std::string::npos) {
+		pos = -1;
+	}
+
 	return (pos >= 0) ? pos : -1;
 }
 
@@ -542,7 +461,7 @@ int Str::findAnyOf(const std::string& s, const char* c, int pos)
 	pos = max(pos, 0);
 	while(pos < len)
 	{
-		const char a = s.string_[pos], *b = c;
+		const char a = s.at(pos), *b = c;
 		while(*b && *b != a) ++b;
 		if(*b) break;
 		++pos;
@@ -556,7 +475,7 @@ int Str::findLastOf(const std::string& s, const char* c, int pos)
 	pos = min(pos, len - 1);
 	while(pos >= 0)
 	{
-		const char a = s.string_[pos], *b = c;
+		const char a = s.at(pos), *b = c;
 		while(*b && *b != a) ++b;
 		if(*b) break;
 		--pos;
@@ -582,14 +501,14 @@ static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
 bool Str::endsWith(const std::string& s, const char* suffix, bool useCase)
 {
 	int len = s.length(), n = strlen(suffix), res = 1;
-	if(len >= n) return Equals(s.string_ + len - n, suffix, n, useCase);
+	if(len >= n) return Equals(s.data() + len - n, suffix, n, useCase);
 	return false;
 }
 
 bool Str::startsWith(const std::string& s, const char* prefix, bool useCase)
 {
-	int len = s.len(), n = strlen(prefix), res = 1;
-	if(len >= n) return Equals(s.string_, prefix, n, useCase);
+	int len = s.length(), n = strlen(prefix), res = 1;
+	if(len >= n) return Equals(s.data(), prefix, n, useCase);
 	return false;
 }
 
@@ -675,7 +594,7 @@ static int PrintInt(char* buf, int v, int minDig, bool hex)
 	return (len < 0) ? DBL_BUFLEN : len;
 }
 
-static int PrintUint(char* buf, uint32_t v, int minDig, bool hex)
+static int PrintUint(char* buf, uint v, int minDig, bool hex)
 {
 	int len;
 	if(minDig <= 0)
@@ -727,7 +646,7 @@ std::string Str::val(int v, int minDig, bool hex)
 	return std::string(buf, PrintInt(buf, v, minDig, hex));
 }
 
-std::string Str::val(uint32_t v, int minDig, bool hex)
+std::string Str::val(uint v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	return std::string(buf, PrintUint(buf, v, minDig, hex));
@@ -751,7 +670,7 @@ void Str::appendVal(std::string& s, int v, int minDig, bool hex)
 	append(s, buf, PrintInt(buf, v, minDig, hex));
 }
 
-void Str::appendVal(std::string& s, uint32_t v, int minDig, bool hex)
+void Str::appendVal(std::string& s, uint v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	append(s, buf, PrintUint(buf, v, minDig, hex));
@@ -784,7 +703,7 @@ Fmt& Fmt::arg(int v, int minDig, bool hex)
 	return arg(buf, PrintInt(buf, v, minDig, hex));
 }
 
-Fmt& Fmt::arg(uint32_t v, int minDig, bool hex)
+Fmt& Fmt::arg(uint v, int minDig, bool hex)
 {
 	char buf[INT_BUFLEN];
 	return arg(buf, PrintUint(buf, v, minDig, hex));
@@ -855,16 +774,7 @@ Fmt& Fmt::arg(const char* s, int n)
 	}
 
 	// Insert the string at the marker position.
-	if(n > markerLen)
-	{
-		Str2::createGap(str, markerPos + markerLen, n - markerLen);
-		memcpy(str.string_ + markerPos, s, n);
-	}
-	else
-	{
-		Str2::closeGap(str, markerPos, markerLen - n);
-		memcpy(str.string_ + markerPos, s, n);
-	}
+	insert(str, markerPos, s);
 
 	return *this;
 }
@@ -872,15 +782,15 @@ Fmt& Fmt::arg(const char* s, int n)
 // ================================================================================================
 // Str:: expression parsing.
 
-static const uint8_t* ParseNestedExpression(const uint8_t* p, double& out);
+static const uchar* ParseNestedExpression(const uchar* p, double& out);
 
-inline const uint8_t* SkipWs(const uint8_t* p)
+inline const uchar* SkipWs(const uchar* p)
 {
 	while(*p == ' ' || *p == '\t') ++p;
 	return p;
 }
 
-static const uint8_t* ParseNumber(const uint8_t* p, double& out)
+static const uchar* ParseNumber(const uchar* p, double& out)
 {
 	// Digits leading up to the decimal-point.
 	uint64_t sum = 0;
@@ -928,7 +838,7 @@ static const uint8_t* ParseNumber(const uint8_t* p, double& out)
 	return SkipWs(p);
 }
 
-static const uint8_t* ParseOperandWithSign(const uint8_t* p, double& out)
+static const uchar* ParseOperandWithSign(const uchar* p, double& out)
 {
 	char sign = *p;
 	p = SkipWs(++p);
@@ -945,7 +855,7 @@ static const uint8_t* ParseOperandWithSign(const uint8_t* p, double& out)
 	return p;
 }
 
-static const uint8_t* ParseMultiplicationOperand(const uint8_t* p, double& out)
+static const uchar* ParseMultiplicationOperand(const uchar* p, double& out)
 {
 	if(*p == '(')
 	{
@@ -963,7 +873,7 @@ static const uint8_t* ParseMultiplicationOperand(const uint8_t* p, double& out)
 	return p;
 }
 
-static const uint8_t* ParseAdditionOperand(const uint8_t* p, double& out)
+static const uchar* ParseAdditionOperand(const uchar* p, double& out)
 {
 	p = ParseMultiplicationOperand(p, out);
 	while(*p == '*' || *p == '/')
@@ -976,7 +886,7 @@ static const uint8_t* ParseAdditionOperand(const uint8_t* p, double& out)
 	return p;
 }
 
-static const uint8_t* ParseNestedExpression(const uint8_t* p, double& out)
+static const uchar* ParseNestedExpression(const uchar* p, double& out)
 {
 	p = ParseAdditionOperand(p, out);
 	while(*p == '+' || *p == '-')
@@ -992,8 +902,8 @@ static const uint8_t* ParseNestedExpression(const uint8_t* p, double& out)
 bool Str::parse(const char* expr, double& out)
 {
 	double tmp = 0.0;
-	const uint8_t* begin = SkipWs((const uint8_t*)expr);
-	const uint8_t* p = ParseNestedExpression(begin, tmp);
+	const uchar* begin = SkipWs((const uchar*)expr);
+	const uchar* p = ParseNestedExpression(begin, tmp);
 	if(p > begin) out = tmp;
 	return (p > begin);
 }
@@ -1004,14 +914,18 @@ bool Str::parse(const char* expr, double& out)
 Vector<std::string> Str::split(const std::string& s)
 {
 	Vector<std::string> out;
-	const char* p = s.begin();
-	while(IsWhiteSpace(*p)) ++p;
-	while(*p)
+	if (s.empty()) {
+		return out;
+	}
+
+	auto it = s.begin();
+	while(IsWhiteSpace(*it) && it != s.end()) ++it;
+	while(it != s.end())
 	{
-		const char* start = p;
-		while(*p && !IsWhiteSpace(*p)) ++p;
-		out.push_back(std::string(start, p - start));
-		while(IsWhiteSpace(*p)) ++p;
+		auto cur = it;
+		while(cur != s.end() && !IsWhiteSpace(*cur)) ++cur;
+		out.push_back(std::string(it, cur));
+		while(it != s.end() && IsWhiteSpace(*it)) ++it;
 	}
 	return out;
 }
@@ -1023,18 +937,18 @@ Vector<std::string> Str::split(const std::string& s, const char* lim, bool trim,
 	int slen = s.length() - limlen, start = 0;
 	for(int i = 0; i <= slen;)
 	{
-		if(memcmp(s.begin() + i, lim, limlen) == 0)
+		if(memcmp(s.data() + i, lim, limlen) == 0)
 		{
 			std::string sub = Str::substr(s, start, i - start);
 			if(trim) Str::trim(sub);
-			if(sub.len() || !skip) out.push_back(sub);
+			if(sub.length() || !skip) out.push_back(sub);
 			i += limlen, start = i;
 		}
 		else ++i;
 	}
 	std::string sub = Str::substr(s, start, std::string::npos);
 	if(trim) Str::trim(sub);
-	if(sub.len() || !skip) out.push_back(sub);
+	if(sub.length() || !skip) out.push_back(sub);
 	return out;
 }
 
@@ -1046,21 +960,18 @@ std::string Str::join(const Vector<std::string>& list, const char* lim)
 	int limlen = strlen(lim);
 	int len = (list.size() - 1) * limlen;
 	for(auto& s : list) len += s.length();
-	std::string out(len, 0);
+	std::string out;
+	out.reserve(len);
 
 	// Copy the first item without the delimiter.
-	char* p = out.begin();
 	auto it = list.begin(), end = list.end();
-	memcpy(p, it->begin(), it->length());
-	p += it->length();
+	out.append(*it);
 
 	// Copy each additional item with a delimiter.
 	for(++it; it != end; ++it)
 	{
-		memcpy(p, lim, limlen);
-		p += limlen;
-		memcpy(p, it->begin(), it->length());
-		p += it->length();
+		out.append(lim);
+		out.append(*it);
 	}
 
 	return out;
@@ -1103,114 +1014,6 @@ std::string Str::formatTime(double seconds, bool precise)
 	}
 
 	return fmt;
-}
-
-// ================================================================================================
-// Global string operators.
-
-std::string operator + (const std::string& a, char b)
-{
-	return Str2::cat(a.begin(), a.length(), &b, 1);
-}
-
-std::string operator + (char a, const std::string& b)
-{
-	return Str2::cat(&a, 1, b.begin(), b.length());
-}
-
-std::string operator + (const std::string& a, const char* b)
-{
-	return Str2::cat(a.begin(), a.length(), b, strlen(b));
-}
-
-std::string operator + (const char* a, const std::string& b)
-{
-	return Str2::cat(a, strlen(a), b.begin(), b.length());
-}
-
-std::string operator + (const std::string& a, const std::string& b)
-{
-	return Str2::cat(a.begin(), a.length(), b.begin(), b.length());
-}
-
-std::string& operator += (std::string& a, char b)
-{
-	Str::append(a, b);
-	return a;
-}
-
-std::string& operator += (std::string& a, const char* b)
-{
-	Str::append(a, b, strlen(b));
-	return a;
-}
-
-std::string& operator += (std::string& a, const std::string& b)
-{
-	Str::append(a, b.begin(), b.length());
-	return a;
-}
-
-bool operator < (const std::string& a, const char* b)
-{
-	return strcmp(a.str(), b) < 0;
-}
-
-bool operator < (const char* a, const std::string& b)
-{
-	return strcmp(a, b.str()) < 0;
-}
-
-bool operator < (const std::string& a, const std::string& b)
-{
-	return strcmp(a.str(), b.str()) < 0;
-}
-
-bool operator > (const std::string& a, const char* b)
-{
-	return strcmp(a.str(), b) > 0;
-}
-
-bool operator > (const char* a, const std::string& b)
-{
-	return strcmp(a, b.str()) > 0;
-}
-
-bool operator > (const std::string& a, const std::string& b)
-{
-	return strcmp(a.str(), b.str()) > 0;
-}
-
-bool operator == (const std::string& a, const char* b)
-{
-	return strcmp(a.str(), b) == 0;
-}
-
-bool operator == (const char* a, const std::string& b)
-{
-	return strcmp(a, b.str()) == 0;
-}
-
-bool operator == (const std::string& a, const std::string& b)
-{
-	int len1 = a.len(), len2 = b.len();
-	if(len1 != len2) return false;
-	return memcmp(a.str(), b.str(), len1) == 0;
-}
-
-bool operator != (const std::string& a, const char* b)
-{
-	return strcmp(a.str(), b) != 0;
-}
-
-bool operator != (const char* a, const std::string& b)
-{
-	return strcmp(a, b.str()) != 0;
-}
-
-bool operator != (const std::string& a, const std::string& b)
-{
-	return !(a == b);
 }
 
 }; // namespace Vortex

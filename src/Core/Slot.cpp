@@ -381,7 +381,7 @@ struct BaseStr
 struct StringVal : public BaseStr
 {
 	void set(const char* s) { str = s; }
-	const char* get() const { return str.str(); }
+	const char* get() const { return str.c_str(); }
 	std::string str;
 };
 
@@ -396,14 +396,14 @@ struct StringPtr : public BaseStr
 {
 	StringPtr(std::string* s) : str(s) {}
 	void set(const char* s) { *str = s; }
-	const char* get() const { return str->str(); }
+	const char* get() const { return str->c_str(); }
 	std::string* str;
 };
 
 struct ConstStringPtr : public BaseStr
 {
 	ConstStringPtr(const std::string* s) : str(s) {}
-	const char* get() const { return str->str(); }
+	const char* get() const { return str->c_str(); }
 	const std::string* str;
 };
 

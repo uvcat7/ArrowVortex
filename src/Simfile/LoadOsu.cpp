@@ -69,7 +69,7 @@ static std::string Unquote(const std::string& s)
 {
 	if(s.length() >= 2 && s.back() == '"' && s.front() == '"')
 	{
-		return Str::create(s.begin() + 1, s.end() - 1);
+		return std::string(s.begin() + 1, s.end() - 1);
 	}
 	return s;
 }
@@ -120,17 +120,20 @@ static bool ReadTag(Parser& parser)
 
 static bool IsProp(const std::string& prop, const char* name)
 {
-	const char* p = prop.begin();
-	while(*name && *p == *name) ++p, ++name;
-	return (*name == 0 && (*p == ':' || *p == ' ' || *p == '\n'));
+	auto it = prop.cbegin();
+	while (*name && *it == *name) {
+		++it;
+		++name;
+	}
+	return (*name == 0 && (*it == ':' || *it == ' ' || *it == '\n'));
 }
 
 static std::string PropVal(const std::string& prop)
 {
-	const char* p = prop.begin();
-	while(*p != ':') ++p;
-	while(*p == ':' || *p == ' ') ++p;
-	return Str::create(p, prop.end());
+	auto it = prop.cbegin();
+	while (*it != ':') ++it;
+	while (*it == ':' || *it == ' ') ++it;
+	return std::string(it, prop.end());
 }
 
 static int NoteVal(const char*& p)
@@ -277,7 +280,7 @@ static void ParseHitObjects(OsuFile& out, Parser& parser)
 {
 	while(ReadProperty(parser))
 	{
-		const char* p = parser.prop.str();
+		const char* p = parser.prop.c_str();
 		int x = max(0, NoteVal(p)), y = NoteVal(p);
 		double time = NoteVal(p) * 0.001;
 		int type = NoteVal(p);
@@ -326,18 +329,20 @@ static void ParseTag(OsuFile& osu, Parser& parser)
 static bool ParseFile(OsuFile& out, std::string str)
 {
 	// Convert all comments and whitespace to space characters.
-	for(char* p = str.begin(), *e = str.end(); p < e; ++p)
-	{
-		if(p[0] == '/' && p[1] == '/')
-			for(; *p && *p != '\n'; ++p) *p = ' ';
-		if(*p == '\r') *p = '\n';
-		if(*p == '\t') *p = ' ';
+	if (str.size() > 1) {
+		for (char* p = &str[0], *e = &str[str.size() - 1]; p < e; ++p)
+		{
+			if (p[0] == '/' && p[1] == '/')
+				for (; *p && *p != '\n'; ++p) *p = ' ';
+			if (*p == '\r') *p = '\n';
+			if (*p == '\t') *p = ' ';
+		}
 	}
 
 	// Initialize the parser.
 	Parser parser;
 	parser.bpm = SIM_DEFAULT_BPM;
-	parser.line = str.begin();
+	parser.line = str.c_str();
 	while(IsSpace(*parser.line)) ++parser.line;
 
 	// Read the file data.
@@ -678,7 +683,7 @@ bool LoadOsu(const std::string& path, Simfile* sim)
 	if(begin >= 0 && end != std::string::npos)
 	{
 		Str::erase(sim->file, begin, end + 1 - begin);
-		if(sim->file.len() && sim->file.back() == ' ')
+		if(sim->file.length() && sim->file.back() == ' ')
 		{
 			Str::pop_back(sim->file);
 		}

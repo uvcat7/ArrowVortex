@@ -253,7 +253,8 @@ void WgLineEdit::onTextCaptureLost()
 	}
 	lineedit_cursor_.x = lineedit_cursor_.y = 0;
 	lineedit_scroll_offset_ = 0.f;
-	lineedit_text_.release();
+	lineedit_text_.clear();
+	lineedit_text_.shrink_to_fit();
 }
 
 void WgLineEdit::onTick()

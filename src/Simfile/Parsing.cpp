@@ -50,8 +50,8 @@ bool ParseSimfile(std::string& out, const std::string& path)
 	if(!success) return false;
 
 	// Preprocess the file contents.
-	const char* read = out.begin();
-	char* write = out.begin();
+	const char* read = &out[0];
+	char* write = &out[0];
 	while(*read)
 	{
 		if(read[0] == '/' && read[1] == '/')
@@ -73,7 +73,7 @@ bool ParseSimfile(std::string& out, const std::string& path)
 			++read, ++write;
 		}
 	}
-	Str::truncate(out, write - out.begin());
+	Str::truncate(out, write - &out[0]);
 
 	return true;
 }

@@ -16,9 +16,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <string>
-#include <fstream>
-#include <filesystem>
 
 namespace Vortex {
 namespace {
@@ -61,6 +58,26 @@ static const char* GetDirStart(const std::string& path)
 		if(p[0] == '\\') ++p;
 	}
 	return p;
+}
+
+static std::string::const_iterator GetDirStartIt(const std::string& path)
+{
+	auto it = path.cbegin();
+	if (*it == '\\') {
+		if (*(it + 1) == '\\') {
+			it += 2;
+			if ((*it == '?' || *it == '.') && (*(it + 1) == '\\')) {
+				it += 2;
+			}
+		}
+	}
+	if (it != path.end() && *(it + 1) == ':') {
+		it += 2;
+		if (*it == '\\') {
+			++it;
+		}
+	}
+	return it;
 }
 
 // Returns true if the path is an absolute path, false otherwise.
@@ -140,7 +157,7 @@ static bool EndsWithSlash(const std::string& path)
 // Adds items from a path to the list.
 static void AddItems(Vector<PathItem>& out, const std::string& path)
 {
-	auto begin = GetDirStart(path), end = path.end();
+	auto begin = GetDirStart(path);
 	for(const char* a = begin, *b = begin; *a; ++b)
 	{
 		if(*b == '\\' || *b == '/' || *b == 0)
@@ -181,8 +198,8 @@ static std::string Concatenate(const std::string& first, const std::string& seco
 	}
 
 	// First, copy the characters in the path prefix.
-	const char* dirBegin = GetDirStart(*pathBegin);
-	std::string out(pathBegin->begin(), static_cast<int>(dirBegin - pathBegin->begin()));
+	auto dirBegin = GetDirStartIt(*pathBegin);
+	std::string out(pathBegin->begin(), dirBegin);
 
 	// If the first character after the prefix was a slash, append a slash.
 	if(*dirBegin == '\\' || *dirBegin == '/') Str::append(out, '\\');
@@ -281,13 +298,13 @@ void Path::clear()
 void Path::dropExt()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, static_cast<int>(GetFileEnd(file) - str.begin()));
+	Str::erase(str, static_cast<int>(GetFileEnd(file) - &str[0]));
 }
 
 void Path::dropFile()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, static_cast<int>(file - str.begin()));
+	Str::erase(str, static_cast<int>(file - &str[0]));
 }
 
 int Path::attributes() const
@@ -318,13 +335,13 @@ std::string Path::name() const
 std::string Path::filename() const
 {
 	auto file = GetFileStart(str);
-	return Str::create(file, str.end());
+	return std::string(file);
 }
 
 std::string Path::ext() const
 {
-	auto file = GetFileStart(str), end = str.end();
-	return Str::create(GetExtStart(file), end);
+	auto file = GetFileStart(str);
+	return std::string(GetExtStart(file));
 }
 
 std::string Path::dir() const
@@ -344,7 +361,7 @@ std::string Path::topdir() const
 
 std::string Path::top() const
 {
-	return Str::create(GetTopItem(str), str.end());
+	return std::string(GetTopItem(str));
 }
 
 std::string Path::brief() const
@@ -479,35 +496,34 @@ static bool isNewline(char c)
 	return (c == '\n' || c == '\r');
 }
 
-String getText(StringRef path, bool* success)
+long getSize(const std::string& path)
 {
-	size_t size = std::filesystem::file_size(path.str());
-	String str(static_cast<int>(size) + 1, '\0');
-	std::ifstream in(path.str());
-	if (in.fail()) 
-	{
-		HudError("Failed to open file: %s", strerror(errno));
-		if (success != nullptr)
-			*success = false;
-		return {};
-	}
+	FILE* fp = OpenFile(path, false);
+	if(!fp) return 0;
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	fclose(fp);
+	return size;
+}
 
-	in.read(str.begin(), size);
-	if (success != nullptr)
-		*success = true;
-	return str;
+std::string getText(const std::string& path, bool* success)
+{
+	FILE* fp = OpenFile(path, false);
+	if(!fp) { if(success) *success = false;  return std::string(); }
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	std::string out(size, 0);
+	fseek(fp, 0, SEEK_SET);
+	fread(&out[0], 1, size, fp);
+	fclose(fp);
+	if(success) *success = true;
+	return out;
 }
 
 Vector<std::string> getLines(const std::string& path, bool* success)
 {
-	std::ifstream in(path.str());
-	if (in.fail())
-	{
-		HudError("Failed to open file: %s", strerror(errno));
-		if (success != nullptr)
-			*success = false;
-		return {};
-	}
+	constexpr size_t kBufferSize = 256;
+	constexpr size_t kNumberOne = 1;
 
 	Vector<std::string> out;
 	FILE* fp = OpenFile(path, false);
@@ -674,7 +690,7 @@ Vector<Path> findFiles(const std::string& path, bool recursive, const char* filt
 	DWORD attr = GetFileAttributesW(wpath.str());
 	if(attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) == 0)
 	{
-		if(HasValidExt(path.str(), filterlist))
+		if(HasValidExt(path.c_str(), filterlist))
 		{
 			out.push_back(path);
 		}

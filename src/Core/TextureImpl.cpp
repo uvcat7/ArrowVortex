@@ -69,8 +69,8 @@ Texture::Data* TextureManager::load(const char* path, Texture::Format fmt, bool 
 
 	// Combine path/format/mipmap information to form the key String.
 	std::string key(path);
-	key += ('0' + fmt);
-	key += (mipmap ? 'y' : 'n');
+	key = key + ("0" + fmt);
+	key = key + (mipmap ? "y" : "n");
 
 	// Check if the image is already loaded.
 	auto it = TM->files.find(key);

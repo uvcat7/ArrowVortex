@@ -99,7 +99,7 @@ Vector<uint8_t> GetClipboardData(const std::string& tag)
 	std::string prefix = "ArrowVortex:" + tag + ":";
 	if(Str::startsWith(text, prefix.c_str()))
 	{
-		Ascii85dec(buffer, text.begin() + prefix.length());
+		Ascii85dec(buffer, text.data() + prefix.length());
 	}
 	return buffer;
 }
@@ -137,19 +137,19 @@ const std::string OrdinalSuffix(int i)
 
 	if (j == 1 && k != 11)
 	{
-		out += "st";
+		out = out + "st";
 	}
 	else if (j == 2 && k != 12)
 	{
-		out += "nd";
+		out = out + "nd";
 	}
 	else if (j == 3 && k != 13)
 	{
-		out += "rd";
+		out = out + "rd";
 	}
 	else
 	{
-		out += "th";
+		out = out + "th";
 	}
 
 	return out;

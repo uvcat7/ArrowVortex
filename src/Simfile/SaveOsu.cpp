@@ -20,9 +20,6 @@
 
 #include <Managers/StyleMan.h>
 
-#include <cmath>
-#include <fstream>
-
 namespace Vortex {
 namespace Osu {
 namespace {
@@ -35,27 +32,27 @@ static int ToMilliseconds(double time)
 	return (int)(time * 1000.0 + 0.5);
 }
 
-static void WriteBlock(std::ofstream& out, const char* name)
+static void WriteBlock(FileWriter& out, const char* name)
 {
-    out << "\n[" << name << "]\n";
+	out.printf("\n[%s]\n", name);
 }
 
-static void Write(std::ofstream& out, const char* str)
+static void Write(FileWriter& out, const char* str)
 {
-    out << str << '\n';
+	out.printf("%s\n", str);
 }
 
-static void Write(std::ofstream& out, const char* name, const char* val)
+static void Write(FileWriter& out, const char* name, const char* val)
 {
-    out << name << ':' << val << '\n';
+	out.printf("%s:%s\n", name, val);
 }
 
-static void Write(std::ofstream& out, const char* name, const std::string& val)
+static void Write(FileWriter& out, const char* name, const std::string& val)
 {
 	Write(out, name, val.c_str());
 }
 
-static void Write(std::ofstream& out, const char* name, int val)
+static void Write(FileWriter& out, const char* name, int val)
 {
 	Write(out, name, Str::val(val));
 }
@@ -121,7 +118,7 @@ static void ConvertStop(Vector<ExportTP>& tps,
 	tps.push_back({cur->endTime, cur->spr});
 }
 
-static void WriteTimingPoints(std::ofstream& out, const Chart* chart, const TimingData& timing, const Tempo* tempo)
+static void WriteTimingPoints(FileWriter& out, const Chart* chart, const TimingData& timing, const Tempo* tempo)
 {
 	Vector<ExportTP> tps;
 	tps.reserve(32);
@@ -153,14 +150,14 @@ static void WriteTimingPoints(std::ofstream& out, const Chart* chart, const Timi
 			double secPerMeasure = (msPerBeat / 1000.0) * 4.0;
 			time = secPerMeasure - fmod(-time, secPerMeasure);
 		}
-	    out << ToMilliseconds(time) << ',' << msPerBeat << ",4,1,0,100,1,0\n";
+		out.printf("%i,%f,4,1,0,100,1,0\n", ToMilliseconds(time), msPerBeat);
 	}
 }
 
 // ===================================================================================
 // Notes exporting.
 
-static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData& timing)
+static void WriteNotes(FileWriter& out, const Chart* chart, const TimingData& timing)
 {
 	int numCols = chart->style->numCols;
 	int colWidth = 512 / numCols;
@@ -181,11 +178,15 @@ static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData&
 			}
 
 			// Write the output hitobject.
-		    out << x << ",192," << ToMilliseconds(time);
+			out.printf("%i,192,%i", x, ToMilliseconds(time));
 			if(endtime > time)
-			    out << ",128,0," << ToMilliseconds(endtime) << ":0:0:0:0:\n";
+			{
+				out.printf(",128,0,%i:0:0:0:0:\n", ToMilliseconds(endtime));
+			}
 			else
-			    out << ",1,0,0:0:0:0:\n";
+			{
+				out.printf(",1,0,0:0:0:0:\n");
+			}
 		}
 	}
 }
@@ -196,8 +197,8 @@ static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData&
 static void SaveChart(const std::string& path, const Simfile* sim, const Chart* chart)
 {
 	// Open the output file.
-	std::ofstream out(path.str());
-	if(out.fail()) return;
+	FileWriter out;
+	if(!out.open(path)) return;
 
 	// Write the version number;
 	Write(out, "osu file format v14");
@@ -252,8 +253,10 @@ static void SaveChart(const std::string& path, const Simfile* sim, const Chart* 
 	WriteBlock(out, "Events");
 
 	Write(out, "//Background and Video events");
-	if(sim->background.len())
-	    out << "0,0,\"" << sim->background.str() << "\",0,0\n";
+	if(sim->background.length())
+	{
+		out.printf("0,0,\"%s\",0,0\n", sim->background.c_str());
+	}
 	Write(out, "//Break Periods");
 	Write(out, "//Storyboard Layer 0 (Background)");
 	Write(out, "//Storyboard Layer 1 (Fail");
@@ -271,8 +274,11 @@ static void SaveChart(const std::string& path, const Simfile* sim, const Chart* 
 	WriteTimingPoints(out, chart, timing, tempo);
 
 	// Write notes.
-	WriteBlock(out, "HitObjects");
-	WriteNotes(out, chart, timing);
+	if(chart)
+	{
+		WriteBlock(out, "HitObjects");
+		WriteNotes(out, chart, timing);
+	}
 
 	out.close();
 }
@@ -285,7 +291,7 @@ bool SaveOsu(const Simfile* sim, bool backup)
 	{
 		Path path(sim->dir + sim->file + ".osu");
 		SaveChart(path, sim, nullptr);
-		HudInfo("Saved: %s", path.filename().str());
+		HudInfo("Saved: %s", path.filename().c_str());
 	}
 	else
 	{
@@ -293,17 +299,17 @@ bool SaveOsu(const Simfile* sim, bool backup)
 		for(auto chart : sim->charts)
 		{
 			std::string path = sim->dir + sim->file;
-			path += " [";
-			path += GetDifficultyName(chart->difficulty);
+			path = path + " [";
+			path = path + GetDifficultyName(chart->difficulty);
 			int& counter = duplicateCounters[path];
 			if(++counter > 1)
 			{
-				path += Str::fmt(" %1").arg(counter).str;
+				path = path + Str::fmt(" %1").arg(counter).str;
 			}
-			path += "].osu";
+			path = path + "].osu";
 			SaveChart(path, sim, chart);
 		}
-		HudInfo("Saved: %s", sim->file.str());
+		HudInfo("Saved: %s", sim->file.c_str());
 	}	
 
 	return true;

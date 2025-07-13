@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Core.h>
+
 namespace Vortex {
 
 using namespace Vortex;

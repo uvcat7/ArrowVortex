@@ -88,7 +88,7 @@ static std::string IdToName(const std::string& id)
 	{
 		if(c == '-') c = ' ';
 		if(prev == ' ' && c >= 'a' && c <= 'z') c += 'A' - 'a';
-		out += c;
+		out = out + c;
 		prev = c;
 	}
 	return out;
@@ -136,7 +136,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers)
 	out->id = id;
 	if(out->id.empty())
 	{
-		out->id = Str::fmt("kb%1-single").arg(numCols);
+		out->id = Str::fmt("kb%1-single").arg(numCols).str;
 	}
 
 	out->name = IdToName(out->id);
@@ -295,11 +295,11 @@ static std::string getFallbackText(int numCols, int numPlayers)
 	std::string out;
 	if(numPlayers > 1)
 	{
-		out = Str::fmt("creating a fallback style (%1 columns, %1 players)").arg(numCols).arg(numPlayers);
+		out = Str::fmt("creating a fallback style (%1 columns, %1 players)").arg(numCols).arg(numPlayers).str;
 	}
 	else
 	{
-		out = Str::fmt("creating a fallback style (%1 columns)").arg(numCols);
+		out = Str::fmt("creating a fallback style (%1 columns)").arg(numCols).str;
 	}
 	return out;
 }

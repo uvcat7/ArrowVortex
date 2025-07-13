@@ -68,9 +68,9 @@ static std::string ApplyStringProperty(ReadStream& in, History::Bindings bound, 
 		*target = undo ? before : after;
 
 		msg = (isChange ? "Changed " : (isRemove ? "Removed " : "Added "));
-		msg += name;
-		msg += ": ";
-		msg += (isChange ? (before + " {g:arrow right} " + after) : (isRemove ? before : after));
+		msg = msg + name;
+		msg = msg + ": ";
+		msg = msg + (isChange ? (before + " {g:arrow right} " + after) : (isRemove ? before : after));
 
 		auto sim = bound.simfile;
 		int changes = VCM_SONG_PROPERTIES_CHANGED;
@@ -120,9 +120,9 @@ static std::string ApplyMusicPreview(ReadStream& in, History::Bindings bound, bo
 		else
 		{
 			msg = "Changed music preview: ";
-			msg += Str::formatTime(value.start);
-			msg += " - ";
-			msg += Str::formatTime(value.start + value.len);
+			msg = msg + Str::formatTime(value.start);
+			msg = msg + " - ";
+			msg = msg + Str::formatTime(value.start + value.len);
 		}
 
 		auto sim = bound.simfile;

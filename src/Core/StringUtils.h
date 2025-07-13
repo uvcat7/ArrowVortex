@@ -239,32 +239,4 @@ struct Str
 	static std::string join(const Vector<std::string>& list, const char* delimiter);
 };
 
-// Concatenation operators.
-
-std::string operator + (const std::string& a, char b);
-std::string operator + (char a, const std::string& b);
-std::string operator + (const std::string& a, const char* b);
-std::string operator + (const char* a, const std::string& b);
-std::string operator + (const std::string& a, const std::string& b);
-
-std::string& operator += (std::string& a, char b);
-std::string& operator += (std::string& a, const char* b);
-std::string& operator += (std::string& a, const std::string& b);
-
-// Alternative lexographical comparison operators.
-
-bool operator < (const std::string& a, const char* b);
-bool operator < (const char* a, const std::string& b);
-
-bool operator > (const std::string& a, const char* b);
-bool operator > (const char* a, const std::string& b);
-bool operator > (const std::string& a, const std::string& b);
-
-bool operator == (const std::string& a, const char* b);
-bool operator == (const char* a, const std::string& b);
-
-bool operator != (const std::string& a, const char* b);
-bool operator != (const char* a, const std::string& b);
-bool operator != (const std::string& a, const std::string& b);
-
 }; // namespace Vortex

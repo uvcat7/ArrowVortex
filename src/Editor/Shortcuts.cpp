@@ -494,32 +494,32 @@ std::string Shortcuts::getNotation(Action::Type action, bool fullList = false)
 		{
 			if (out.length())
 			{
-				out += ", ";
+				out = out + ", ";
 			}
 
 			if(shortcut.keyflags & Keyflag::CTRL)
 			{
-				out += "Ctrl+";
+				out = out + "Ctrl+";
 			}
 			if(shortcut.keyflags & Keyflag::SHIFT)
 			{
-				out += "Shift+";
+				out = out + "Shift+";
 			}
 			if(shortcut.keyflags & Keyflag::ALT)
 			{
-				out += "Alt+";
+				out = out + "Alt+";
 			}
 			if(shortcut.key == nullptr)
 			{
-				out += shortcut.scrollUp ? "Scroll Up" : "Scroll Down";
+				out = out + (shortcut.scrollUp ? "Scroll Up" : "Scroll Down");
 			}
 			else if(shortcut.key->chr)
 			{
-				out += shortcut.key->chr;
+				out = out + shortcut.key->chr;
 			}
 			else
 			{
-				out += shortcut.key->name;
+				out = out + shortcut.key->name;
 			}
 
 			if (!fullList)

@@ -72,10 +72,10 @@ static std::string ApplyStepArtist(ReadStream& in, History::Bindings bound, bool
 		const std::string& newVal = undo ? before : after;
 
 		msg = bound.chart->description();
-		msg += " :: ";
-		msg += (undo ? "reverted" : "changed");
-		msg += " step artist to ";
-		msg += newVal;
+		msg = msg + " :: ";
+		msg = msg + (undo ? "reverted" : "changed");
+		msg = msg + " step artist to ";
+		msg = msg + newVal;
 
 		gSimfile->openChart(bound.chart);
 		bound.chart->artist = newVal;
@@ -105,9 +105,9 @@ static std::string ApplyMeter(ReadStream& in, History::Bindings bound, bool undo
 		int newVal = undo ? before : after;
 
 		msg = bound.chart->description();
-		msg += " :: ";
-		msg += (undo ? "reverted" : "changed");
-		msg += " meter to ";
+		msg = msg + " :: ";
+		msg = msg + (undo ? "reverted" : "changed");
+		msg = msg + " meter to ";
 		Str::appendVal(msg, newVal);
 
 		gSimfile->openChart(bound.chart);
@@ -138,10 +138,10 @@ static std::string ApplyDifficulty(ReadStream& in, History::Bindings bound, bool
 		Difficulty newDiff = (Difficulty)(undo ? before : after);
 
 		msg = bound.chart->description();
-		msg += " :: ";
-		msg += (undo ? "reverted" : "changed");
-		msg += " difficulty to ";
-		msg += GetDifficultyName(newDiff);
+		msg = msg + " :: ";
+		msg = msg + (undo ? "reverted" : "changed");
+		msg = msg + " difficulty to ";
+		msg = msg + GetDifficultyName(newDiff);
 
 		gSimfile->openChart(bound.chart);
 		bound.chart->difficulty = newDiff;
@@ -236,7 +236,7 @@ static Vector<BreakdownItem> ToBreakdown(const Vector<StreamItem>& items)
 			}
 			else
 			{
-				item.text += '-';
+				item.text = item.text + "-";
 			}
 		}
 		else

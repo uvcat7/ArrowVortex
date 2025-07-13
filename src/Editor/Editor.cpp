@@ -517,7 +517,7 @@ bool openNextSimfile(bool iterateForward)
 	int index = -1;
 	for(int i = 0; i < songDirs.size(); ++i)
 	{
-		if(songDirs[i] == curDir)
+		if(songDirs[i].str == curDir)
 		{
 			index = i;
 		}
@@ -866,15 +866,15 @@ void updateTitle()
 	bool hasChanges = gHistory->hasUnsavedChanges();
 	if(title.length() || subtitle.length())
 	{
-		if(title.length() && subtitle.length()) title += " ";
-		title += subtitle;
-		if(hasChanges) title += "*";
-		title += " :: ArrowVortex";
+		if(title.length() && subtitle.length()) title = title + " ";
+		title = title + subtitle;
+		if(hasChanges) title = title + "*";
+		title = title + " :: ArrowVortex";
 	}
 	else
 	{
 		title = "ArrowVortex";
-		if(hasChanges) title += "*";
+		if(hasChanges) title = title + "*";
 	}
 	gSystem->setWindowTitle(title);
 }

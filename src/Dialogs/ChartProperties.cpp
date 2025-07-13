@@ -171,9 +171,9 @@ static void StringifyNoteInfo(std::string& out, const char* name, int count)
 {
 	if(count > 0)
 	{
-		if(out.length()) out += ", ";
-		out += Str::fmt("%1 %2").arg(count).arg(name).str;
-		if(count > 1) out += 's';
+		if(out.length()) out = out + ", ";
+		out = out + Str::fmt("%1 %2").arg(count).arg(name).str;
+		if(count > 1) out = out + "s";
 	}
 }
 
@@ -431,8 +431,8 @@ void DialogChartProperties::myCopyBreakdown()
 		std::string out;
 		for(auto& item : breakdown)
 		{
-			out += item.text;
-			out += '/';
+			out = out + item.text;
+			out = out + "/";
 		}
 		Str::pop_back(out);
 		gSystem->setClipboardText(out);

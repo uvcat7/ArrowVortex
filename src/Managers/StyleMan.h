@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Core.h>
+
 namespace Vortex {
 
 /// Holds data that determines the play style of a chart.

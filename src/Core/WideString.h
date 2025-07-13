@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace Vortex {
 
 // Wide string, stores UTF-16.
