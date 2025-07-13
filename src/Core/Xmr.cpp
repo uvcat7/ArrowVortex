@@ -92,7 +92,7 @@ static bool IsWhiteSpace(char c)
 // Valid chars: all characters except '\0', '{', '}', ';', ',', '\n', '='.
 static bool IsNameChar(char c)
 {
-	static const uint b[4] = {0xFFFFFBFE, 0xD7FFEFFF, 0xFFFFFFFF, 0xD7FFFFFF};
+	static const uint32_t b[4] = {0xFFFFFBFE, 0xD7FFEFFF, 0xFFFFFFFF, 0xD7FFFFFF};
 	return ((unsigned char)c < 128) ? ((b[c >> 5] & (1 << (c & 31))) != 0) : true;
 }
 
@@ -283,11 +283,11 @@ XmrResult XmrReader::load(const char* buffer, XmrDoc& doc)
 		int line = 1, pos = 1;
 		for(p = buffer; *p && p < xmrErrorPosition_; ++p)
 		{
-			if((uchar)(*p) == 0xA)
+			if((uint8_t)(*p) == 0xA)
 				++line, pos = 1; // newline character.
-			else if((uchar)(*p) < 128)
+			else if((uint8_t)(*p) < 128)
 				++pos; // single-byte character.
-			else if(((uchar)(*p) & 192) == 192)
+			else if(((uint8_t)(*p) & 192) == 192)
 				++pos; // first byte of multi-byte character.
 		}
 
@@ -943,7 +943,7 @@ XmrResult XmrDoc::loadString(const char* str)
 	SetError(this, nullptr);
 
 	// Skip the BOM character if there is one.
-	const uchar bom[] = {0xEF, 0xBB, 0xBF};
+	const uint8_t bom[] = {0xEF, 0xBB, 0xBF};
 	if(memcmp(str, bom, 3) == 0) str += 3;
 
 	// Parse the document.

@@ -114,11 +114,11 @@ public:
 protected:
 	void ScrollbarUpdateValue(int v);
 	int scrollbar_end_, scrollbar_page_;
-	uint scrollbar_action_ : 9;
-	uint scrollbar_grab_position_ : 16;
+	uint32_t scrollbar_action_ : 9;
+	uint32_t scrollbar_grab_position_ : 16;
 
 private:
-	uint GetScrollbarActionAtPosition(int x, int y);
+	uint32_t GetScrollbarActionAtPosition(int x, int y);
 };
 
 /// Base scroll region widgets.
@@ -152,17 +152,17 @@ protected:
 	void PostTick();
 	void ClampScrollPositions();
 
-	uint scroll_type_horizontal_ : 2;
-	uint scroll_type_vertical_ : 2;
-	uint is_horizontal_scrollbar_active_ : 1;
-	uint is_vertical_scrollbar_active_ : 1;
-	uint scroll_region_action_ : 9;
-	uint scroll_region_grab_position_ : 16;
+	uint32_t scroll_type_horizontal_ : 2;
+	uint32_t scroll_type_vertical_ : 2;
+	uint32_t is_horizontal_scrollbar_active_ : 1;
+	uint32_t is_vertical_scrollbar_active_ : 1;
+	uint32_t scroll_region_action_ : 9;
+	uint32_t scroll_region_grab_position_ : 16;
 	int scroll_width_, scroll_height_;
 	int scroll_position_x_, scroll_position_y_;
 
 private:
-	uint getScrollRegionActionAt_(int x, int y);
+	uint32_t getScrollRegionActionAt_(int x, int y);
 };
 
 // Vertical Scrollbar GuiWidget.
@@ -213,8 +213,8 @@ protected:
 	WgScrollbarV* scrollbar_;
 	Vector<String> selectlist_items_;
 	int scroll_position_;
-	uint is_interacted_ : 1;
-	uint show_background_ : 1;
+	uint32_t is_interacted_ : 1;
+	uint32_t show_background_ : 1;
 };
 
 /// Vertical Drop Down List GuiWidget.
@@ -300,10 +300,10 @@ private:
 	int lineedit_max_length_, lineedit_drag_;
 	vec2i lineedit_cursor_;
 	float lineedit_blink_time_, lineedit_scroll_offset_;
-	uint is_numerical_ : 1;
-	uint is_editable_ : 1;
-	uint force_scroll_update_ : 1;
-	uint lineedit_show_background_ : 1;
+	uint32_t is_numerical_ : 1;
+	uint32_t is_editable_ : 1;
+	uint32_t force_scroll_update_ : 1;
+	uint32_t lineedit_show_background_ : 1;
 	TextStyle lineedit_style_;
 };
 

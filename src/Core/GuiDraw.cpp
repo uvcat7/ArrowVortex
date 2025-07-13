@@ -328,7 +328,7 @@ void GuiDraw::button(TileRect* tr, const recti& r, bool hover, bool focus)
 	}
 }
 
-void GuiDraw::checkerboard(recti r, color32 color)
+void GuiDraw::checkerboard(recti r, uint32_t color)
 {
 	// Vertex positions.
 	int vp[8];

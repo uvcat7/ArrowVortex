@@ -387,11 +387,11 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 		}
 		else if(*p == '1')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_STEP_OR_HOLD, (uint32_t) quantization});
 		}
 		else if(*p == '2' || *p == '4')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_STEP_OR_HOLD, (uint32_t) quantization});
 			data.holdType[col] = (*p == '2') ? NOTE_STEP_OR_HOLD : NOTE_ROLL;
 			data.holdPos[col] = data.notes->size();
 			data.quants[col] = quantization;
@@ -420,15 +420,15 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 		}
 		else if(*p == 'M')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_MINE, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_MINE, (uint32_t) quantization});
 		}
 		else if(*p == 'L')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_LIFT, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_LIFT, (uint32_t) quantization});
 		}
 		else if(*p == 'F')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_FAKE, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_FAKE, (uint32_t) quantization});
 		}
 	}
 }

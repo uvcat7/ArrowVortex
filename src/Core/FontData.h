@@ -17,17 +17,17 @@ struct FontData;
 
 struct Glyph
 {
-	uint hasPixels : 1;
-	uint hasAlphaTex : 1;
-	uint isWhitespace : 1;
-	uint isNewline : 1;
-	uint dummy : 28;
+	uint32_t hasPixels : 1;
+	uint32_t hasAlphaTex : 1;
+	uint32_t isWhitespace : 1;
+	uint32_t isNewline : 1;
+	uint32_t dummy : 28;
 	int advance;
 	areai ofs;
 	recti box;
 	areaf uvs;
 	int index;
-	uint charcode;
+	uint32_t charcode;
 	FontData* font;
 	Texture::Data* tex;
 	float timeSinceLastUse;

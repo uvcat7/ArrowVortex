@@ -69,18 +69,18 @@ public:
 
 	/// Binds a read-only value.
 	void bind(const int* v);
-	void bind(const uint* v);
+	void bind(const uint32_t* v);
 	void bind(const long* v);
-	void bind(const ulong* v);
+	void bind(const uint64_t* v);
 	void bind(const float* v);
 	void bind(const double* v);
 	void bind(const bool* v);
 
 	/// Binds a read-write value.
 	void bind(int* v);
-	void bind(uint* v);
+	void bind(uint32_t* v);
 	void bind(long* v);
-	void bind(ulong* v);
+	void bind(uint64_t* v);
 	void bind(float* v);
 	void bind(double* v);
 	void bind(bool* v);

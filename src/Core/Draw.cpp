@@ -29,9 +29,9 @@ const colorf Colorsf::white = {1, 1, 1, 1};
 const colorf Colorsf::black = {0, 0, 0, 1};
 const colorf Colorsf::blank = {0, 0, 0, 0};
 
-const color32 Colors::white = RGBAtoColor32(255, 255, 255, 255);
-const color32 Colors::black = RGBAtoColor32(0, 0, 0, 255);
-const color32 Colors::blank = RGBAtoColor32(0, 0, 0, 0);
+const uint32_t Colors::white = RGBAtoColor32(255, 255, 255, 255);
+const uint32_t Colors::black = RGBAtoColor32(0, 0, 0, 255);
+const uint32_t Colors::blank = RGBAtoColor32(0, 0, 0, 0);
 
 // ================================================================================================
 // TileBar.
@@ -99,7 +99,7 @@ TileBar::TileBar()
 {
 }
 
-void TileBar::draw(recti rect, color32 color, int flags) const
+void TileBar::draw(recti rect, uint32_t color, int flags) const
 {
 	int vp[24];
 	float vt[24];
@@ -111,11 +111,11 @@ void TileBar::draw(recti rect, color32 color, int flags) const
 	Renderer::drawQuads(3, vp, vt);
 }
 
-void TileBar::draw(QuadBatchTC* out, recti rect, color32 color, int flags) const
+void TileBar::draw(QuadBatchTC* out, recti rect, uint32_t color, int flags) const
 {
 	out->push(3);
 
-	color32* vc = out->col, *end = vc + 12;
+	uint32_t* vc = out->col, *end = vc + 12;
 	while(vc != end) { QCOL(color); }
 
 	TB_setVerts(*this, out->pos, out->uvs, rect, uvs, flags);
@@ -190,7 +190,7 @@ TileRect::TileRect()
 {
 }
 
-void TileRect::draw(recti rect, color32 color, int flags) const
+void TileRect::draw(recti rect, uint32_t color, int flags) const
 {
 	int vp[72];
 	float vt[72];
@@ -202,11 +202,11 @@ void TileRect::draw(recti rect, color32 color, int flags) const
 	Renderer::drawQuads(9, vp, vt);
 }
 
-void TileRect::draw(QuadBatchTC* out, recti rect, color32 color, int flags) const
+void TileRect::draw(QuadBatchTC* out, recti rect, uint32_t color, int flags) const
 {
 	out->push(9);
 
-	color32* vc = out->col, *end = vc + 36;
+	uint32_t* vc = out->col, *end = vc + 36;
 	while(vc != end) { QCOL(color); }
 
 	TR_setVerts(*this, out->pos, out->uvs, rect, uvs, flags);
@@ -262,7 +262,7 @@ static void TR2_setVerts(const TileRect2& rect, int* vp, float* vt, recti r, int
 	QUVS(s + bl, y, t + bl, z); QUVS(t, y, u, z); QUVS(u + br, y, v + br, z);
 }
 
-void TileRect2::draw(recti rect, int rounding, color32 color, int flags) const
+void TileRect2::draw(recti rect, int rounding, uint32_t color, int flags) const
 {
 	int vp[72];
 	float vt[72];
@@ -274,11 +274,11 @@ void TileRect2::draw(recti rect, int rounding, color32 color, int flags) const
 	Renderer::drawQuads(9, vp, vt);
 }
 
-void TileRect2::draw(QuadBatchTC* out, recti rect, int rounding, color32 color, int flags) const
+void TileRect2::draw(QuadBatchTC* out, recti rect, int rounding, uint32_t color, int flags) const
 {
 	out->push(9);
 
-	color32* vc = out->col, *end = vc + 36;
+	uint32_t* vc = out->col, *end = vc + 36;
 	while(vc != end) { QCOL(color); }
 
 	TR2_setVerts(*this, out->pos, out->uvs, rect, rounding, flags);
@@ -287,7 +287,7 @@ void TileRect2::draw(QuadBatchTC* out, recti rect, int rounding, color32 color, 
 // ================================================================================================
 // Rectangle drawing.
 
-void Draw::fill(recti r, color32 col)
+void Draw::fill(recti r, uint32_t col)
 {
 	// Vertex positions.
 	int pos[8], *vp = pos;
@@ -300,7 +300,7 @@ void Draw::fill(recti r, color32 col)
 	Renderer::drawQuads(1, pos);
 }
 
-void Draw::fill(QuadBatchC* out, recti r, color32 color)
+void Draw::fill(QuadBatchC* out, recti r, uint32_t color)
 {
 	out->push();
 
@@ -309,18 +309,18 @@ void Draw::fill(QuadBatchC* out, recti r, color32 color)
 	QPOS(r.x, r.y, r.x + r.w, r.y + r.h);
 	
 	// Vertex colors.
-	color32* vc = out->col;
+	uint32_t* vc = out->col;
 	QCOL(color);
 }
 
-void Draw::fill(recti r, color32 tl, color32 tr, color32 bl, color32 br, bool hsv)
+void Draw::fill(recti r, uint32_t tl, uint32_t tr, uint32_t bl, uint32_t br, bool hsv)
 {
 	// Vertex positions.
 	int pos[8], *vp = pos;
 	QPOS(r.x, r.y, r.x + r.w, r.y + r.h);
 
 	// Vertex colors.
-	color32 col[4], *vc = col;
+	uint32_t col[4], *vc = col;
 	QCOL4(tl, tr, bl, br);
 
 	// Render quad.
@@ -328,7 +328,7 @@ void Draw::fill(recti r, color32 tl, color32 tr, color32 bl, color32 br, bool hs
 	Renderer::drawQuads(1, pos, col);
 }
 
-void Draw::fill(recti r, color32 col, TextureHandle tex, Texture::Format fmt)
+void Draw::fill(recti r, uint32_t col, TextureHandle tex, Texture::Format fmt)
 {
 	// Vertex positions.
 	int pos[8], *vp = pos;
@@ -345,7 +345,7 @@ void Draw::fill(recti r, color32 col, TextureHandle tex, Texture::Format fmt)
 	Renderer::drawQuads(1, pos, uvs);
 }
 
-void Draw::fill(recti r, color32 col, TextureHandle tex, areaf uva, Texture::Format fmt)
+void Draw::fill(recti r, uint32_t col, TextureHandle tex, areaf uva, Texture::Format fmt)
 {
 	// Vertex positions.
 	int pos[8], *vp = pos;
@@ -362,9 +362,9 @@ void Draw::fill(recti r, color32 col, TextureHandle tex, areaf uva, Texture::For
 	Renderer::drawQuads(1, pos, uvs);
 }
 
-void Draw::outline(recti r, color32 col)
+void Draw::outline(recti r, uint32_t col)
 {
-	static const uint indices[24] =
+	static const uint32_t indices[24] =
 	{
 		0, 3, 1, 0, 2, 3, 4, 7, 5, 4, 6, 7, 0, 4, 2, 0, 6, 4, 3, 7, 1, 3, 5, 7
 	};
@@ -387,7 +387,7 @@ void Draw::outline(recti r, color32 col)
 	Renderer::drawTris(8, indices, vp);
 }
 
-void Draw::roundedBox(recti r, color32 c)
+void Draw::roundedBox(recti r, uint32_t c)
 {
 	Renderer::getRoundedBox().draw(r, c);
 }
@@ -400,7 +400,7 @@ void Draw::sprite(const Texture& tex, vec2i pos, int flags)
 	Draw::sprite(tex, pos, Colors::white, flags);
 }
 
-void Draw::sprite(const Texture& tex, vec2i pos, color32 col, int flags)
+void Draw::sprite(const Texture& tex, vec2i pos, uint32_t col, int flags)
 {
 	vec2i size = tex.size();
 	int w = size.x, x = pos.x - w / 2;

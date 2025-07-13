@@ -605,7 +605,7 @@ void pasteFromClipboard(bool insert)
 	SegmentEdit clipboard;
 
 	// Decode the clipboard data.	
-	Vector<uchar> data = GetClipboardData(clipboardTag);
+	Vector<uint8_t> data = GetClipboardData(clipboardTag);
 	ReadStream stream(data.begin(), data.size());
 	clipboard.add.decode(stream);
 	if(stream.success() == false || stream.bytesleft() > 0)
