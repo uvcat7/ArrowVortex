@@ -1,4 +1,5 @@
 ﻿#include <Core/StringUtils.h>
+#include <Core/WideString.h>
 #include <Core/Utils.h>
 
 #include <System/File.h>
@@ -684,9 +685,10 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	data.sim = sim;
 
 	Path path = sim->dir + sim->file + (ssc ? ".ssc" : ".sm");
+	fs::path fpath(Widen(path.str).str());
 
 	// If a backup file is requested, rename the existing sim before saving over it.
-	if(backup && fs::exists(path.str.str()))
+	if(backup && fs::exists(fpath))
 	{
 		if(!File::moveFile(path.str, path.str + ".old", true))
 		{
@@ -696,7 +698,7 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	}
 
 	// Open the output file.
-    data.file.open(path.str.str());
+    data.file.open(fpath);
 	if(data.file.fail())
 	    return false;
 	GiveUnicodeWarning(path, "sim");

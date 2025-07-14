@@ -325,11 +325,11 @@ Path Path::operator + (StringRef items) const
 
 namespace File {
 
-String getText(StringRef path, bool* success)
+String getText(StringRef wpath, bool* success)
 {
-	size_t size = std::filesystem::file_size(path.str());
-	String str(static_cast<int>(size) + 1, '\0');
-	std::ifstream in(path.str());
+	fs::path path(Widen(wpath).str());
+
+	std::ifstream in(path);
 	if (in.fail()) 
 	{
 		HudError("Failed to open file: %s", strerror(errno));
@@ -337,6 +337,9 @@ String getText(StringRef path, bool* success)
 			*success = false;
 		return {};
 	}
+
+	size_t size = fs::file_size(path);
+	String str(static_cast<int>(size) + 1, '\0');
 
 	in.read(str.begin(), size);
 	if (success != nullptr)
@@ -346,7 +349,7 @@ String getText(StringRef path, bool* success)
 
 Vector<String> getLines(StringRef path, bool* success)
 {
-	std::ifstream in(path.str());
+	std::ifstream in(Widen(path).str());
 	if (in.fail())
 	{
 		HudError("Failed to open file: %s", strerror(errno));
@@ -366,13 +369,15 @@ Vector<String> getLines(StringRef path, bool* success)
 	return v;
 }
 
-bool moveFile(StringRef path, StringRef newPath, bool replace)
+bool moveFile(StringRef wpath, StringRef wnewPath, bool replace)
 {
+	fs::path path(Widen(wpath).str());
+	fs::path newPath(Widen(wnewPath).str());
 	try
 	{
-		if (replace && fs::exists(newPath.str()))
-			fs::remove(newPath.str());
-		fs::rename(path.str(), newPath.str());
+		if (replace && fs::exists(newPath))
+			fs::remove(newPath);
+		fs::rename(path, newPath);
 		return true;
 	}
 	catch (const fs::filesystem_error& e)
@@ -430,28 +435,30 @@ static void AddFilesInDir(Vector<Path>& out, const WideString& wpath, bool recur
 
 Vector<Path> findFiles(StringRef path, bool recursive, const char* filters)
 {
-	if (path.empty()) return {};
-
 	Vector<Path> out;
+
+	if (path.empty()) return out;
 
 	// Extract filters from the filter String.
 	Vector<String> filterlist;
-	if (filters)
+	if(filters)
 	{
-		for (const char* begin = filters, *end = begin; true; end = begin)
+		for(const char* begin = filters, *end = begin; true; end = begin)
 		{
-			while (*end && *end != ';') ++end;
-			if (end != begin) filterlist.push_back(String(begin, static_cast<int>(end - begin)));
-			if (*end == 0) break;
+			while(*end && *end != ';') ++end;
+			if(end != begin) filterlist.push_back(String(begin, static_cast<int>(end - begin)));
+			if(*end == 0) break;
 			begin = end + 1;
 		}
 	}
 
+	fs::path fpath(Widen(path).str());
+
 	// If the given path is not a directory but a file, return it as-is.
-	if (fs::is_regular_file(path.str()) && HasValidExt(path, filterlist))
+	if (fs::is_regular_file(fpath) && HasValidExt(path, filterlist))
 		out.push_back(path);
 
-	if (fs::is_directory(path.str()))
+	if (fs::is_directory(fpath))
 		AddFilesInDir(out, Widen(path), recursive, false, filterlist);
 
 	return out;

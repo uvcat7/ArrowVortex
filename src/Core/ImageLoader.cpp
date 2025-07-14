@@ -2,6 +2,7 @@
 
 #include <System/File.h>
 #include <System/Debug.h>
+#include <Core/WideString.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -2122,7 +2123,7 @@ ImageLoader::Data ImageLoader::load(const char* path, ImageLoader::Format fmt)
 	int cmp = 0, w = 0, h = 0;
 	ImageLoader::Data out = {nullptr, 0, 0};
 	stbi_io_callbacks callback;
-    callback.file.open(path, std::ios::in | std::ios::binary);
+    callback.file.open(Widen(path).str(), std::ios::in | std::ios::binary);
 	if(callback.file.good())
 	{
 		stbi_uc* pixels = stbi_load_from_callbacks(callback, &w, &h, &cmp);
