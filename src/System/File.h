@@ -5,7 +5,9 @@
 
 #include <Core/Vector.h>
 
-#include <stdio.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -76,40 +78,6 @@ struct Path
 	std::string str;
 };
 
-/// Reads data from a file.
-struct FileReader
-{
-	FileReader();
-	~FileReader();
-
-	bool open(const std::string& path);
-	void close();
-
-	size_t size() const;
-	long tell() const;
-	size_t read(void* ptr, size_t size, size_t count);
-	int seek(long offset, int origin);
-	void skip(size_t n);
-	bool eof();	
-
-	void* file;
-};
-
-/// Writes data to a file.
-struct FileWriter
-{
-	FileWriter();
-	~FileWriter();
-
-	bool open(const std::string& path);
-	void close();
-
-	size_t write(const void* ptr, size_t size, size_t count);
-	void printf(const char* format, ...);
-
-	void* file;
-};
-
 namespace File
 {
 	/// Enumeration of file/directory attributes.
@@ -120,9 +88,6 @@ namespace File
 		ATR_HIDDEN    = 0x4, ///< The file or directory is hidden.
 		ATR_READ_ONLY = 0x8, ///< The file is read-only.
 	};
-
-	/// Returns the size in bytes of a file.
-	extern long getSize(const std::string& path, bool* success);
 
 	/// Returns a string with the contents of a file.
 	extern std::string getText(const std::string& path, bool* success);
