@@ -327,8 +327,8 @@ namespace File {
 
 std::string getText(const std::string& path, bool* success)
 {
-	size_t size = std::filesystem::file_size(path);
-	std::ifstream in(path);
+	fs::path wpath(Widen(path).str());
+	std::ifstream in(wpath);
 	if (in.fail()) 
 	{
 		HudError("Failed to open file: %s", strerror(errno));
@@ -345,7 +345,7 @@ std::string getText(const std::string& path, bool* success)
 
 Vector<std::string> getLines(const std::string& path, bool* success)
 {
-	std::ifstream in(path);
+	std::ifstream in(Widen(path).str());
 	if (in.fail())
 	{
 		HudError("Failed to open file: %s", strerror(errno));
@@ -367,11 +367,13 @@ Vector<std::string> getLines(const std::string& path, bool* success)
 
 bool moveFile(const std::string& path, const std::string& newPath, bool replace)
 {
+	fs::path widePath(Widen(path).str());
+	fs::path wideNewPath(Widen(newPath).str());
 	try
 	{
-		if (replace && fs::exists(newPath))
-			fs::remove(newPath);
-		fs::rename(path, newPath);
+		if (replace && fs::exists(wideNewPath))
+			fs::remove(wideNewPath);
+		fs::rename(widePath, wideNewPath);
 		return true;
 	}
 	catch (const fs::filesystem_error& e)
@@ -403,7 +405,7 @@ static void AddFilesInDir(Vector<Path>& out, const DirectoryIter& it, bool findD
 {
 	for (const auto& entry : it)
 	{
-		Path aw_path(entry.path().string().c_str());
+		Path aw_path(Narrow(entry.path().c_str()));
 		if (fs::is_regular_file(entry) && !findDirs)
 		{
 			if (HasValidExt(aw_path, filters))
@@ -429,9 +431,9 @@ static void AddFilesInDir(Vector<Path>& out, const WideString& wpath, bool recur
 
 Vector<Path> findFiles(const std::string& path, bool recursive, const char* filters)
 {
-	if (path.empty()) return {};
-
 	Vector<Path> out;
+
+	if (path.empty()) return out;
 
 	// Extract filters from the filter String.
 	Vector<std::string> filterlist;
@@ -446,11 +448,13 @@ Vector<Path> findFiles(const std::string& path, bool recursive, const char* filt
 		}
 	}
 
+	fs::path wpath(Widen(path).str());
+
 	// If the given path is not a directory but a file, return it as-is.
-	if (fs::is_regular_file(path) && HasValidExt(path, filterlist))
+	if (fs::is_regular_file(wpath) && HasValidExt(path, filterlist))
 		out.push_back(path);
 
-	if (fs::is_directory(path))
+	if (fs::is_directory(wpath))
 		AddFilesInDir(out, Widen(path), recursive, false, filterlist);
 
 	return out;

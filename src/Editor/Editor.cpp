@@ -7,6 +7,7 @@
 #include <Core/Draw.h>
 #include <Core/Shader.h>
 #include <Core/StringUtils.h>
+#include <Core/WideString.h>
 
 #include <System/System.h>
 #include <System/File.h>
@@ -326,7 +327,7 @@ void loadSettings(XmrDoc& settings)
 	    if (path == nullptr)
 	        return;
 
-        if (std::ifstream testPath(path); testPath.good())
+        if (std::ifstream testPath(Widen(path).str()); testPath.good())
             myFontPath = path;
 	}
 }
