@@ -295,7 +295,7 @@ void Str::erase(std::string& s, int pos, int n)
 	else if(pos < len && n > 0)
 	{
 		n = min(n, len - pos);
-		s.erase(s.begin() + pos, s.begin() + n);
+		s.erase(s.begin() + pos, s.begin() + pos + n);
 	}
 }
 
