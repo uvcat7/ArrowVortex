@@ -6,7 +6,9 @@
 #include <Core/String.h>
 #include <Core/Vector.h>
 
-#include <stdio.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -36,9 +38,6 @@ struct Path
 
 	/// Removes the filename portion of the path.
 	void dropFile();
-
-	/// Returns the attributes of the file/directory.
-	int attributes() const;
 
 	/// Returns true if the path has the given extension, false otherwise (case-insensitive).
 	bool hasExt(const char* ext) const;
@@ -79,42 +78,21 @@ struct Path
 
 namespace File
 {
-	/// Enumeration of file/directory attributes.
-	enum Attributes
-	{
-		ATR_EXISTS    = 0x1, ///< The file or directory could be found.
-		ATR_DIR       = 0x2, ///< The path identifies a directory.
-		ATR_HIDDEN    = 0x4, ///< The file or directory is hidden.
-		ATR_READ_ONLY = 0x8, ///< The file is read-only.
-	};
-
-	/// Returns the size in bytes of a file.
-	extern long getSize(StringRef path, bool* success);
-
 	/// Returns a string with the contents of a file.
-	extern String getText(StringRef path, bool* success);
+	String getText(StringRef path, bool* success);
 
 	/// Returns a vector with the contents of a file, split into lines.
-	extern Vector<String> getLines(StringRef path, bool* success);
+	Vector<String> getLines(StringRef path, bool* success);
 
 	/// Moves or renames a file.
-	extern bool moveFile(StringRef path, StringRef newPath, bool replace);
-
-	/// Creates a folder.
-	extern bool createFolder(StringRef path);
-
-	/// Deletes a file.
-	extern bool deleteFile(StringRef path);
-
-	/// Deletes a folder.
-	extern bool deleteFolder(StringRef path);
+	bool moveFile(StringRef path, StringRef newPath, bool replace);
 
 	/// Returns a list of files if path is a directory, or a single file if path is a file.
 	/// Filters is a string of acceptable extensions seperated by semicolons (e.g. "sm;ssc").
-	extern Vector<Path> findFiles(StringRef path, bool recursive = true, const char* filters = nullptr);
+	Vector<Path> findFiles(StringRef path, bool recursive = true, const char* filters = nullptr);
 
 	/// Returns a list of all subdirectories in a directory.
-	extern Vector<Path> findDirs(StringRef path, bool recursive = true);
+	Vector<Path> findDirs(StringRef path, bool recursive = true);
 
 }; // namespace File.
 

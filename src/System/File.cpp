@@ -4,18 +4,6 @@
 #include <Core/WideString.h>
 #include <Core/StringUtils.h>
 
-#include <vector>
-#include <array>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <shellapi.h>
-#undef DeleteFile
-#undef MoveFile
-#undef ERROR
-
-#include <errno.h>
-#include <stdio.h>
 #include <string>
 #include <fstream>
 #include <filesystem>
@@ -270,19 +258,6 @@ void Path::dropFile()
 	Str::erase(str, static_cast<int>(file - str.begin()));
 }
 
-int Path::attributes() const
-{
-	DWORD out = 0, a = GetFileAttributesW(Widen(str).str());
-	if(a != INVALID_FILE_ATTRIBUTES)
-	{
-		out |= File::ATR_EXISTS;
-		if(a & FILE_ATTRIBUTE_DIRECTORY) out |= File::ATR_DIR;
-		if(a & FILE_ATTRIBUTE_HIDDEN)    out |= File::ATR_HIDDEN;
-		if(a & FILE_ATTRIBUTE_READONLY)  out |= File::ATR_READ_ONLY;
-	}
-	return out;
-}
-
 bool Path::hasExt(const char* ext) const
 {
 	auto file = GetFileStart(str);
@@ -350,11 +325,6 @@ Path Path::operator + (StringRef items) const
 
 namespace File {
 
-static bool isNewline(char c)
-{
-	return (c == '\n' || c == '\r');
-}
-
 String getText(StringRef path, bool* success)
 {
 	size_t size = std::filesystem::file_size(path.str());
@@ -396,48 +366,24 @@ Vector<String> getLines(StringRef path, bool* success)
 	return v;
 }
 
-static void LogMoveFileError(StringRef path, StringRef newPath)
-{
-	int code = GetLastError();
-	Debug::blockBegin(Debug::ERROR, "could not move file");
-	Debug::log("old path: %s\n", path.str());
-	Debug::log("new path: %s\n", newPath.str());
-	Debug::log("windows error code: %i\n", code);
-	Debug::blockEnd();
-}
-
 bool moveFile(StringRef path, StringRef newPath, bool replace)
 {
-	WideString wpath = Widen(path), wnew = Widen(newPath);
-	DWORD flags = replace ? MOVEFILE_REPLACE_EXISTING : 0;
-	BOOL result = MoveFileExW(wpath.str(), wnew.str(), flags);
-	if(result == FALSE) LogMoveFileError(path, newPath);
-	return result != FALSE;
-}
-
-bool createFolder(StringRef path)
-{
-	WideString wpath = Widen(path);
-	return (CreateDirectoryW(wpath.str(), nullptr) != 0);
-}
-
-bool deleteFile(StringRef path)
-{
-	WideString wpath = Widen(path);
-	return (DeleteFileW(wpath.str()) != 0);
-}
-
-bool deleteFolder(StringRef path)
-{
-	WideString wpath = Widen(path);
-	wpath.push_back(0);
-	SHFILEOPSTRUCTW file_op =
+	try
 	{
-		NULL, FO_DELETE, wpath.str(), L"\0\0",
-		FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
-		false, 0, L""
-	};
-	return (SHFileOperationW(&file_op) == 0);
+		if (replace && fs::exists(newPath.str()))
+			fs::remove(newPath.str());
+		fs::rename(path.str(), newPath.str());
+		return true;
+	}
+	catch (const fs::filesystem_error& e)
+	{
+		Debug::blockBegin(Debug::ERROR, "could not move file");
+		Debug::log("path1: %s\n", e.path1());
+		Debug::log("path2: %s\n", e.path2());
+		Debug::log("windows error code: %s\n", e.what());
+		Debug::blockEnd();
+		return false;
+	}
 }
 
 static bool HasValidExt(StringRef filename, const Vector<String>& filters)
@@ -453,82 +399,60 @@ static bool HasValidExt(StringRef filename, const Vector<String>& filters)
 	return filters.empty();
 }
 
-static void AddFilesInDir(Vector<Path>& out, const WideString& path, bool recursive, bool findDirs, const Vector<String>& filters)
+template<typename DirectoryIter>
+static void AddFilesInDir(Vector<Path>& out, const DirectoryIter& it, bool findDirs, const Vector<String>& filters)
 {
-	WIN32_FIND_DATAW ffd;
-	WideString searchpath = path;
-	searchpath.append(L"\\*");
-	HANDLE hFind = FindFirstFileW(searchpath.str(), &ffd);
-	if(hFind != INVALID_HANDLE_VALUE)
+	for (const auto& entry : it)
 	{
-		do {
-			if(wcscmp(ffd.cFileName, L".") != 0 && wcscmp(ffd.cFileName, L"..") != 0)
-			{
-				bool isSubDirectory = (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-				if(isSubDirectory)
-				{
-					WideString subpath(path);
-					subpath.append(L"\\");
-					subpath.append(ffd.cFileName);
-					if(recursive)
-					{
-						AddFilesInDir(out, subpath, true, findDirs, filters);
-					}
-					if(findDirs)
-					{
-						out.push_back({Narrow(subpath), String(), String()});
-					}
-				}
-				else
-				{
-					if(!findDirs)
-					{
-						String filename = Narrow(ffd.cFileName);
-						if(HasValidExt(filename, filters))
-						{
-							out.push_back({Narrow(path), filename});
-						}
-					}
-				}
-			}
-		} while(FindNextFileW(hFind, &ffd) != 0);
+		Path aw_path(entry.path().string().c_str());
+		if (fs::is_regular_file(entry) && !findDirs)
+		{
+			if (HasValidExt(aw_path, filters))
+				out.push_back(aw_path);
+		}
+
+		if (fs::is_directory(entry) && findDirs)
+			out.push_back(aw_path);
 	}
-	FindClose(hFind);
+}
+
+static void AddFilesInDir(Vector<Path>& out, const WideString& wpath, bool recursive, bool findDirs, const Vector<String>& filters)
+{
+	fs::path path(wpath.str());
+	if (fs::is_regular_file(path))
+		return;
+
+	if (recursive)
+		AddFilesInDir(out, fs::recursive_directory_iterator(path), findDirs, filters);
+	else
+		AddFilesInDir(out, fs::directory_iterator(path), findDirs, filters);
 }
 
 Vector<Path> findFiles(StringRef path, bool recursive, const char* filters)
 {
-	Vector<Path> out;
+	if (path.empty()) return {};
 
-	if(path.empty()) return out;
+	Vector<Path> out;
 
 	// Extract filters from the filter String.
 	Vector<String> filterlist;
-	if(filters)
+	if (filters)
 	{
-		for(const char* begin = filters, *end = begin; true; end = begin)
+		for (const char* begin = filters, *end = begin; true; end = begin)
 		{
-			while(*end && *end != ';') ++end;
+			while (*end && *end != ';') ++end;
 			if (end != begin) filterlist.push_back(String(begin, static_cast<int>(end - begin)));
-			if(*end == 0) break;
+			if (*end == 0) break;
 			begin = end + 1;
 		}
 	}
 
 	// If the given path is not a directory but a file, return it as-is.
-	WideString wpath = Widen(path);
-	DWORD attr = GetFileAttributesW(wpath.str());
-	if(attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) == 0)
-	{
-		if(HasValidExt(path.str(), filterlist))
-		{
-			out.push_back(path);
-		}
-	}
-	else // Search for files.
-	{
-		AddFilesInDir(out, wpath, recursive, false, filterlist);
-	}
+	if (fs::is_regular_file(path.str()) && HasValidExt(path, filterlist))
+		out.push_back(path);
+
+	if (fs::is_directory(path.str()))
+		AddFilesInDir(out, Widen(path), recursive, false, filterlist);
 
 	return out;
 }
