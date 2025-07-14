@@ -6,23 +6,6 @@ namespace Vortex {
 
 struct Str
 {
-	/// Creates a string from a range of characters.
-	static std::string create(const char* begin, const char* end);
-
-	/// Sets the string to character c repeated n times.
-	static void assign(std::string& s, int n, char c);
-
-	/// Sets the string to a copy of str.
-	static void assign(std::string& s, std::string&& str);
-
-	/// Sets the string to a copy of str.
-	static void assign(std::string& s, const std::string& str);
-
-	/// Sets the string to a copy of str.
-	static void assign(std::string& s, const char* str);
-
-	/// Sets the string to the first n characters of str.
-	static void assign(std::string& s, const char* str, int n);
 
 	/// Appends character c at the end of the string.
 	static void append(std::string& s, char c);

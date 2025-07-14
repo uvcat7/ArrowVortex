@@ -94,7 +94,7 @@ static bool ReadProperty(Parser& parser)
 	while(end > begin && IsSpace(end[-1])) --end;
 
 	// Copy the property and go to the next line.
-	Str::assign(parser.prop, begin, static_cast<int>(end - begin));
+	parser.prop = std::string(begin, static_cast<size_t>(end - begin));
 	parser.line = NextLine(p);
 	return true;
 }
@@ -113,7 +113,7 @@ static bool ReadTag(Parser& parser)
 	const char* end = p;
 
 	// Copy the tag and go to the next line.
-	Str::assign(parser.tag, begin, static_cast<int>(end - begin));
+	parser.tag = std::string(begin, static_cast<size_t>(end - begin));
 	parser.line = NextLine(p);
 	return true;
 }

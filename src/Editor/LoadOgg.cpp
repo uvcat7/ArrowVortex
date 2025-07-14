@@ -81,7 +81,7 @@ static void ReadComment(const char* str, int len, const char* tag, std::string& 
 		while(str != end && (*str == ' ' || *str == '\t')) ++str;
 		if(str != end && *str == '=') ++str;
 		while(str != end && (*str == ' ' || *str == '\t')) ++str;
-		Str::assign(out, str, static_cast<int>(end - str));
+		out = std::string(str, static_cast<size_t>(end - str));
 	}
 }
 

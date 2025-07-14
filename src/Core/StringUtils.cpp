@@ -18,41 +18,6 @@ inline char ToUpper(char c) { return (c >= 'a' && c <= 'z') ? (c & ~0x20) : c; }
 inline char ToLower(char c) { return (c >= 'A' && c <= 'Z') ? (c | 0x20) : c; }
 
 // ================================================================================================
-// Str :: assign functions.
-
-void Str::assign(std::string& s, int n, char c)
-{
-	if(n > 0)
-	{
-		s = std::string(c, n);
-	}
-	else
-	{
-		s.clear();
-	}
-}
-
-void Str::assign(std::string& s, std::string&& str)
-{
-	s.swap(str);
-}
-
-void Str::assign(std::string& s, const std::string& str)
-{
-	assign(s, str.data(), static_cast<int>(str.length()));
-}
-
-void Str::assign(std::string& s, const char* str)
-{
-	assign(s, str, static_cast<int>(strlen(str)));
-}
-
-void Str::assign(std::string& s, const char* str, int n)
-{
-	s = std::string(str, n);
-}
-
-// ================================================================================================
 // Str :: append functions.
 
 void Str::append(std::string& s, char c)
