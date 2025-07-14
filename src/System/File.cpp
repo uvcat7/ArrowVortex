@@ -309,7 +309,7 @@ bool Path::hasExt(const char* ext) const
 std::string Path::name() const
 {
 	auto file = GetFileStart(str);
-	return Str::create(file, GetFileEnd(file));
+	return std::string(file, GetFileEnd(file));
 }
 
 std::string Path::filename() const
@@ -326,17 +326,17 @@ std::string Path::ext() const
 
 std::string Path::dir() const
 {
-	return Str::create(str.c_str(), GetFileStart(str));
+	return std::string(str.c_str(), GetFileStart(str));
 }
 
 std::string Path::dirWithoutSlash() const
 {
-	return Str::create(str.c_str(), GetDirEnd(str));
+	return std::string(str.c_str(), GetDirEnd(str));
 }
 
 std::string Path::topdir() const
 {
-	return Str::create(GetTopDir(str), GetFileStart(str));
+	return std::string(GetTopDir(str), GetFileStart(str));
 }
 
 std::string Path::top() const

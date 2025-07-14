@@ -20,15 +20,6 @@ inline char ToLower(char c) { return (c >= 'A' && c <= 'Z') ? (c | 0x20) : c; }
 // ================================================================================================
 // Str :: assign functions.
 
-std::string Str::create(const char* begin, const char* end)
-{
-	std::string o;
-	while (begin != end) {
-		o.append(1, *begin++);
-	}
-	return o;
-}
-
 void Str::assign(std::string& s, int n, char c)
 {
 	if(n > 0)
