@@ -697,7 +697,7 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	Path path = sim->dir + sim->file + (ssc ? ".ssc" : ".sm");
 
 	// If a backup file is requested, rename the existing sim before saving over it.
-	if (backup && (path.attributes() & File::ATR_EXISTS))
+	if(backup && fs::exists(path.str))
 	{
 		if (!File::moveFile(path.str, path.str + ".old", true))
 		{
