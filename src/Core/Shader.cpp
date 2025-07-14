@@ -149,8 +149,8 @@ static GLuint Compile(int type, const char* code, std::string& log)
 		{
 			int size = 1;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
-			log = "";
-			log.reserve(size);
+			log.clear();
+			log.resize(size);
 			glGetShaderInfoLog(shader, size, nullptr, &log[0]);
 		}
 		glDeleteShader(shader);
@@ -173,8 +173,8 @@ static GLuint Link(GLuint vert, GLuint frag, std::string& log)
 		{
 			int size = 1;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &size);
-			log = "";
-			log.reserve(size);
+			log.clear();
+			log.resize(size);
 			glGetProgramInfoLog(program, size, 0, &log[0]);
 		}
 		glDeleteProgram(program);
