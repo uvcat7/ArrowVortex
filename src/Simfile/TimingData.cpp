@@ -14,6 +14,8 @@
 
 #include <float.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -85,8 +87,8 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end, in
 	double targetTime = entry->time;
 
 	// Modify the current entry, make it the start of the warp.
-	entry->rowTime = targetTime = max(targetTime, entry->rowTime);
-	entry->endTime = targetTime = max(targetTime, entry->endTime);
+	entry->rowTime = targetTime = std::max(targetTime, entry->rowTime);
+	entry->endTime = targetTime = std::max(targetTime, entry->endTime);
 	entry->spr = 0.0;
 
 	// Skip all segments that end inside the warp.
@@ -228,7 +230,7 @@ static void CreateTimeSigs(Vector<TimeSig>& out, const TimeSignature* it, const 
 	int row = 0, measure = 0;
 	while(it != end)
 	{
-		int beatsPerMeasure = max(it->rowsPerMeasure / ROWS_PER_BEAT, 1);
+		int beatsPerMeasure = std::max(it->rowsPerMeasure / ROWS_PER_BEAT, 1);
 		int rowsPerMeasure = beatsPerMeasure * ROWS_PER_BEAT;
 		out.push_back({row, measure, rowsPerMeasure});
 		if(++it != end)

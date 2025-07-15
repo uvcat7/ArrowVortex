@@ -23,6 +23,8 @@
 #include <Managers/StyleMan.h>
 #include <Managers/NoteMan.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 namespace {
@@ -66,15 +68,15 @@ struct SetPixelData
 
 static void SetPixels(const SetPixelData& spd, int x, double tor, uint32_t color)
 {
-	int y = clamp((int)((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
+	int y = std::clamp((int)((tor - spd.startOfs) * spd.pixPerOfs, 0, MAP_HEIGHT - 1);
 	uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
 	for(int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
 }
 
 static void SetPixels(const SetPixelData& spd, int x, double tor, double end, uint32_t color)
 {
-	int yt = clamp((int)((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
-	int yb = clamp((int)((end - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
+	int yt = std::clamp((int)((tor - spd.startOfs) * spd.pixPerOfs, 0, MAP_HEIGHT - 1);
+	int yb = std::clamp((int)((end - spd.startOfs) * spd.pixPerOfs, 0, MAP_HEIGHT - 1);
 	for(int y = yt; y <= yb; ++y)
 	{
 		uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
@@ -188,7 +190,7 @@ static void SetDensityRow(uint32_t* pixels, int y, double density)
 		128, 128, 255,
 	};
 	density = round(density * 10.0) * (512.0 * 0.1 / 16.0);
-	int coloring = clamp((int)density, 0, 511);
+	int coloring = std::clamp((int)density, 0, 511);
 	int ci = coloring >> 8; ci *= 3;
 	int bf = coloring & 255;
 	int r = BlendI32(colors[ci + 0], colors[ci + 3], bf);
@@ -196,7 +198,7 @@ static void SetDensityRow(uint32_t* pixels, int y, double density)
 	int b = BlendI32(colors[ci + 2], colors[ci + 5], bf);
 	uint32_t col = Color32(r, g, b);
 
-	int w = clamp((int)(density * 0.05), 4, MAP_WIDTH) / 2;
+	int w = std::clamp((int)(density * 0.05, 4, MAP_WIDTH) / 2;
 	uint32_t* dst = pixels + y * MAP_WIDTH + MAP_WIDTH / 2 - w;
 	for(int i = -w; i < w; ++i, ++dst) *dst = col;
 }
@@ -218,7 +220,7 @@ void renderDensity(SetPixelData& spd, const int* colx)
 				if(it->isMine || it->isWarped) continue;
 				double pre = (it > first) ? (it - 1)->time : (it->time - 1.0);
 				double post = (it < last) ? (it + 1)->time : (it->time + 1.0);
-				if(post > pre) density = max(density, 2.0 / (post - pre));
+				if(post > pre) density = std::max(density, 2.0 / (post - pre);
 			}
 			if(density > 0.0) SetDensityRow(spd.pixels, y, density);
 			sec += secPerPix;
@@ -237,7 +239,7 @@ void renderDensity(SetPixelData& spd, const int* colx)
 				if(it->isMine || it->isWarped) continue;
 				double pre = (it > first) ? (it - 1)->time : (it->time - 1.0);
 				double post = (it < last) ? (it + 1)->time : (it->time + 1.0);
-				if(post > pre) density = max(density, 2.0 / (post - pre));
+				if(post > pre) density = std::max(density, 2.0 / (post - pre);
 			}
 			if(density > 0.0) SetDensityRow(spd.pixels, y, density);
 			row += rowPerPix;
@@ -262,7 +264,7 @@ bool updateMinimapHeight()
 	//If the vertical size has changed, update the minimap
 	if (rect.h != myNotesH)
 	{
-		myNotesH = min(MAP_HEIGHT, rect.h);
+		myNotesH = std::min(MAP_HEIGHT, rect.h);
 		onChanges(VCM_VIEW_CHANGED);
 		return true;
 	}
@@ -281,7 +283,7 @@ double myGetMapOffset(int y)
 		topY = chartRect.y;
 		bottomY = chartRect.y + chartRect.h;
 
-		double t = clamp((double)(y - topY) / (double)(bottomY - topY), 0.0, 1.0);
+		double t = std::clamp((double)(y - topY) / (double)(bottomY - topY, 0.0, 1.0);
 		if(gView->hasReverseScroll()) t = 1.0 - t;
 
 		tor = myChartBeginOfs + (myChartEndOfs - myChartBeginOfs) * t;
@@ -397,7 +399,7 @@ void drawRegion(int x, int w, double ofsA, double ofsB, uint32_t color)
 	int y2 = baseY + (int)((ofsB - myChartBeginOfs) * pixPerOfs + 0.5);
 	if(y1 > y2) swapValues(y1, y2);
 
-	Draw::fill({x, y1, w, max(y2 - y1, 1)}, color);
+	Draw::fill({x, y1, w, std::max(y2 - y1, 1)}, color);
 }
 
 void draw()

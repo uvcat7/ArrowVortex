@@ -9,6 +9,8 @@
 #include <cctype>
 #include <stdint.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -180,7 +182,7 @@ static void ReadFontSize(const uint8_t* param, int len)
 	{
 		fontSize = (int)(ReadNumber(param, len) + 0.5);
 	}	
-	LD->fontSize = min(max(1, fontSize), 256);
+	LD->fontSize = std::min(std::max(1, fontSize), 256);
 	SetLineMetrics();
 }
 
@@ -331,8 +333,8 @@ static const Glyph* GetGlyph(int charcode)
 
 static void SetLineMetrics()
 {
-	LD->lineTop    = min(LD->lineTop, -LD->fontSize);
-	LD->lineBottom = max(LD->lineBottom, LD->fontSize / 4);
+	LD->lineTop    = std::min(LD->lineTop, -LD->fontSize);
+	LD->lineBottom = std::max(LD->lineBottom, LD->fontSize / 4);
 }
 
 static const Glyph* ReadGlyph(const uint8_t* str)
@@ -371,7 +373,7 @@ static void AddEllipsesToLine()
 {
 	const Glyph* ellipsesGlyph = GetGlyph('.');
 	int ellipsesW = ellipsesGlyph->advance * 3;
-	int maxLineW = max(0, LD->maxLineW - ellipsesW);
+	int maxLineW = std::max(0, LD->maxLineW - ellipsesW);
 
 	// In order to do ellipses, the line must contain atleast one glyph.
 	if(LD->lineBeginGlyph == LD->glyphs.size()) return;
@@ -409,14 +411,14 @@ static void AddEllipsesToLine()
 	{
 		if(quad.line == LD->lineIndex)
 		{
-			quad.w = min(quad.w, max(0, LD->lineW - quad.x));
+			quad.w = std::min(quad.w, std::max(0, LD->lineW - quad.x));
 		}
 	}
 	for(auto& quad : LD->bgQuads)
 	{
 		if(quad.line == LD->lineIndex)
 		{
-			quad.w = min(quad.w, max(0, LD->lineW - quad.x));
+			quad.w = std::min(quad.w, std::max(0, LD->lineW - quad.x));
 		}
 	}
 
@@ -494,7 +496,7 @@ static void FinishCurrentLine(bool last)
 	line.bottom = LD->lineBottom;
 
 	// Update the size of the text area.
-	LD->textW = max(LD->textW, LD->lineW);
+	LD->textW = std::max(LD->textW, LD->lineW);
 	LD->textH = lineY + LD->lineBottom;
 
 	// advance to the next line.
@@ -719,7 +721,7 @@ vec2i Text::arrange(Text::Align align, const char* text)
 
 vec2i Text::arrange(Text::Align align, int maxLineWidth, const char* text)
 {
-	return ArrangeText(LD->defaultStyle, max(maxLineWidth, 0), align, text);
+	return ArrangeText(LD->defaultStyle, std::max(maxLineWidth, 0), align, text);
 }
 
 vec2i Text::arrange(Text::Align align, const TextStyle& style, const char* text)
@@ -729,7 +731,7 @@ vec2i Text::arrange(Text::Align align, const TextStyle& style, const char* text)
 
 vec2i Text::arrange(Text::Align align, const TextStyle& style, int maxLineWidth, const char* text)
 {
-	return ArrangeText(style, max(maxLineWidth, 0), align, text);
+	return ArrangeText(style, std::max(maxLineWidth, 0), align, text);
 }
 
 vec2i Text::getSize()

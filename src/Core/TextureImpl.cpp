@@ -9,6 +9,7 @@
 
 #include <System/Debug.h>
 
+#include <algorithm>
 #include <set>
 #include <map>
 
@@ -253,7 +254,7 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h, const uint8_
 		{
 			int px = (int)sx;
 
-			const uint8_t* p1 = pixels + clamp(py * w + px, 0, maxIndex) * channels;
+			const uint8_t* p1 = pixels + std::clamp(py * w + px, 0, maxIndex) * channels;
 			const uint8_t* p2 = p1 + channels;
 			const uint8_t* p3 = p1 + w * channels;
 			const uint8_t* p4 = p3 + channels;
@@ -398,7 +399,7 @@ void Texture::Data::increaseHeight(int newHeight)
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		h = newHeight;
-		rh = 1.0f / (float)max(h, 1);
+		rh = 1.0f / (float)std::max(h, 1);
 		free(pixels);
 	}
 }
@@ -447,8 +448,8 @@ Texture::Texture()
 Texture::Texture(int w, int h, Format fmt)
 	: data_(nullptr)
 {
-	w = max(w, 1);
-	h = max(h, 1);
+	w = std::max(w, 1);
+	h = std::max(h, 1);
 	Vector<uint8_t> pixels;
 	pixels.resize(w * h * sNumChannels[fmt], 0);
 	data_ = TexMan::load(w, h, fmt, false, pixels.begin());

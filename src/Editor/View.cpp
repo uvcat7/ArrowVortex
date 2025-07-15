@@ -100,9 +100,9 @@ void loadSettings(XmrNode& settings)
 		view->get("receptorX", &myReceptorX);
 		view->get("receptorY", &myReceptorY);
 
-		myCustomSnap = min(max(myCustomSnap, 5), 191);
-		myZoomLevel = min(max(myZoomLevel, -2.0), 16.0);
-		myScaleLevel = min(max(myScaleLevel, 1.0), 10.0);
+		myCustomSnap = std::min(std::max(myCustomSnap, 5), 191);
+		myZoomLevel = std::min(std::max(myZoomLevel, -2.0), 16.0);
+		myScaleLevel = std::min(std::max(myScaleLevel, 1.0), 10.0);
 	}
 
 	updateScrollValues();
@@ -339,7 +339,7 @@ void tick()
 		else
 		{
 			double time = gMusic->getPlayTime();
-			myCursorTime = clamp(time, begintime, endtime);
+			myCursorTime = std::clamp(time, begintime, endtime);
 			myCursorBeat = gTempo->timeToBeat(myCursorTime);
 			myCursorRow = (int)(myCursorBeat * ROWS_PER_BEAT);
 		}
@@ -348,8 +348,8 @@ void tick()
 	// Clamp the receptor X and Y to the view region.
 	int minRecepX = rect_.x - rect_.w / 2;
 	int maxRecepX = RightX(rect_) - rect_.w / 2;
-	myReceptorY = min(max(myReceptorY, rect_.y), BottomY(rect_));
-	myReceptorX = min(max(myReceptorX, minRecepX), maxRecepX);
+	myReceptorY = std::min(std::max(myReceptorY, rect_.y), BottomY(rect_));
+	myReceptorX = std::min(std::max(myReceptorX, minRecepX), maxRecepX);
 
 	// Store the y-position of time zero.
 	if(myUseTimeBasedView)
@@ -408,7 +408,7 @@ void setTimeBased(bool enabled)
 
 void setZoomLevel(double level)
 {
-	level = min(max(level, -2.0), 16.0);
+	level = std::min(std::max(level, -2.0), 16.0);
 	if(myZoomLevel != level)
 	{
 		myZoomLevel = level;
@@ -420,7 +420,7 @@ void setZoomLevel(double level)
 void setScaleLevel(double level)
 {
 
-	level = min(max(level, 1.0), 10.0);
+	level = std::min(std::max(level, 1.0), 10.0);
 	if(myScaleLevel != level)
 	{
 		myScaleLevel = level;
@@ -465,7 +465,7 @@ void setCursorTime(double time)
 {
 	double begintime = gTempo->rowToTime(0);
 	double endtime = gTempo->rowToTime(gSimfile->getEndRow());
-	myCursorTime = min(max(begintime, time), endtime);
+	myCursorTime = std::min(std::max(begintime, time), endtime);
 	myCursorBeat = gTempo->timeToBeat(myCursorTime);
 	myCursorRow = (int)(myCursorBeat * ROWS_PER_BEAT);
 	gMusic->seek(myCursorTime);
@@ -473,7 +473,7 @@ void setCursorTime(double time)
 
 void setCursorRow(int row)
 {
-	myCursorRow = min(max(row, 0), gSimfile->getEndRow());
+	myCursorRow = std::min(std::max(row, 0), gSimfile->getEndRow());
 	myCursorBeat = myCursorRow * BEATS_PER_ROW;
  	myCursorTime = gTempo->rowToTime(myCursorRow);
 	gMusic->seek(myCursorTime);
@@ -616,8 +616,8 @@ Coords getNotefieldCoords() const
 	if(myUseTimeBasedView && gNotefield->hasShowWaveform())
 	{
 		int w = gWaveform->getWidth() / 2;
-		out.xl = min(out.xl, out.xc - w - 4);
-		out.xr = max(out.xr, out.xc + w + 4);
+		out.xl = std::min(out.xl, out.xc - w - 4);
+		out.xr = std::max(out.xr, out.xc + w + 4);
 	}
 	return out;
 }

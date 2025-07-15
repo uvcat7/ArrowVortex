@@ -4,6 +4,8 @@
 
 #include <math.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -80,15 +82,15 @@ void RowLayout::onUpdateSize()
 			{
 				(*widget)->updateSize();
 				vec2i size = (*widget)->getSize();
-				h = max(h, size.y);
+				h = std::max(h, size.y);
 				if(cols[c].adjust)
 				{
-					cols[c].width = max(cols[c].width, (uint32_t)size.x);
+					cols[c].width = std::max(cols[c].width, (uint32_t)size.x);
 				}
 			}
 
 			x += cols[c].width;
-			width_ = max(width_, x);
+			width_ = std::max(width_, x);
 			x += row_spacing_;
 		}
 
@@ -102,7 +104,7 @@ void RowLayout::onArrange(recti r)
 {
 	int y = r.y;
 
-	int extraW = max(0, r.w - width_);
+	int extraW = std::max(0, r.w - width_);
 
 	for(auto& row : row_list_)
 	{
@@ -134,7 +136,7 @@ void RowLayout::onArrange(recti r)
 			{
 				vec2i size = (*widget)->getSize();
 				(*widget)->arrange({x, y, colW, size.y});
-				h = max(h, size.y);
+				h = std::max(h, size.y);
 			}
 
 			x += cols[c].width + row_spacing_;

@@ -50,8 +50,8 @@ static Note PlacingNoteToNote(const PlacingNote& pnote, int col)
 {
 	Note out;
 	out.col = col;
-	out.row = min(pnote.startRow, pnote.endRow);
-	out.endrow = max(pnote.startRow, pnote.endRow);
+	out.row = std::min(pnote.startRow, pnote.endRow);
+	out.endrow = std::max(pnote.startRow, pnote.endRow);
 	out.player = pnote.player;
 	out.type = NOTE_STEP_OR_HOLD;
 	out.quant = pnote.quant;
@@ -370,7 +370,7 @@ void finishNotePlacement(int col)
 
 		if (note.quant > 0 && note.quant <= 192)
 		{
-			note.quant = min(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
+			note.quant = std::min(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
 		}
 		else
 		{
@@ -612,7 +612,7 @@ void changePlayerNumber()
 		{"Converted %1 note to P3.", "Converted %1 notes to P3."},
 		{"Switched player for %1 note.", "Switched player for %1 notes."},
 	};
-	auto* desc = descs + (samePlayer ? min(newPlayer, 3) : 3);
+	auto* desc = descs + (samePlayer ? std::min(newPlayer, 3) : 3);
 	gNotes->modify(edit, false, desc);
 }
 

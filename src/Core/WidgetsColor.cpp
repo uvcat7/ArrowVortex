@@ -10,6 +10,8 @@
 #include <Core/Shader.h>
 #include <Core/Widgets.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -20,8 +22,8 @@ struct ColorHSV { float h, s, v, a; };
 ColorHSV RGBtoHSV(colorf rgb, float a)
 {
 	float r = rgb.r, g = rgb.g, b = rgb.b, h, s, v;
-	float cmax = max(max(r, g), b);
-	float cmin = min(min(r, g), b);
+	float cmax = std::max(std::max(r, g), b);
+	float cmin = std::min(std::min(r, g), b);
 	float delta = cmax - cmin;
 	if(delta > 0)
 	{
@@ -159,26 +161,26 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui)
 
 	recti view = gui->getView();
 
-	rect_.x = clamp(rect_.x, view.x, view.x + view.w - rect_.w);
-	rect_.y = clamp(rect_.y, view.y, view.y + view.h - rect_.h);
+	rect_.x = std::clamp(rect_.x, view.x, view.x + view.w - rect_.w);
+	rect_.y = std::clamp(rect_.y, view.y, view.y + view.h - rect_.h);
 
 	vec2i mpos = gui->getMousePos();
 
 	if(myDrag == 1)
 	{
 		recti r = getSr();
-		myCol.s = clamp((float)(mpos.x - r.x) / (float)r.w, 0.0f, 1.0f);
-		myCol.v = clamp(1.0f - (float)(mpos.y - r.y) / (float)r.h, 0.0f, 1.0f);
+		myCol.s = std::clamp((float)(mpos.x - r.x) / (float)r.w, 0.0f, 1.0f);
+		myCol.v = std::clamp(1.0f - (float)(mpos.y - r.y) / (float)r.h, 0.0f, 1.0f);
 	}
 	else if(myDrag == 2)
 	{
 		recti r = getHr();
-		myCol.h = clamp((float)(mpos.y - r.y) / (float)r.h, 0.0f, 1.0f);
+		myCol.h = std::clamp((float)(mpos.y - r.y) / (float)r.h, 0.0f, 1.0f);
 	}
 	else if(myDrag == 3)
 	{
 		recti r = getAr();
-		myCol.a = clamp(1.0f - (float)(mpos.y - r.y) / (float)r.h, 0.0f, 1.0f);
+		myCol.a = std::clamp(1.0f - (float)(mpos.y - r.y) / (float)r.h, 0.0f, 1.0f);
 	}
 }
 
@@ -315,7 +317,7 @@ void WgColorPicker::onDraw()
 	GuiDraw::checkerboard(r, Colors::white);
 
 	ColorHSV hsv = RGBtoHSV(rgb, rgb.a);
-	hsv.v = min(1.0f, hsv.v * 0.75f + isMouseOver() * (hsv.v * 0.25f + 0.25f));
+	hsv.v = std::min(1.0f, hsv.v * 0.75f + isMouseOver() * (hsv.v * 0.25f + 0.25f);
 	Draw::fill(r, ToColor32(HSVtoRGB(hsv, rgb.a)));
 
 	r = Shrink(r, 1);

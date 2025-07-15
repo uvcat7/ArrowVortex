@@ -278,7 +278,7 @@ static void ParseHitObjects(OsuFile& out, Parser& parser)
 	while(ReadProperty(parser))
 	{
 		const char* p = parser.prop.str();
-		int x = max(0, NoteVal(p)), y = NoteVal(p);
+		int x = std::max(0, NoteVal(p)), y = NoteVal(p);
 		double time = NoteVal(p) * 0.001;
 		int type = NoteVal(p);
 		switch(type)
@@ -288,7 +288,7 @@ static void ParseHitObjects(OsuFile& out, Parser& parser)
 			break;
 		case 128: // Hold note.
 			int hitSound = NoteVal(p);
-			double endTime = max(time, NoteVal(p) * 0.001);
+			double endTime = std::max(time, NoteVal(p) * 0.001);
 			out.hitObjects.push_back({x, time, endTime});
 			break;
 		};
@@ -422,7 +422,7 @@ static void AssignDifficulties(Simfile* sim, const Vector<String>& versions)
 		{
 			return a->notes.size() < b->notes.size();
 		});
-		int offset = max(0, min(charts[0]->meter / 2, 5 - charts.size()));
+		int offset = std::max(0, std::min(charts[0]->meter / 2, 5 - charts.size()));
 		for(int i = 0; i < charts.size(); ++i)
 		{
 			charts[i]->difficulty = (Difficulty)(offset + i);
@@ -501,8 +501,8 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart)
 	for(auto& hitObject : osu.hitObjects)
 	{
 		// x ranges from 0 to 512 (inclusive), y ranges from 0 to 384 (inclusive).
-		int colWidth = 512 / max(osu.numCols, 1);
-		int col = min(max(0, hitObject.x / colWidth), osu.numCols);
+		int colWidth = 512 / std::max(osu.numCols, 1);
+		int col = std::min(std::max(0, hitObject.x / colWidth), osu.numCols);
 
 		// Convert time and endtime to rows.
 		int row = tracker.advance(hitObject.time);

@@ -22,6 +22,8 @@
 #include <System/System.h>
 #include <System/Debug.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 namespace {
@@ -416,7 +418,7 @@ void registerUpdateFunctions()
 	myUpdateFunctions[RECENT_FILES] = []
 	{
 		Item* recent = newMenu();
-		int numFiles = min(gEditor->getNumRecentFiles(), (int)Action::MAX_RECENT_FILES);
+		int numFiles = std::min(gEditor->getNumRecentFiles(), (int)Action::MAX_RECENT_FILES);
 		if(numFiles > 0)
 		{
 			recent->addItem(FILE_CLEAR_RECENT_FILES, "Clear list");
@@ -495,7 +497,7 @@ void registerUpdateFunctions()
 	{
 		Item* hSkins = System::MenuItem::create();
 		int numValid = 0;
-		int numTypes = min(gNoteskin->getNumTypes(), (int)Action::MAX_NOTESKINS);
+		int numTypes = std::min(gNoteskin->getNumTypes(), (int)Action::MAX_NOTESKINS);
 		int activeType = gNoteskin->getType();
 		for(int type = 0; type < numTypes; ++type)
 		{

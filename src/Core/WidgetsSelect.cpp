@@ -4,6 +4,8 @@
 #include <Core/Utils.h>
 #include <Core/GuiDraw.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -90,7 +92,7 @@ void WgSelectList::scroll(bool up)
 	{
 		int end = selectlist_items_.size() * ITEM_H - ItemRect().h;
 		int delta = up ? -ITEM_H : ITEM_H;
-		scroll_position_ = min(max(scroll_position_ + delta, 0), end);
+		scroll_position_ = std::min(std::max(scroll_position_ + delta, 0), end);
 	}
 }
 
@@ -222,7 +224,7 @@ void WgDroplist::onMousePress(MousePress& evt)
 		int numItems = droplist_items_.size();
 		if(isEnabled() && numItems && evt.button == Mouse::LMB && evt.unhandled())
 		{
-			int h = min(numItems * 18 + 8, 128);
+			int h = std::min(numItems * 18 + 8, 128);
 			recti r = {rect_.x, rect_.y + rect_.h, rect_.w, h};
 			selectlist_widget_ = new WgSelectList(gui_);
 			selectlist_widget_->setHeight(h);

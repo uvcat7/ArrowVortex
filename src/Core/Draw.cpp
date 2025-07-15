@@ -3,6 +3,8 @@
 #include <Core/Utils.h>
 #include <Core/Renderer.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -82,7 +84,7 @@ static void TB_setVerts(const TileBar& bar, int* vp, float* vt, recti r, areaf u
 	}
 
 	// Texture coordinates: left-to-right [s,t,u,v] top-to-bottom [w,x].
-	float rw = 1.0f / max(bar.texture.width(), 1);
+	float rw = 1.0f / std::max(bar.texture.width(), 1);
 	float s = uvs.l, t = uvs.l + (b - a) * rw, u = uvs.r - (d - c) * rw, v = uvs.r;
 	float w = uvs.t, x = uvs.b;
 
@@ -172,8 +174,8 @@ static void TR_setVerts(const TileRect& rect, int* vp, float* vt, recti r, areaf
 
 	// Texture coordinates: left-to-right [s,t,u,v] top-to-bottom [w,x,y,z].
 	vec2i size = rect.texture.size();
-	float rw = 1.f / max(size.x, 1);
-	float rh = 1.f / max(size.y, 1);
+	float rw = 1.f / std::max(size.x, 1);
+	float rh = 1.f / std::max(size.y, 1);
 	float s = uvs.l, t = uvs.l + (b - a) * rw, u = uvs.r - (d - c) * rw, v = uvs.r;
 	float w = uvs.t, x = uvs.t + (f - e) * rh, y = uvs.b - (h - g) * rh, z = uvs.b;
 
@@ -242,8 +244,8 @@ static void TR2_setVerts(const TileRect2& rect, int* vp, float* vt, recti r, int
 
 	// Texture coordinates: left-to-right [s,t,u,v] top-to-bottom [w,x,y,z].
 	vec2i size = rect.texture.size();
-	float rw = 1.f / max(size.x, 1);
-	float rh = 1.f / max(size.y, 1);
+	float rw = 1.f / std::max(size.x, 1);
+	float rh = 1.f / std::max(size.y, 1);
 	float s = 0, t = (b - a) * rw, u = 0.5f - (d - c) * rw, v = 0.5f;
 	float w = 0, x = (f - e) * rh, y = 1.0f - (h - g) * rh, z = 1.0f;
 

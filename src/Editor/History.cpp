@@ -8,6 +8,8 @@
 
 #include <Editor/Common.h>
 
+#include <algorithm>
+
 #define HISTORY ((HistoryImpl*)gHistory)
 
 #define NO_SAVED_ENTRIES -1
@@ -405,7 +407,7 @@ void startChain()
 
 void finishChain(String msg)
 {
-	myOpenChains = max(0, myOpenChains - 1);
+	myOpenChains = std::max(0, myOpenChains - 1);
 	if(myChain.head && myOpenChains == 0)
 	{
 		clearUnappliedEntries();

@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -440,7 +442,7 @@ void NoteList::prepareEdit(const NoteEdit& in, NoteEditResult& out, bool clearRe
 		if(nextAddRows[col] <= it->endrow && !removeNote)
 		{
 			Note trimmed = *it;
-			trimmed.endrow = max(trimmed.row, nextAddRows[col] - 24);
+			trimmed.endrow = std::max(trimmed.row, nextAddRows[col] - 24);
 			out.add.append(trimmed);
 			VerifyAdd(trimmed, prevPos, prevEndRows);
 			removeNote = true;
@@ -637,7 +639,7 @@ void NoteList::myReserve(int num)
 	int numBytes = num * sizeof(Note);
 	if(myCap < numBytes)
 	{
-		myCap = max(numBytes, myCap << 1);
+		myCap = std::max(numBytes, myCap << 1);
 		myNotes = (Note*)realloc(myNotes, myCap);
 	}
 }

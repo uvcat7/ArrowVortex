@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fstream>
+#include <algorithm>
 
 #include <Core/Utils.h>
 
@@ -53,7 +54,7 @@ struct WavLoader : public SoundSource
 
 int WavLoader::readFrames(int frames, short* buffer)
 {
-	int numFramesToRead = min(numFramesLeft, frames);
+	int numFramesToRead = std::min(numFramesLeft, frames);
 	numFramesLeft -= numFramesToRead;
 	file.read(reinterpret_cast<char*>(buffer), bytesPerSample * numChannels * numFramesToRead);
     return static_cast<int>(file.gcount());

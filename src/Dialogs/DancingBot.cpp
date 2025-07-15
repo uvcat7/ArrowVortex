@@ -15,6 +15,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 enum TileType
@@ -376,8 +378,8 @@ void DialogDancingBot::onUpdateSize()
 	auto style = gStyle->get();
 	if(style && style->padWidth > 0)
 	{
-		w = max(w, style->padWidth * 64 + 8);
-		h = max(h, style->padHeight * 64 + 24);
+		w = std::max(w, style->padWidth * 64 + 8);
+		h = std::max(h, style->padHeight * 64 + 24);
 	}
 	setWidth(w);
 	setHeight(h);
@@ -419,7 +421,7 @@ void DialogDancingBot::onDraw()
 		{
 			auto n = prevNotes[col];
 			double dist = n ? (time - n->endtime) : 1000.0;
-			int alpha = min(max((int)((1.5 - dist * 6.0) * 255.0), 0), 255);
+			int alpha = std::min(std::max((int)((1.5 - dist * 6.0) * 255.0, 0), 255);
 			if(alpha > 0)
 			{
 				vec2i pos = myGetDrawPos(style->padColPositions[col]);
@@ -446,7 +448,7 @@ void DialogDancingBot::onDraw()
 			if(abs(l.x - r.x) + abs(l.y - r.y) > 0.1f)
 			{
 				rotation = atan2(r.y - l.y, r.x - l.x);
-				rotation = min(max(rotation, -0.8f), 0.8f);
+				rotation = std::min(std::max(rotation, -0.8f), 0.8f);
 			}
 
 			// Draw the feet.
@@ -603,14 +605,14 @@ void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn)
 		vec2f endPos = ToVec2f(myGetDrawPos(endButton));
 		if(endtime > curTime)
 		{
-			double startTime = max(curTime, endtime - 0.5);
+			double startTime = std::max(curTime, endtime - 0.5);
 			double delta = LerpDelta(startTime, endtime, time);
-			curPos = SmoothStep(curPos, endPos, (float)min(max(delta, 0.0), 1.0));
+			curPos = SmoothStep(curPos, endPos, (float)std::min(std::max(delta, 0.0), 1.0));
 		}
 
 		// Determine feet scale.
-		double dt = min(fabs(curTime - time), fabs(endtime - time));
-		float scale = (float)min(1.0, 0.8 + dt * 6.0);
+		double dt = std::min(fabs(curTime - time), fabs(endtime - time));
+		float scale = (float)std::min(1.0, 0.8 + dt * 6.0);
 
 		out[f] = {curPos.x, curPos.y, scale};
 	}

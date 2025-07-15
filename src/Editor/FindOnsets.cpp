@@ -9,6 +9,8 @@
 
 #include <math.h>
 
+#include <algorithm>
+
 // double to float conversion.
 #pragma warning(disable: 4244)
 
@@ -1068,8 +1070,8 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 				fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
 				int beginPos = framesPerThread * (thread + 0);
 				int endPos = framesPerThread * (thread + 1);
-				int paddedBegin = max(beginPos - bufsize, 0);
-				int paddedEnd = min(endPos + bufsize, numFrames - windowlen);
+				int paddedBegin = std::max(beginPos - bufsize, 0);
+				int paddedEnd = std::min(endPos + bufsize, numFrames - windowlen);
 				for(int i = paddedBegin; i < paddedEnd; i += windowlen)
 				{
 					memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);

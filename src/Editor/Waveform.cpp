@@ -182,7 +182,7 @@ void loadSettings(XmrNode& settings)
 		if(ws) setWaveShape(ToWaveShape(ws));	
 
 		waveform->get("antiAliasing", &waveformAntiAliasingMode_);
-		setAntiAliasing(clamp(waveformAntiAliasingMode_, 0, 3));
+		setAntiAliasing(std::clamp(waveformAntiAliasingMode_, 0, 3));
 	}
 }
 
@@ -341,7 +341,7 @@ void edgeLumAmplitude(WaveEdge* edge, int w, int h)
 	int scalar = (255 << 16) * 2 / w;
 	for(int y = 0; y < h; ++y, ++edge)
 	{
-		int mag = max(abs(edge->l), abs(edge->r));
+		int mag = std::max(abs(edge->l), abs(edge->r));
 		edge->lum = (mag * scalar) >> 16;
 	}
 }
@@ -354,7 +354,7 @@ void edgeShapeRectified(uint8_t* dst, const WaveEdge* edge, int w, int h)
 	int cx = w / 2;
 	for(int y = 0; y < h; ++y, dst += w, ++edge)
 	{
-		int mag = max(abs(edge->l), abs(edge->r));
+		int mag = std::max(abs(edge->l), abs(edge->r));
 		int l = cx - mag;
 		int r = cx + mag;
 		for(int x = l; x < r; ++x) dst[x] = edge->lum;
@@ -366,8 +366,8 @@ void edgeShapeSigned(uint8_t* dst, const WaveEdge* edge, int w, int h)
 	int cx = w / 2;
 	for(int y = 0; y < h; ++y, dst += w, ++edge)
 	{
-		int l = cx + min(edge->l, 0);
-		int r = cx + max(edge->r, 0);
+		int l = cx + std::min(edge->l, 0);
+		int r = cx + std::max(edge->r, 0);
 		for(int x = l; x < r; ++x) dst[x] = edge->lum;
 	}
 }
@@ -443,8 +443,8 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	double samplesPerBlock = (double)TEX_H * samplesPerPixel;
 
 	int64_t srcFrames = filtered ? waveformFilter_->samplesL.size() : music.getNumFrames();
-	int64_t samplePos = max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
-	double sampleCount = min((double) srcFrames - samplePos, samplesPerBlock);
+	int64_t samplePos = std::max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId);
+	double sampleCount = std::min((double) srcFrames - samplePos, samplesPerBlock);
 
 	if (samplePos >= srcFrames || sampleCount <= 0)
 	{
@@ -463,7 +463,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 		return;
 	}
 
-	double sampleSkip = max(0.001, (samplesPerPixel / 200.0));
+	double sampleSkip = std::max(0.001, samplesPerPixel / 200.0);
 	int wh = w / 2 - 1;
 
 	const short* in = nullptr;
@@ -482,15 +482,15 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	for(int y = 0; y < h; ++y)
 	{
 		// Determine the last sample of the line.
-		double end = min(sampleCount, (double)(y + 1) * advance);
+		double end = std::min(sampleCount, (double)(y + 1) * advance);
 
 		// Find the minimum/maximum amplitude within the line.
 		int minAmp = SHRT_MAX;
 		int maxAmp = SHRT_MIN;
 		while(ofs < end)
 		{
-			maxAmp = max(maxAmp, (int)*(in + (int) round(ofs)));
-			minAmp = min(minAmp, (int)*(in + (int) round(ofs)));
+			maxAmp = std::max(maxAmp, (int)*(in + (int) round(ofs));
+			minAmp = std::min(minAmp, (int)*(in + (int) round(ofs));
 			ofs += sampleSkip;
 		}
 
@@ -499,7 +499,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 		int r = (maxAmp * wh) >> 15;
 		if(r >= l)
 		{
-			edges[y] = {clamp(l, -wh, wh), clamp(r, -wh, wh), 0};
+			edges[y] = {std::clamp(l, -wh, wh), std::clamp(r, -wh, wh), 0};
 		}
 		else
 		{
@@ -611,7 +611,7 @@ void updateBlockW()
 {
 	int width = waveformBlockWidth_;
 
-	waveformBlockWidth_ = min(TEX_W, gView->applyZoom(256));
+	waveformBlockWidth_ = std::min(TEX_W, gView->applyZoom(256));
 	waveformSpacing_ = gView->applyZoom(24);
 
 	if(waveformBlockWidth_ != width) clearBlocks();
@@ -667,7 +667,7 @@ void drawPeaks()
 	areaf uvs = {0, 0, waveformBlockWidth_ / (float)TEX_W, 1};
 	if(reversed) swapValues(uvs.t, uvs.b);
 
-	int id = max(0, visibilityStartY / TEX_H);
+	int id = std::max(0, visibilityStartY / TEX_H);
 	for(; id * TEX_H < visibilityEndY; ++id)
 	{
 		auto block = getBlock(id);

@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <algorithm>
+
 namespace Vortex {
 
 // Writes order + 1 coefficients to b and a.
@@ -22,12 +24,12 @@ void FilterOrder3(const double* b, const double* a, const short* in, short* out,
 		z1 = b2 * Xi + z2 - a2 * Yi;
 		z2 = b3 * Xi - a3 * Yi;
 		*dst = (short)Yi;
-		maxAmp = max(*dst, maxAmp);
+		maxAmp = std::max(*dst, maxAmp);
 	}
 	int scalar = (SHRT_MAX << 16) / (int)maxAmp;
 	for(short* dst = out, *end = dst + size; dst != end; ++dst)
 	{
-		*dst = (short)clamp((((int)*dst) * scalar) >> 16, SHRT_MIN, SHRT_MAX);
+		*dst = (short)std::clamp((int)*dst) * scalar) >> 16, SHRT_MIN, SHRT_MAX);
 	}
 }
 

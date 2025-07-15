@@ -8,6 +8,8 @@
 #include <Managers/NoteskinMan.h>
 #include <Managers/ChartMan.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -144,7 +146,7 @@ Style* CreateStyle(StringRef id, int numCols, int numPlayers)
 	if(numCols < 1 || numCols > SIM_MAX_COLUMNS)
 	{
 		int old = numCols;
-		numCols = clamp<int>(numCols, 1, SIM_MAX_COLUMNS);
+		numCols = std::clamp<int>(numCols, 1, SIM_MAX_COLUMNS);
 		HudError("Style %s has %i columns, ArrowVortex only supports 1-%i, using %i columns.",
 			id.str(), old, SIM_MAX_COLUMNS, numCols);
 	}
@@ -152,7 +154,7 @@ Style* CreateStyle(StringRef id, int numCols, int numPlayers)
 	if(numPlayers < 1 || numPlayers > SIM_MAX_PLAYERS)
 	{
 		int old = numPlayers;
-		numPlayers = clamp<int>(numPlayers, 1, SIM_MAX_PLAYERS);
+		numPlayers = std::clamp<int>(numPlayers, 1, SIM_MAX_PLAYERS);
 		HudError("Style %s has %i players, ArrowVortex only supports 1-%i, using %i players.",
 			id.str(), old, SIM_MAX_PLAYERS, numPlayers);
 	}
@@ -216,7 +218,7 @@ Style* CreateStyle(const XmrNode* node)
 				{
 					pos[col] = {x, height};
 				}
-				width = max(width, x + 1);
+				width = std::max(width, x + 1);
 			}
 			++height;
 		}

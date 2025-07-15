@@ -111,8 +111,8 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 		if(key == Key::END) cx = cy = lineedit_text_.len();
 		if(cx != cy)
 		{
-			if(key == Key::LEFT) cx = cy = min(cx, cy); 
-			if(key == Key::RIGHT) cx = cy = max(cx, cy);
+			if(key == Key::LEFT) cx = cy = std::min(cx, cy); 
+			if(key == Key::RIGHT) cx = cy = std::max(cx, cy);
 		}
 		else
 		{
@@ -138,8 +138,8 @@ void WgLineEdit::onKeyPress(KeyPress& evt)
 	}
 
 	int len = lineedit_text_.len();
-	lineedit_cursor_.x = clamp(lineedit_cursor_.x, 0, len);
-	lineedit_cursor_.y = clamp(lineedit_cursor_.y, 0, len);
+	lineedit_cursor_.x = std::clamp(lineedit_cursor_.x, 0, len);
+	lineedit_cursor_.y = std::clamp(lineedit_cursor_.y, 0, len);
 }
 
 void WgLineEdit::onKeyRelease(KeyRelease& evt)
@@ -277,8 +277,8 @@ void WgLineEdit::onTick()
 		lineedit_cursor_.y = Text::getCharIndex(vec2i{tp.x, tp.y}, {mp.x, tp.y});
 		lineedit_blink_time_ = 0.f;
 	}
-	lineedit_cursor_.x = min(max(lineedit_cursor_.x, 0), (int)lineedit_text_.len());
-	lineedit_cursor_.y = min(max(lineedit_cursor_.y, 0), (int)lineedit_text_.len());
+	lineedit_cursor_.x = std::min(std::max(lineedit_cursor_.x, 0), (int)lineedit_text_.len());
+	lineedit_cursor_.y = std::min(std::max(lineedit_cursor_.y, 0), (int)lineedit_text_.len());
 
 	// Update text offset
 	
@@ -286,11 +286,11 @@ void WgLineEdit::onTick()
 	float barW = (float)(rect_.w - 12);
 	float textW = (float)Text::getSize().x;
 	float cursorX = (float)Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x;
-	float target = min(max(lineedit_scroll_offset_, cursorX - barW + 12), cursorX - 12);
-	target = max(0.f, min(target, textW - barW));
+	float target = std::min(std::max(lineedit_scroll_offset_, cursorX - barW + 12), cursorX - 12);
+	target = std::max(0.f, std::min(target, textW - barW));
 
-	float delta = max((float)fabs(lineedit_scroll_offset_ - target) * 10.f * dt, dt * 256.f);
-	float smooth = (lineedit_scroll_offset_ < target) ? min(lineedit_scroll_offset_ + delta, target) : max(lineedit_scroll_offset_ - delta, target);
+	float delta = std::max((float)fabs(lineedit_scroll_offset_ - target) * 10.f * dt, dt * 256.f);
+	float smooth = (lineedit_scroll_offset_ < target) ? std::min(lineedit_scroll_offset_ + delta, target) : std::max(lineedit_scroll_offset_ - delta, target);
 	lineedit_scroll_offset_ = force_scroll_update_ ? target : smooth;
 	force_scroll_update_ = false;
 
@@ -367,7 +367,7 @@ void WgLineEdit::hideBackground()
 
 void WgLineEdit::setMaxLength(int n)
 {
-	lineedit_max_length_ = max(0, n);
+	lineedit_max_length_ = std::max(0, n);
 }
 
 void WgLineEdit::setNumerical(bool numerical)
@@ -572,7 +572,7 @@ void WgSpinner::setPrecision(int minDecimalPlaces, int maxDecimalPlaces)
 void WgSpinner::SpinnerUpdateValue(double v)
 {
 	double prev = value.get();
-	value.set(max(spinner_min_, min(spinner_max_, v)));
+	value.set(std::max(spinner_min_, std::min(spinner_max_, v)));
 	SpinnerUpdateText();
 	if(value.get() != prev) onChange.call();
 }

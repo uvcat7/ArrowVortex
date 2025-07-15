@@ -14,6 +14,8 @@
 
 #include <Editor/Common.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -73,7 +75,7 @@ void onDraw() override
 	if(chart)
 	{
 		// Draw the left-side colored bar with difficulty and meter.
-		recti left = {rect_.x, rect_.y, min(r.w, 128), 20};
+		recti left = {rect_.x, rect_.y, std::min(r.w, 128), 20};
 		uint32_t color = ToColor(chart->difficulty);
 		myBar->draw(left, 0, color);
 
@@ -132,7 +134,7 @@ static int GetChartListH()
 		}
 		h += 21;
 	}
-	return max(24, h);
+	return std::max(24, h);
 }
 
 struct DialogChartList::ChartList : public WgScrollRegion {
@@ -280,8 +282,8 @@ void DialogChartList::onChanges(int changes)
 	{
 		myList->updateButtons();
 		int h = GetChartListH();
-		h = min(h, getGui()->getView().h - 128);
-		h = max(h, 32);
+		h = std::min(h, getGui()->getView().h - 128);
+		h = std::max(h, 32);
 		setHeight(h);
 	}
 }
@@ -290,8 +292,8 @@ void DialogChartList::onUpdateSize()
 {
 	myList->updateSize();
 	int h = myList->getScrollHeight();
-	setMinimumHeight(min(64, h));
-	setMaximumHeight(min(1024, h));
+	setMinimumHeight(std::min(64, h));
+	setMaximumHeight(std::min(1024, h));
 }
 
 void DialogChartList::onTick()

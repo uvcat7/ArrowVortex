@@ -7,6 +7,8 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 
+#include <algorithm>
+
 #include <System/OpenGL.h>
 
 namespace Vortex {
@@ -217,7 +219,7 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot)
 		// Copy the glyph pixels to the cache texture.
 		uint8_t* pixels = CopyGlyphBitmap(bitmapW, bitmapH, bitmap);
 		cache->tex->modify(glyph->box.x, glyph->box.y, bitmapW, bitmapH, pixels);
-		cache->shelfH = max(cache->shelfH, bitmapH);
+		cache->shelfH = std::max(cache->shelfH, bitmapH);
 		free(pixels);
 
 		// Set the glyph uvs.

@@ -6,6 +6,8 @@
 #include <Core/Draw.h>
 #include <Core/Canvas.h>
 
+#include <algorithm>
+
 #include <System/Debug.h>
 #include <System/OpenGL.h>
 
@@ -206,7 +208,7 @@ void Renderer::pushScissorRect(const recti& r)
 void Renderer::pushScissorRect(int x, int y, int w, int h)
 {
 	auto& stack = RI->scissorStack;
-	w = max(w, 0), h = max(h, 0);
+	w = std::max(w, 0), h = std::max(h, 0);
 	if(stack.empty())
 	{
 		// The new scissor region is the first scissor region, use it as-is.
@@ -217,10 +219,10 @@ void Renderer::pushScissorRect(int x, int y, int w, int h)
 	{
 		// Calculate the intersection of the current and new scissor region.
 		recti last = stack.back();
-		int r = min(last.x + last.w, x + w);
-		int b = min(last.y + last.h, y + h);
-		x = max(last.x, x), w = max(0, r - x);
-		y = max(last.y, y), h = max(0, b - y);
+		int r = std::min(last.x + last.w, x + w);
+		int b = std::min(last.y + last.h, y + h);
+		x = std::max(last.x, x), w = std::max(0, r - x);
+		y = std::max(last.y, y), h = std::max(0, b - y);
 		stack.push_back({x, y, w, h});
 	}
 

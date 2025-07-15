@@ -4,6 +4,8 @@
 #include <Core/Utils.h>
 #include <Core/GuiDraw.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -242,7 +244,7 @@ void WgSlider::onDraw()
 	if(slider_begin_ != slider_end_)
 	{
 		int boxX = (int)((double)bar.w * (value.get() - slider_begin_) / (slider_end_ - slider_begin_));
-		recti box = {bar.x + min(max(boxX, 0), bar.w) - 4, bar.y - 8, 8, 16};
+		recti box = {bar.x + std::min(std::max(boxX, 0), bar.w) - 4, bar.y - 8, 8, 16};
 		
 		button.base.draw(box, 0);
 		if(isCapturingMouse())
@@ -259,8 +261,8 @@ void WgSlider::onDraw()
 void WgSlider::SliderUpdateValue(double v)
 {
 	double prev = value.get();
-	v = min(v, max(slider_begin_, slider_end_));
-	v = max(v, min(slider_begin_, slider_end_));
+	v = std::min(v, std::max(slider_begin_, slider_end_));
+	v = std::max(v, std::min(slider_begin_, slider_end_));
 	value.set(v);
 	if(value.get() != prev) onChange.call();
 }
@@ -268,7 +270,7 @@ void WgSlider::SliderUpdateValue(double v)
 void WgSlider::SliderDrag(int x, int y)
 {
 	recti r = rect_;
-	r.w = max(r.w, 1);
+	r.w = std::max(r.w, 1);
 	double val = slider_begin_ + (slider_end_ - slider_begin_) * ((double)(x - r.x) / (double)r.w);
 	SliderUpdateValue(val);
 }

@@ -4,6 +4,8 @@
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 #define ForEachType(type)\
@@ -60,8 +62,8 @@ void SegmentGroup::prepareEdit(const SegmentEdit& in, SegmentEditResult& out, bo
 				auto last = list.rbegin();
 				if(last->row > first->row)
 				{
-					regionBegin = min(regionBegin, first->row);
-					regionEnd = max(regionEnd, last->row);
+					regionBegin = std::min(regionBegin, first->row);
+					regionEnd = std::max(regionEnd, last->row);
 				}
 			}
 		}

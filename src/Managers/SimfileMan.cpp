@@ -82,7 +82,7 @@ void myUpdateEndRow()
 	{
 		for(auto seg = list->begin(), end = list->end(); seg != end; ++seg)
 		{
-			endRow = max(endRow, seg->row);
+			endRow = std::max(endRow, seg->row);
 		}
 	}
 
@@ -91,12 +91,12 @@ void myUpdateEndRow()
 	{
 		for (auto& n : myChart->notes)
 		{
-			endRow = max(endRow, n.endrow);
+			endRow = std::max(endRow, n.endrow);
 		}
 	}
 
 	// Row of the end of the music.
-	endRow = max(endRow, gTempo->timeToRow(gMusic->getSongLength()));
+	endRow = std::max(endRow, gTempo->timeToRow(gMusic->getSongLength()));
 
 	// Round up to the next beat, with at least half a beat leeway.
 	int beatRow = endRow + ROWS_PER_BEAT * 3 / 2 - 1;
@@ -122,7 +122,7 @@ void myUpdateChart()
 {
 	if(mySimfile)
 	{
-		myChartIndex = clamp(myChartIndex, -1, mySimfile->charts.size() - 1);
+		myChartIndex = std::clamp(myChartIndex, -1, mySimfile->charts.size() - 1);
 		myChart = (myChartIndex >= 0) ? mySimfile->charts[myChartIndex] : nullptr;
 	}
 	else

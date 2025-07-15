@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 namespace {
@@ -64,7 +66,7 @@ struct OggConversionPipe : public System::CommandPipe
 			firstChunk = false;
 			return sizeof(WaveHeader);
 		}
-		int numFrames = min(framesLeft, 4096);
+		int numFrames = std::min(framesLeft, 4096);
 		for(int i = 0, p = 0; i < numFrames; ++i)
 		{
 			samples[p++] = *srcL++;

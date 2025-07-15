@@ -4,12 +4,11 @@
 #include <Core/AlignedMemory.h>
 
 #include <vector>
+#include <algorithm>
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
-
-#undef min
-#undef max
 
 namespace Vortex {
 
@@ -130,7 +129,7 @@ int ParallelThreads::concurrency()
 	{
 		SYSTEM_INFO sysinfo;
 		GetSystemInfo(&sysinfo);
-		s_num_of_procs = clamp<int>(sysinfo.dwNumberOfProcessors, 1, 16);
+		s_num_of_procs = std::clamp<int>(sysinfo.dwNumberOfProcessors, 1, 16);
 	}
 	return s_num_of_procs;
 }

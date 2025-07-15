@@ -249,8 +249,8 @@ void myApplyNotes(Chart* chart, const NoteList& add, const NoteList& rem, bool f
 		}
 
 		int row = gSimfile->getEndRow();
-		if(rem.size()) row = min(row, rem.begin()->row);
-		if(add.size()) row = min(row, add.begin()->row);
+		if(rem.size()) row = std::min(row, rem.begin()->row);
+		if(add.size()) row = std::min(row, add.begin()->row);
 
 		int h = gView->getHeight();
 		int y = gView->rowToY(row);
@@ -363,7 +363,7 @@ static String ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool und
 	{
 		if(desc)
 		{
-			int numNotes = max(add.size(), rem.size());
+			int numNotes = std::max(add.size(), rem.size());
 			const char* format = (numNotes > 1) ? desc->plural : desc->singular;
 			msg = Str::fmt(format).arg(numNotes);
 		}

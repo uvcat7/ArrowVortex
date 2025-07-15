@@ -116,7 +116,7 @@ void update()
 	for(TempoBox& box : myBoxes)
 	{
 		Text::arrange(Text::MC, textStyle, box.str.str());
-		int width = max(32, Text::getWidth() + 24);
+		int width = std::max(32, Text::getWidth() + 24);
 		box.width = width;
 		
 		int side = Segment::meta[box.type]->side;
@@ -423,7 +423,7 @@ void drawBoxHelp(const TempoBox& box)
 	Text::arrange(Text::TC, style, meta->help);
 	vec2i helpSize = Text::getSize();
 
-	int w = max(nameSize.x, helpSize.x) + 12;
+	int w = std::max(nameSize.x, helpSize.x) + 12;
 	int h = nameSize.y + helpSize.y + 8;
 	recti r = recti{x - w / 2, y, w, h};
 

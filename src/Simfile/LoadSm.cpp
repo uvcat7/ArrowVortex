@@ -407,7 +407,7 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 				// Make sure we set the note to its largest quantization to avoid data loss
 				if (data.quants[col] > 0 && hold->quant > 0)
 				{
-					hold->quant = min(192u, quantization * hold->quant / gcd(quantization, hold->quant));
+					hold->quant = std::min(192u, quantization * hold->quant / gcd(quantization, hold->quant));
 				}
 				else // There was some error, so always play safe and use 192
 				{

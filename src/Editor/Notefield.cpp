@@ -38,6 +38,8 @@
 #include <Editor/Waveform.h>
 #include <Editor/TempoBoxes.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 namespace {
@@ -211,7 +213,7 @@ void onChanges(int changes)
 
 void setBgAlpha(int percent)
 {
-	percent = min(max(percent, 0), 100);
+	percent = std::min(std::max(percent, 0), 100);
 	if(myBgBrightness != percent)
 	{
 		myBgBrightness = percent;
@@ -359,8 +361,8 @@ void drawBeatLines()
 	Vector<MeasureLabel> labels(8);
 
 	// Determine the first row and last row that should show beat lines.
-	int drawBeginRow = max(0, gView->offsetToRow(myFirstVisibleTor));
-	int drawEndRow = min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) + 1;
+	int drawBeginRow = std::max(0, gView->offsetToRow(myFirstVisibleTor));
+	int drawEndRow = std::min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) + 1;
 
 	auto& sigs = gTempo->getTimingData().sigs;
 	auto it = sigs.begin(), end = sigs.end();
@@ -389,7 +391,7 @@ void drawBeatLines()
 	while(it != end && row < drawEndRow)
 	{
 		int endRow = drawEndRow;
-		if(next != end) endRow = min(endRow, next->row);
+		if(next != end) endRow = std::min(endRow, next->row);
 		while(row < endRow)
 		{
 			// Measure line and measure label.
@@ -440,8 +442,8 @@ bool validSegmentRegion(int& t, int& b, int& viewTop, int viewBtm)
 	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm);
 	if(draw)
 	{
-		t = clamp(t, viewTop, viewBtm);
-		b = clamp(b, viewTop, viewBtm);
+		t = std::clamp(t, viewTop, viewBtm);
+		b = std::clamp(b, viewTop, viewBtm);
 		return true;
 	}
 	return false;
@@ -521,7 +523,7 @@ void drawReceptors()
 		// Calculate the beat pulse value for the receptors.
 		double beat = gTempo->timeToBeat(gView->getCursorTime());
 		float beatfrac = (float)(beat - floor(beat));
-		uint8_t beatpulse = (uint8_t)min(max((int)((2 - beatfrac * 4)*255), 0), 255);
+		uint8_t beatpulse = (uint8_t)std::min(std::max((int)((2 - beatfrac * 4)*255, 0), 255);
 
 		// Draw the receptors.
 		auto batch = Renderer::batchTC();
@@ -563,7 +565,7 @@ void drawReceptorGlow()
 		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
 
 		double lum = 1.5 - (time - note->endtime) * 6.0;
-		uint8_t alpha = (uint8_t)clamp((int)(lum * 255.0), 0, 255);
+		uint8_t alpha = (uint8_t)std::clamp((int)(lum * 255.0, 0, 255);
 		if(alpha > 0)
 		{
 			noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
@@ -651,7 +653,7 @@ void drawNotes()
 		}
 
 		// Don't show notes off the screen
-		if(max(y, by) < -32 || min(y, by) > maxY) continue;
+		if(std::max(y, by) < -32 || std::min(y, by) > maxY) continue;
 
 		int rowtype = ToRowType(note.row);
 		int col = note.col, x = myColX[col];
@@ -780,8 +782,8 @@ void drawSongPreviewArea()
 	double end = start + gSimfile->get()->previewLength;
 	if(end > start)
 	{
-		int yt = max(0, gView->timeToY(start));
-		int yb = min(gView->getHeight(), gView->timeToY(end));
+		int yt = std::max(0, gView->timeToY(start));
+		int yb = std::min(gView->getHeight(), gView->timeToY(end));
 		Draw::fill({myX, yt, myW, yb - yt}, RGBAtoColor32(255, 255, 255, 64));
 		if(gView->getScaleLevel() > 2)
 		{

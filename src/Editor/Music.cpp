@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <chrono>
+#include <algorithm>
 
 #include <Core/Vector.h>
 #include <Core/Reference.h>
@@ -187,11 +188,11 @@ void WriteTickSamples(short* dst, int startFrame, int numFrames, const TickData&
 
 	if(rate == 100)
 	{
-		int n = min(numFrames, tick.sound.getNumFrames() - startFrame);
+		int n = std::min(numFrames, tick.sound.getNumFrames() - startFrame);
 		for(int i = 0; i < n; ++i)
 		{
-			*dst++ = min(max(*dst + *srcL++, SHRT_MIN), SHRT_MAX);
-			*dst++ = min(max(*dst + *srcR++, SHRT_MIN), SHRT_MAX);
+			*dst++ = std::min(std::max(*dst + *srcL++, SHRT_MIN), SHRT_MAX);
+			*dst++ = std::min(std::max(*dst + *srcR++, SHRT_MIN), SHRT_MAX);
 		}
 	}
 	else
@@ -207,8 +208,8 @@ void WriteTickSamples(short* dst, int startFrame, int numFrames, const TickData&
 			float sampleL = lerp((float)srcL[idx], (float)srcL[idx + 1], frac);
 			float sampleR = lerp((float)srcR[idx], (float)srcR[idx + 1], frac);
 			
-			*dst++ = min(max(*dst + (short)sampleL, SHRT_MIN), SHRT_MAX);
-			*dst++ = min(max(*dst + (short)sampleR, SHRT_MIN), SHRT_MAX);
+			*dst++ = std::min(std::max(*dst + (short)sampleL, SHRT_MIN), SHRT_MAX);
+			*dst++ = std::min(std::max(*dst + (short)sampleR, SHRT_MIN), SHRT_MAX);
 
 			srcPos += srcDelta;
 			idx = (int)srcPos;
@@ -234,8 +235,8 @@ void WriteTicks(short* buf, int frames, const TickData& tick, int rate)
 		if(beginFrame == curFrame) continue; // avoid double ticks for jumps.
 		if(beginFrame > frames) break;
 
-		int srcPos = max(0, -beginFrame);
-		int dstPos = max(0, beginFrame);
+		int srcPos = std::max(0, -beginFrame);
+		int dstPos = std::max(0, beginFrame);
 		short* dst = buf + dstPos * 2;
 		int dstFrames = frames - dstPos;
 
@@ -254,7 +255,7 @@ void WriteSourceFrames(short* buffer, int frames, int64_t srcPos)
 	int framesLeft = frames;
 	if(srcPos < 0)
 	{
-		int n = min(framesLeft, (int)max(-srcPos, (int64_t)INT_MIN));
+		int n = std::min(framesLeft, (int)std::max(-srcPos, (int64_t)INT_MIN));
 		memset(dst, 0, sizeof(short) * MIX_CHANNELS * n);
 		dst += n * MIX_CHANNELS;
 		framesLeft -= n;
@@ -264,7 +265,7 @@ void WriteSourceFrames(short* buffer, int frames, int64_t srcPos)
 	// Fill the remaining buffer with music samples.
 	if(framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 && !myIsMuted)
 	{
-		int n = (int)min(max(mySamples.getNumFrames() - srcPos, (int64_t)0), (int64_t)framesLeft);
+		int n = (int)std::min(std::max(mySamples.getNumFrames() - srcPos, (int64_t)0), (int64_t)framesLeft);
 		const short* srcL = mySamples.samplesL() + srcPos;
 		const short* srcR = mySamples.samplesR() + srcPos;
 		if(musicVolume == 100)
@@ -328,8 +329,8 @@ void writeFrames(short* buffer, int frames) override
 		short* dst = buffer;
 		for(int i = 0; i < frames; ++i)
 		{
-			int index0 = min((int)tmpPos, tmpEnd);
-			int index1 = min(index0 + 1, tmpEnd);
+			int index0 = std::min((int)tmpPos, tmpEnd);
+			int index1 = std::min(index0 + 1, tmpEnd);
 			index0 *= MIX_CHANNELS;
 			index1 *= MIX_CHANNELS;
 
@@ -339,8 +340,8 @@ void writeFrames(short* buffer, int frames) override
 			float l = (float)tmpL[index0] * w0 + (float)tmpL[index1] * w1;
 			float r = (float)tmpR[index0] * w0 + (float)tmpR[index1] * w1;
 
-			*dst++ = (short)min(max((int)l, SHRT_MIN), SHRT_MAX);
-			*dst++ = (short)min(max((int)r, SHRT_MIN), SHRT_MAX);
+			*dst++ = (short)std::min(std::max((int)l, SHRT_MIN), SHRT_MAX);
+			*dst++ = (short)std::min(std::max((int)r, SHRT_MIN), SHRT_MAX);
 
 			tmpPos += rate;
 		}
@@ -557,7 +558,7 @@ const Sound& getSamples()
 
 void setSpeed(int speed)
 {
-	speed = min(max(speed, 10), 400);
+	speed = std::min(std::max(speed, 10), 400);
 	if(myMusicSpeed != speed)
 	{
 		interruptStream();
@@ -574,7 +575,7 @@ int getSpeed()
 
 void setVolume(int vol)
 {
-	vol = min(max(vol, 0), 100);
+	vol = std::min(std::max(vol, 0), 100);
 	if(myMusicVolume != vol)
 	{
 		interruptStream();

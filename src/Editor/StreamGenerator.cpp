@@ -14,6 +14,7 @@
 
 #include <math.h>
 #include <random>
+#include <algorithm>
 
 namespace Vortex {
 namespace {
@@ -126,14 +127,14 @@ int FootPlanner::getNextCol(int xmin, int xmax)
 	}
 
 	// Adjust the weights based on the target average step distance.
-	float scaledTarget = max(0.1f, owner->targetStepDistance - 0.6f);
-	float scaledAvg = max(0.1f, avgStepDist - 0.6f);
+	float scaledTarget = std::max(0.1f, owner->targetStepDistance - 0.6f);
+	float scaledAvg = std::max(0.1f, avgStepDist - 0.6f);
 	scaledTarget = scaledTarget + (scaledTarget - scaledAvg) * 0.5f;
 	for(int col = 0; col < numCols; ++col)
 	{
 		if(weights[col] > 0.0f)
 		{
-			float scaledDist = max(0.1f, stepDists[col] - 0.6f);
+			float scaledDist = std::max(0.1f, stepDists[col] - 0.6f);
 			float delta = abs(scaledDist - scaledTarget);
 			float w = weights[col] / (0.1f + delta);
 			weights[col] = lerp(weights[col], w, owner->targetStepDistanceBias);
@@ -177,8 +178,8 @@ StreamPlanner::StreamPlanner(const StreamGenerator* sg)
 
 	numCols = gStyle->getNumCols();
 	nextFoot = sg->startWithRight ? FOOT_R : FOOT_L;
-	maxColReps = clamp(sg->maxColRep, 1, 16);
-	maxBoxReps = clamp(sg->maxBoxRep, 1, 16);
+	maxColReps = std::clamp(sg->maxColRep, 1, 16);
+	maxBoxReps = std::clamp(sg->maxBoxRep, 1, 16);
 
 	feet[FOOT_L].curCol = sg->feetCols.x;
 	feet[FOOT_R].curCol = sg->feetCols.y;
@@ -209,10 +210,10 @@ StreamPlanner::StreamPlanner(const StreamGenerator* sg)
 		for(int j = i + 1; j < numCols; ++j)
 		{
 			float dist = GetPadDist(pad.data(), i, j);
-			maxStepDist = max(maxStepDist, dist);
+			maxStepDist = std::max(maxStepDist, dist);
 		}
 	}
-	maxStepDist = min(MAX_STEP_DIST, maxStepDist);
+	maxStepDist = std::min(MAX_STEP_DIST, maxStepDist);
 	targetStepDistance = lerp(0.2f, maxStepDist, sg->patternDifficulty);
 	targetStepDistanceBias = abs(sg->patternDifficulty * 2 - 1);
 

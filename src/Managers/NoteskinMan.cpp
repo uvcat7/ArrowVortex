@@ -15,6 +15,8 @@
 
 #include <Managers/StyleMan.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -522,7 +524,7 @@ void saveSettings(XmrNode& settings)
 	// Save the noteskin preferences.
 	Vector<const char*> prefs;
 	for(int i : myPriorities) prefs.push_back(myTypes[i].name.str());
-	view->addAttrib("noteskinPrefs", prefs.data(), min(prefs.size(), 5));
+	view->addAttrib("noteskinPrefs", prefs.data(), std::min(prefs.size(), 5));
 }
 
 // ================================================================================================
@@ -611,7 +613,7 @@ void giveTopPriority(int type)
 
 void setType(int type)
 {
-	type = clamp(type, 0, myTypes.size());
+	type = std::clamp(type, 0, myTypes.size());
 	if(myActiveSkin && myActiveSkin->type != type)
 	{
 		LoadNoteskin(myActiveSkin, myTypes[type]);

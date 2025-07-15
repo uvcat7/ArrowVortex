@@ -6,12 +6,11 @@
 #include <stdint.h>
 #include <math.h>
 
+#include <algorithm>
+
 # pragma warning(disable : 4996) // stricmp.
 
 namespace Vortex {
-
-inline int min(int a, int b) { return (a > b) ? b : a; }
-inline int max(int a, int b) { return (a < b) ? b : a; }
 
 inline char ToUpper(char c) { return (c >= 'a' && c <= 'z') ? (c & ~0x20) : c; }
 inline char ToLower(char c) { return (c >= 'A' && c <= 'Z') ? (c | 0x20) : c; }
@@ -395,7 +394,7 @@ void Str::erase(String& s, int pos, int n)
 	}
 	else if(pos < len && n > 0)
 	{
-		n = min(n, len - pos);
+		n = std::min(n, len - pos);
 		Str2::closeGap(s, pos, n);
 	}
 }
@@ -472,7 +471,7 @@ String Str::substr(StringRef s, int pos, int n)
 	}
 	else if(pos < len && n > 0)
 	{
-		n = min(n, len - pos);
+		n = std::min(n, len - pos);
 		return String(s.string_ + pos, n);
 	}
 	return {};
@@ -502,14 +501,14 @@ bool Str::isUnicode(StringRef s)
 int Str::find(StringRef s, char c, int pos)
 {
 	int len = s.len();
-	pos = max(pos, 0);
+	pos = std::max(pos, 0);
 	while(pos < len && s.string_[pos] != c) ++pos;
 	return (pos < len) ? pos : String::npos;
 }
 
 int Str::find(StringRef s, const char* str, int pos)
 {
-	pos = max(pos, 0);
+	pos = std::max(pos, 0);
 	int len = s.len();
 
 	if(*str == 0 && pos <= len)
@@ -531,7 +530,7 @@ int Str::find(StringRef s, const char* str, int pos)
 int Str::findLast(StringRef s, char c, int pos)
 {
 	int len = s.len();
-	pos = min(pos, len - 1);
+	pos = std::min(pos, len - 1);
 	while(pos >= 0 && s.string_[pos] != c) --pos;
 	return (pos >= 0) ? pos : -1;
 }
@@ -539,7 +538,7 @@ int Str::findLast(StringRef s, char c, int pos)
 int Str::findAnyOf(StringRef s, const char* c, int pos)
 {
 	int len = s.len();
-	pos = max(pos, 0);
+	pos = std::max(pos, 0);
 	while(pos < len)
 	{
 		const char a = s.string_[pos], *b = c;
@@ -553,7 +552,7 @@ int Str::findAnyOf(StringRef s, const char* c, int pos)
 int Str::findLastOf(StringRef s, const char* c, int pos)
 {
 	int len = s.len();
-	pos = min(pos, len - 1);
+	pos = std::min(pos, len - 1);
 	while(pos >= 0)
 	{
 		const char a = s.string_[pos], *b = c;
@@ -691,8 +690,8 @@ static int PrintUint(char* buf, uint32_t v, int minDig, bool hex)
 
 static int PrintDouble(char* buf, double v, int minDec, int maxDec)
 {
-	minDec = min(max(minDec, 0), 16);
-	maxDec = min(max(minDec, maxDec), 16);
+	minDec = std::min(std::max(minDec, 0), 16);
+	maxDec = std::min(std::max(minDec, maxDec), 16);
 
 	// Print the value.
 	int len = _snprintf(buf, DBL_BUFLEN, "%.*f", maxDec, v);

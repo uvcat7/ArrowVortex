@@ -14,6 +14,8 @@
 #include <Managers/StyleMan.h>
 #include <Managers/SimfileMan.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 static const char* SpacingStrings[] =
@@ -96,7 +98,7 @@ void DialogGenerateNotes::onChanges(int changes)
 		auto style = gStyle->get();
 		if(style && style->padWidth > 0)
 		{
-			w = max(w, gStyle->getNumCols() * (IFP_SIZE + IFP_SPACING));
+			w = std::max(w, gStyle->getNumCols() * (IFP_SIZE + IFP_SPACING);
 			streamGenerator_.feetCols = style->padInitialFeetCols[0];
 		}
 	}

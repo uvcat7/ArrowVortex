@@ -16,6 +16,8 @@
 
 #include <System/Debug.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -91,7 +93,7 @@ static void handleTooltip()
 		{
 			TextStyle style;
 
-			int alpha = clamp((int)(GUI->tooltipTimer * 1000 - 1000), 0, 255);
+			int alpha = std::clamp((int)(GUI->tooltipTimer * 1000 - 1000, 0, 255);
 			
 			style.textColor = Color32(0, alpha);
 			style.shadowColor = Colors::blank;
@@ -114,8 +116,8 @@ static void handleTooltip()
 				}
 			}
 
-			pos.x = clamp(pos.x, 4, GUI->viewSize.x - textSize.x - 4);
-			pos.y = clamp(pos.y, 4, GUI->viewSize.y - textSize.y - 4);
+			pos.x = std::clamp(pos.x, 4, GUI->viewSize.x - textSize.x - 4);
+			pos.y = std::clamp(pos.y, 4, GUI->viewSize.y - textSize.y - 4);
 
 			recti textBox = {pos.x, pos.y, textSize.x, textSize.y};
 			recti box = Expand(textBox, 3);

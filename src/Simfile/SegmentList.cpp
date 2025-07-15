@@ -9,6 +9,8 @@
 
 #include <stdlib.h>
 
+#include <algorithm>
+
 namespace Vortex {
 namespace {
 
@@ -574,7 +576,7 @@ void SegmentList::myReserve(int num)
 	int numBytes = num * myStride;
 	if(myCap < numBytes)
 	{
-		myCap = max(numBytes, myCap << 1);
+		myCap = std::max(numBytes, myCap << 1);
 		mySegs = (uint8_t*)realloc(mySegs, myCap);
 	}
 }

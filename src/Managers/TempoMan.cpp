@@ -470,7 +470,7 @@ static bool Differs(const BpmRange& a, const BpmRange& b)
 
 static double ClampAndRound(double val, double min, double max)
 {
-	return round(clamp(val, min, max) * 1000000.0) / 1000000.0;
+	return round(std::clamp(val, min, max) * 1000000.0) / 1000000.0;
 }
 
 void modify(const SegmentEdit& edit)
@@ -577,7 +577,7 @@ void copyToClipboard()
 	{
 		if(list->size())
 		{
-			row = min(row, list->begin()->row);
+			row = std::min(row, list->begin()->row);
 		}
 	}
 
@@ -645,7 +645,7 @@ void startTweakingOffset()
 
 void startTweakingBpm(int row)
 {
-	row = max(0, row);
+	row = std::max(0, row);
 
 	if((myTweakMode == TWEAK_BPM && myTweakRow == row) || !myTempo) return;
 	
@@ -837,8 +837,8 @@ BpmRange getBpmRange() const
 		{
 			if(it->bpm >= 0)
 			{
-				low = min(low, it->bpm);
-				high = max(high, it->bpm);
+				low = std::min(low, it->bpm);
+				high = std::max(high, it->bpm);
 			}
 		}
 	}

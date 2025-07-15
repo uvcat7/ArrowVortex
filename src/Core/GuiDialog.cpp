@@ -5,6 +5,8 @@
 #include <Core/GuiContext.h>
 #include <Core/GuiWidget.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 #define MY_GUI ((GuiContextImpl*)gui_)
@@ -213,14 +215,14 @@ void DialogData::ClampRect()
 	if(current_action_ && current_action_->type >= ACT_RESIZE)
 	{
 		auto a = (ResizeAction*)current_action_;
-		if(a->dirH < 0) rect_.w = min(rect_.w, a->anchor.x - bounds.x);
-		if(a->dirH > 0) rect_.w = min(rect_.w, bounds.x + bounds.w - a->anchor.x);
-		if(a->dirV < 0) rect_.h = min(rect_.h, a->anchor.y - bounds.y);
-		if(a->dirV > 0) rect_.h = min(rect_.h, bounds.y + bounds.h - a->anchor.y);
+		if(a->dirH < 0) rect_.w = std::min(rect_.w, a->anchor.x - bounds.x);
+		if(a->dirH > 0) rect_.w = std::min(rect_.w, bounds.x + bounds.w - a->anchor.x);
+		if(a->dirV < 0) rect_.h = std::min(rect_.h, a->anchor.y - bounds.y);
+		if(a->dirV > 0) rect_.h = std::min(rect_.h, bounds.y + bounds.h - a->anchor.y);
 	}
 
-	rect_.w = max(min_size_.x, min(max_size_.x, min(bounds.w, rect_.w)));
-	rect_.h = max(min_size_.y, min(max_size_.y, min(bounds.h, rect_.h)));
+	rect_.w = std::max(min_size_.x, std::min(max_size_.x, std::min(bounds.w, rect_.w)));
+	rect_.h = std::max(min_size_.y, std::min(max_size_.y, std::min(bounds.h, rect_.h)));
 
 	if(current_action_ && current_action_->type >= ACT_RESIZE)
 	{
@@ -230,8 +232,8 @@ void DialogData::ClampRect()
 	}
 
 	int marginH = minimized_state_ ? (FRAME_PADDING * -2) : rect_.h;
-	rect_.x = max(min(rect_.x, bounds.x + bounds.w - rect_.w), bounds.x);
-	rect_.y = max(min(rect_.y, bounds.y + bounds.h - marginH), bounds.y);
+	rect_.x = std::max(std::min(rect_.x, bounds.x + bounds.w - rect_.w), bounds.x);
+	rect_.y = std::max(std::min(rect_.y, bounds.y + bounds.h - marginH), bounds.y);
 }
 
 void DialogData::arrange()
@@ -528,22 +530,22 @@ void GuiDialog::setHeight(int h)
 
 void GuiDialog::setMinimumWidth(int w)
 {
-	DATA->min_size_.x = max(0, w);
+	DATA->min_size_.x = std::max(0, w);
 }
 
 void GuiDialog::setMinimumHeight(int h)
 {
-	DATA->min_size_.y = max(0, h);
+	DATA->min_size_.y = std::max(0, h);
 }
 
 void GuiDialog::setMaximumWidth(int w)
 {
-	DATA->max_size_.x = max(0, w);
+	DATA->max_size_.x = std::max(0, w);
 }
 
 void GuiDialog::setMaximumHeight(int h)
 {
-	DATA->max_size_.y = max(0, h);
+	DATA->max_size_.y = std::max(0, h);
 }
 
 void GuiDialog::setCloseable(bool enable)

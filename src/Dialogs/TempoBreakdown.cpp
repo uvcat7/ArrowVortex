@@ -9,6 +9,8 @@
 #include <Simfile/SegmentList.h>
 #include <Simfile/SegmentGroup.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -28,7 +30,7 @@ static int GetTempoListH()
 			}
 		}
 	}
-	return max(h, 16);
+	return std::max(h, 16);
 }
 
 struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
@@ -126,8 +128,8 @@ void DialogTempoBreakdown::onUpdateSize()
 {
 	myList->updateSize();
 	int h = myList->getScrollHeight();
-	setMinimumHeight(min(64, h));
-	setMaximumHeight(min(1024, h));
+	setMinimumHeight(std::min(64, h));
+	setMaximumHeight(std::min(1024, h));
 }
 
 void DialogTempoBreakdown::onTick()

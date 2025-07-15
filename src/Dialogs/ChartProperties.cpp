@@ -15,6 +15,8 @@
 #include <Editor/Common.h>
 #include <Managers/ChartMan.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 enum Result
@@ -234,7 +236,7 @@ void DialogChartProperties::myUpdateNoteInfo()
 	double density = 0.0;
 	if(gNotes->begin() < gNotes->end())
 	{
-		density = (double)count[0] / max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
+		density = (double)count[0] / std::max(1.0, gNotes->end() - 1)->time - gNotes->begin()->time);
 	}
 
 	myNoteDensity->text.set(Str::fmt("Note density: %1 NPS").arg(density, 1, 1).str);
@@ -322,7 +324,7 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(WgLabel* measureCou
 		auto& item = breakdown[i];
 
 		Text::arrange(Text::TL, TextStyle(), item.text.str());
-		int w = max(16, Text::getSize().x + 8);
+		int w = std::max(16, Text::getSize().x + 8);
 
 		if(i >= myButtons.size())
 		{

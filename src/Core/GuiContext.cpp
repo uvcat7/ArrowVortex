@@ -4,6 +4,8 @@
 #include <Core/MapUtils.h>
 #include <Core/VectorUtils.h>
 
+#include <algorithm>
+
 namespace Vortex {
 
 GuiContext::~GuiContext()
@@ -45,8 +47,8 @@ void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events)
 {
 	view_rect_ = view;
 
-	view_rect_.w = max(view_rect_.w, 0);
-	view_rect_.h = max(view_rect_.h, 0);
+	view_rect_.w = std::max(view_rect_.w, 0);
+	view_rect_.h = std::max(view_rect_.h, 0);
 
 	delta_time_ = deltaTime;
 	input_events_ = &events;

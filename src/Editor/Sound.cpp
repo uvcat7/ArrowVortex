@@ -12,6 +12,7 @@
 #include <limits.h>
 #include <chrono>
 #include <fstream>
+#include <algorithm>
 
 namespace Vortex {
 
@@ -134,7 +135,7 @@ bool Sound::Thread::readBlock()
 
 	if(mySound->myIsAllocated)
 	{
-		framesRead = min(framesRead, mySound->myNumFrames - myCurrentFrame);
+		framesRead = std::min(framesRead, mySound->myNumFrames - myCurrentFrame);
 	}
 
 	if(framesRead > 0)
@@ -143,7 +144,7 @@ bool Sound::Thread::readBlock()
 		{
 			if(myCurrentFrame + framesRead > myReservedFrames)
 			{
-				myReservedFrames = max(myReservedFrames * 2, myCurrentFrame + framesRead);
+				myReservedFrames = std::max(myReservedFrames * 2, myCurrentFrame + framesRead);
 
 				short* newBufferL = static_cast<short*>(realloc(mySound->mySamplesL, myReservedFrames * sizeof(short)));
 				short* newBufferR = static_cast<short*>(realloc(mySound->mySamplesR, myReservedFrames * sizeof(short)));
