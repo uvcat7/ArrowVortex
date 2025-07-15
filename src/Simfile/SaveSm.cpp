@@ -53,7 +53,7 @@ static void GiveUnicodeWarning(const std::string& path, const std::string& name)
 
 static std::string Escape(const char* name, const char* str)
 {
-	std::string s = (std::string)str;
+	std::string s(str);
 	//These characters must be escaped in the .sm/.ssc file
 	Str::replace(s, "\\", "\\\\");
 	Str::replace(s, ":", "\\:");
