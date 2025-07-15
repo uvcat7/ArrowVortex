@@ -565,7 +565,7 @@ void drawReceptorGlow()
 		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
 
 		double lum = 1.5 - (time - note->endtime) * 6.0;
-		uint8_t alpha = (uint8_t)std::clamp((int)(lum * 255.0, 0, 255);
+		uint8_t alpha = (uint8_t)std::clamp((int)(lum * 255.0), 0, 255);
 		if(alpha > 0)
 		{
 			noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);

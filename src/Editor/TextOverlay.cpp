@@ -444,7 +444,7 @@ void drawHud()
 	x = 4, y = 4;
 	for(auto& m : hudEntries_)
 	{
-		int a = std::clamp((int)(m.timeLeft * 512.0f + 256.0f, 0, 255);
+		int a = std::clamp((int)(m.timeLeft * 512.0f + 256.0f), 0, 255);
 
 		textStyle.textColor = Color32a(textStyle.textColor, a);
 		textStyle.shadowColor = Color32a(textStyle.shadowColor, a);

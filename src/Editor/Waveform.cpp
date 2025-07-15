@@ -443,7 +443,7 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 	double samplesPerBlock = (double)TEX_H * samplesPerPixel;
 
 	int64_t srcFrames = filtered ? waveformFilter_->samplesL.size() : music.getNumFrames();
-	int64_t samplePos = std::max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId);
+	int64_t samplePos = std::max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
 	double sampleCount = std::min((double) srcFrames - samplePos, samplesPerBlock);
 
 	if (samplePos >= srcFrames || sampleCount <= 0)
