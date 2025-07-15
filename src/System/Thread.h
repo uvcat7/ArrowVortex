@@ -30,7 +30,7 @@ public:
 	virtual void exec() = 0;
 
 protected:
-	uchar terminationFlag_;
+	uint8_t terminationFlag_;
 private:
 	void* data_;  // TODO: replace with a more descriptive variable name.
 };

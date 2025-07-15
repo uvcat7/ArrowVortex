@@ -117,7 +117,7 @@ static bool Error(String& log, const char* desc, const char* name, const char* f
 	return false;
 }
 
-static void Destroy(uint& program, uint& vert, uint& frag)
+static void Destroy(uint32_t& program, uint32_t& vert, uint32_t& frag)
 {
 	if(program)
 	{

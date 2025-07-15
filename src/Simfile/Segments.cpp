@@ -191,7 +191,7 @@ static void Decode(ReadStream& in, Stop& seg)
 template <>
 static bool IsRedundant(const Stop& seg, const Stop* prev)
 {
-	return (fabs(seg.seconds) < 0.0005) || (prev && prev->row == seg.row);
+	return (fabs(seg.seconds) < 0.0000005) || (prev && prev->row == seg.row);
 }
 
 template <>

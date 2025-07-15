@@ -13,7 +13,7 @@ namespace Vortex {
 
 WriteStream::WriteStream()
 {
-	buffer_ = (uchar*)malloc(128);
+	buffer_ = (uint8_t*)malloc(128);
 	current_size_ = 0;
 	capacity_ = 128;
 	is_external_buffer_ = false;
@@ -22,7 +22,7 @@ WriteStream::WriteStream()
 
 WriteStream::WriteStream(void* out, int bytes)
 {
-	buffer_ = (uchar*)out;
+	buffer_ = (uint8_t*)out;
 	current_size_ = 0;
 	capacity_ = bytes;
 	is_external_buffer_ = true;
@@ -45,7 +45,7 @@ void WriteStream::write(const void* in, int bytes)
 	else if(!is_external_buffer_)
 	{
 		capacity_ = max(capacity_ << 1, newSize);
-		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		buffer_ = (uint8_t*)realloc(buffer_, capacity_);
 		memcpy(buffer_ + current_size_, in, bytes);
 		current_size_ = newSize;
 	}
@@ -65,7 +65,7 @@ void WriteStream::write8(const void* val)
 	else if(!is_external_buffer_)
 	{
 		capacity_ <<= 1;
-		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		buffer_ = (uint8_t*)realloc(buffer_, capacity_);
 		buffer_[current_size_] = *(const uint8_t*)val;
 		++current_size_;
 	}
@@ -86,7 +86,7 @@ void WriteStream::write16(const void* val)
 	else if(!is_external_buffer_)
 	{
 		capacity_ <<= 1;
-		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		buffer_ = (uint8_t*)realloc(buffer_, capacity_);
 		*(uint16_t*)(buffer_ + current_size_) = *(const uint16_t*)val;
 		current_size_ = newSize;
 	}
@@ -107,7 +107,7 @@ void WriteStream::write32(const void* val)
 	else if(!is_external_buffer_)
 	{
 		capacity_ <<= 1;
-		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		buffer_ = (uint8_t*)realloc(buffer_, capacity_);
 		*(uint32_t*)(buffer_ + current_size_) = *(const uint32_t*)val;
 		current_size_ = newSize;
 	}
@@ -128,7 +128,7 @@ void WriteStream::write64(const void* val)
 	else if(!is_external_buffer_)
 	{
 		capacity_ <<= 1;
-		buffer_ = (uchar*)realloc(buffer_, capacity_);
+		buffer_ = (uint8_t*)realloc(buffer_, capacity_);
 		*(uint64_t*)(buffer_ + current_size_) = *(const uint64_t*)val;
 		current_size_ = newSize;
 	}
@@ -138,7 +138,7 @@ void WriteStream::write64(const void* val)
 	}
 }
 
-void WriteStream::writeNum(uint num)
+void WriteStream::writeNum(uint32_t num)
 {
 	if(num < 0x80)
 	{
@@ -146,8 +146,8 @@ void WriteStream::writeNum(uint num)
 	}
 	else
 	{
-		uchar buf[8];
-		uint index = 0;
+		uint8_t buf[8];
+		uint32_t index = 0;
 		while(num >= 0x80)
 		{
 			buf[index] = (num & 0x7F) | 0x80;
@@ -170,7 +170,7 @@ void WriteStream::writeStr(StringRef str)
 
 ReadStream::ReadStream(const void* in, int bytes)
 {
-	read_position_ = (const uchar*)in;
+	read_position_ = (const uint8_t*)in;
 	end_position_ = read_position_ + bytes;
 	is_read_successful_ = true;
 }
@@ -270,7 +270,7 @@ void ReadStream::read64(void* out)
 	}
 }
 
-uint ReadStream::readNum()
+uint32_t ReadStream::readNum()
 {
 	uint32_t out;
 	if(read_position_ != end_position_)
@@ -283,7 +283,7 @@ uint ReadStream::readNum()
 		else
 		{
 			out = *read_position_ & 0x7F;
-			uint shift = 7;
+			uint32_t shift = 7;
 			while(true)
 			{
 				if(++read_position_ == end_position_)
@@ -292,7 +292,7 @@ uint ReadStream::readNum()
 					is_read_successful_ = false;
 					break;
 				}
-				uint byte = *read_position_;
+				uint32_t byte = *read_position_;
 				if((byte & 0x80) == 0)
 				{
 					out |= byte << shift;
@@ -315,7 +315,7 @@ uint ReadStream::readNum()
 String ReadStream::readStr()
 {
 	String out;
-	uint len = readNum();
+	uint32_t len = readNum();
 	auto newPos = read_position_ + len;
 	if(newPos <= end_position_)
 	{
@@ -328,7 +328,7 @@ String ReadStream::readStr()
 	return String();
 }
 
-void ReadStream::readNum(uint& num)
+void ReadStream::readNum(uint32_t& num)
 {
 	num = readNum();
 }

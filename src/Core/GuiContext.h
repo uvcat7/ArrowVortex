@@ -27,9 +27,9 @@ public:
 	InputEvents& getEvents();
 
 	bool bind(StringRef slot, const int* v);
-	bool bind(StringRef slot, const uint* v);
+	bool bind(StringRef slot, const uint32_t* v);
 	bool bind(StringRef slot, const long* v);
-	bool bind(StringRef slot, const ulong* v);
+	bool bind(StringRef slot, const uint64_t* v);
 	bool bind(StringRef slot, const float* v);
 	bool bind(StringRef slot, const double* v);
 	bool bind(StringRef slot, const bool* v);
@@ -37,9 +37,9 @@ public:
 	bool bind(StringRef slot, const String* str);
 
 	bool bind(StringRef slot, int* v);
-	bool bind(StringRef slot, uint* v);
+	bool bind(StringRef slot, uint32_t* v);
 	bool bind(StringRef slot, long* v);
-	bool bind(StringRef slot, ulong* v);
+	bool bind(StringRef slot, uint64_t* v);
 	bool bind(StringRef slot, float* v);
 	bool bind(StringRef slot, double* v);
 	bool bind(StringRef slot, bool* v);

@@ -140,7 +140,7 @@ void WgSelectList::onDraw()
 		int mo = HoveredItem(mpos.x, mpos.y);
 		if(mo != item && mo >= 0 && mo < numItems)
 		{
-			color32 col = Color32(255, 255, 255, isEnabled() ? 128 : 0);
+			uint32_t col = Color32(255, 255, 255, isEnabled() ? 128 : 0);
 			misc.imgSelect.draw({r.x, r.y - scroll_position_ + mo * ITEM_H, r.w, ITEM_H}, col);
 		}
 	}
@@ -421,10 +421,10 @@ void WgCycleButton::onDraw()
 	int mouseX = gui_->getMousePos().x - CenterX(rect_);
 	if(!isMouseOver()) mouseX = 0;
 
-	color32 colL = (isEnabled() && mouseX < 0) ? Colors::white : misc.colDisabled;
+	uint32_t colL = (isEnabled() && mouseX < 0) ? Colors::white : misc.colDisabled;
 	Draw::sprite(icons.arrow, {r.x + 10, r.y + r.h / 2}, colL, Draw::FLIP_H);
 
-	color32 colR = (isEnabled() && mouseX > 0) ? Colors::white : misc.colDisabled;
+	uint32_t colR = (isEnabled() && mouseX > 0) ? Colors::white : misc.colDisabled;
 	Draw::sprite(icons.arrow, {r.x + r.w - 10, r.y + r.h / 2}, colR);
 
 	// Draw the button text.

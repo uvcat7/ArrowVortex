@@ -62,7 +62,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 
 	WgSpinner* spinner = myLayout.add<WgSpinner>("Delay");
 	spinner->value.bind(&myDelay);
-	spinner->setPrecision(3, 3);
+	spinner->setPrecision(3, 6);
 	spinner->setStep(0.001);
 	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_DELAY_SET);
@@ -71,7 +71,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 	myLayout.row().col(84).col(154);
 	spinner = myLayout.add<WgSpinner>("Warp");
 	spinner->value.bind(&myWarp);
-	spinner->setPrecision(3, 3);
+	spinner->setPrecision(3, 6);
 	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_WARP_SET);
 	spinner->setTooltip("Warp length at the current beat, in beats");
@@ -121,7 +121,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 
 	spinner = myLayout.add<WgSpinner>("Speed");
 	spinner->value.bind(&mySpeedRatio);
-	spinner->setPrecision(2, 2);
+	spinner->setPrecision(2, 6);
 	spinner->setStep(0.1);
 	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_SPEED_SET);
@@ -129,7 +129,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 
 	spinner = myLayout.add<WgSpinner>();
 	spinner->value.bind(&mySpeedDelay);
-	spinner->setPrecision(2, 2);
+	spinner->setPrecision(2, 6);
 	spinner->setStep(0.1);
 	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_SPEED_SET);
@@ -146,7 +146,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 
 	spinner = myLayout.add<WgSpinner>("Scroll");
 	spinner->value.bind(&myScrollRatio);
-	spinner->setPrecision(2, 2);
+	spinner->setPrecision(2, 6);
 	spinner->setStep(0.1);
 	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_SCROLL_SET);
@@ -154,7 +154,7 @@ void DialogAdjustTempoSM5::myCreateWidgets()
 
 	spinner = myLayout.add<WgSpinner>("Fakes");
 	spinner->value.bind(&myFakeBeats);
-	spinner->setPrecision(3, 3);
+	spinner->setPrecision(3, 6);
 	spinner->setRange(0, 1000);
 	spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction, (int)ACT_FAKE_SET);
 	spinner->setTooltip("Fake region, in beats");

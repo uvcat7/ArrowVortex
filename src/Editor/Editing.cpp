@@ -34,7 +34,7 @@ enum TweakMode { TWEAK_NONE, TWEAK_BPM, TWEAK_OFS };
 
 enum PlaceMode { PLACE_NONE, PLACE_NEW, PLACE_AFTER_REMOVE};
 
-struct PlacingNote { int player, startRow, endRow; PlaceMode mode; uint quant; };
+struct PlacingNote { int player, startRow, endRow; PlaceMode mode; uint32_t quant; };
 
 static int KeyToCol(Key::Code code)
 {
@@ -168,7 +168,7 @@ void onKeyPress(KeyPress& evt) override
 			}
 			NoteEdit edit;
 			auto note = gNotes->getNoteAt(row, col);
-			uint quant = gView->getSnapQuant();
+			uint32_t quant = gView->getSnapQuant();
 			if(note)
 			{
 				if(gMusic->isPaused())
@@ -180,7 +180,7 @@ void onKeyPress(KeyPress& evt) override
 			}
 			else
 			{
-				edit.add.append({row, row, (uint)col, (uint)myCurPlayer, NOTE_STEP_OR_HOLD, quant});
+				edit.add.append({row, row, (uint32_t)col, (uint32_t)myCurPlayer, NOTE_STEP_OR_HOLD, quant});
 				if(evt.keyflags & Keyflag::SHIFT)
 				{
 					edit.add.begin()->type = NOTE_MINE;
@@ -327,6 +327,26 @@ void onChanges(int changes)
 // ================================================================================================
 // EditingImpl :: member functions.
 
+static int gcd(int a, int b)
+{
+	if (a == 0)
+	{
+		return b;
+	}
+	if (b == 0)
+	{
+		return a;
+	}
+	if (a > b)
+	{
+		return gcd(a - b, b);
+	}
+	else
+	{
+		return gcd(a, b - a);
+	}
+}
+
 void finishNotePlacement(int col)
 {
 	auto& pnote = myPlacingNotes[col];
@@ -343,11 +363,19 @@ void finishNotePlacement(int col)
 			{
 				if((int)note.row > hold->row && (int)note.row <= hold->endrow && (int)note.endrow > hold->endrow)
 				{
-					note.row = (uint)hold->row;
+					note.row = (uint32_t)hold->row;
 				}
 			}
 		}
 
+		if (note.quant > 0 && note.quant <= 192)
+		{
+			note.quant = min(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
+		}
+		else
+		{
+			note.quant = 192;
+		}
 		NoteEdit edit;
 		edit.add.append(note);
 		gNotes->modify(edit, false);
@@ -589,7 +617,7 @@ void changePlayerNumber()
 }
 
 template <typename T>
-static T readFromBuffer(Vector<uchar>& buffer, int& pos)
+static T readFromBuffer(Vector<uint8_t>& buffer, int& pos)
 {
 	if(pos + (int)sizeof(T) <= buffer.size())
 	{
@@ -605,7 +633,7 @@ void pasteNotePatterns()
 	/* TODO?
 	NoteList out = gSelection->getSelectedNotes();
 
-	Vector<uchar> buffer = GetClipboardData("notes");
+	Vector<uint8_t> buffer = GetClipboardData("notes");
 	if(buffer.empty()) return;
 
 	int readPos = 0;

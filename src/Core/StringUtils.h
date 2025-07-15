@@ -62,7 +62,7 @@ struct Str
 	static int readInt(StringRef s, int alt = 0);
 
 	/// Converts the string to an uinteger; returns alt on failure.
-	static uint readUint(StringRef s, uint alt = 0);
+	static uint32_t readUint(StringRef s, uint32_t alt = 0);
 
 	/// Converts the string to a float; returns alt on failure.
 	static float readFloat(StringRef s, float alt = 0);
@@ -85,7 +85,7 @@ struct Str
 
 	/// Converts the string to an uinteger; returns true on success.
 	/// On failure, out remains unchanged.
-	static bool read(StringRef s, uint* out);
+	static bool read(StringRef s, uint32_t* out);
 
 	/// Converts the string to a float; returns true on success.
 	/// On failure, out remains unchanged.
@@ -192,13 +192,13 @@ struct Str
 
 	/// Converts the given value to a string.
 	static String val(int v, int minDigits = 0, bool hex = false);
-	static String val(uint v, int minDigits = 0, bool hex = false);
+	static String val(uint32_t v, int minDigits = 0, bool hex = false);
 	static String val(float v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 	static String val(double v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 
 	/// Converts the given value and appends it to the string.
 	static void appendVal(String& s, int v, int minDigits = 0, bool hex = false);
-	static void appendVal(String& s, uint v, int minDigits = 0, bool hex = false);
+	static void appendVal(String& s, uint32_t v, int minDigits = 0, bool hex = false);
 	static void appendVal(String& s, float v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 	static void appendVal(String& s, double v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 
@@ -213,7 +213,7 @@ struct Str
 		fmt& arg(const char* s);
 		fmt& arg(const char* s, int n);
 		fmt& arg(int v, int minDigits = 0, bool hex = false);
-		fmt& arg(uint v, int minDigits = 0, bool hex = false);
+		fmt& arg(uint32_t v, int minDigits = 0, bool hex = false);
 		fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);
 		fmt& arg(double v, int minDecimals = 0, int maxDecimals = 6);
 

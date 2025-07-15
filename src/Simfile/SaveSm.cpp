@@ -1,4 +1,5 @@
 ﻿#include <Core/StringUtils.h>
+#include <Core/Utils.h>
 
 #include <System/File.h>
 
@@ -10,6 +11,10 @@
 #include <Simfile/TimingData.h>
 
 #include <Managers/StyleMan.h>
+
+#include <cmath>
+#include <fstream>
+#include <iomanip>
 #include <list>
 
 namespace Vortex {
@@ -32,7 +37,7 @@ static double ToBeat(int row)
 struct ExportData
 {
 	Vector<int> diffs;
-	FileWriter file;
+	std::ofstream file;
 	const Simfile* sim;
 	const Chart* chart;
 	bool ssc;
@@ -72,7 +77,7 @@ static void WriteTag(ExportData& data, const char* tag, StringRef value, ForceWr
 {
 	if(ShouldWrite(data, when, value.len() != 0, sscOnly))
 	{
-		data.file.printf("#%s:%s;\n", tag, value.str());
+	    data.file << "#" << tag << ':' << value.str() << ";\n";
 	}
 }
 
@@ -80,7 +85,8 @@ static void WriteTag(ExportData& data, const char* tag, double value, ForceWrite
 {
 	if(ShouldWrite(data, when, value != 0, sscOnly))
 	{
-		data.file.printf("#%s:%.3f;\n", tag, value);
+	    data.file << std::fixed << std::setprecision(6)
+			<< "#" << tag << ':' << value << ";\n";
 	}
 }
 
@@ -88,7 +94,7 @@ static void WriteTag(ExportData& data, const char* tag, int value, ForceWrite wh
 {
 	if(ShouldWrite(data, when, value != 0, sscOnly))
 	{
-		data.file.printf("#%s:%i;\n", tag, value);
+	    data.file << "#" << tag << ':' << value << ";\n";
 	}
 }
 
@@ -117,24 +123,24 @@ static void WriteTag(ExportData& data, const char* tag, const T& list, Seperator
 	if(ShouldWrite(data, when, list.size() != 0, sscOnly))
 	{
 		auto& file = data.file;
-		file.printf("#%s:", tag);
+	    file << "#" << tag << ":";
 		for(auto it = list.begin(); it != list.end();)
 		{
 			if(it != list.begin() && pos == START_OF_LINE)
 			{
-				file.write(&seperator, 1, 1);
+			    file << seperator;
 			}
 			func(*it);
 			if(++it != list.end() && pos == END_OF_LINE)
 			{
-				file.write(&seperator, 1, 1);
+			    file << seperator;
 			}
 			if(list.size() > 1)
 			{
-				file.write("\n", 1, 1);
+			    file << '\n';
 			}
 		}
-		file.write(";\n", 2, 1);
+	    file << ";\n";
 	}
 }
 
@@ -147,24 +153,24 @@ static void WriteSegments(ExportData& data, const char* tag, const Tempo* tempo,
 	if(ShouldWrite(data, when, begin != end, sscOnly))
 	{
 		auto& file = data.file;
-		file.printf("#%s:", tag);
+	    file << "#" << tag << ":";
 		for(auto it = begin; it != end; ++it)
 		{
 			if(it != begin && pos == START_OF_LINE)
 			{
-				file.write(&seperator, 1, 1);
+			    file << seperator;
 			}
 			func(*it);
 			if(it + 1 != end && pos == END_OF_LINE)
 			{
-				file.write(&seperator, 1, 1);
+			    file << seperator;
 			}
 			if(begin + 1 < end)
 			{
-				file.write("\n", 1, 1);
+			    file << '\n';
 			}
 		}
-		file.write(";\n", 2, 1);
+	    file << ";\n";
 	}
 }
 
@@ -181,8 +187,9 @@ static void WriteBpms(ExportData& data, const Tempo* tempo)
 	WriteSegments<BpmChange>(data, "BPMS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
 	[&](const BpmChange& change)
 	{
-		data.file.printf("%.3f=%.6f",
-			ToBeat(change.row), change.bpm);
+	    data.file << std::fixed << std::setprecision(6)
+	        << ToBeat(change.row) << '='
+	        << std::setprecision(6) << change.bpm;
 	});
 }
 
@@ -191,8 +198,9 @@ static void WriteStops(ExportData& data, const Tempo* tempo)
 	WriteSegments<Stop>(data, "STOPS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
 	[&](const Stop& stop)
 	{
-		data.file.printf("%.3f=%.3f",
-			ToBeat(stop.row), stop.seconds);
+	    data.file << std::fixed << std::setprecision(6)
+	        << ToBeat(stop.row) << '='
+	        << stop.seconds;
 	});
 }
 
@@ -201,8 +209,9 @@ static void WriteDelays(ExportData& data, const Tempo* tempo)
 	WriteSegments<Delay>(data, "DELAYS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Delay& delay)
 	{
-		data.file.printf("%.3f=%.3f",
-			ToBeat(delay.row), delay.seconds);
+	    data.file << std::fixed << std::setprecision(6)
+	        << ToBeat(delay.row) << '='
+	        << delay.seconds;
 	});
 }
 
@@ -211,8 +220,9 @@ static void WriteWarps(ExportData& data, const Tempo* tempo)
 	WriteSegments<Warp>(data, "WARPS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Warp& warp)
 	{
-		data.file.printf("%.3f=%.3f",
-			ToBeat(warp.row), ToBeat(warp.numRows));
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(warp.row) << '='
+            << ToBeat(warp.numRows);
 	});
 }
 
@@ -221,8 +231,11 @@ static void WriteSpeeds(ExportData& data, const Tempo* tempo)
 	WriteSegments<Speed>(data, "SPEEDS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Speed& speed)
 	{
-		data.file.printf("%.3f=%.3f=%.3f=%i",
-			ToBeat(speed.row), speed.ratio, speed.delay, speed.unit);
+	    data.file << std::fixed << std::setprecision(6)
+	        << ToBeat(speed.row) << '='
+            << speed.ratio << '='
+            << speed.delay << '='
+            << speed.unit;
 	});
 }
 
@@ -231,8 +244,9 @@ static void WriteScrolls(ExportData& data, const Tempo* tempo)
 	WriteSegments<Scroll>(data, "SCROLLS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Scroll& scroll)
 	{
-		data.file.printf("%.3f=%.3f",
-			ToBeat(scroll.row), scroll.ratio);
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(scroll.row) << '='
+            << scroll.ratio;
 	});
 }
 
@@ -241,8 +255,9 @@ static void WriteTickCounts(ExportData& data, const Tempo* tempo)
 	WriteSegments<TickCount>(data, "TICKCOUNTS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const TickCount& tick)
 	{
-		data.file.printf("%.3f=%i",
-			ToBeat(tick.row), tick.ticks);
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(tick.row) << '='
+            << tick.ticks;
 	});
 }
 
@@ -251,8 +266,10 @@ static void WriteTimeSignatures(ExportData& data, const Tempo* tempo)
 	WriteSegments<TimeSignature>(data, "TIMESIGNATURES", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const TimeSignature& sig)
 	{
-		data.file.printf("%.3f=%i=%i",
-			ToBeat(sig.row), (int)ToBeat(sig.rowsPerMeasure), sig.beatNote);
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(sig.row) << '='
+            << static_cast<int>(ToBeat(sig.rowsPerMeasure)) << '='
+	        << sig.beatNote;
 	});
 }
 
@@ -261,8 +278,9 @@ static void WriteLabels(ExportData& data, const Tempo* tempo)
 	WriteSegments<Label>(data, "LABELS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Label& label)
 	{
-		data.file.printf("%.3f=%s",
-			ToBeat(label.row), label.str.str());
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(label.row) << '='
+            << label.str.str();
 	});
 }
 
@@ -271,9 +289,10 @@ static void WriteAttacks(ExportData& data, const Tempo* tempo)
 	WriteTag(data, "ATTACKS", tempo->attacks, START_OF_LINE, ':', NEVER, true,
 	[&](const Attack& attack)
 	{
-		data.file.printf("TIME=%.3f:", attack.time);
-		data.file.printf((attack.unit == ATTACK_END) ? "END=%.3f:" : "LEN=%.3f:", attack.duration);
-		data.file.printf("MODS=%s", attack.mods.str());
+	    data.file << std::fixed << std::setprecision(6)
+	        << "TIME=" << attack.time << ':'
+	        << ((attack.unit == ATTACK_END) ? "END=" : "LEN=") << attack.duration << ":"
+	        << "MODS=" << attack.mods.str();
 	});
 }
 
@@ -282,7 +301,7 @@ static void WriteKeySounds(ExportData& data, const Tempo* tempo)
 	WriteTag(data, "KEYSOUNDS", tempo->keysounds, END_OF_LINE, ',', NEVER, true,
 	[&](StringRef str)
 	{
-		data.file.printf("%s", str.str());
+	    data.file << str.str();
 	});
 }
 
@@ -291,11 +310,11 @@ static void WriteCombos(ExportData& data, const Tempo* tempo)
 	WriteSegments<Combo>(data, "COMBOS", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Combo& combo)
 	{
-		data.file.printf("%.3f=%i", ToBeat(combo.row), combo.hitCombo);
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(combo.row) << '='
+            << combo.hitCombo;
 		if(combo.hitCombo != combo.missCombo)
-		{
-			data.file.printf("=%i", combo.missCombo);
-		}
+		    data.file << '=' << combo.missCombo;
 	});
 }
 
@@ -304,8 +323,9 @@ static void WriteFakes(ExportData& data, const Tempo* tempo)
 	WriteSegments<Fake>(data, "FAKES", tempo, END_OF_LINE, ',', NEVER, true,
 	[&](const Fake& fake)
 	{
-		data.file.printf("%.3f=%.3f",
-			ToBeat(fake.row), ToBeat(fake.numRows));
+	    data.file << std::fixed << std::setprecision(6)
+            << ToBeat(fake.row) << '='
+            << ToBeat(fake.numRows);
 	});
 }
 
@@ -367,25 +387,26 @@ static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgCha
 	{
 		if(bg.effect.empty() && bg.file2.empty() && bg.transition.empty() && bg.color.empty() && bg.color2.empty())
 		{
-			data.file.printf("%.3f=%s=%.3f=0=0=1",
-				bg.startBeat,
-				bg.file.str(),
-				bg.rate);
+		    data.file << std::fixed << std::setprecision(6)
+                << bg.startBeat << '='
+                << bg.file.str()
+		        << bg.rate
+		        << "=0=0=1";
 		}
 		else
 		{
-			data.file.printf("%.3f=%s=%.3f=%d=%d=%d=%s=%s=%s=%s=%s",
-				bg.startBeat,
-				bg.file.str(),
-				bg.rate,
-				bg.transition == "CrossFade",
-				bg.effect == "StretchRewind",
-				bg.effect != "StretchNoLoop",
-				bg.effect.str(),
-				bg.file2.str(),
-				bg.transition.str(),
-				bg.color.str(),
-				bg.color2.str());
+		    data.file << std::fixed << std::setprecision(6)
+		        << bg.startBeat << '='
+		        << bg.file.str() << '='
+		        << bg.rate << '='
+		        << (bg.transition == "CrossFade") << '='
+		        << (bg.effect == "StretchRewind") << '='
+		        << (bg.effect != "StretchNoLoop") << '='
+		        << bg.effect.str() << '='
+		        << bg.file2.str() << '='
+		        << bg.transition.str() << '='
+		        << bg.color.str() << '='
+		        << bg.color2.str() << '=';
 		}
 	});
 }
@@ -393,7 +414,7 @@ static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgCha
 // ================================================================================================
 // Chart writing functions.
 
-static char GetNoteChar(uint type)
+static char GetNoteChar(uint32_t type)
 {
 	if(type == NOTE_STEP_OR_HOLD)
 	{
@@ -414,7 +435,7 @@ static char GetNoteChar(uint type)
 	return '0';
 }
 
-static char GetHoldChar(uint type)
+static char GetHoldChar(uint32_t type)
 {
 	return (type == NOTE_STEP_OR_HOLD) ? '2' : '4';
 }
@@ -450,93 +471,35 @@ static const char* GetDifficultyString(Difficulty difficulty)
 	return "Edit";
 }
 
-static int gcd(int a, int b)
+static inline bool TestSectionCompression(const char* section, int width, int quant)
 {
-	if (a == 0)
+	String zeroline(width, '0');
+	float mod = (float)ROWS_PER_NOTE_SECTION / quant;
+	for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j)
 	{
-		return b;
+		float rem = round(fmod(j, mod));
+		// Check all the compressed rows and make sure they are empty
+		if (rem > 0 && rem < static_cast<int>(mod)
+			&& memcmp(section + j * width, zeroline.str(), width))
+		{
+			return false;
+		}
 	}
-	if (b == 0)
-	{
-		return a;
-	}
-	if (a > b)
-	{
-		return gcd(a - b, b);
-	}
-	else
-	{
-		return gcd(a, b - a);
-	}
+	return quant >= MIN_SECTIONS_PER_MEASURE;
 }
 
-static void GetSectionCompression(const char* section, int width, std::list<uint> quantVec, int& count, int& pitch)
+static void GetSectionCompression(const char* section, int width, int& count, int& pitch)
 {
+	count = ROWS_PER_NOTE_SECTION;
 	// Determines the best compression for the given section.
-	int best = ROWS_PER_NOTE_SECTION;
-	String zeroline(width, '0');
-	std::list<uint>::iterator it;
-	int lcm = 1;
-	for (it = quantVec.begin(); it != quantVec.end(); it++)
+	// We actually don't care about custom snaps for this at all, since we want to save 192nds for non-standard-compressible snaps.
+	for (int i = 0; i < NUM_MEASURE_SUBDIV - 1; i++)
 	{
-		if (*it <= 0)
+		if (TestSectionCompression(section, width, MEASURE_SUBDIV[i]))
 		{
-			HudError("Bug: zero or negative quantization recorded in chart.");
-			continue;
-		}
-		lcm = lcm * *it / gcd(lcm, *it);
-		if (lcm > ROWS_PER_NOTE_SECTION)
-		{
-			lcm = ROWS_PER_NOTE_SECTION;
+			count = MEASURE_SUBDIV[i];
 			break;
 		}
-	}
-
-	// Set whole and half step measures to be quarter notes by default
-	if (lcm <= MIN_SECTIONS_PER_MEASURE)
-	{
-		count = MIN_SECTIONS_PER_MEASURE;
-	}
-	else
-	{
-	// Determines the best compression for the given section.
-    // Maybe lcm is the best factor, so just keep that.
-		count = lcm;
-		String zeroline(width, '0');
-
-		//The factor list is small, just check them all by hand
-		for (int i = lcm / 2; i >= 2; i--)
-		{
-			// Skip anything that isn't a lcm factor
-			if (lcm % i > 0) continue;
-
-			bool valid = true;
-			float mod = (float) ROWS_PER_NOTE_SECTION / i;
-			for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION; ++j)
-			{
-				float rem = round(fmod(j, mod));
-				// Check all the compressed rows and make sure they are empty
-				if (rem > 0 && rem < static_cast<int>(mod)
-					&& memcmp(section + j * width, zeroline.str(), width))
-				{ 
-					valid = false;
-					break;
-				}
-			}
-
-			// The first (largest) match is always the best
-			if (valid && i >= MIN_SECTIONS_PER_MEASURE)
-			{
-				count = i;
-				break;
-			}
-		}
-	}
-	// Is our factor a standard snap? If so, use it.
-	// If not, save the measure as 192nds for SM5 Editor compatibility.
-	if (ROWS_PER_NOTE_SECTION % count != 0)
-	{
-		count = ROWS_PER_NOTE_SECTION;
 	}
 	pitch = (ROWS_PER_NOTE_SECTION * width) / count;
 }
@@ -565,7 +528,7 @@ static void WriteSections(ExportData& data)
 		Vector<const Note*> holdVec(numCols, nullptr);
 		const Note** holds = holdVec.begin();
 
-		std::list<uint> quantVec;
+		std::list<uint32_t> quantVec;
 
 		const Note* it = chart->notes.begin();
 		const Note* end = chart->notes.end();
@@ -588,12 +551,10 @@ static void WriteSections(ExportData& data)
 					if(it->row == it->endrow)
 					{
 						section[pos] = GetNoteChar(it->type);
-						quantVec.push_front(it->quant);
 					}
 					else
 					{
 						section[pos] = GetHoldChar(it->type);
-						quantVec.push_front(it->quant);
 						auto hold = holds[it->col];
 						if(hold)
 						{
@@ -601,7 +562,6 @@ static void WriteSections(ExportData& data)
 							{
 								int pos = ((int)hold->endrow - startRow) * numCols + (int)hold->col;
 								section[pos] = '3';
-								quantVec.push_front(it->quant);
 								--remainingHolds;
 							}
 						}
@@ -624,7 +584,6 @@ static void WriteSections(ExportData& data)
 							int pos = (hold->endrow - startRow) * numCols + hold->col;
 							section[pos] = '3';
 							holds[col] = nullptr;
-							quantVec.push_front(it->quant);
 							--remainingHolds;
 						}
 					}
@@ -635,7 +594,7 @@ static void WriteSections(ExportData& data)
 			int count, pitch;
 			const char* m = section;
 			quantVec.unique();
-			GetSectionCompression(m, numCols, quantVec, count, pitch);
+			GetSectionCompression(m, numCols, count, pitch);
 			quantVec.clear();
 			if (ROWS_PER_NOTE_SECTION % count != 0)
 			{
@@ -643,18 +602,21 @@ static void WriteSections(ExportData& data)
 			}
 			for (int k = 0; k < count; ++k, m += pitch)
 			{
-				data.file.write(m, numCols, 1);
-				data.file.write("\n", 1, 1);
+			    for (int i = 0; i < numCols; i++)
+			        data.file << m[i];
+			    data.file << '\n';
 			}
 
 			// Write a comma if this is not the last section.
-			if(it != end || remainingHolds > 0) data.file.write(",\n", 2, 1);
+			if(it != end || remainingHolds > 0)
+			    data.file << ",\n";
 		}
 
 		// Write an ampersand if this is not the last player.
-		if(pn != numPlayers - 1) data.file.write("&\n", 2, 1);
+		if(pn != numPlayers - 1)
+		    data.file << "&\n";
 	}
-	data.file.write(";\n", 2, 1);
+    data.file << ";\n";
 }
 
 static void WriteChart(ExportData& data)
@@ -680,8 +642,7 @@ static void WriteChart(ExportData& data)
 	}
 
 	// Write the output chart data.
-	data.file.printf("//--------------- %s - %s ----------------\n",
-		chart->style->id.str(), chart->artist.str());
+    data.file << "//--------------- " << chart->style->id.str() << " - " << chart->artist.str() << " ----------------\n";
 
 	String chartStyle = Escape("chart style", chart->style->id.str());
 	String chartArtist = Escape("chart artist", chart->artist.str());
@@ -696,17 +657,17 @@ static void WriteChart(ExportData& data)
 		WriteTag(data, "RADARVALUES", RadarToString(chart->radar).str(), ALWAYS, true);
 
 		if(chart->tempo) WriteTempo(data, chart->tempo);
-		
-		data.file.printf("#NOTES:\n");
+
+	    data.file << "#NOTES:\n";
 	}
 	else
 	{
-		data.file.printf("#NOTES:\n");
-		data.file.printf("     %s:\n", chartStyle.str());
-		data.file.printf("     %s:\n", chartArtist.str());
-		data.file.printf("     %s:\n", GetDifficultyString(diff));
-		data.file.printf("     %i:\n", chart->meter);
-		data.file.printf("     %s:\n", RadarToString(chart->radar).str());
+	    data.file << "#NOTES:\n";
+	    data.file << "     " << chartStyle.str() << ":\n";
+	    data.file << "     " << chartArtist.str() << ":\n";
+	    data.file << "     " << GetDifficultyString(diff) << ":\n";
+	    data.file << "     " << chart->meter << ":\n";
+	    data.file << "     " << RadarToString(chart->radar).str() << ":\n";
 	}
 
 	WriteSections(data);
@@ -735,7 +696,9 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	}
 
 	// Open the output file.
-	if(!data.file.open(path)) return false;
+    data.file.open(path.str.str());
+	if(data.file.fail())
+	    return false;
 	GiveUnicodeWarning(path, "sim");
 
 	// Start with a version tag for SSC files.

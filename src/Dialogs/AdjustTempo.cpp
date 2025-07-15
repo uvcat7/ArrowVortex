@@ -91,10 +91,12 @@ void DialogAdjustTempo::myCreateWidgets()
 
 	WgSpinner* bpm = myCreateWidgetRow("BPM", 0, myBPM, ACT_BPM_SET);
 	bpm->setRange(VC_MIN_BPM, VC_MAX_BPM);
+	bpm->setPrecision(3, 6);
 	bpm->setStep(1.0);
 
 	WgSpinner* stop = myCreateWidgetRow("Stop", 28, myStop, ACT_STOP_SET);
 	stop->setRange(VC_MIN_STOP, VC_MAX_STOP);
+	stop->setPrecision(3, 6);
 	stop->setStep(0.001);
 
 	myLayout.row().col(242);

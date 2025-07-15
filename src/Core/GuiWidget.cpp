@@ -16,7 +16,7 @@ namespace Vortex {
 	recti rect_;
 	int width_;
 	int height_;
-	uint flags_;
+	uint32_t flags_;
 
 GuiWidget::GuiWidget(GuiContext* gui)
 	: gui_(gui)

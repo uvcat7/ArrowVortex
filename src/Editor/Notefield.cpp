@@ -125,7 +125,7 @@ BatchSprite myNoteLabels[2];
 
 Reference<TweakInfoBox> myTweakInfoBox;
 
-color32 mySongBgColor;
+uint32_t mySongBgColor;
 int myBgBrightness;
 
 int myColX[SIM_MAX_COLUMNS], myCX, myX, myY, myW;
@@ -184,7 +184,7 @@ void onChanges(int changes)
 			}
 			else
 			{
-				const uchar* src = img.pixels;
+				const uint8_t* src = img.pixels;
 				int64_t rsum = 0, gsum = 0, bsum = 0;
 				int numPixels = img.width * img.height;
 				for(int i = 0; i < numPixels; ++i)
@@ -383,8 +383,8 @@ void drawBeatLines()
 
 	// Start drawing measures and beat lines.
 	auto batch = Renderer::batchC();
-	color32 halfColor = ToColor32({1, 1, 1, 0.4f});
-	color32 fullColor = ToColor32({1, 1, 1, 0.7f});
+	uint32_t halfColor = ToColor32({1, 1, 1, 0.4f});
+	uint32_t fullColor = ToColor32({1, 1, 1, 0.7f});
 	DrawPosHelper drawPos;
 	while(it != end && row < drawEndRow)
 	{
@@ -469,7 +469,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * it->rowTime);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = RGBAtoColor32(26, 128, 128, 128);
+					uint32_t col = RGBAtoColor32(26, 128, 128, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -479,7 +479,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * it->endTime);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = RGBAtoColor32(128, 128, 51, 128);
+					uint32_t col = RGBAtoColor32(128, 128, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -495,7 +495,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * (it + 1)->row);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = RGBAtoColor32(128, 26, 51, 128);
+					uint32_t col = RGBAtoColor32(128, 26, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -521,13 +521,13 @@ void drawReceptors()
 		// Calculate the beat pulse value for the receptors.
 		double beat = gTempo->timeToBeat(gView->getCursorTime());
 		float beatfrac = (float)(beat - floor(beat));
-		uchar beatpulse = (uchar)min(max((int)((2 - beatfrac * 4)*255), 0), 255);
+		uint8_t beatpulse = (uint8_t)min(max((int)((2 - beatfrac * 4)*255), 0), 255);
 
 		// Draw the receptors.
 		auto batch = Renderer::batchTC();
 		for(int c = 0; c < cols; ++c)
 		{
-			noteskin->recepOff[c].draw(&batch, myColX[c], myY, (uchar)255);
+			noteskin->recepOff[c].draw(&batch, myColX[c], myY, (uint8_t)255);
 			noteskin->recepOn[c].draw(&batch, myColX[c], myY, beatpulse);
 		}
 		batch.flush();
@@ -563,7 +563,7 @@ void drawReceptorGlow()
 		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
 
 		double lum = 1.5 - (time - note->endtime) * 6.0;
-		uchar alpha = (uchar)clamp((int)(lum * 255.0), 0, 255);
+		uint8_t alpha = (uint8_t)clamp((int)(lum * 255.0), 0, 255);
 		if(alpha > 0)
 		{
 			noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);

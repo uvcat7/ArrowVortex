@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <memory>
+#include <fstream>
 
 #include <System/File.h>
 
@@ -13,7 +15,7 @@ namespace {
 // ================================================================================================
 // ID3 tag parsing.
 
-typedef ulong id3_length_t;
+typedef uint64_t id3_length_t;
 
 enum ID3Tagtype
 {
@@ -23,7 +25,7 @@ enum ID3Tagtype
 	TAGTYPE_ID3V2_FOOTER
 };
 
-static ID3Tagtype ID3GetTagtype(const uchar *data, id3_length_t length)
+static ID3Tagtype ID3GetTagtype(const uint8_t *data, id3_length_t length)
 {
 	if(length >= 3 &&
 		data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
@@ -39,9 +41,9 @@ static ID3Tagtype ID3GetTagtype(const uchar *data, id3_length_t length)
 	return TAGTYPE_NONE;
 }
 
-static ulong ID3ParseUint(const uchar **ptr, uint bytes)
+static uint64_t ID3ParseUint(const uint8_t **ptr, uint32_t bytes)
 {
-	ulong value = 0;
+	uint64_t value = 0;
 	switch(bytes)
 	{
 		case 4: value = (value << 8) | *(*ptr)++;
@@ -52,9 +54,9 @@ static ulong ID3ParseUint(const uchar **ptr, uint bytes)
 	return value;
 }
 
-static ulong ID3ParseSyncsafe(const uchar **ptr, uint bytes)
+static uint64_t ID3ParseSyncsafe(const uint8_t **ptr, uint32_t bytes)
 {
-	ulong value = 0;
+	uint64_t value = 0;
 	switch(bytes)
 	{
 	case 5:
@@ -68,7 +70,7 @@ static ulong ID3ParseSyncsafe(const uchar **ptr, uint bytes)
 	return value;
 }
 
-static void ID3ParseHeader(const uchar **ptr, uint *version, int *flags, id3_length_t *size)
+static void ID3ParseHeader(const uint8_t **ptr, uint32_t *version, int *flags, id3_length_t *size)
 {
 	*ptr += 3;
 	*version = ID3ParseUint(ptr, 2);
@@ -76,9 +78,9 @@ static void ID3ParseHeader(const uchar **ptr, uint *version, int *flags, id3_len
 	*size = ID3ParseSyncsafe(ptr, 4);
 }
 
-static long ID3TagQuery(const uchar *data, id3_length_t length)
+static long ID3TagQuery(const uint8_t *data, id3_length_t length)
 {
-	uint version;
+	uint32_t version;
 	int flags;
 	id3_length_t size;
 	switch(ID3GetTagtype(data, length))
@@ -124,8 +126,8 @@ enum XingFlags
 
 static int XingParse(XingHeader* xing, struct mad_bitptr ptr, unsigned int bitlen)
 {
-	const uint XING_MAGIC = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
-	const uint INFO_MAGIC = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
+	const uint32_t XING_MAGIC = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
+	const uint32_t INFO_MAGIC = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
 	unsigned data;
 	if(bitlen < 64)
 		goto fail;
@@ -213,7 +215,7 @@ struct MP3Loader : public SoundSource
 	int numChannels;
 	int frequency;
 
-	uchar fileBuf[16384];
+	uint8_t fileBuf[16384];
 	short synthBuf[8192];
 	int synthNumSamples;
 	int synthBufPos;
@@ -223,7 +225,7 @@ struct MP3Loader : public SoundSource
 
 	XingHeader xing;
 
-	FileReader* file;
+	std::ifstream file;
 };
 
 MP3Loader::MP3Loader()
@@ -250,27 +252,26 @@ MP3Loader::~MP3Loader()
 	mad_synth_finish(&madSynth);
 	mad_frame_finish(&madFrame);
  	mad_stream_finish(&madStream);
-
-	delete file;
 }
 
 int MP3Loader::fillInputBuffer()
 {
 	// Mad needs more data from the input file.
 	int inbytes = 0;
-	if(madStream.next_frame != NULL)
+	if(madStream.next_frame != nullptr)
 	{
 		// Pull out remaining data from the last buffer.
 		inbytes = madStream.bufend - madStream.next_frame;
 		memmove(fileBuf, madStream.next_frame, inbytes);
 	}
 
-	bool eofBeforeReading = file->eof();
+	bool eofBeforeReading = file.eof();
 
-	int rc = file->read(fileBuf + inbytes, 1, sizeof(fileBuf) - inbytes - MAD_BUFFER_GUARD);
+	file.read(reinterpret_cast<char*>(fileBuf + inbytes), sizeof(fileBuf) - inbytes - MAD_BUFFER_GUARD);
+    std::streamsize rc = file.gcount();
 	if(rc < 0) return -1;
 
-	if(file->eof() && !eofBeforeReading)
+	if(file.eof() && !eofBeforeReading)
 	{
 		/* We just reached EOF.  Append MAD_BUFFER_GUARD bytes of NULs to the
 		* buffer, to ensure that the last frame is flushed. */
@@ -308,7 +309,7 @@ int MP3Loader::decodeNextFrame()
 		if(ret == -1 && (madStream.error == MAD_ERROR_BUFLEN || madStream.error == MAD_ERROR_BUFPTR))
 		{
 			if(bytes_read > 25000) return -1; // We've read this much without actually getting a frame; error.
-			int ret = fillInputBuffer();
+			ret = fillInputBuffer();
 			if(ret <= 0) return ret;
 			bytes_read += ret;
 			continue;
@@ -429,21 +430,17 @@ int MP3Loader::readFrames(int frames, short* buffer)
 
 }; // anonymous namespace.
 
-SoundSource* LoadMP3(FileReader* file, String& title, String& artist)
+SoundSource* LoadMP3(std::ifstream&& file, String& title, String& artist)
 {
-	MP3Loader* loader = new MP3Loader;
-	loader->file = file;
+	std::unique_ptr<MP3Loader> loader = std::make_unique<MP3Loader>();
+	loader->file = std::move(file);
 
 	// Decode and synth the first frame to check if the file is valid.
 	if(!loader->decodeFirstFrame())
-	{
-		loader->file = nullptr;
-		delete loader;
 		return nullptr;
-	}
 
 	// The file is valid, return the MP3 loader.
-	return loader;
+	return loader.release();
 }
 
 }; // namespace Vortex

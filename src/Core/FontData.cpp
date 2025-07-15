@@ -16,14 +16,14 @@ static const int CHANNELS = 1;
 static const Texture::Format FORMAT = Texture::ALPHA;
 
 // Creates a padded grayscale copy of a glyph bitmap.
-static uchar* CopyGlyphBitmap(int boxW, int boxH, FT_Bitmap bitmap)
+static uint8_t* CopyGlyphBitmap(int boxW, int boxH, FT_Bitmap bitmap)
 {
 	int srcW = bitmap.width, srcH = bitmap.rows, srcP = abs(bitmap.pitch);
-	uchar* out = (uchar*)calloc(boxW * boxH, 1);
+	uint8_t* out = (uint8_t*)calloc(boxW * boxH, 1);
 	for(int y = 0; y < srcH; ++y)
 	{
-		const uchar* src = bitmap.buffer + y * srcP;
-		uchar* dst = out + ((y + PADDING) * boxW + PADDING) * CHANNELS;
+		const uint8_t* src = bitmap.buffer + y * srcP;
+		uint8_t* dst = out + ((y + PADDING) * boxW + PADDING) * CHANNELS;
 		switch(bitmap.pixel_mode)
 		{
 		case FT_PIXEL_MODE_BGRA:
@@ -49,7 +49,7 @@ static uchar* CopyGlyphBitmap(int boxW, int boxH, FT_Bitmap bitmap)
 enum GlyphTraitBits { GTB_WHITESPACE = 1, GTB_NEWLINE = 2 };
 
 // Glyph traits of charcode values up to 32, values above 32 always have zero.
-static const uchar glyphTraits[33] =
+static const uint8_t glyphTraits[33] =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 | 2, 1, 1, 1, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
@@ -59,7 +59,7 @@ static GlyphCache* CreateCache(FT_Face face, int size)
 {
 	int texW = 128, texH = 128;
 	while(texW < 1024 && texW < size * 8 + 64) texW *= 2;
-	std::vector<uchar> pixels(texW * texH, 0);
+	std::vector<uint8_t> pixels(texW * texH, 0);
 
 	auto* cache = new GlyphCache;
 	cache->tex = TextureManager::load(texW, texH, FORMAT, false, pixels.data());
@@ -215,7 +215,7 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot)
 		}
 
 		// Copy the glyph pixels to the cache texture.
-		uchar* pixels = CopyGlyphBitmap(bitmapW, bitmapH, bitmap);
+		uint8_t* pixels = CopyGlyphBitmap(bitmapW, bitmapH, bitmap);
 		cache->tex->modify(glyph->box.x, glyph->box.y, bitmapW, bitmapH, pixels);
 		cache->shelfH = max(cache->shelfH, bitmapH);
 		free(pixels);
@@ -255,7 +255,7 @@ Glyph* RenderGlyph(FontData* font, GlyphCache* cache, int size, int charcode)
 
 	// Render the glyph as a bitmap using FreeType.
 	FT_Error error = 0;
-	uint index = FT_Get_Char_Index(face, charcode);
+	uint32_t index = FT_Get_Char_Index(face, charcode);
 	if(index) error = FT_Load_Glyph(face, index, font->loadflags);
 
 	// Check if the glyph is supported by the font face and was rendered correctly.

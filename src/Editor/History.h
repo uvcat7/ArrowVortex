@@ -15,7 +15,7 @@ struct History : public InputHandler
 		Tempo* tempo;
 	};
 
-	typedef uint EditId;
+	typedef uint32_t EditId;
 
 	typedef void (*ReleaseFunc)(ReadStream& in, bool hasBeenApplied);
 	typedef String(*ApplyFunc)(ReadStream& in, Bindings bound, bool undo, bool redo);
@@ -25,9 +25,9 @@ struct History : public InputHandler
 
 	virtual EditId addCallback(ApplyFunc apply, ReleaseFunc release = nullptr) = 0;
 
-	virtual void addEntry(EditId id, const void* data, uint size) = 0;
-	virtual void addEntry(EditId id, const void* data, uint size, Tempo* targetTempo) = 0;
-	virtual void addEntry(EditId id, const void* data, uint size, Chart* targetChart) = 0;
+	virtual void addEntry(EditId id, const void* data, uint32_t size) = 0;
+	virtual void addEntry(EditId id, const void* data, uint32_t size, Tempo* targetTempo) = 0;
+	virtual void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart) = 0;
 
 	virtual void startChain() = 0;
 	virtual void finishChain(String message) = 0;

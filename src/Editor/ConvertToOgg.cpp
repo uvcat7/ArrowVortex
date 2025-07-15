@@ -71,15 +71,15 @@ struct OggConversionPipe : public System::CommandPipe
 			samples[p++] = *srcR++;
 		}
 		framesLeft -= numFrames;
-		*progress = (uchar)(100 - (uint64_t)(100 * framesLeft / totalFrames));
+		*progress = (uint8_t)(100 - (uint64_t)(100 * framesLeft / totalFrames));
 		return numFrames * 4;
 	}
-	uchar* progress;
+	uint8_t* progress;
 	bool firstChunk;
 	int totalFrames, framesLeft;
 	const short* srcL, *srcR;
 	short samples[4096 * 2];
-	uchar* terminateFlag;
+	uint8_t* terminateFlag;
 };
 
 }; // Anonymous namepspace.

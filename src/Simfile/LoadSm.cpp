@@ -2,8 +2,10 @@
 
 #include <map>
 #include <algorithm>
+#include <numeric>
 
 #include <Core/StringUtils.h>
+#include <Core/Utils.h>
 
 #include <System/Debug.h>
 #include <System/File.h>
@@ -372,6 +374,7 @@ struct ReadNoteData
 	NoteList* notes;
 	Vector<int> holdPos;
 	Vector<NoteType> holdType;
+	Vector<int> quants;
 };
 
 static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
@@ -384,13 +387,14 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 		}
 		else if(*p == '1')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_STEP_OR_HOLD, (uint32_t) quantization});
 		}
 		else if(*p == '2' || *p == '4')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_STEP_OR_HOLD, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_STEP_OR_HOLD, (uint32_t) quantization});
 			data.holdType[col] = (*p == '2') ? NOTE_STEP_OR_HOLD : NOTE_ROLL;
 			data.holdPos[col] = data.notes->size();
+			data.quants[col] = quantization;
 		}
 		else if(*p == '3')
 		{
@@ -400,20 +404,31 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 				auto* hold = data.notes->begin() + holdPos - 1;
 				hold->endrow = row;
 				hold->type = data.holdType[col];
+				// Make sure we set the note to its largest quantization to avoid data loss
+				if (data.quants[col] > 0 && hold->quant > 0)
+				{
+					hold->quant = min(192u, quantization * hold->quant / gcd(quantization, hold->quant));
+				}
+				else // There was some error, so always play safe and use 192
+				{
+					HudError("Bug: couldn't get hold quantization in row %d", row);
+					hold->quant = 192;
+				}
 				data.holdPos[col] = 0;
+				data.quants[col] = 0;
 			}
 		}
 		else if(*p == 'M')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_MINE, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_MINE, (uint32_t) quantization});
 		}
 		else if(*p == 'L')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_LIFT, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_LIFT, (uint32_t) quantization});
 		}
 		else if(*p == 'F')
 		{
-			data.notes->append({row, row, (uint)col, (uint)data.player, NOTE_FAKE, (uint) quantization});
+			data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player, NOTE_FAKE, (uint32_t) quantization});
 		}
 	}
 }
@@ -448,6 +463,7 @@ static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* not
 	readNoteData.numCols = numCols;
 	readNoteData.notes = &chart->notes;
 	readNoteData.holdPos.resize(numCols, 0);
+	readNoteData.quants.resize(numCols, 0);
 	readNoteData.holdType.resize(numCols, NOTE_STEP_OR_HOLD);
 
 	int numSections = 0;
