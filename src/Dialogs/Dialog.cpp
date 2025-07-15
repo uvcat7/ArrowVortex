@@ -15,6 +15,7 @@ static const char* IdStrings[NUM_DIALOG_IDS] =
 	"newChart",
 	"songProperties",
 	"tempoBreakdown",
+	"labelBreakdown",
 	"waveformSettings",
 	"zoom",
 	"customSnap"
