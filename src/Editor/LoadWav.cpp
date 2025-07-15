@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
 
 #include <Core/Utils.h>
 
@@ -35,15 +36,13 @@ struct WaveData
 
 struct WavLoader : public SoundSource
 {
-	~WavLoader();
-
 	int getFrequency() override { return frequency; }
 	int getNumFrames() override { return numFrames; }
 	int getNumChannels() override { return numChannels; }
 	int getBytesPerSample() override { return bytesPerSample; }
 	int readFrames(int frames, short* buffer) override;
 
-	FileReader* file;
+	std::ifstream file;
 	int numFrames;
 	int numFramesLeft;
 	int numChannels;
@@ -51,25 +50,25 @@ struct WavLoader : public SoundSource
 	int frequency;
 };
 
-WavLoader::~WavLoader()
-{
-	delete file;
-}
 
 int WavLoader::readFrames(int frames, short* buffer)
 {
 	int numFramesToRead = min(numFramesLeft, frames);
 	numFramesLeft -= numFramesToRead;
-	return file->read(buffer, bytesPerSample * numChannels, numFramesToRead);
+
+	std::streamsize bytesPerFrame = static_cast<std::streamsize>(bytesPerSample) * numChannels;
+	file.read(reinterpret_cast<char*>(buffer), bytesPerFrame * numFramesToRead);
+    return static_cast<int>(file.gcount() / bytesPerFrame);
 }
 
 }; // anonymous namespace
 
-SoundSource* LoadWav(FileReader* file, std::string& title, std::string& artist)
+SoundSource* LoadWav(std::ifstream&& file, String& title, String& artist)
 {
 	// Read the wave header.
 	WaveHeader header;
-	if(file->read(&header, sizeof(WaveHeader), 1) == 0
+    file.read(reinterpret_cast<char*>(&header), sizeof(header));
+	if(file.fail()
 		|| memcmp(header.chunkId, "RIFF", 4) != 0
 		|| memcmp(header.format, "WAVE", 4) != 0
 		|| memcmp(header.subchunk1Id, "fmt ", 4) != 0
@@ -85,17 +84,18 @@ SoundSource* LoadWav(FileReader* file, std::string& title, std::string& artist)
 	if (header.subchunk1Size > 16)
 	{
 		size_t extraBytes = static_cast<size_t>(header.subchunk1Size) - 16;
-		file->skip(extraBytes);
+		file.ignore(extraBytes);
 	}
 
 	// Read the start of the data chunk.
 	WaveData data;
 	while (true) {
-		if (file->read(&data, sizeof(WaveData), 1) == 0)
+		file.read(reinterpret_cast<char*>(&data), sizeof(WaveData));
+		if (file.fail())
 			return nullptr;
 		if (memcmp(data.chunkId, "data", 4) == 0)
 			break;
-		file->skip(data.chunkSize);
+		file.ignore(data.chunkSize);
 	}
 
 	// Create a wav loader that will read the contents of the data chunk.
@@ -106,7 +106,7 @@ SoundSource* LoadWav(FileReader* file, std::string& title, std::string& artist)
 	loader->bytesPerSample = header.bitsPerSample / 8;
 	loader->numFrames = data.chunkSize / (loader->bytesPerSample * loader->numChannels);
 	loader->numFramesLeft = loader->numFrames;
-	loader->file = file;
+	loader->file = std::move(file);
 
 	return loader;
 }
