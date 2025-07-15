@@ -314,7 +314,8 @@ uint32_t ReadStream::readNum()
 std::string ReadStream::readStr()
 {
 	std::string out;
-	uint len = readNum();
+	uint32_t len = readNum();
+	auto newPos = read_position_ + len;
 	if(newPos <= end_position_)
 	{
 		auto str = read_position_;

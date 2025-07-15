@@ -394,7 +394,7 @@ static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgCha
 // ================================================================================================
 // Chart writing functions.
 
-static char GetNoteChar(uint type)
+static char GetNoteChar(uint32_t type)
 {
 	if(type == NOTE_STEP_OR_HOLD)
 	{
@@ -415,7 +415,7 @@ static char GetNoteChar(uint type)
 	return '0';
 }
 
-static char GetHoldChar(uint type)
+static char GetHoldChar(uint32_t type)
 {
 	return (type == NOTE_STEP_OR_HOLD) ? '2' : '4';
 }
@@ -508,7 +508,7 @@ static void WriteSections(ExportData& data)
 		Vector<const Note*> holdVec(numCols, nullptr);
 		const Note** holds = holdVec.begin();
 
-		std::list<uint> quantVec;
+		std::list<uint32_t> quantVec;
 
 		const Note* it = chart->notes.begin();
 		const Note* end = chart->notes.end();

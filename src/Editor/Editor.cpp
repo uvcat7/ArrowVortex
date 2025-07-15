@@ -383,14 +383,14 @@ void loadRecentFiles()
 void saveRecentFiles()
 {
 	std::ofstream out("settings/recent files.txt");
-	if(out.good())
+	if (out.good())
 	{
-		for(int i = 0; i < myRecentFiles.size(); ++i)
+		for (int i = 0; i < myRecentFiles.size(); ++i)
 		{
 			auto& file = myRecentFiles[i];
-			out.write(file.c_str(), 1, file.length());
-			if(i != myRecentFiles.size() - 1)
-			    out << '\n';
+			out.write(file.c_str(), file.length());
+			if (i != myRecentFiles.size() - 1)
+				out << '\n';
 		}
 	}
 }

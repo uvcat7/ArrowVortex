@@ -25,9 +25,9 @@ public:
 
 	// Functions that bind a read-only value to a slot.
 	virtual bool bind(const std::string& slot, const int* v) = 0;
-	virtual bool bind(const std::string& slot, const uint* v) = 0;
+	virtual bool bind(const std::string& slot, const uint32_t* v) = 0;
 	virtual bool bind(const std::string& slot, const long* v) = 0;
-	virtual bool bind(const std::string& slot, const ulong* v) = 0;
+	virtual bool bind(const std::string& slot, const uint64_t* v) = 0;
 	virtual bool bind(const std::string& slot, const float* v) = 0;
 	virtual bool bind(const std::string& slot, const double* v) = 0;
 	virtual bool bind(const std::string& slot, const bool* v) = 0;
@@ -36,9 +36,9 @@ public:
 
 	// Functions that bind a read-write value to a slot.
 	virtual bool bind(const std::string& slot, int* v) = 0;
-	virtual bool bind(const std::string& slot, uint* v) = 0;
+	virtual bool bind(const std::string& slot, uint32_t* v) = 0;
 	virtual bool bind(const std::string& slot, long* v) = 0;
-	virtual bool bind(const std::string& slot, ulong* v) = 0;
+	virtual bool bind(const std::string& slot, uint64_t* v) = 0;
 	virtual bool bind(const std::string& slot, float* v) = 0;
 	virtual bool bind(const std::string& slot, double* v) = 0;
 	virtual bool bind(const std::string& slot, bool* v) = 0;

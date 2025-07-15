@@ -94,7 +94,7 @@ void SetClipboardData(const std::string& tag, const uint8_t* data, int size)
 
 Vector<uint8_t> GetClipboardData(const std::string& tag)
 {
-	Vector<uchar> buffer;
+	Vector<uint8_t> buffer;
 	std::string text = gSystem->getClipboardText();
 	std::string prefix = "ArrowVortex:" + tag + ":";
 	if(Str::startsWith(text, prefix.c_str()))

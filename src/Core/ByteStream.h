@@ -19,7 +19,7 @@ public:
 	void write32(const void* val);
 	void write64(const void* val);
 
-	void writeNum(uint num);
+	void writeNum(uint32_t num);
 	void writeStr(const std::string& str);
 
 	template <unsigned int S>
@@ -91,7 +91,7 @@ public:
 	uint32_t readNum();
 	std::string readStr();
 
-	void readNum(uint& num);
+	void readNum(uint32_t& num);
 	void readStr(std::string& str);
 
 	template <size_t S>

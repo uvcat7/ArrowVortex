@@ -44,7 +44,7 @@ struct Str
 	static int readInt(const std::string& s, int alt = 0);
 
 	/// Converts the string to an uinteger; returns alt on failure.
-	static uint readUint(const std::string& s, uint32_t alt = 0);
+	static uint32_t readUint(const std::string& s, uint32_t alt = 0);
 
 	/// Converts the string to a float; returns alt on failure.
 	static float readFloat(const std::string& s, float alt = 0);
@@ -174,13 +174,13 @@ struct Str
 
 	/// Converts the given value to a string.
 	static std::string val(int v, int minDigits = 0, bool hex = false);
-	static std::string val(uint v, int minDigits = 0, bool hex = false);
+	static std::string val(uint32_t v, int minDigits = 0, bool hex = false);
 	static std::string val(float v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 	static std::string val(double v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 
 	/// Converts the given value and appends it to the string.
 	static void appendVal(std::string& s, int v, int minDigits = 0, bool hex = false);
-	static void appendVal(std::string& s, uint v, int minDigits = 0, bool hex = false);
+	static void appendVal(std::string& s, uint32_t v, int minDigits = 0, bool hex = false);
 	static void appendVal(std::string& s, float v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 	static void appendVal(std::string& s, double v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
 

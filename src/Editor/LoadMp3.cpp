@@ -433,10 +433,17 @@ int MP3Loader::readFrames(int frames, short* buffer)
 SoundSource* LoadMP3(FileReader* file, std::string& title, std::string& artist)
 {
 	std::unique_ptr<MP3Loader> loader = std::make_unique<MP3Loader>();
-	loader->file = std::move(file);
+
+	// Open the file using the provided FileReader and associate it with the loader.
+	if (!file || !file->file)
+		return nullptr;
+
+	loader->file.open(static_cast<const char*>(file->file), std::ios::binary);
+	if (!loader->file.is_open())
+		return nullptr;
 
 	// Decode and synth the first frame to check if the file is valid.
-	if(!loader->decodeFirstFrame())
+	if (!loader->decodeFirstFrame())
 		return nullptr;
 
 	// The file is valid, return the MP3 loader.

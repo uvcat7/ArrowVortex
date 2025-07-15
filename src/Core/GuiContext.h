@@ -27,9 +27,9 @@ public:
 	InputEvents& getEvents();
 
 	bool bind(const std::string& slot, const int* v);
-	bool bind(const std::string& slot, const uint* v);
+	bool bind(const std::string& slot, const uint32_t* v);
 	bool bind(const std::string& slot, const long* v);
-	bool bind(const std::string& slot, const ulong* v);
+	bool bind(const std::string& slot, const uint64_t* v);
 	bool bind(const std::string& slot, const float* v);
 	bool bind(const std::string& slot, const double* v);
 	bool bind(const std::string& slot, const bool* v);
@@ -37,9 +37,9 @@ public:
 	bool bind(const std::string& slot, const std::string* str);
 
 	bool bind(const std::string& slot, int* v);
-	bool bind(const std::string& slot, uint* v);
+	bool bind(const std::string& slot, uint32_t* v);
 	bool bind(const std::string& slot, long* v);
-	bool bind(const std::string& slot, ulong* v);
+	bool bind(const std::string& slot, uint64_t* v);
 	bool bind(const std::string& slot, float* v);
 	bool bind(const std::string& slot, double* v);
 	bool bind(const std::string& slot, bool* v);
