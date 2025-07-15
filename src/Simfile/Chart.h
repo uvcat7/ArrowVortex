@@ -15,7 +15,7 @@ struct Chart : NonCopyable
 	~Chart();
 
 	// Returns the difficulty and meter of the chart (e.g. "Challenge 12").
-	std::string description() const;
+	String description() const;
 
 	// Returns true if the chart has split timing, false if the chart uses song timing.
 	bool hasTempo() const;
@@ -33,7 +33,7 @@ struct Chart : NonCopyable
 	void sanitize();
 
 	const Style* style;
-	std::string artist;
+	String artist;
 	Difficulty difficulty;
 	Vector<double> radar;
 	int meter;

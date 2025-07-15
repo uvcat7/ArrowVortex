@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/String.h>
 #include <Core/Input.h>
 #include <Core/ByteStream.h>
 
@@ -17,7 +18,7 @@ struct History : public InputHandler
 	typedef uint32_t EditId;
 
 	typedef void (*ReleaseFunc)(ReadStream& in, bool hasBeenApplied);
-	typedef std::string(*ApplyFunc)(ReadStream& in, Bindings bound, bool undo, bool redo);
+	typedef String(*ApplyFunc)(ReadStream& in, Bindings bound, bool undo, bool redo);
 
 	static void create();
 	static void destroy();
@@ -29,7 +30,7 @@ struct History : public InputHandler
 	virtual void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart) = 0;
 
 	virtual void startChain() = 0;
-	virtual void finishChain(std::string message) = 0;
+	virtual void finishChain(String message) = 0;
 	
 	virtual void onFileOpen(Simfile* simfile) = 0;
 	virtual void onFileClosed() = 0;

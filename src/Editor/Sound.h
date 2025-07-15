@@ -33,7 +33,7 @@ public:
 	/// Destroys the current sample data and starts loading audio from a file. If title/artist
 	/// fields are found in the metadata, they are written to the corresponding strings. When
 	/// threaded, "isAllocated" and "isCompleted" can be used to check loading progress.
-	bool load(const char* path, bool threaded, std::string& title, std::string& artist);
+	bool load(const char* path, bool threaded, String& title, String& artist);
 
 	/// Returns the number of frames per second.
 	int getFrequency() const { return myFrequency; }

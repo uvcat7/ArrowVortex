@@ -129,19 +129,19 @@ enum BackgroundStyle
 };
 
 // Returns true if the tag of the clipboard data matches the given tag.
-bool HasClipboardData(const std::string& tag);
+bool HasClipboardData(StringRef tag);
 
 // Encodes the given data to an ascii85 string and sends it to the clipboard.
-void SetClipboardData(const std::string& tag, const uint8_t* data, int size);
+void SetClipboardData(StringRef tag, const uint8_t* data, int size);
 
 // Reads a string from the clipboard and decodes it using ascii85.
-Vector<uint8_t> GetClipboardData(const std::string& tag);
+Vector<uint8_t> GetClipboardData(StringRef tag);
 
 // Returns a text representation of the given snap type.
 const char* ToString(SnapType st);
 
 // Returns a number value with it's ordinal suffix.
-const std::string OrdinalSuffix(int i);
+const String OrdinalSuffix(int i);
 
 // Returns the color representation of the given difficulty type.
 uint32_t ToColor(Difficulty dt);

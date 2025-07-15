@@ -55,15 +55,13 @@ int WavLoader::readFrames(int frames, short* buffer)
 {
 	int numFramesToRead = min(numFramesLeft, frames);
 	numFramesLeft -= numFramesToRead;
-
-	std::streamsize bytesPerFrame = static_cast<std::streamsize>(bytesPerSample) * numChannels;
-	file.read(reinterpret_cast<char*>(buffer), bytesPerFrame * numFramesToRead);
-    return static_cast<int>(file.gcount() / bytesPerFrame);
+	file.read(reinterpret_cast<char*>(buffer), bytesPerSample * numChannels * numFramesToRead);
+    return static_cast<int>(file.gcount());
 }
 
 }; // anonymous namespace
 
-SoundSource* LoadWav(std::ifstream&& file, std::string& title, std::string& artist)
+SoundSource* LoadWav(std::ifstream&& file, String& title, String& artist)
 {
 	// Read the wave header.
 	WaveHeader header;

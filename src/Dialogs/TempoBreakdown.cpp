@@ -83,12 +83,12 @@ void onDraw() override
 			}
 			while(seg != segEnd && y < view.y + view.h + 20)
 			{
-				std::string str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
-				Text::arrange(Text::MR, style, str.c_str());
+				String str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
+				Text::arrange(Text::MR, style, str.str());
 				Text::draw(vec2i{x + view.w / 2 - 6, y + 8});
 
 				str = meta->getDescription(seg.ptr);
-				Text::arrange(Text::ML, style, str.c_str());
+				Text::arrange(Text::ML, style, str.str());
 				Text::draw(vec2i{x + view.w / 2 + 6, y + 8});
 
 				y += 16, ++seg;

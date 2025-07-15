@@ -24,54 +24,54 @@ public:
 	virtual InputEvents& getEvents() = 0;
 
 	// Functions that bind a read-only value to a slot.
-	virtual bool bind(const std::string& slot, const int* v) = 0;
-	virtual bool bind(const std::string& slot, const uint32_t* v) = 0;
-	virtual bool bind(const std::string& slot, const long* v) = 0;
-	virtual bool bind(const std::string& slot, const uint64_t* v) = 0;
-	virtual bool bind(const std::string& slot, const float* v) = 0;
-	virtual bool bind(const std::string& slot, const double* v) = 0;
-	virtual bool bind(const std::string& slot, const bool* v) = 0;
-	virtual bool bind(const std::string& slot, const char* str) = 0;
-	virtual bool bind(const std::string& slot, const std::string* str) = 0;
+	virtual bool bind(StringRef slot, const int* v) = 0;
+	virtual bool bind(StringRef slot, const uint32_t* v) = 0;
+	virtual bool bind(StringRef slot, const long* v) = 0;
+	virtual bool bind(StringRef slot, const uint64_t* v) = 0;
+	virtual bool bind(StringRef slot, const float* v) = 0;
+	virtual bool bind(StringRef slot, const double* v) = 0;
+	virtual bool bind(StringRef slot, const bool* v) = 0;
+	virtual bool bind(StringRef slot, const char* str) = 0;
+	virtual bool bind(StringRef slot, const String* str) = 0;
 
 	// Functions that bind a read-write value to a slot.
-	virtual bool bind(const std::string& slot, int* v) = 0;
-	virtual bool bind(const std::string& slot, uint32_t* v) = 0;
-	virtual bool bind(const std::string& slot, long* v) = 0;
-	virtual bool bind(const std::string& slot, uint64_t* v) = 0;
-	virtual bool bind(const std::string& slot, float* v) = 0;
-	virtual bool bind(const std::string& slot, double* v) = 0;
-	virtual bool bind(const std::string& slot, bool* v) = 0;
-	virtual bool bind(const std::string& slot, std::string* str) = 0;
+	virtual bool bind(StringRef slot, int* v) = 0;
+	virtual bool bind(StringRef slot, uint32_t* v) = 0;
+	virtual bool bind(StringRef slot, long* v) = 0;
+	virtual bool bind(StringRef slot, uint64_t* v) = 0;
+	virtual bool bind(StringRef slot, float* v) = 0;
+	virtual bool bind(StringRef slot, double* v) = 0;
+	virtual bool bind(StringRef slot, bool* v) = 0;
+	virtual bool bind(StringRef slot, String* str) = 0;
 
 	/// Binds a functor to a call slot, and takes ownership of it.
 	/// On failure, false is returned and the functor is deleted.
-	virtual bool bind(const std::string& slot, Functor::Generic* f) = 0;
+	virtual bool bind(StringRef slot, Functor::Generic* f) = 0;
 
 	/// Binds a static function without arguments.
 	template <typename Result>
-	bool bind(const std::string& slot, Result(*function)())
+	bool bind(StringRef slot, Result(*function)())
 	{
 		return bind(slot, new Functor::Static<Result>(function));
 	}
 
 	/// Binds a static function with one argument.
 	template <typename Result, typename Arg>
-	bool bind(const std::string& slot, Result(*function)(Arg), Arg arg)
+	bool bind(StringRef slot, Result(*function)(Arg), Arg arg)
 	{
 		return bind(slot, new Functor::StaticWithArg<Result, Arg>(function, arg));
 	}
 
 	/// Binds an object with a member function without arguments.
 	template <typename Result, typename Object>
-	bool bind(const std::string& slot, Object* obj, Result(Object::*member)())
+	bool bind(StringRef slot, Object* obj, Result(Object::*member)())
 	{
 		return bind(slot, new Functor::Member<Result, Object>(obj, member));
 	}
 
 	/// Binds an object with a member function with one argument.
 	template <typename Result, typename Object, typename Arg>
-	bool bind(const std::string& slot, Object* obj, Result(Object::*member)(Arg), Arg arg)
+	bool bind(StringRef slot, Object* obj, Result(Object::*member)(Arg), Arg arg)
 	{
 		return bind(slot, new Functor::MemberWithArg<Result, Object, Arg>(obj, member, arg));
 	}
@@ -115,12 +115,12 @@ public:
 	void draw();
 
 	// Set functions.
-	void setId(const std::string& id);
+	void setId(StringRef id);
 	void setWidth(int w);
 	void setHeight(int h);
 	void setSize(int w, int h);
 	void setEnabled(bool enabled);
-	void setTooltip(const std::string& text);
+	void setTooltip(StringRef text);
 
 	// Get functions.
 	bool isEnabled() const;
@@ -128,7 +128,7 @@ public:
 	int getHeight() const;
 	vec2i getSize() const;
 	recti getRect() const;
-	std::string getTooltip() const;
+	String getTooltip() const;
 	GuiContext* getGui() const;
 
 protected:
@@ -167,7 +167,7 @@ public:
 	void requestPin();
 
 	void setPosition(int x, int y);
-	void setTitle(const std::string& title);
+	void setTitle(StringRef title);
 
 	void setWidth(int w);
 	void setHeight(int h);
@@ -200,10 +200,10 @@ struct GuiMain
 	typedef GuiWidget* (*CreateWidgetFunction)(GuiContext*);
 
 	/// Prototype for functions that read text from the clipboard.
-	typedef std::string(*ClipboardGetFunction)();
+	typedef String(*ClipboardGetFunction)();
 
 	/// Prototype for functions that write text to the clipboard.
-	typedef void(*ClipboardSetFunction)(std::string);
+	typedef void(*ClipboardSetFunction)(String);
 
 	/// Call once to initialize the gui system.
 	static void init();
@@ -227,10 +227,10 @@ struct GuiMain
 	static void setClipboardFunctions(ClipboardGetFunction get, ClipboardSetFunction set);
 
 	/// Sets the clipboard text by using the assigned ClipboardSetFunction.
-	static void setClipboardText(std::string text);
+	static void setClipboardText(String text);
 
 	/// Returns the clipboard text obtained from the assigned ClipboardGetFunction.
-	static std::string getClipboardText();
+	static String getClipboardText();
 
 	/// Sets the mouse cursor icon, which is reset to CURSOR_ARROW at the start of each frame.
 	static void setCursorIcon(Cursor::Icon icon);
@@ -239,10 +239,10 @@ struct GuiMain
 	static Cursor::Icon getCursorIcon();
 
 	/// Sets the current tooltip text, which is reset to an empty string at the start of each frame.
-	static void setTooltip(std::string text);
+	static void setTooltip(String text);
 
 	/// Returns the current tooltip text.
-	static std::string getTooltip();
+	static String getTooltip();
 
 	/// Returns true if the mouse is hovering over a gui object or if a gui object is capturing mouse input.
 	static bool isCapturingMouse();

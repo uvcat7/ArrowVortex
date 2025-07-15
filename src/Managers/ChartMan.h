@@ -20,7 +20,7 @@ struct ChartMan
 	virtual bool isClosed() const = 0;
 
 	/// Sets the step artist of the current chart.
-	virtual void setStepArtist(std::string stepArtist) = 0;
+	virtual void setStepArtist(String stepArtist) = 0;
 
 	/// Sets the difficulty of the current chart.
 	virtual void setDifficulty(Difficulty dt) = 0;
@@ -29,7 +29,7 @@ struct ChartMan
 	virtual void setMeter(int meter) = 0;
 
 	/// Returns the step artist of the current chart.
-	virtual std::string getStepArtist() const = 0;
+	virtual String getStepArtist() const = 0;
 
 	/// Returns the difficulty type of the current chart (e.g. Challenge).
 	virtual Difficulty getDifficulty() const = 0;
@@ -38,10 +38,10 @@ struct ChartMan
 	virtual int getMeter() const = 0;
 
 	/// Returns a description of the difficulty and meter (e.g. "Challenge 12").
-	virtual std::string getDescription() const = 0;
+	virtual String getDescription() const = 0;
 
 	/// Represents a single item in a stream breakdown.
-	struct BreakdownItem { int row, endrow; std::string text; };
+	struct BreakdownItem { int row, endrow; String text; };
 
 	/// Returns a text representation of the 16th stream breakdown of the current chart.
 	virtual Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures = nullptr) const = 0;

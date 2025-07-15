@@ -12,10 +12,10 @@ struct GuiManagerData
 
 	Vector<GuiWidget*> mouseBlockers;
 
-	std::map<GuiWidget*, std::string> widgetToIdMap;
-	std::multimap<std::string, GuiWidget*> idToWidgetMap;
-	std::map<std::string, GuiMain::CreateWidgetFunction> widgetFactory;
-	std::map<const GuiWidget*, std::string> tooltipMap;
+	std::map<GuiWidget*, String> widgetToIdMap;
+	std::multimap<String, GuiWidget*> idToWidgetMap;
+	std::map<String, GuiMain::CreateWidgetFunction> widgetFactory;
+	std::map<const GuiWidget*, String> tooltipMap;
 };
 
 GuiManagerData* GM = nullptr;
@@ -57,12 +57,12 @@ void GuiManager::create()
 	RegisterCommonWidgetClasses();
 }
 
-void GuiManager::registerWidgetClass(const std::string& name, GuiMain::CreateWidgetFunction fun)
+void GuiManager::registerWidgetClass(StringRef name, GuiMain::CreateWidgetFunction fun)
 {
 	GM->widgetFactory[name] = fun;
 }
 
-GuiWidget* GuiManager::createWidget(const std::string& name, GuiContext* gui)
+GuiWidget* GuiManager::createWidget(StringRef name, GuiContext* gui)
 {
 	auto it = Map::findVal(GM->widgetFactory, name);
 	return (it) ? (*it)(gui) : nullptr;
@@ -80,18 +80,18 @@ void GuiManager::removeWidget(GuiWidget* w)
 	GM->mouseBlockers.erase_values(w);
 }
 
-void GuiManager::setWidgetId(GuiWidget* w, const std::string& id)
+void GuiManager::setWidgetId(GuiWidget* w, StringRef id)
 {
 	Map::eraseVals(GM->idToWidgetMap, w);
 	GM->widgetToIdMap.erase(w);
-	if(id.length())
+	if(id.len())
 	{
 		GM->idToWidgetMap.insert({id, w});
 		GM->widgetToIdMap.insert({w, id});
 	}
 }
 
-GuiWidget* GuiManager::findWidget(const std::string& id, GuiContext* gui)
+GuiWidget* GuiManager::findWidget(StringRef id, GuiContext* gui)
 {
 	auto& map = GM->idToWidgetMap;
 	auto r = map.equal_range(id);
@@ -102,15 +102,15 @@ GuiWidget* GuiManager::findWidget(const std::string& id, GuiContext* gui)
 	return (r.first != r.second) ? r.first->second : nullptr;
 }
 
-void GuiManager::setTooltip(const GuiWidget* w, const std::string& str)
+void GuiManager::setTooltip(const GuiWidget* w, StringRef str)
 {
 	GM->tooltipMap[w] = str;
 }
 
-std::string GuiManager::getTooltip(const GuiWidget* w)
+String GuiManager::getTooltip(const GuiWidget* w)
 {
 	auto it = Map::findVal(GM->tooltipMap, w);
-	return it ? *it : std::string();
+	return it ? *it : String();
 }
 
 void GuiManager::blockMouseOver(GuiWidget* w)

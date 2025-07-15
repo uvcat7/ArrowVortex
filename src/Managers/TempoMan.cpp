@@ -157,9 +157,9 @@ void myQueueSegments(const SegmentEdit& edit, bool clearRegion)
 	}
 }
 
-std::string myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
+String myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	SegmentGroup add, rem;
 	add.decode(in);
 	rem.decode(in);
@@ -196,23 +196,23 @@ std::string myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 			}
 		}
 
-		std::string remove = rem.descriptionValues();
-		std::string after = add.descriptionValues();
+		String remove = rem.descriptionValues();
+		String after = add.descriptionValues();
 
 		if(addMatchesRem)
 		{
-			msg = msg + "Changed " + add.description() + ": " + remove + " {g:arrow right} " + after;
+			msg += "Changed " + add.description() + ": " + remove + " {g:arrow right} " + after;
 		}
 		else
 		{
 			if(numAdd > 0)
 			{
-				msg = msg + "Added " + add.description() + ": " + after;
+				msg += "Added " + add.description() + ": " + after;
 			}
 			if(numRem > 0)
 			{
-				if(msg.length()) msg = msg + ", ";
-				msg = msg + "Removed " + rem.description() + ": " + remove;
+				if(msg.len()) msg += ", ";
+				msg += "Removed " + rem.description() + ": " + remove;
 			}
 		}
 
@@ -233,7 +233,7 @@ std::string myApplySegments(Tempo* out, ReadStream& in, bool undo, bool redo)
 	return msg;
 }
 
-static std::string ApplySegments(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplySegments(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplySegments(bound.tempo, in, undo, redo);
 }
@@ -316,7 +316,7 @@ void myApplyInsertRowsOffset(Tempo* tempo, int startRow, int numRows)
 	}
 }
 
-std::string myApplyInsertRows(ReadStream& in, bool undo, bool redo)
+String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 {
 	auto startRow = in.read<int>();
 	auto numRows = in.read<int>();
@@ -355,10 +355,10 @@ std::string myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 		
 		target = in.read<Tempo*>();
 	}
-	return std::string();
+	return String();
 }
 
-static std::string ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplyInsertRows(in, undo, redo);
 }
@@ -374,9 +374,9 @@ void myQueueOffset(double offset)
 	gHistory->addEntry(myApplyOffsetId, stream.data(), stream.size(), myTempo);
 }
 
-std::string myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
+String myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	auto before = in.read<double>();
 	auto after = in.read<double>();
 	if(in.success())
@@ -385,7 +385,7 @@ std::string myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 
 		msg = "Changed offset: ";
 		Str::appendVal(msg, before);
-		msg = msg + " {g:arrow right} ";
+		msg += " {g:arrow right} ";
 		Str::appendVal(msg, after);
 
 		myStartEdit(out);
@@ -395,7 +395,7 @@ std::string myApplyOffset(Tempo* out, ReadStream& in, bool undo, bool redo)
 	return msg;
 }
 
-static std::string ApplyOffset(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyOffset(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplyOffset(bound.tempo, in, undo, redo);
 }
@@ -413,9 +413,9 @@ void myQueueDisplayBpm(const DisplayBpmEdit& change)
 	gHistory->addEntry(myApplyDisplayBpmId, stream.data(), stream.size(), myTempo);
 }
 
-std::string myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo)
+String myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	auto before = in.read<DisplayBpmEdit>();
 	auto after = in.read<DisplayBpmEdit>();
 	if(in.success())
@@ -424,7 +424,7 @@ std::string myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo
 
 		msg = "Changed display BPM: ";
 		myApplyDisplayBpmMessage(msg, before);
-		msg = msg + " {g:arrow right} ";
+		msg += " {g:arrow right} ";
 		myApplyDisplayBpmMessage(msg, after);
 		
 		tempo->displayBpmType = value.type;
@@ -434,28 +434,28 @@ std::string myApplyDisplayBpm(Tempo* tempo, ReadStream& in, bool undo, bool redo
 	return msg;
 }
 
-void myApplyDisplayBpmMessage(std::string &msg, DisplayBpmEdit &edit)
+void myApplyDisplayBpmMessage(String &msg, DisplayBpmEdit &edit)
 {
 	if (edit.type == BPM_ACTUAL)
 	{
-		msg = msg + "default";
+		msg += "default";
 	}
 	else if (edit.type == BPM_RANDOM)
 	{
-		msg = msg + "random";
+		msg += "random";
 	}
 	else
 	{
 		Str::appendVal(msg, edit.range.min);
 		if (edit.range.min != edit.range.max)
 		{
-			msg = msg + "-";
+			msg += "-";
 			Str::appendVal(msg, edit.range.max);
 		}
 	}
 }
 
-static std::string ApplyDisplayBpm(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyDisplayBpm(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return TEMPO_MAN->myApplyDisplayBpm(bound.tempo, in, undo, redo);
 }
@@ -596,7 +596,7 @@ void copyToClipboard()
 		WriteStream stream;
 		clipboard.encode(stream);
 		SetClipboardData(clipboardTag, stream.data(), stream.size());
-		HudNote("Copied %s", clipboard.description().c_str());
+		HudNote("Copied %s", clipboard.description().str());
 	}
 }
 

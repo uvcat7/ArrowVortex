@@ -14,52 +14,52 @@ struct MetadataMan
 	virtual void update(Simfile* simfile) = 0;
 
 	/// Returns the relative path of first music file in the simfile directory.
-	virtual std::string findMusicFile() = 0;
+	virtual String findMusicFile() = 0;
 
 	/// Returns the relative path of first banner file in the simfile directory.
-	virtual std::string findBannerFile() = 0;
+	virtual String findBannerFile() = 0;
 
 	/// Returns the relative path of the first background file in the simfile directory.
-	virtual std::string findBackgroundFile() = 0;
+	virtual String findBackgroundFile() = 0;
 
 	/// Returns the relative path of the first CD title file in the simfile directory.
-	virtual std::string findCdTitleFile() = 0;
+	virtual String findCdTitleFile() = 0;
 
 	/// Sets the song title.
-	virtual void setTitle(const std::string& s) = 0;
+	virtual void setTitle(StringRef s) = 0;
 
 	/// Sets the transliterated song title.
-	virtual void setTitleTranslit(const std::string& s) = 0;
+	virtual void setTitleTranslit(StringRef s) = 0;
 
 	/// Sets the song subtitle.
-	virtual void setSubtitle(const std::string& s) = 0;
+	virtual void setSubtitle(StringRef s) = 0;
 
 	/// Sets the transliterated song subtitle.
-	virtual void setSubtitleTranslit(const std::string& s) = 0;
+	virtual void setSubtitleTranslit(StringRef s) = 0;
 
 	/// Sets the song artist.
-	virtual void setArtist(const std::string& s) = 0;
+	virtual void setArtist(StringRef s) = 0;
 
 	/// Sets the transliterated song artist.
-	virtual void setArtistTranslit(const std::string& s) = 0;
+	virtual void setArtistTranslit(StringRef s) = 0;
 
 	/// Sets the music genre.
-	virtual void setGenre(const std::string& s) = 0;
+	virtual void setGenre(StringRef s) = 0;
 
 	/// Sets the simfile creator.
-	virtual void setCredit(const std::string& s) = 0;
+	virtual void setCredit(StringRef s) = 0;
 
 	/// Sets the relative path of the music file.
-	virtual void setMusicPath(const std::string& s) = 0;
+	virtual void setMusicPath(StringRef s) = 0;
 
 	/// Sets the relative path of the banner file.
-	virtual void setBannerPath(const std::string& s) = 0;
+	virtual void setBannerPath(StringRef s) = 0;
 
 	/// Sets the relative path of the background file.
-	virtual void setBackgroundPath(const std::string& s) = 0;
+	virtual void setBackgroundPath(StringRef s) = 0;
 
 	/// Sets the relative path of the CD title file.
-	virtual void setCdTitlePath(const std::string& s) = 0;
+	virtual void setCdTitlePath(StringRef s) = 0;
 
 	/// Sets the music preview time to the given start time and duration in seconds.
 	virtual void setMusicPreview(double start, double len) = 0;

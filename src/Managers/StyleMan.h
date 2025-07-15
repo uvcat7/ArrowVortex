@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Core.h>
+#include <Core/String.h>
 
 namespace Vortex {
 
@@ -9,8 +9,8 @@ struct Style
 {
 	int index;
 
-	std::string id;
-	std::string name;
+	String id;
+	String name;
 
 	int numCols;
 	int numPlayers;
@@ -35,15 +35,15 @@ struct StyleMan
 	virtual void update(Chart* chart) = 0;
 
 	/// Returns the first style that matches the given id, or null if none was found.
-	virtual const Style* findStyle(const std::string& id) = 0;
+	virtual const Style* findStyle(StringRef id) = 0;
 
 	/// Returns the first style that matches the given column and player count.
 	/// If a match is not found, a new style with the given parameters is created.
-	virtual const Style* findStyle(const std::string& chartName, int numCols, int numPlayers) = 0;
+	virtual const Style* findStyle(StringRef chartName, int numCols, int numPlayers) = 0;
 
 	/// Returns the first style that matches the given id, column, and player count.
 	/// If a match is not found, a new style with the given parameters is created.
-	virtual const Style* findStyle(const std::string& chartName, int numCols, int numPlayers, const std::string& id) = 0;
+	virtual const Style* findStyle(StringRef chartName, int numCols, int numPlayers, StringRef id) = 0;
 
 	// Returns the number of available styles.
 	virtual int getNumStyles() const = 0;

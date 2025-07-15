@@ -213,7 +213,7 @@ void updateTempo()
 // ================================================================================================
 // NotesManImpl :: editing helper functions.
 
-static std::string GetNoteName(const Note& note)
+static String GetNoteName(const Note& note)
 {
 	switch(note.type)
 	{
@@ -280,9 +280,9 @@ void myQueueAddNote(Note note)
 	gHistory->addEntry(myApplyAddNoteId, stream.data(), stream.size(), myChart);
 }
 
-static std::string ApplyAddNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyAddNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	Note note;
 	DecodeNote(in, note);
 	if(in.success())
@@ -299,7 +299,7 @@ static std::string ApplyAddNote(ReadStream& in, History::Bindings bound, bool un
 			msg = "Added ";
 			NOTE_MAN->myApplyNotes(bound.chart, add, dummy, !redo);
 		}
-		msg = msg + GetNoteName(note);
+		msg += GetNoteName(note);
 	}
 	return msg;
 }
@@ -314,9 +314,9 @@ void myQueueRemoveNote(Note note)
 	gHistory->addEntry(myApplyRemNoteId, stream.data(), stream.size(), myChart);
 }
 
-static std::string ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	Note note;
 	DecodeNote(in, note);
 	if(in.success())
@@ -333,7 +333,7 @@ static std::string ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool
 			msg = "Removed ";
 			NOTE_MAN->myApplyNotes(bound.chart, dummy, rem, !redo);
 		}
-		msg = msg + GetNoteName(note);
+		msg += GetNoteName(note);
 	}
 	return msg;
 }
@@ -350,9 +350,9 @@ void myQueueChangeNotes(const NoteEditResult& edit, const EditDescription* desc)
 	gHistory->addEntry(myApplyChangeNotesId, stream.data(), stream.size(), myChart);
 }
 
-static std::string ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	
 	NoteList add, rem;
 
@@ -365,11 +365,11 @@ static std::string ApplyChangeNotes(ReadStream& in, History::Bindings bound, boo
 		{
 			int numNotes = max(add.size(), rem.size());
 			const char* format = (numNotes > 1) ? desc->plural : desc->singular;
-			msg = Str::fmt(format).arg(numNotes).str;
+			msg = Str::fmt(format).arg(numNotes);
 		}
 		else
 		{
-			Vector<std::string> info;
+			Vector<String> info;
 
 			if(add.size() == 1)
 			{
@@ -465,7 +465,7 @@ void myApplyInsertRowsOffset(Chart* chart, int startRow, int numRows)
 	}
 }
 
-std::string myApplyInsertRows(ReadStream& in, bool undo, bool redo)
+String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 {
 	auto startRow = in.read<int>();
 	auto numRows = in.read<int>();
@@ -510,10 +510,10 @@ std::string myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 
 		target = in.read<Chart*>();
 	}
-	return std::string();
+	return String();
 }
 
-static std::string ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return NOTE_MAN->myApplyInsertRows(in, undo, redo);
 }

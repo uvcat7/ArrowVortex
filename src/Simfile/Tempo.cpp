@@ -50,13 +50,13 @@ void Tempo::sanitize(const Chart* owner)
 	{
 		double bpm = (bpmc != end) ? bpmc->bpm : SIM_DEFAULT_BPM;
 		segments->insert(BpmChange(0, bpm));
-		std::string suffix;
+		String suffix;
 		if(owner)
 		{
 			Str::append(suffix, " to ");
 			Str::append(suffix, owner->description());
 		}
-		HudNote("Added an initial BPM of %.3f%s.", bpm, suffix.c_str());
+		HudNote("Added an initial BPM of %.3f%s.", bpm, suffix.str());
 	}
 }
 

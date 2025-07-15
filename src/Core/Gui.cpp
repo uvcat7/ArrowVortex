@@ -29,10 +29,10 @@ struct GuiMainData
 
 	GuiMain::ClipboardSetFunction clipboardSet;
 	GuiMain::ClipboardGetFunction clipboardGet;
-	std::string clipboardText;
+	String clipboardText;
 
-	std::string tooltipPreviousText;
-	std::string tooltipText;
+	String tooltipPreviousText;
+	String tooltipText;
 	vec2i tooltipPos;
 	float tooltipTimer;
 
@@ -87,7 +87,7 @@ static void handleTooltip()
 {
 	if(GUI->tooltipPreviousText == GUI->tooltipText)
 	{
-		if(GUI->tooltipText.length() && GUI->tooltipTimer > 1.0f)
+		if(GUI->tooltipText.len() && GUI->tooltipTimer > 1.0f)
 		{
 			TextStyle style;
 
@@ -97,7 +97,7 @@ static void handleTooltip()
 			style.shadowColor = Colors::blank;
 			style.fontSize = 11;
 
-			Text::arrange(Text::TL, style, 256, GUI->tooltipText.c_str());
+			Text::arrange(Text::TL, style, 256, GUI->tooltipText.str());
 			vec2i textSize = Text::getSize();
 
 			vec2i& pos = GUI->tooltipPos;
@@ -126,7 +126,7 @@ static void handleTooltip()
 			Text::draw(textBox);
 		}
 	}
-	else if(GUI->tooltipText.length())
+	else if(GUI->tooltipText.len())
 	{
 		GUI->tooltipPos = {INT_MAX, INT_MAX};
 		GUI->tooltipTimer = 0.0f;
@@ -148,7 +148,7 @@ void GuiMain::frameStart(float dt, InputEvents& events)
 	GUI->cursorIcon = Cursor::ARROW;
 
 	GUI->tooltipPreviousText = GUI->tooltipText;
-	GUI->tooltipText = std::string();
+	GUI->tooltipText = String();
 	GUI->tooltipTimer += dt;
 
 	Renderer::startFrame();
@@ -185,13 +185,13 @@ void GuiMain::setClipboardFunctions(ClipboardGetFunction get, ClipboardSetFuncti
 	GUI->clipboardSet = set;
 }
 
-void GuiMain::setClipboardText(std::string text)
+void GuiMain::setClipboardText(String text)
 {
 	GUI->clipboardText = text;
 	if(GUI->clipboardSet) (*GUI->clipboardSet)(GUI->clipboardText);
 }
 
-std::string GuiMain::getClipboardText()
+String GuiMain::getClipboardText()
 {
 	if(GUI->clipboardGet) GUI->clipboardText = (*GUI->clipboardGet)();
 	return GUI->clipboardText;
@@ -207,12 +207,12 @@ Cursor::Icon GuiMain::getCursorIcon()
 	return GUI->cursorIcon;
 }
 
-void GuiMain::setTooltip(std::string text)
+void GuiMain::setTooltip(String text)
 {
 	GUI->tooltipText = text;
 }
 
-std::string GuiMain::getTooltip()
+String GuiMain::getTooltip()
 {
 	return GUI->tooltipText;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/String.h>
 #include <Core/Input.h>
 
 namespace Vortex {
@@ -18,7 +19,7 @@ struct InfoBoxWithProgress : public InfoBox
 	int height();
 	void setProgress(double rate);
 	void setTime(double seconds);
-	std::string left, right;
+	String left, right;
 };
 
 struct TextOverlay : public InputHandler

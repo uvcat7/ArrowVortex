@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <Core/String.h>
 #include <Core/Utils.h>
 #include <Core/Xmr.h>
 #include <Core/Draw.h>

@@ -70,10 +70,10 @@ struct Music
 	virtual double getSongLength() = 0;
 
 	/// Returns the title of the current music, as reported by the metadata.
-	virtual const std::string& getTitle() = 0;
+	virtual StringRef getTitle() = 0;
 
 	/// Returns the artist of the current music, as reported by the metadata.
-	virtual const std::string& getArtist() = 0;
+	virtual StringRef getArtist() = 0;
 
 	/// Returns the audio samples of the current music.
 	virtual const Sound& getSamples() = 0;

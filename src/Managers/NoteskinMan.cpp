@@ -20,7 +20,7 @@ namespace {
 
 struct SkinType
 {
-	std::string name;
+	String name;
 	bool supportsAll;
 	Vector<const Style*> supportedStyles;
 };
@@ -37,9 +37,9 @@ struct SpriteTransform
 	int x, y, w, h, rot, mir;
 };
 
-static bool LoadTexture(const std::string& path, const std::string& dir, Texture& out)
+static bool LoadTexture(StringRef path, StringRef dir, Texture& out)
 {
-	out = Texture((dir + path).c_str());
+	out = Texture((dir + path).str());
 	if(out.handle()) return true;
 
 	uint8_t dummyTex[4] = {255, 0, 255, 255};
@@ -262,22 +262,22 @@ static void DeleteNoteskin(NoteskinImpl* skin)
 static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type)
 {
 	XmrDoc doc;
-	std::string dir, path;
+	String dir, path;
 
 	// Load the noteskin file.
 	bool loadFallback = true;
-	if(type.name.length())
+	if(type.name.len())
 	{
-		std::string filename = type.supportsAll ? "all-styles" : skin->style->id;
+		String filename = type.supportsAll ? "all-styles" : skin->style->id;
 		dir = "noteskins/" + type.name + "/";
 		path = dir + filename + ".txt";		
-		if(doc.loadFile(path.c_str()) == XMR_SUCCESS)
+		if(doc.loadFile(path.str()) == XMR_SUCCESS)
 		{
 			loadFallback = false;
 		}
 		else
 		{
-			HudError("Unable to load noteskin: %s", path.c_str());
+			HudError("Unable to load noteskin: %s", path.str());
 		}
 	}
 	
@@ -286,9 +286,9 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type)
 	{
 		dir = "noteskins/";
 		path = dir + "fallback.txt";
-		if(doc.loadFile(path.c_str()) != XMR_SUCCESS)
+		if(doc.loadFile(path.str()) != XMR_SUCCESS)
 		{
-			HudError("Unable to load noteskin: %s", path.c_str());
+			HudError("Unable to load noteskin: %s", path.str());
 		}
 	}
 
@@ -420,13 +420,13 @@ NoteskinManImpl()
 
 		// Capitalize the first letter.
 		type.name = skin.name();
-		char* c = &type.name[0];
+		char* c = type.name.begin();
 		if(*c >= 'a' && *c <= 'z') *c += 'A' - 'a';
 
 		// Make a list of available noteskin files.
 		for(auto files : File::findFiles(skin, false, "txt"))
 		{
-			std::string id = files.name();
+			String id = files.name();
 			if(id == "all-styles")
 			{
 				type.supportsAll = true;
@@ -437,7 +437,7 @@ NoteskinManImpl()
 				if(!style)
 				{
 					HudError("Could not find style '%s' used in noteskin: %s",
-						id.c_str(), type.name.c_str());
+						id.str(), type.name.str());
 					continue;
 				}
 				type.supportedStyles.push_back(style);
@@ -448,7 +448,7 @@ NoteskinManImpl()
 		if(type.supportsAll == false && type.supportedStyles.empty())
 		{
 			HudError("Could not find any supported styles in noteskin: %s",
-				type.name.c_str());
+				type.name.str());
 			continue;
 		}
 
@@ -478,7 +478,7 @@ NoteskinManImpl()
 void loadSettings(XmrNode& settings)
 {
 	// Read the noteskin preferences from the settings.
-	Vector<std::string> prefs;
+	Vector<String> prefs;
 	XmrNode* view = settings.child("view");
 	if(view)
 	{
@@ -521,7 +521,7 @@ void saveSettings(XmrNode& settings)
 	
 	// Save the noteskin preferences.
 	Vector<const char*> prefs;
-	for(int i : myPriorities) prefs.push_back(myTypes[i].name.c_str());
+	for(int i : myPriorities) prefs.push_back(myTypes[i].name.str());
 	view->addAttrib("noteskinPrefs", prefs.data(), min(prefs.size(), 5));
 }
 
@@ -593,7 +593,7 @@ int getNumTypes() const
 	return myTypes.size();
 }
 
-const std::string& getName(int type) const
+StringRef getName(int type) const
 {
 	return myTypes[type].name;
 }

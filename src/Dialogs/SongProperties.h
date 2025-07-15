@@ -38,14 +38,14 @@ private:
 	void mySetProperty(int p);
 	void mySetDisplayBpm();
 
-	std::string myTitle;
-	std::string mySubtitle;
-	std::string myArtist;
-	std::string myCredit;
-	std::string myMusic;
-	std::string myBackground;
-	std::string myBanner;
-	std::string myCdTitle;
+	String myTitle;
+	String mySubtitle;
+	String myArtist;
+	String myCredit;
+	String myMusic;
+	String myBackground;
+	String myBanner;
+	String myCdTitle;
 	
 	int myDisplayBpmType;
 	BpmRange myDisplayBpmRange;
@@ -53,7 +53,7 @@ private:
 	BannerWidget* myBannerWidget;
 	WgCycleButton* myBpmTypeList;
 	WgSpinner* mySpinMinBPM, *mySpinMaxBPM;
-	std::string myPreviewStart, myPreviewEnd;
+	String myPreviewStart, myPreviewEnd;
 };
 
 }; // namespace Vortex
