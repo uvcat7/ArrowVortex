@@ -409,7 +409,7 @@ static void AddFilesInDir(Vector<Path>& out, const DirectoryIter& it, bool findD
 {
 	for (const auto& entry : it)
 	{
-		Path aw_path(entry.path().string().c_str());
+		Path aw_path(Narrow(entry.path().c_str()));
 		if (fs::is_regular_file(entry) && !findDirs)
 		{
 			if (HasValidExt(aw_path, filters))
