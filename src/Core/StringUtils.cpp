@@ -7,8 +7,6 @@
 #include <math.h>
 #include <algorithm>
 
-# pragma warning(disable : 4996) // stricmp.
-
 namespace Vortex {
 
 inline int min(int a, int b) { return (a > b) ? b : a; }
@@ -442,6 +440,23 @@ int Str::findLastOf(const std::string& s, const char* c, int pos)
 // ================================================================================================
 // Str :: compare functions.
 
+static int fastnocasecmp(const char* pStrA, const char* pStrB, int lim = 0) {
+	char a, b;
+	if (lim > 0) {
+		do {
+			a = ToLower(*(pStrA++));
+			b = ToLower(*(pStrB++));
+		} while ((--lim > 0) && (a) && a == b);
+	}
+	else {
+		do {
+			a = ToLower(*(pStrA++));
+			b = ToLower(*(pStrB++));
+		} while ((a) && a == b);
+	}
+	return static_cast<int>(a - b);
+}
+
 static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
 {
 	if(caseSensitive)
@@ -450,7 +465,7 @@ static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
 	}
 	else
 	{
-		return strnicmp(a, b, len) == 0;
+		return fastnocasecmp(a, b, len) == 0;
 	}
 }
 
@@ -485,47 +500,47 @@ int Str::compare(const char* a, const char* b)
 
 int Str::icompare(const std::string& a, const std::string& b)
 {
-	return stricmp(a.c_str(), b.c_str());
+	return fastnocasecmp(a.c_str(), b.c_str());
 }
 
 int Str::icompare(const std::string& a, const char* b)
 {
-	return stricmp(a.c_str(), b);
+	return fastnocasecmp(a.c_str(), b);
 }
 
 int Str::icompare(const char* a, const char* b)
 {
-	return stricmp(a, b);
+	return fastnocasecmp(a, b);
 }
 
 bool Str::equal(const std::string& a, const std::string& b)
 {
-	return strcmp(a.c_str(), b.c_str()) == 0;
+	return compare(a, b) == 0;
 }
 
 bool Str::equal(const std::string& a, const char* b)
 {
-	return strcmp(a.c_str(), b) == 0;
+	return compare(a, b) == 0;
 }
 
 bool Str::equal(const char* a, const char* b)
 {
-	return strcmp(a, b) == 0;
+	return compare(a, b) == 0;
 }
 
 bool Str::iequal(const std::string& a, const std::string& b)
 {
-	return stricmp(a.c_str(), b.c_str()) == 0;
+	return icompare(a, b) == 0;
 }
 
 bool Str::iequal(const std::string& a, const char* b)
 {
-	return stricmp(a.c_str(), b) == 0;
+	return icompare(a, b) == 0;
 }
 
 bool Str::iequal(const char* a, const char* b)
 {
-	return stricmp(a, b) == 0;
+	return icompare(a, b) == 0;
 }
 
 // ================================================================================================

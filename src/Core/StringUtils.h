@@ -157,7 +157,7 @@ struct Str
 	static int compare(const std::string& a, const char* b);
 	static int compare(const char* a, const char* b);
 
-	// Comparison using stricmp, not case-sensitive.
+	// Comparison using fastnocasecmp, not case-sensitive.
 	static int icompare(const std::string& a, const std::string& b);
 	static int icompare(const std::string& a, const char* b);
 	static int icompare(const char* a, const char* b);
@@ -167,7 +167,7 @@ struct Str
 	static bool equal(const std::string& a, const char* b);
 	static bool equal(const char* a, const char* b);
 
-	// Equivalence check using stricmp, not case-sensitive.
+	// Equivalence check using fastnocasecmp, not case-sensitive.
 	static bool iequal(const std::string& a, const std::string& b);
 	static bool iequal(const std::string& a, const char* b);
 	static bool iequal(const char* a, const char* b);
