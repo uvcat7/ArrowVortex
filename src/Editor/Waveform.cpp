@@ -489,8 +489,8 @@ void sampleEdges(WaveEdge* edges, int w, int h, int channel, int blockId, bool f
 		int maxAmp = SHRT_MIN;
 		while(ofs < end)
 		{
-			maxAmp = std::max(maxAmp, (int)*(in + (int) round(ofs));
-			minAmp = std::min(minAmp, (int)*(in + (int) round(ofs));
+			maxAmp = std::max(maxAmp, (int)*(in + (int) round(ofs)));
+			minAmp = std::min(minAmp, (int)*(in + (int) round(ofs)));
 			ofs += sampleSkip;
 		}
 

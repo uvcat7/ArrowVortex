@@ -195,7 +195,7 @@ void UpdateScrollValues()
 
 	if(textOverlayMode_ == MESSAGE_LOG)
 	{
-		textOverlayPageSize_ = std::max(0, size.y - 32) / 16);
+		textOverlayPageSize_ = std::max(0, (size.y - 32) / 16);
 		textOverlayScrollEnd_ = std::max(0, logEntries_.size() - textOverlayPageSize_);
 	}
 	else if(textOverlayMode_ == SHORTCUTS)
@@ -665,7 +665,7 @@ void InfoBoxWithProgress::draw(recti r)
 
 void InfoBoxWithProgress::setProgress(double rate)
 {
-	int progress = std::clamp((int)(rate * 100.0f + 0.5f, 0, 100);
+	int progress = std::clamp((int)(rate * 100.0f + 0.5f), 0, 100);
 	right = Str::val(progress) + '%';
 }
 

@@ -29,7 +29,7 @@ void FilterOrder3(const double* b, const double* a, const short* in, short* out,
 	int scalar = (SHRT_MAX << 16) / (int)maxAmp;
 	for(short* dst = out, *end = dst + size; dst != end; ++dst)
 	{
-		*dst = (short)std::clamp((int)*dst) * scalar) >> 16, SHRT_MIN, SHRT_MAX);
+		*dst = (short)std::clamp((((int)*dst) * scalar) >> 16, SHRT_MIN, SHRT_MAX);
 	}
 }
 
