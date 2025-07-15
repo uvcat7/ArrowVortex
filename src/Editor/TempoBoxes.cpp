@@ -97,7 +97,7 @@ void update()
 		auto meta = Segment::meta[type];
 		for(auto seg = it->begin(), segEnd = it->end(); seg != segEnd; ++seg)
 		{
-			String desc = meta->getDescription(seg.ptr);
+			std::string desc = meta->getDescription(seg.ptr);
 			myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
 		}
 	}
@@ -115,7 +115,7 @@ void update()
 	int stacks[2] = {0, 0};
 	for(TempoBox& box : myBoxes)
 	{
-		Text::arrange(Text::MC, textStyle, box.str.str());
+		Text::arrange(Text::MC, textStyle, box.str.c_str());
 		int width = max(32, Text::getWidth() + 24);
 		box.width = width;
 		
@@ -393,7 +393,7 @@ void draw()
 		int side = Segment::meta[box.type]->side;
 		int x = baseX[side] + box.x + side * 4 - 2;
 
-		Text::arrange(Text::MC, textStyle, box.str.str());
+		Text::arrange(Text::MC, textStyle, box.str.c_str());
 		Text::draw(recti{x, y - 17, (int)box.width, 32});
 	}
 

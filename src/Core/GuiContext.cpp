@@ -145,126 +145,126 @@ void GuiContextImpl::releaseFocus(GuiWidget* w)
 // ================================================================================================
 // GuiContextImpl :: slot bindings.
 
-bool GuiContextImpl::bind(StringRef slot, const int* v)
+bool GuiContextImpl::bind(const std::string& slot, const int* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const uint32_t* v)
+bool GuiContextImpl::bind(const std::string& slot, const uint32_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const long* v)
+bool GuiContextImpl::bind(const std::string& slot, const long* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const uint64_t* v)
+bool GuiContextImpl::bind(const std::string& slot, const uint64_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const float* v)
+bool GuiContextImpl::bind(const std::string& slot, const float* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const double* v)
+bool GuiContextImpl::bind(const std::string& slot, const double* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const bool* v)
+bool GuiContextImpl::bind(const std::string& slot, const bool* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const char* str)
+bool GuiContextImpl::bind(const std::string& slot, const char* str)
 {
 	auto s = Map::findVal(text_slots_, slot);
 	if(s) (*s)->bind(str);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, const String* str)
+bool GuiContextImpl::bind(const std::string& slot, const std::string* str)
 {
 	auto s = Map::findVal(text_slots_, slot);
 	if(s) (*s)->bind(str);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, int* v)
+bool GuiContextImpl::bind(const std::string& slot, int* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, uint32_t* v)
+bool GuiContextImpl::bind(const std::string& slot, uint32_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, long* v)
+bool GuiContextImpl::bind(const std::string& slot, long* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, uint64_t* v)
+bool GuiContextImpl::bind(const std::string& slot, uint64_t* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, float* v)
+bool GuiContextImpl::bind(const std::string& slot, float* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, double* v)
+bool GuiContextImpl::bind(const std::string& slot, double* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, bool* v)
+bool GuiContextImpl::bind(const std::string& slot, bool* v)
 {
 	auto s = Map::findVal(value_slots_, slot);
 	if(s) (*s)->bind(v);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, String* str)
+bool GuiContextImpl::bind(const std::string& slot, std::string* str)
 {
 	auto s = Map::findVal(text_slots_, slot);
 	if(s) (*s)->bind(str);
 	return s != nullptr;
 }
 
-bool GuiContextImpl::bind(StringRef slot, Functor::Generic* f)
+bool GuiContextImpl::bind(const std::string& slot, Functor::Generic* f)
 {
 	auto s = Map::findVal(call_slots_, slot);
 	if(s) (*s)->bind(f); else delete f;

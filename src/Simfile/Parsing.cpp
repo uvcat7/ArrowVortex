@@ -21,7 +21,7 @@ namespace Vortex {
 // ===================================================================================
 // External load and save functions.
 
-#define LOAD_ARGS StringRef path, Simfile* sim
+#define LOAD_ARGS const std::string& path, Simfile* sim
 #define SAVE_ARGS const Simfile* sim, bool backup
 
 namespace Sm
@@ -43,15 +43,15 @@ namespace Dwi
 // ================================================================================================
 // Parsing utilities.
 
-bool ParseSimfile(String& out, StringRef path)
+bool ParseSimfile(std::string& out, const std::string& path)
 {
 	bool success;
 	out = File::getText(path, &success);
 	if(!success) return false;
 
 	// Preprocess the file contents.
-	const char* read = out.begin();
-	char* write = out.begin();
+	const char* read = &out[0];
+	char* write = &out[0];
 	while(*read)
 	{
 		if(read[0] == '/' && read[1] == '/')
@@ -73,7 +73,7 @@ bool ParseSimfile(String& out, StringRef path)
 			++read, ++write;
 		}
 	}
-	Str::truncate(out, write - out.begin());
+	Str::truncate(out, static_cast<int>(write - &out[0]));
 
 	return true;
 }
@@ -197,7 +197,7 @@ static void ClearSimfile(Simfile& sim, Path& path)
 	sim.file = path.name();
 }
 
-bool LoadSimfile(Simfile& sim, StringRef path)
+bool LoadSimfile(Simfile& sim, const std::string& path)
 {
 	// Store the song directory, filename and extension.
 	Path filePath = path;
@@ -205,7 +205,7 @@ bool LoadSimfile(Simfile& sim, StringRef path)
 
 	// Call the load function associated with the extension.
 	bool success = false;
-	String ext = filePath.ext();
+	std::string ext = filePath.ext();
 	Str::toLower(ext);
 	if(ext == "sm" || ext == "ssc")
 	{

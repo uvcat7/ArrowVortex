@@ -430,13 +430,19 @@ int MP3Loader::readFrames(int frames, short* buffer)
 
 }; // anonymous namespace.
 
-SoundSource* LoadMP3(std::ifstream&& file, String& title, String& artist)
+SoundSource* LoadMP3(std::ifstream&& file, std::string& title, std::string& artist)
 {
 	std::unique_ptr<MP3Loader> loader = std::make_unique<MP3Loader>();
+
+	// Check if the file stream is valid.
+	if (!file.is_open())
+		return nullptr;
+
+	// Open the file using the provided file stream.
 	loader->file = std::move(file);
 
 	// Decode and synth the first frame to check if the file is valid.
-	if(!loader->decodeFirstFrame())
+	if (!loader->decodeFirstFrame())
 		return nullptr;
 
 	// The file is valid, return the MP3 loader.

@@ -22,11 +22,11 @@ namespace {
 
 #define OVERLAY ((TextOverlayImpl*)gTextOverlay) 
 
-struct HudEntry { String text; TextOverlay::MessageType type; float timeLeft; };
+struct HudEntry { std::string text; TextOverlay::MessageType type; float timeLeft; };
 
-struct ProgressMessage { int id; String text; };
+struct ProgressMessage { int id; std::string text; };
 
-struct Shortcut { String a, b; bool isHeader; };
+struct Shortcut { std::string a, b; bool isHeader; };
 
 static const int NUM_ICONS = 16;
 
@@ -61,9 +61,9 @@ struct TextOverlayImpl : public TextOverlay {
 
 Vector<HudEntry> hudEntries_;
 Vector<InfoBox*> infoBoxes_;
-Vector<String> logEntries_;
+Vector<std::string> logEntries_;
 Vector<Shortcut> displayShortcuts_;
-String debugLog_;
+std::string debugLog_;
 
 int textOverlayScrollPos_, textOverlayScrollEnd_, textOverlayPageSize_;
 Mode textOverlayMode_;
@@ -111,8 +111,8 @@ void addShortcut(const char* name, const char* keys)
 
 void addShortcut(Action::Type action, const char* name)
 {
-	String notation = gShortcuts->getNotation(action, true);
-	if(notation.len()) addShortcut(name, notation.str());
+	std::string notation = gShortcuts->getNotation(action, true);
+	if(notation.length()) addShortcut(name, notation.c_str());
 }
 
 void LoadShortcuts()
@@ -361,7 +361,7 @@ void draw()
 
 void addMessage(const char* str, MessageType type)
 {
-	String msg = str;
+	std::string msg = str;
 	if(type == NOTE)
 	{
 		hudEntries_.push_back({msg, type, 0.5f});
@@ -447,7 +447,7 @@ void drawHud()
 		textStyle.textColor = Color32a(textStyle.textColor, a);
 		textStyle.shadowColor = Color32a(textStyle.shadowColor, a);
 
-		Text::arrange(Text::TL, textStyle, m.text.str());
+		Text::arrange(Text::TL, textStyle, m.text.c_str());
 		Text::draw(recti{x, y, view.x - 8, view.y - y});
 
 		y += Text::getSize().y + 2;
@@ -476,7 +476,7 @@ void drawMessageLog()
 	for(int i = textOverlayScrollPos_, n = logEntries_.size(); i < n && y < bottomY - 16; ++i)
 	{
 		auto& m = logEntries_[i];
-		Text::arrange(Text::TL, textStyle, m.str());
+		Text::arrange(Text::TL, textStyle, m.c_str());
 		Text::draw(recti{x, y, size.x - 8, size.y});
 		y += Text::getSize().y + 2;
 	}
@@ -498,7 +498,7 @@ void drawDebugLog()
 
 	TextStyle textStyle;
 	textStyle.fontSize = 11;
-	Text::arrange(Text::TL, textStyle, debugLog_.str());
+	Text::arrange(Text::TL, textStyle, debugLog_.c_str());
 	Text::draw(recti{4, 32, size.x - 8, size.y});
 
 	DrawTitleText("DEBUG LOG", "[ESC] close", "");
@@ -520,16 +520,16 @@ void drawShortcuts()
 	{
 		if(e.isHeader)
 		{
-			Text::arrange(Text::TL, e.a.str());
+			Text::arrange(Text::TL, e.a.c_str());
 			Text::draw(vec2i{x, y});
 			Draw::fill({x, y + 18, w, 1}, Colors::white);
 			y += 24;
 		}
 		else
 		{
-			Text::arrange(Text::TR, e.a.str());
+			Text::arrange(Text::TR, e.a.c_str());
 			Text::draw(vec2i{x + w / 2 - 10, y});
-			Text::arrange(Text::TL, e.b.str());
+			Text::arrange(Text::TL, e.b.c_str());
 			Text::draw(vec2i{x + w / 2 + 10, y});
 
 			y += 18;
@@ -593,8 +593,8 @@ void drawAbout()
 
 	Text::arrange(Text::BC, "ArrowVortex release v1.0.1");
 	Text::draw(vec2i{size.x / 2, size.y / 2 - 128});
-	String buildDate = "Build date: " + System::getBuildData();
-	Text::arrange(Text::TC, buildDate.str());
+	std::string buildDate = "Build date: " + System::getBuildData();
+	Text::arrange(Text::TC, buildDate.c_str());
 	Text::draw(vec2i{ size.x / 2, size.y / 2 - 112 });
 
 	Text::arrange(Text::TC, "Join our Discord for support and our GitHub for source code access!");
@@ -654,10 +654,10 @@ InfoBox::~InfoBox()
 
 void InfoBoxWithProgress::draw(recti r)
 {
-	Text::arrange(Text::TL, r.w, left.str());
+	Text::arrange(Text::TL, r.w, left.c_str());
 	Text::draw(r);
 
-	Text::arrange(Text::TR, r.w, right.str());
+	Text::arrange(Text::TR, r.w, right.c_str());
 	Text::draw(r);
 }
 
