@@ -53,4 +53,4 @@ Code from the following projects is included in this repository:
 
  8. Code from the stb library, which is in public domain, is present in
     src/Core/ImageLoader.cpp
-	https://github.com/nothings/stb
+    https://github.com/nothings/stb
