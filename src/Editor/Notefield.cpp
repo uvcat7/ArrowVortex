@@ -435,9 +435,9 @@ void drawBeatLines()
 // ================================================================================================
 // NotefieldImpl :: segments.
 
-bool validSegmentRegion(int& t, int& b, int& viewTop, int viewBtm)
+bool validSegmentRegion(int& t, int& b, int viewTop, int viewBtm)
 {
-	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm);
+	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm) || (b > viewTop && t < viewBtm);
 	if(draw)
 	{
 		t = clamp(t, viewTop, viewBtm);
