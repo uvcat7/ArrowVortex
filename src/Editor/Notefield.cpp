@@ -523,7 +523,7 @@ void drawReceptors()
 		// Calculate the beat pulse value for the receptors.
 		double beat = gTempo->timeToBeat(gView->getCursorTime());
 		float beatfrac = (float)(beat - floor(beat));
-		uint8_t beatpulse = (uint8_t)std::min(std::max((int)((2 - beatfrac * 4)*255, 0), 255);
+		uint8_t beatpulse = (uint8_t)std::min(std::max((int)((2 - beatfrac * 4)*255), 0), 255);
 
 		// Draw the receptors.
 		auto batch = Renderer::batchTC();

@@ -220,7 +220,7 @@ void renderDensity(SetPixelData& spd, const int* colx)
 				if(it->isMine || it->isWarped) continue;
 				double pre = (it > first) ? (it - 1)->time : (it->time - 1.0);
 				double post = (it < last) ? (it + 1)->time : (it->time + 1.0);
-				if(post > pre) density = std::max(density, 2.0 / (post - pre);
+				if(post > pre) density = std::max(density, 2.0 / (post - pre));
 			}
 			if(density > 0.0) SetDensityRow(spd.pixels, y, density);
 			sec += secPerPix;
