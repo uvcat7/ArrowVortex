@@ -17,28 +17,28 @@ struct Str
 	static void append(std::string& s, const char* str);
 
 	/// Appends the first n characters from str at the end of the string.
-	static void append(std::string& s, const char* str, int n);
+	static void append(std::string& s, const char* str, size_t n);
 
 	/// Inserts character c into the string at position pos.
-	static void insert(std::string& s, int pos, char c);
+	static void insert(std::string& s, size_t pos, char c);
 
 	/// Inserts str into the string at position pos.
-	static void insert(std::string& s, int pos, const std::string& str);
+	static void insert(std::string& s, size_t pos, const std::string& str);
 
 	/// Inserts str into the string at position pos.
-	static void insert(std::string& s, int pos, const char* str);
+	static void insert(std::string& s, size_t pos, const char* str);
 
 	/// Inserts the first n characters from str into the string at position pos.
-	static void insert(std::string& s, int pos, const char* str, int n);
+	static void insert(std::string& s, size_t pos, const char* str, size_t n);
 
 	/// Makes sure the string is at most length n, removing characters at the end if necessary.
-	static void truncate(std::string& s, int n);
+	static void truncate(std::string& s, size_t n);
 
 	/// Makes sure the string is at least length n, appending c at the end if necessary.
-	static void extend(std::string& s, int n, char c);
+	static void extend(std::string& s, size_t n, char c);
 
 	/// Makes sure the string is exactly length n, truncating or extending with c if necessary.
-	static void resize(std::string& s, int n, char c);
+	static void resize(std::string& s, size_t n, char c);
 
 	/// Converts the string to an integer; returns alt on failure.
 	static int readInt(const std::string& s, int alt = 0);
@@ -92,7 +92,7 @@ struct Str
 	static void simplify(std::string& s);
 
 	/// Erases a sequence of n characters starting at position pos.
-	static void erase(std::string& s, int pos = 0, int n = std::string::npos);
+	static void erase(std::string& s, size_t pos = 0, size_t n = std::string::npos);
 
 	/// Removes the last character from the string.
 	static void pop_back(std::string& s);
@@ -111,40 +111,40 @@ struct Str
 
 	/// Returns a substring of the string starting at position pos.
 	/// The substring spans n characters (or until the end of the string, whichever comes first).
-	static std::string substr(const std::string& s, int pos = 0, int n = std::string::npos);
+	static std::string substr(const std::string& s, size_t pos = 0, size_t n = std::string::npos);
 
 	/// Interprets the string as UTF-8 and returns the position of the next character after pos,
 	/// which may be an offset of more than one when dealing with multibyte UTF-8 characters.
 	/// If the next character is past the end of the string, npos is returned.
-	static int nextChar(const std::string& s, int pos = 0);
+	static size_t nextChar(const std::string& s, size_t pos = 0);
 	
 	/// Interprets the string as UTF-8 and returns the position of the previous character before
 	/// pos, which may be an offset of more than one when dealing with multibyte UTF-8 characters.
 	/// If the previous character is before the start of the string, -1 is returend.
-	static int prevChar(const std::string& s, int pos = std::string::npos);
+	static size_t prevChar(const std::string& s, size_t pos = std::string::npos);
 
 	/// Returns true if the string contains non-ascii characters.
 	static bool isUnicode(const std::string& s);
 
 	/// Searches the string for character c.
 	/// Returns the position of the first occurence on or after pos, or npos if no match is found.
-	static int find(const std::string& s, char c, int pos = 0);
+	static size_t find(const std::string& s, char c, size_t pos = 0);
 
 	/// Searches the string for substring s.
 	/// Returns the position of the first occurence on or after pos, or npos if no match is found.
-	static int find(const std::string& s, const char* str, int pos = 0);
+	static size_t find(const std::string& s, const char* str, size_t pos = 0);
 
 	/// Searches the string for character c.
 	/// Returns the position of the last occurence on or before pos, or -1 if no match is found.
-	static int findLast(const std::string& s, char c, int pos = std::string::npos);
+	static size_t findLast(const std::string& s, char c, size_t pos = std::string::npos);
 
 	/// Searches the string for any of the characters in c.
 	/// Returns the position of the first occurence on or after pos, or npos if no match is found.
-	static int findAnyOf(const std::string& s, const char* c, int pos = 0);
+	static size_t findAnyOf(const std::string& s, const char* c, size_t pos = 0);
 
 	/// Searches the string for any of the characters in c.
 	/// Returns the position of the last occurence on or before pos, or -1 if no match is found.
-	static int findLastOf(const std::string& s, const char* c, int pos = std::string::npos);
+	static size_t findLastOf(const std::string& s, const char* c, size_t pos = std::string::npos);
 
 	// Returns true if the end of the string matches suffix.
 	static bool endsWith(const std::string& s, const char* suffix, bool caseSensitive = true);

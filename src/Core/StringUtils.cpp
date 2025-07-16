@@ -33,7 +33,7 @@ void Str::append(std::string& s, const char* str)
 	s.append(str);
 }
 
-void Str::append(std::string& s, const char* str, int n)
+void Str::append(std::string& s, const char* str, size_t n)
 {
 	if(n > 0)
 	{
@@ -44,7 +44,7 @@ void Str::append(std::string& s, const char* str, int n)
 // ================================================================================================
 // Str :: insert functions.
 
-void Str::insert(std::string& s, int pos, char c)
+void Str::insert(std::string& s, size_t pos, char c)
 {
 	if (pos >= s.length()) {
 		s.append(1, c);
@@ -54,23 +54,23 @@ void Str::insert(std::string& s, int pos, char c)
 	}
 }
 
-void Str::insert(std::string& s, int pos, const std::string& str)
+void Str::insert(std::string& s, size_t pos, const std::string& str)
 {
-	insert(s, pos, str.c_str(), static_cast<int>(str.length()));
+	insert(s, pos, str.c_str(), str.length());
 }
 
-void Str::insert(std::string& s, int pos, const char* str)
+void Str::insert(std::string& s, size_t pos, const char* str)
 {
-	insert(s, pos, str, static_cast<int>(strlen(str)));
+	insert(s, pos, str, strlen(str));
 }
 
-void Str::insert(std::string& s, int pos, const char* str, int n)
+void Str::insert(std::string& s, size_t pos, const char* str, size_t n)
 {
 
 	if (pos >= s.length()) {
 		s.append(str, n);
 	}
-	else if (pos + n > static_cast<int>(s.length())) {
+	else if (pos + n > s.length()) {
 		s = s.substr(0, pos) + std::string(str, n) + s.substr(pos);
 	}
 	else {
@@ -81,7 +81,7 @@ void Str::insert(std::string& s, int pos, const char* str, int n)
 // ================================================================================================
 // Str :: resize functions.
 
-void Str::truncate(std::string& s, int n)
+void Str::truncate(std::string& s, size_t n)
 {
 	if(n < s.length())
 	{
@@ -96,7 +96,7 @@ void Str::truncate(std::string& s, int n)
 	}
 }
 
-void Str::extend(std::string& s, int n, char c)
+void Str::extend(std::string& s, size_t n, char c)
 {
 	const auto len = s.length();
 	if(n > len)
@@ -105,7 +105,7 @@ void Str::extend(std::string& s, int n, char c)
 	}
 }
 
-void Str::resize(std::string& s, int n, char c)
+void Str::resize(std::string& s, size_t n, char c)
 {
 	if(n > s.length())
 	{
@@ -179,7 +179,7 @@ bool Str::read(const std::string& s, int* out)
 		int v = static_cast<int>(std::stol(s));
 		*out = v;
 		return true;
-	} catch (std::exception& e) {
+	} catch (...) {
 		// probably want to log the error here
 		return false;
 	}
@@ -192,7 +192,7 @@ bool Str::read(const std::string& s, uint32_t* out)
 		*out = v;
 		return true;
 	}
-	catch (std::exception& e) {
+	catch (...) {
 		// probably want to log the error here
 		return false;
 	}
@@ -205,7 +205,7 @@ bool Str::read(const std::string& s, float* out)
 		*out = v;
 		return true;
 	}
-	catch (std::exception& e) {
+	catch (...) {
 		// probably want to log the error here
 		return false;
 	}
@@ -218,7 +218,7 @@ bool Str::read(const std::string& s, double* out)
 		*out = v;
 		return true;
 	}
-	catch (std::exception& e) {
+	catch (...) {
 		// probably want to log the error here
 		return false;
 	}
@@ -282,7 +282,7 @@ void Str::simplify(std::string& s)
 	s.erase(it, s.end());
 }
 
-void Str::erase(std::string& s, int pos, int n)
+void Str::erase(std::string& s, size_t pos, size_t n)
 {
 	auto len = s.length();
 	if(pos < 0)	{ n += pos, pos = 0; }
@@ -315,7 +315,7 @@ void Str::replace(std::string& s, const char* fnd, const char* rep)
 {
 	if(*fnd == 0) return;
 
-	int pos = find(s, fnd);
+	auto pos = find(s, fnd);
 	if(pos == std::string::npos) return;
 	const auto replen = strlen(rep);
 	const auto fndlen = strlen(fnd);
@@ -340,7 +340,7 @@ void Str::toLower(std::string& s)
 // ================================================================================================
 // Information functions
 
-std::string Str::substr(const std::string& s, int pos, int n)
+std::string Str::substr(const std::string& s, size_t pos, size_t n)
 {
 	auto len = s.length();
 	if(pos < 0) { n += pos, pos = 0; }
@@ -356,7 +356,7 @@ std::string Str::substr(const std::string& s, int pos, int n)
 	return {};
 }
 
-int Str::nextChar(const std::string& s, int pos)
+size_t Str::nextChar(const std::string& s, size_t pos)
 {
 	auto len = s.length();
 	if(pos >= len) return std::string::npos;
@@ -364,7 +364,7 @@ int Str::nextChar(const std::string& s, int pos)
 	return pos;
 }
 
-int Str::prevChar(const std::string& s, int pos)
+size_t Str::prevChar(const std::string& s, size_t pos)
 {
 	if(pos <= 0) return -1;
 	do { --pos; } while(pos >= 0 && (s.at(pos) & 0xC0) == 0x80);
@@ -377,7 +377,7 @@ bool Str::isUnicode(const std::string& s)
 	return false;
 }
 
-int Str::find(const std::string& s, char c, int pos)
+size_t Str::find(const std::string& s, char c, size_t pos)
 {
 	auto len = s.length();
 	pos = max(pos, 0);
@@ -385,10 +385,10 @@ int Str::find(const std::string& s, char c, int pos)
 	return (pos < len) ? pos : std::string::npos;
 }
 
-int Str::find(const std::string& s, const char* str, int pos)
+size_t Str::find(const std::string& s, const char* str, size_t pos)
 {
 	pos = max(pos, 0);
-	int len = s.length();
+	auto len = s.length();
 
 	if(*str == 0 && pos <= len)
 		return pos;
@@ -396,7 +396,7 @@ int Str::find(const std::string& s, const char* str, int pos)
 	return s.find(str, pos);
 }
 
-int Str::findLast(const std::string& s, char c, int pos)
+size_t Str::findLast(const std::string& s, char c, size_t pos)
 {
 	auto len = s.length();
 	pos = min(pos, len - 1);
@@ -409,7 +409,7 @@ int Str::findLast(const std::string& s, char c, int pos)
 	return (pos >= 0) ? pos : -1;
 }
 
-int Str::findAnyOf(const std::string& s, const char* c, int pos)
+size_t Str::findAnyOf(const std::string& s, const char* c, size_t pos)
 {
 	auto len = s.length();
 	pos = max(pos, 0);
@@ -423,7 +423,7 @@ int Str::findAnyOf(const std::string& s, const char* c, int pos)
 	return (pos < len) ? pos : std::string::npos;
 }
 
-int Str::findLastOf(const std::string& s, const char* c, int pos)
+size_t Str::findLastOf(const std::string& s, const char* c, size_t pos)
 {
 	auto len = s.length();
 	pos = min(pos, len - 1);
@@ -440,7 +440,7 @@ int Str::findLastOf(const std::string& s, const char* c, int pos)
 // ================================================================================================
 // Str :: compare functions.
 
-static int fastnocasecmp(const char* pStrA, const char* pStrB, int lim = 0) {
+static int fastnocasecmp(const char* pStrA, const char* pStrB, size_t lim = 0) {
 	char a, b;
 	if (lim > 0) {
 		do {
@@ -457,7 +457,7 @@ static int fastnocasecmp(const char* pStrA, const char* pStrB, int lim = 0) {
 	return static_cast<int>(a - b);
 }
 
-static bool Equals(const char* a, const char* b, int len, bool caseSensitive)
+static bool Equals(const char* a, const char* b, size_t len, bool caseSensitive)
 {
 	if(caseSensitive)
 	{
@@ -709,14 +709,14 @@ Fmt& Fmt::arg(const char* s)
 
 Fmt& Fmt::arg(const char* s, size_t n)
 {
-	int fmtLen = str.length();
+	auto fmtLen = str.length();
 
 	// find the lowest marker position.
-	int markerPos = fmtLen;
-	int markerLen = 0;
+	auto markerPos = fmtLen;
+	auto markerLen = 0;
 	if(fmtLen > 0)
 	{
-		int lowestMarker = 100;
+		size_t lowestMarker = 100;
 		const char* p = str.c_str();
 		for(int i = 0; i < fmtLen; ++i)
 		{
@@ -907,8 +907,8 @@ Vector<std::string> Str::split(const std::string& s, const char* lim, bool trim,
 	Vector<std::string> out;
 	auto limlen = strlen(lim);
 	auto slen = s.length() - limlen;
-	auto start = 0;
-	for(int i = 0; i <= slen;)
+	size_t start = 0;
+	for(size_t i = 0; i <= slen;)
 	{
 		if(memcmp(s.data() + i, lim, limlen) == 0)
 		{
