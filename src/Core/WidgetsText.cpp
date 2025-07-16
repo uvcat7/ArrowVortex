@@ -225,14 +225,14 @@ void WgLineEdit::onTextInput(TextInput& evt)
 			// truncate input
 			if (input.length() > MaximumPastedTextLength)
 			{
-				Str::erase(input, MaximumPastedTextLength, static_cast<int>(input.length()) - MaximumPastedTextLength);
+				Str::erase(input, MaximumPastedTextLength, input.length() - MaximumPastedTextLength);
 			}
 
 			// ensure total length does not exceed max length
 			int maxInputLen = std::min(MaximumPastedTextLength, static_cast<int>(lineedit_max_length_ - lineedit_text_.length()));
 			if (input.length() > maxInputLen)
 			{
-				Str::erase(input, maxInputLen, static_cast<int>(input.length()) - maxInputLen);
+				Str::erase(input, maxInputLen, input.length() - maxInputLen);
 			}
 
 			Str::insert(lineedit_text_, lineedit_cursor_.y, input);
