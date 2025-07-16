@@ -24,7 +24,7 @@ Chart::~Chart()
 	delete tempo;
 }
 
-String Chart::description() const
+std::string Chart::description() const
 {
 	return Str::fmt("%1 %2").arg(GetDifficultyName(difficulty)).arg(meter);
 }
@@ -58,12 +58,12 @@ void Chart::sanitize()
 {
 	if(!style)
 	{
-		HudWarning("%s is missing a style.", description().str());
+		HudWarning("%s is missing a style.", description().c_str());
 	}
 
 	if(meter <= 0)
 	{
-		HudWarning("%s has an invalid meter value %i.", description().str(), meter);
+		HudWarning("%s has an invalid meter value %i.", description().c_str(), meter);
 		meter = 1;
 	}
 

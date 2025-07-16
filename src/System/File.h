@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <Core/String.h>
 #include <Core/Vector.h>
 
 #include <filesystem>
@@ -17,15 +16,15 @@ struct Path
 {
 	Path();
 	Path(const Path& other);
-	Path(StringRef path);
-	Path(StringRef dir, StringRef file);
-	Path(StringRef dir, StringRef name, StringRef ext);
+	Path(const std::string& path);
+	Path(const std::string& dir, const std::string& file);
+	Path(const std::string& dir, const std::string& name, const std::string& ext);
 
 	/// Appends one or more items at the end of the path.
-	void push(String items, bool endWithSlash);
+	void push(std::string items, bool endWithSlash);
 
 	/// Appends one or more items at the end of the path.
-	void push(String items);
+	void push(std::string items);
 
 	/// Removes the top-most item from the past.
 	void pop();
@@ -43,37 +42,71 @@ struct Path
 	bool hasExt(const char* ext) const;
 
 	/// Returns the name of the file, without extension.
-	String name() const;
+	std::string name() const;
 
 	/// Returns the name of the file, including extension.
-	String filename() const;
+	std::string filename() const;
 
 	/// Returns the extension of the file at the end of the path.
-	String ext() const;
+	std::string ext() const;
 
 	/// Returns the directory portion of the path.
-	String dir() const;
+	std::string dir() const;
 
 	/// Returns the directory portion of the path without a final slash.
-	String dirWithoutSlash() const;
+	std::string dirWithoutSlash() const;
 
 	/// Returns the name of the top-most directory in the path.
-	String topdir() const;
+	std::string topdir() const;
 
 	/// Returns the name of the top-most item in the path.
-	String top() const;
+	std::string top() const;
 
 	/// Returns the name of the top-most item, shortened to 20 characters.
-	String brief() const;
+	std::string brief() const;
 
 	/// Returns the string representation of the entire path.
-	operator StringRef() const { return str; }
+	operator std::string() const { return str; }
 
 	/// Returns the path that would result from push(items);
-	Path operator + (StringRef items) const;
+	Path operator + (const std::string& items) const;
 
 	/// String representation of the entire path.
-	String str;
+	std::string str;
+};
+
+/// Reads data from a file.
+struct FileReader
+{
+	FileReader();
+	~FileReader();
+
+	bool open(const std::string& path);
+	void close();
+
+	size_t size() const;
+	long tell() const;
+	size_t read(void* ptr, size_t size, size_t count);
+	int seek(long offset, int origin);
+	void skip(size_t n);
+	bool eof();	
+
+	void* file;
+};
+
+/// Writes data to a file.
+struct FileWriter
+{
+	FileWriter();
+	~FileWriter();
+
+	bool open(const std::string& path);
+	void close();
+
+	size_t write(const void* ptr, size_t size, size_t count);
+	void printf(const char* format, ...);
+
+	void* file;
 };
 
 namespace File

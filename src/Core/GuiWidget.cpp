@@ -173,7 +173,7 @@ void GuiWidget::onDraw()
 // ================================================================================================
 // GuiWidget :: get / set functions.
 
-void GuiWidget::setId(StringRef id)
+void GuiWidget::setId(const std::string& id)
 {
 	GuiManager::setWidgetId(this, id);
 }
@@ -214,7 +214,7 @@ recti GuiWidget::getRect() const
 	return rect_;
 }
 
-String GuiWidget::getTooltip() const
+std::string GuiWidget::getTooltip() const
 {
 	return GuiManager::getTooltip(this);
 }
@@ -224,7 +224,7 @@ void GuiWidget::setEnabled(bool value)
 	SetFlags(flags_, WF_ENABLED, value);
 }
 
-void GuiWidget::setTooltip(StringRef text)
+void GuiWidget::setTooltip(const std::string& text)
 {
 	GuiManager::setTooltip(this, text);
 }

@@ -93,7 +93,7 @@ void saveSettings(XmrNode& settings)
 
 void draw()
 {
-	Vector<String> info;
+	Vector<std::string> info;
 
 	TextStyle textStyle;
 	textStyle.textFlags = Text::MARKUP;
@@ -135,7 +135,7 @@ void draw()
 
 	if(myShowTime)
 	{
-		String time = Str::formatTime(gView->getCursorTime());
+		std::string time = Str::formatTime(gView->getCursorTime());
 		info.push_back(Str::fmt("{tc:888}Time:{tc} %1").arg(time));
 	}
 	if(myShowTimingMode)
@@ -155,8 +155,8 @@ void draw()
 
 	if(info.size())
 	{
-		String str = Str::join(info, " ");
-		Text::arrange(Text::MC, textStyle, str.str());
+		std::string str = Str::join(info, " ");
+		Text::arrange(Text::MC, textStyle, str.c_str());
 
 		recti view = gView->getRect();
 		view = {view.x + 128, view.y + view.h - 32, view.w - 256 - 32, 24};

@@ -48,9 +48,6 @@
     <ClCompile Include="..\..\src\Core\Input.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Core\String.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Core\StringUtils.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -366,9 +363,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Core\Reference.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Core\String.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Core\StringUtils.h">

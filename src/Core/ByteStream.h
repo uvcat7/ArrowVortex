@@ -20,7 +20,7 @@ public:
 	void write64(const void* val);
 
 	void writeNum(uint32_t num);
-	void writeStr(StringRef str);
+	void writeStr(const std::string& str);
 
 	template <unsigned int S>
 	inline void writeSz(const void* val)
@@ -89,10 +89,10 @@ public:
 	void read64(void* out);
 
 	uint32_t readNum();
-	String readStr();
+	std::string readStr();
 
 	void readNum(uint32_t& num);
-	void readStr(String& str);
+	void readStr(std::string& str);
 
 	template <size_t S>
 	inline void readSz(void* out)

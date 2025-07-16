@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Core/String.h>
 #include <Core/Texture.h>
 
 namespace Vortex {
@@ -86,7 +85,7 @@ namespace Text
 	CursorPos getCursorPos(recti textBox, int charIndex);
 
 	/// Escapes all characters that could be interpreted as markup tags.
-	String escapeMarkup(const char* unformattedText);
+	std::string escapeMarkup(const char* unformattedText);
 
 	/// Returns the new index of the given character after the transformation done by "EscapeMarkup".
 	int getEscapedCharIndex(const char* unformattedText, int charIndex);

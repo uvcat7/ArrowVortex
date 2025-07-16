@@ -169,18 +169,18 @@ void onChanges(int changes)
 	if(changes & VCM_BACKGROUND_PATH_CHANGED)
 	{
 		mySongBg = Texture();
-		String filename;
+		std::string filename;
 		if(gSimfile->isOpen())
 		{
 			filename = gSimfile->get()->background;
 		}
-		if(filename.len())
+		if(filename.length())
 		{
-			String path = gSimfile->getDir() + filename;
-			ImageLoader::Data img = ImageLoader::load(path.str(), ImageLoader::RGBA);
+			std::string path = gSimfile->getDir() + filename;
+			ImageLoader::Data img = ImageLoader::load(path.c_str(), ImageLoader::RGBA);
 			if(img.pixels == nullptr)
 			{
-				HudWarning("Could not open \"%s\".", filename.str());
+				HudWarning("Could not open \"%s\".", filename.c_str());
 			}
 			else
 			{
@@ -426,8 +426,8 @@ void drawBeatLines()
 	if(!zoomedIn) textStyle.fontSize = 9;
 	for(const auto& label : labels)
 	{
-		String info = Str::val(label.measure);
-		Text::arrange(Text::MR, textStyle, info.str());
+		std::string info = Str::val(label.measure);
+		Text::arrange(Text::MR, textStyle, info.c_str());
 		Text::draw(vec2i{myX - dist, label.y});
 	}
 }
@@ -435,9 +435,9 @@ void drawBeatLines()
 // ================================================================================================
 // NotefieldImpl :: segments.
 
-bool validSegmentRegion(int& t, int& b, int& viewTop, int viewBtm)
+bool validSegmentRegion(int& t, int& b, int viewTop, int viewBtm)
 {
-	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm);
+	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm) || (b > viewTop && t < viewBtm);
 	if(draw)
 	{
 		t = clamp(t, viewTop, viewBtm);
@@ -598,13 +598,13 @@ void drawSnapDiamonds()
 		TextStyle textStyle;
 		textStyle.fontSize = gView->getZoomLevel() >= 4 ? 11 : 9;
 
-		String snap = Str::val(gView->getSnapQuant());
+		std::string snap = Str::val(gView->getSnapQuant());
 
 		for (int i = 0; i < 2; ++i)
 		{
 			int vx = x[i] + gView->applyZoom(i * 40 - 20);
 
-			Text::arrange(Text::MC, textStyle, snap.str());
+			Text::arrange(Text::MC, textStyle, snap.c_str());
 			Text::draw(vec2i{ vx, myY - 1 });
 		}
 	}

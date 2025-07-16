@@ -577,7 +577,7 @@ void changePlayerNumber()
 	// Check if the current style actually supports more than 1 player.
 	if(numPlayers <= 1)
 	{
-		HudNote("%s only has one player.", gStyle->get()->name.str());
+		HudNote("%s only has one player.", gStyle->get()->name.c_str());
 		return;
 	}
 
@@ -1040,7 +1040,7 @@ void exportNotesAsLuaTable()
 	Debug::log("arrowtable = {");
 	for(auto it = chart->notes.begin(), end = chart->notes.end(), last = end - 1; it != end; ++it)
 	{
-		String beat = Str::val(it->row * BEATS_PER_ROW, 0, 3);
+		std::string beat = Str::val(it->row * BEATS_PER_ROW, 0, 3);
 		const char* fmt = (it == last) ? "{%s,%i}};\n" : "{%s,%i},";
 		Debug::log(fmt, beat, it->col);
 	}
@@ -1055,7 +1055,7 @@ void copySelectionToClipboard(bool remove)
 {
 	if(gSelection->getType() == Selection::NONE)
 	{
-		String time = Str::formatTime(gView->getCursorTime());
+		std::string time = Str::formatTime(gView->getCursorTime());
 		gSystem->setClipboardText(Str::fmt("%1").arg(time));
 		HudNote("Copied timestamp to Clipboard.");
 	}
@@ -1083,7 +1083,7 @@ void pasteFromClipboard(bool insert)
 	}
 	else
 	{
-		String text = gSystem->getClipboardText();
+		std::string text = gSystem->getClipboardText();
 		double target = Str::readTime(text);
 		if(target > 0)
 		{

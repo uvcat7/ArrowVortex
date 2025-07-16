@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <filesystem>
+#include <string>
 
 namespace Vortex {
 namespace {
@@ -970,13 +971,13 @@ XmrResult XmrDoc::saveFile(const char* path, XmrSaveSettings settings)
 	}
 
 	// Write the string to the output file.
-	String str = saveString(settings);
-	file.write(str.begin(), str.len());
+	std::string str = saveString(settings);
+	file.write(str.data(), str.length());
 
 	return XMR_SUCCESS;
 }
 
-String XmrDoc::saveString(XmrSaveSettings settings)
+std::string XmrDoc::saveString(XmrSaveSettings settings)
 {
 	SetError(this, nullptr);
 	xstring str(1024);
@@ -991,7 +992,7 @@ String XmrDoc::saveString(XmrSaveSettings settings)
 	int last = str.size - 1;
 	if(last >= 0 && str.data[last] == '\n') --str.size;
 
-	return String(str.data, str.size);
+	return std::string(str.data, str.size);
 }
 
 }; // namespace Vortex

@@ -33,7 +33,7 @@ void WgSelectList::hideBackground()
 	show_background_ = 0;
 }
 
-void WgSelectList::addItem(StringRef text)
+void WgSelectList::addItem(const std::string& text)
 {
 	selectlist_items_.push_back(text);
 }
@@ -152,7 +152,7 @@ void WgSelectList::onDraw()
 	{
 		if(ty > r.y - ITEM_H && ty < r.y + r.h)
 		{
-			Text::arrange(Text::MC, style, selectlist_items_[i].str());
+			Text::arrange(Text::MC, style, selectlist_items_[i].c_str());
 			Text::draw({r.x + 2, ty, r.w - 2, ITEM_H});
 		}
 	}
@@ -231,7 +231,7 @@ void WgDroplist::onMousePress(MousePress& evt)
 
 			for(int i = 0; i < numItems; ++i)
 			{
-				selectlist_widget_->addItem(droplist_items_[i].str());
+				selectlist_widget_->addItem(droplist_items_[i].c_str());
 			}
 
 			selected_index_ = value.get();
@@ -316,7 +316,7 @@ void WgDroplist::onDraw()
 	int item = value.get();
 	if(item >= 0 && item < numItems)
 	{
-		Text::arrange(Text::MC, style, rect_.w - 18, droplist_items_[item].str());
+		Text::arrange(Text::MC, style, rect_.w - 18, droplist_items_[item].c_str());
 		Text::draw({r.x + 6, r.y, r.w - 18, r.h});
 	}
 
@@ -336,7 +336,7 @@ void WgDroplist::clearItems()
 	droplist_items_.clear();
 }
 
-void WgDroplist::addItem(StringRef text)
+void WgDroplist::addItem(const std::string& text)
 {
 	droplist_items_.push_back(text);
 }
@@ -364,7 +364,7 @@ WgCycleButton::WgCycleButton(GuiContext* gui)
 {
 }
 
-void WgCycleButton::addItem(StringRef text)
+void WgCycleButton::addItem(const std::string& text)
 {
 	cycle_items_.push_back(text);
 }
@@ -435,7 +435,7 @@ void WgCycleButton::onDraw()
 		if(!isEnabled()) style.textColor = misc.colDisabled;
 
 		Renderer::pushScissorRect(Shrink(rect_, 2));
-		Text::arrange(Text::MC, style, cycle_items_[item].str());
+		Text::arrange(Text::MC, style, cycle_items_[item].c_str());
 		Text::draw({r.x + 2, r.y, r.w - 4, r.h});
 		Renderer::popScissorRect();
 	}
