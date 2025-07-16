@@ -148,7 +148,7 @@ static void ReleaseEntry(Entry* in, bool hasBeenApplied)
 	free(in);
 }
 
-static std::string ApplyEntry(const Entry* in, Bindings bound, bool undo, bool redo)
+static String ApplyEntry(const Entry* in, Bindings bound, bool undo, bool redo)
 {
 	EntryData entry = DecodeEntry(in);
 
@@ -216,9 +216,9 @@ void pushEntry(Entry* entry)
 	++myAppliedEntries;
 	++myTotalEntries;
 
-	std::string msg = ApplyEntry(entry, bound, false, false);
+	String msg = ApplyEntry(entry, bound, false, false);
 
-	if(msg.length()) HudNote("%s", msg.c_str());
+	if(msg.len()) HudNote("%s", msg.str());
 }
 
 void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart, Tempo* targetTempo)
@@ -277,13 +277,13 @@ void redoEntry()
 		auto it = myEntries.head;
 		for(int i = 0; i < myAppliedEntries; ++i) it = Advance(it, bound);
 
-		std::string msg = ApplyEntry(it, bound, false, true);
+		String msg = ApplyEntry(it, bound, false, true);
 
 		++myAppliedEntries;
 
 		if(msg.empty()) msg = "---";
 		HudNote("{tc:4a4}{g:redo}{tc:666}[%i/%i]:{tc} %s",
-			myAppliedEntries, myTotalEntries, msg.c_str());
+			myAppliedEntries, myTotalEntries, msg.str());
 	}
 }
 
@@ -295,13 +295,13 @@ void undoEntry()
 		auto it = myEntries.head;
 		for(int i = 0; i < myAppliedEntries - 1; ++i) it = Advance(it, bound);
 
-		std::string msg = ApplyEntry(it, bound, true, false);
+		String msg = ApplyEntry(it, bound, true, false);
 
 		--myAppliedEntries;
 
 		if(msg.empty()) msg = "---";
 		HudNote("{tc:822}{g:undo}{tc:666}[%i/%i]:{tc} %s",
-			myAppliedEntries, myTotalEntries, msg.c_str());
+			myAppliedEntries, myTotalEntries, msg.str());
 	}
 }
 
@@ -368,7 +368,7 @@ static void ReleaseChain(ReadStream& in, bool hasBeenApplied)
 	}
 }
 
-static std::string ApplyChain(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyChain(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	auto list = in.read<EntryList>();
 	auto msg = in.readStr();
@@ -403,7 +403,7 @@ void startChain()
 	++myOpenChains;
 }
 
-void finishChain(std::string msg)
+void finishChain(String msg)
 {
 	myOpenChains = max(0, myOpenChains - 1);
 	if(myChain.head && myOpenChains == 0)

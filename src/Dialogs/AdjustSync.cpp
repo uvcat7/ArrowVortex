@@ -45,7 +45,7 @@ DialogAdjustSync::DialogAdjustSync()
 	onChanges(VCM_ALL_CHANGES);
 }
 
-WgSpinner* DialogAdjustSync::myCreateWidgetRow(const std::string& label, double& val, int setAction, int tweakAction,
+WgSpinner* DialogAdjustSync::myCreateWidgetRow(StringRef label, double& val, int setAction, int tweakAction,
 	const char* tooltip1, const char* tooltip2)
 {
 	WgSpinner* spinner = myLayout.add<WgSpinner>(label);

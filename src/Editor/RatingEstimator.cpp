@@ -27,8 +27,8 @@ RatingEstimator::RatingEstimator(const char* databaseFile)
 	Vector<double> values;
 	for(auto& line : File::getLines(databaseFile, &success))
 	{
-		if(line.length() && line[0] == '#') continue;
-		values.push_back(atof(line.data()));
+		if(line.len() && line[0] == '#') continue;
+		values.push_back(atof(line.begin()));
 	}
 	if(values.size() != HM_NUM_WEIGHTS) return;
 

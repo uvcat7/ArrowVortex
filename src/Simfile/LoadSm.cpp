@@ -26,7 +26,7 @@ namespace Sm {
 
 struct ParseData;
 
-#define PARSE_ARGS ParseData& data, const std::string& tag, char* str
+#define PARSE_ARGS ParseData& data, StringRef tag, char* str
 
 typedef void(*ParseFunc)(PARSE_ARGS);
 
@@ -41,10 +41,10 @@ struct ParseData
 
 	Simfile* sim;
 	Chart* chart;
-	std::string styleId;
+	String styleId;
 
-	std::map<std::string, std::string*> simMap1;
-	std::map<std::string, ParseFunc> simMap2, chartMap;
+	std::map<String, String*> simMap1;
+	std::map<String, ParseFunc> simMap2, chartMap;
 
 	Tempo* tempo();
 };
@@ -433,7 +433,7 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 	}
 }
 
-static void ParseNotes(ParseData& data, Chart* chart, const std::string& style, char* notes)
+static void ParseNotes(ParseData& data, Chart* chart, StringRef style, char* notes)
 {
 	char* p = notes;
 
@@ -454,8 +454,8 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style, 
 	}
 
 	// Create an empty note line for quick comparison.
-	std::string emptylinestr(numCols, '0');
-	const char* emptyline = emptylinestr.c_str();
+	String emptylinestr(numCols, '0');
+	const char* emptyline = emptylinestr.str();
 
 	// Read the note data.
 	ReadNoteData readNoteData;
@@ -622,10 +622,10 @@ static void ParseNotes(PARSE_ARGS)
 // ================================================================================================
 // Tag parsing.
 
-typedef std::map<std::string, std::string*> StrMap;
-typedef std::map<std::string, ParseFunc> FuncMap;
+typedef std::map<String, String*> StrMap;
+typedef std::map<String, ParseFunc> FuncMap;
 
-std::string UnescapeTag(std::string s)
+String UnescapeTag(String s)
 {
 	Str::replace(s, "\\\\", "\\");
 	Str::replace(s, "\\;", ";");
@@ -700,7 +700,7 @@ static void MapChartTags(FuncMap& map)
 	map["STEPSTYPE"]    = [](PARSE_ARGS) { data.styleId = str; };
 }
 
-static void ParseTag(ParseData& data, std::string tag, char* val)
+static void ParseTag(ParseData& data, String tag, char* val)
 {
 	if(data.chart)
 	{
@@ -738,7 +738,7 @@ static void ParseTag(ParseData& data, std::string tag, char* val)
 // ===================================================================================
 // File importing
 
-bool LoadSm(const std::string& path, Simfile* sim)
+bool LoadSm(StringRef path, Simfile* sim)
 {
 	ParseData data;
 
@@ -751,11 +751,11 @@ bool LoadSm(const std::string& path, Simfile* sim)
 	MapChartTags(data.chartMap);
 
 	// Read the file.
-	std::string str;
+	String str;
 	if(!ParseSimfile(str, path)) return false;
 
 	// Read the tags.
-	char* tag, *val, *p = &str[0];
+	char* tag, *val, *p = str.begin();
 	while(ParseNextTag(p, tag, val))
 	{
 		ParseTag(data, tag, val);

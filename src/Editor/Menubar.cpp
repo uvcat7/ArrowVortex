@@ -73,10 +73,10 @@ static void sep(Item* menu)
 
 static void add(Item* menu, Action::Type action, const char* str)
 {
-	std::string notation = gShortcuts->getNotation(action);
-	if(notation.length())
+	String notation = gShortcuts->getNotation(action);
+	if(notation.len())
 	{
-		std::string combined(str);
+		String combined(str);
 		Str::append(combined, '\t');
 		Str::append(combined, notation);
 		menu->addItem(action, combined);
@@ -89,12 +89,12 @@ static void add(Item* menu, Action::Type action, const char* str)
 
 static void add(Item* menu, Action::Type action, const wchar_t* str)
 {
-	add(menu, action, Narrow(str).c_str());
+	add(menu, action, Narrow(str).str());
 }
 
 static void add(Item* menu, int item, const wchar_t* str)
 {
-	menu->addItem(item, Narrow(str).c_str());
+	menu->addItem(item, Narrow(str).str());
 }
 
 static void add(Item* menu, int item, const char* str)

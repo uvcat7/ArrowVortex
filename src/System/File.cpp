@@ -12,32 +12,12 @@ namespace Vortex {
 namespace {
 
 // ================================================================================================
-// Utility functions.
-
-static FILE* OpenFile(const std::string& path, bool write)
-{
-	FILE* file;
-	WideString wpath = Widen(path);
-	if(!(file = _wfopen(wpath.str(), write ? L"wb" : L"rb")))
-	{
-		const char* reason = "file not found";
-		if(errno == EACCES) reason = "permission denied, file might be read only";
-		else if(write) reason = "unable to create file";
-		Debug::blockBegin(Debug::ERROR, "could not open file");
-		Debug::log("file: %s\n", path.c_str());
-		Debug::log("reason: %s\n", reason);
-		Debug::blockEnd();
-	}
-	return (FILE*)file;
-}
-
-// ================================================================================================
 // Path iteration functions.
 
 // Returns a pointer to the first character past the prefix of path.
-static const char* GetDirStart(const std::string& path)
+static const char* GetDirStart(StringRef path)
 {
-	auto p = path.c_str();
+	auto p = path.str();
 	if(p[0] == '\\' && p[1] == '\\')
 	{
 		p += 2;
@@ -52,13 +32,13 @@ static const char* GetDirStart(const std::string& path)
 }
 
 // Returns true if the path is an absolute path, false otherwise.
-static bool IsAbsolutePath(const std::string& path)
+static bool IsAbsolutePath(StringRef path)
 {
-	return GetDirStart(path) != path.c_str();
+	return GetDirStart(path) != path.str();
 }
 
 // Returns a pointer to the end of the top-most directory in the path.
-static const char* GetDirEnd(const std::string& path)
+static const char* GetDirEnd(StringRef path)
 {
 	auto p = GetDirStart(path), out = p;
 	for(; *p; ++p) { if(p[0] == '\\') out = p; }
@@ -66,7 +46,7 @@ static const char* GetDirEnd(const std::string& path)
 }
 
 // Returns a pointer to the first character of the filename in path.
-static const char* GetFileStart(const std::string& path)
+static const char* GetFileStart(StringRef path)
 {
 	auto p = GetDirStart(path), out = p;
 	for(; *p; ++p) { if(p[0] == '\\') out = p + 1; }
@@ -92,7 +72,7 @@ static const char* GetExtStart(const char* filename)
 }
 
 // Returns a pointer to the start of the top-most directory in the path.
-static const char* GetTopDir(const std::string& path)
+static const char* GetTopDir(StringRef path)
 {
 	auto p = GetDirStart(path), out = p, tmp = p;
 	for(; *p; ++p) { if(p[0] == '\\') out = tmp, tmp = p + 1; }
@@ -100,7 +80,7 @@ static const char* GetTopDir(const std::string& path)
 }
 
 // Returns a pointer to the start of the top-most item in the path.
-static const char* GetTopItem(const std::string& path)
+static const char* GetTopItem(StringRef path)
 {
 	auto p = GetDirStart(path), out = p;
 	for(; *p; ++p) { if(p[0] == '\\' && p[1]) out = p + 1; }
@@ -120,15 +100,15 @@ struct PathItem
 };
 
 // Returns true if the given String ends with a slash character.
-static bool EndsWithSlash(const std::string& path)
+static bool EndsWithSlash(StringRef path)
 {
-	return path.length() && (path.back() == '\\' || path.back() == '/');
+	return path.len() && (path.back() == '\\' || path.back() == '/');
 }
 
 // Adds items from a path to the list.
-static void AddItems(Vector<PathItem>& out, const std::string& path)
+static void AddItems(Vector<PathItem>& out, StringRef path)
 {
-	auto begin = GetDirStart(path);
+	auto begin = GetDirStart(path), end = path.end();
 	for(const char* a = begin, *b = begin; *a; ++b)
 	{
 		if(*b == '\\' || *b == '/' || *b == 0)
@@ -151,10 +131,10 @@ static void AddItems(Vector<PathItem>& out, const std::string& path)
 }
 
 // Concatenates two paths, resolving navigation elements and turning slashes forward.
-static std::string Concatenate(const std::string& first, const std::string& second, EndSlash slash = SLASH_AS_IS)
+static String Concatenate(StringRef first, StringRef second, EndSlash slash = SLASH_AS_IS)
 {
 	// Split the path into a list of items.
-	const std::string* pathBegin;
+	const String* pathBegin;
 	Vector<PathItem> items;
 	if(first.empty() || IsAbsolutePath(second))
 	{
@@ -169,11 +149,11 @@ static std::string Concatenate(const std::string& first, const std::string& seco
 	}
 
 	// First, copy the characters in the path prefix.
-	auto dirBeginP = GetDirStart(*pathBegin);
-	std::string out(pathBegin->data(), dirBeginP);
+	const char* dirBegin = GetDirStart(*pathBegin);
+	String out(pathBegin->begin(), static_cast<int>(dirBegin - pathBegin->begin()));
 
 	// If the first character after the prefix was a slash, append a slash.
-	if(dirBeginP && (*dirBeginP == '\\' || *dirBeginP == '/')) Str::append(out, '\\');
+	if(*dirBegin == '\\' || *dirBegin == '/') Str::append(out, '\\');
 
 	// If the path is empty, we're done.
 	if(items.empty()) return out;
@@ -194,7 +174,7 @@ static std::string Concatenate(const std::string& first, const std::string& seco
 	}
 	else if(slash == SLASH_AS_IS)
 	{
-		const std::string& pathEnd = second.length() ? second : first;
+		StringRef pathEnd = second.len() ? second : first;
 		if(EndsWithSlash(pathEnd)) Str::append(out, '\\');
 	}
 
@@ -224,17 +204,17 @@ Path::Path(const Path& other)
 {
 }
 
-Path::Path(const std::string& path)
-	: str(Concatenate(std::string(), path))
+Path::Path(StringRef path)
+	: str(Concatenate(String(), path))
 {
 }
 
-Path::Path(const std::string& dir, const std::string& file)
+Path::Path(StringRef dir, StringRef file)
 	: str(Concatenate(dir, file))
 {
 }
 
-Path::Path(const std::string& dir, const std::string& file, const std::string& ext)
+Path::Path(StringRef dir, StringRef file, StringRef ext)
 {
 	if(ext.empty())
 	{
@@ -246,12 +226,12 @@ Path::Path(const std::string& dir, const std::string& file, const std::string& e
 	}
 }
 
-void Path::push(std::string items, bool slash)
+void Path::push(String items, bool slash)
 {
 	str = Concatenate(str, items, slash ? SLASH_YES : SLASH_NO);
 }
 
-void Path::push(std::string items)
+void Path::push(String items)
 {
 	str = Concatenate(str, items);
 }
@@ -269,13 +249,13 @@ void Path::clear()
 void Path::dropExt()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, static_cast<int>(GetFileEnd(file) - &str[0]));
+	Str::erase(str, static_cast<int>(GetFileEnd(file) - str.begin()));
 }
 
 void Path::dropFile()
 {
 	auto file = GetFileStart(str);
-	Str::erase(str, static_cast<int>(file - &str[0]));
+	Str::erase(str, static_cast<int>(file - str.begin()));
 }
 
 bool Path::hasExt(const char* ext) const
@@ -284,56 +264,56 @@ bool Path::hasExt(const char* ext) const
 	return Str::iequal(GetExtStart(file), ext);
 }
 
-std::string Path::name() const
+String Path::name() const
 {
 	auto file = GetFileStart(str);
-	return std::string(file, GetFileEnd(file));
+	return Str::create(file, GetFileEnd(file));
 }
 
-std::string Path::filename() const
+String Path::filename() const
 {
 	auto file = GetFileStart(str);
-	return std::string(file);
+	return Str::create(file, str.end());
 }
 
-std::string Path::ext() const
+String Path::ext() const
 {
-	auto file = GetFileStart(str);
-	return std::string(GetExtStart(file));
+	auto file = GetFileStart(str), end = str.end();
+	return Str::create(GetExtStart(file), end);
 }
 
-std::string Path::dir() const
+String Path::dir() const
 {
-	return std::string(str.c_str(), GetFileStart(str));
+	return Str::create(str.str(), GetFileStart(str));
 }
 
-std::string Path::dirWithoutSlash() const
+String Path::dirWithoutSlash() const
 {
-	return std::string(str.c_str(), GetDirEnd(str));
+	return Str::create(str.str(), GetDirEnd(str));
 }
 
-std::string Path::topdir() const
+String Path::topdir() const
 {
-	return std::string(GetTopDir(str), GetFileStart(str));
+	return Str::create(GetTopDir(str), GetFileStart(str));
 }
 
-std::string Path::top() const
+String Path::top() const
 {
-	return std::string(GetTopItem(str));
+	return Str::create(GetTopItem(str), str.end());
 }
 
-std::string Path::brief() const
+String Path::brief() const
 {
-	std::string out = top();
-	if(out.length() > 20)
+	String out = top();
+	if(out.len() > 20)
 	{
-		Str::erase(out, 3, static_cast<int>(out.length()) - 16);
+		Str::erase(out, 3, out.len() - 16);
 		Str::insert(out, 3, '~');
 	}
 	return out;
 }
 
-Path Path::operator + (const std::string& items) const
+Path Path::operator + (StringRef items) const
 {
 	Path out(*this);
 	out.push(items);
@@ -341,11 +321,9 @@ Path Path::operator + (const std::string& items) const
 }
 
 // ================================================================================================
-// File reader.
+// File utilities.
 
-FileReader::FileReader() : file(nullptr)
-{
-}
+namespace File {
 
 String getText(StringRef wpath, bool* success)
 {
@@ -354,20 +332,11 @@ String getText(StringRef wpath, bool* success)
 	std::ifstream in(path);
 	if (in.fail()) 
 	{
-		fclose(static_cast<FILE*>(file));
-		file = nullptr;
+		HudError("Failed to open file: %s", strerror(errno));
+		if (success != nullptr)
+			*success = false;
+		return {};
 	}
-}
-
-size_t FileReader::size() const
-{
-	if (!file) return 0;
-	long pos = ftell(static_cast<FILE*>(file));
-	fseek(static_cast<FILE*>(file), 0, SEEK_END);
-	size_t size = ftell(static_cast<FILE*>(file));
-	fseek(static_cast<FILE*>(file), pos, SEEK_SET);
-	return size;
-}
 
 	size_t size = fs::file_size(path);
 	String str(static_cast<int>(size) + 1, '\0');
@@ -378,110 +347,26 @@ size_t FileReader::size() const
 	return str;
 }
 
-// ================================================================================================
-// File writer.
-
-FileWriter::FileWriter() : file(nullptr)
+Vector<String> getLines(StringRef path, bool* success)
 {
 	std::ifstream in(Widen(path).str());
 	if (in.fail())
 	{
-		fclose(static_cast<FILE*>(file));
+		HudError("Failed to open file: %s", strerror(errno));
+		if (success != nullptr)
+			*success = false;
+		return {};
 	}
-	file = nullptr;
-}
 
-size_t FileWriter::write(const void* ptr, size_t size, size_t count)
-{
-	return fwrite(ptr, size, count, (FILE*)file);
-}
+	Vector<String> v;
+	std::string line;
 
-void FileWriter::printf(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	vfprintf(static_cast<FILE*>(file), fmt, args);
-	va_end(args);
-}
+	while (std::getline(in, line))
+		v.push_back(line.c_str());
 
-// ================================================================================================
-// File utilities.
-
-namespace File {
-
-static bool isNewline(char c)
-{
-	return (c == '\n' || c == '\r');
-}
-
-long getSize(const std::string& path)
-{
-	FILE* fp = OpenFile(path, false);
-	if(!fp) return 0;
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	fclose(fp);
-	return size;
-}
-
-std::string getText(const std::string& path, bool* success)
-{
-	FILE* fp = OpenFile(path, false);
-	if(!fp) { if(success) *success = false;  return std::string(); }
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	std::string out(size, 0);
-	fseek(fp, 0, SEEK_SET);
-	fread(&out[0], 1, size, fp);
-	fclose(fp);
-	if(success) *success = true;
-	return out;
-}
-
-Vector<std::string> getLines(const std::string& path, bool* success)
-{
-	constexpr size_t kBufferSize = 256;
-	constexpr size_t kNumberOne = 1;
-
-	Vector<std::string> out;
-	FILE* fp = OpenFile(path, false);
-	if(!fp) { if(success) *success = false; return out; }
-	out.append();
-	std::array<char, kBufferSize> buffer;
-	for (size_t bytesRead; bytesRead = fread(buffer.data(), kNumberOne, buffer.size(), fp);)
-	{
-		if(bytesRead > 0 && isNewline(buffer[0]) && out.back().length())
-		{
-			out.append();
-		}
-		for (size_t pos = 0, end = 0; pos < bytesRead;)
-		{
-			while(pos < bytesRead && isNewline(buffer[pos]))
-			{
-				++pos, ++end;
-			}
-			while(end < bytesRead && !isNewline(buffer[end]))
-			{
-				++end;
-			}
-			if(end > pos)
-			{
-				Str::append(out.back(), buffer.data() + pos, static_cast<int>(end - pos));
-			}
-			if(end < bytesRead && isNewline(buffer[end]))
-			{
-				out.append();
-			}
-			pos = end;
-		}
-	}
-	if(out.back().empty())
-	{
-		out.pop_back();
-	}
-	fclose(fp);
-	if(success) *success = true;
-	return out;
+	if (success != nullptr)
+		*success = true;
+	return v;
 }
 
 bool moveFile(StringRef wpath, StringRef wnewPath, bool replace)
@@ -506,9 +391,9 @@ bool moveFile(StringRef wpath, StringRef wnewPath, bool replace)
 	}
 }
 
-static bool HasValidExt(const std::string& filename, const Vector<std::string>& filters)
+static bool HasValidExt(StringRef filename, const Vector<String>& filters)
 {
-	const char* ext = GetExtStart(filename.c_str());
+	const char* ext = GetExtStart(filename.str());
 	for(auto& filter : filters)
 	{
 		if(Str::iequal(filter, ext))
@@ -548,14 +433,14 @@ static void AddFilesInDir(Vector<Path>& out, const WideString& wpath, bool recur
 		AddFilesInDir(out, fs::directory_iterator(path), findDirs, filters);
 }
 
-Vector<Path> findFiles(const std::string& path, bool recursive, const char* filters)
+Vector<Path> findFiles(StringRef path, bool recursive, const char* filters)
 {
 	Vector<Path> out;
 
 	if (path.empty()) return out;
 
 	// Extract filters from the filter String.
-	Vector<std::string> filterlist;
+	Vector<String> filterlist;
 	if(filters)
 	{
 		for(const char* begin = filters, *end = begin; true; end = begin)
@@ -579,10 +464,10 @@ Vector<Path> findFiles(const std::string& path, bool recursive, const char* filt
 	return out;
 }
 
-Vector<Path> findDirs(const std::string& path, bool recursive)
+Vector<Path> findDirs(StringRef path, bool recursive)
 {
 	Vector<Path> out;
-	AddFilesInDir(out, Widen(path), recursive, true, Vector<std::string>());
+	AddFilesInDir(out, Widen(path), recursive, true, Vector<String>());
 	return out;
 }
 

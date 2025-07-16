@@ -211,14 +211,14 @@ void NoteList::sanitize(const Chart* chart)
 	// Notify the user if the column or player count is invalid.
 	if(numCols <= 0 || numPlayers <= 0)
 	{
-		std::string prefix(chart ? chart->description() : "Chart");
+		String prefix(chart ? chart->description() : "Chart");
 		if(numCols <= 0)
 		{
-			HudWarning("%s has an invalid column count (%i).", prefix.c_str(), numCols);
+			HudWarning("%s has an invalid column count (%i).", prefix.str(), numCols);
 		}
 		if(numPlayers <= 0)
 		{
-			HudWarning("%s has an invalid player count (%i).", prefix.c_str(), numPlayers);
+			HudWarning("%s has an invalid player count (%i).", prefix.str(), numPlayers);
 		}
 		clear();
 	}
@@ -276,28 +276,28 @@ void NoteList::sanitize(const Chart* chart)
 	{
 		cleanup();
 
-		std::string suffix = " from ";
+		String suffix = " from ";
 		Str::append(suffix, chart->description());
 
 		if(numInvalidCols > 0)
 		{
-			HudNote("Removed %i note(s) with an invalid column%s.", numInvalidCols, suffix.c_str());
+			HudNote("Removed %i note(s) with an invalid column%s.", numInvalidCols, suffix.str());
 		}
 		if(numInvalidPlayers > 0)
 		{
-			HudNote("Removed %i note(s) with an invalid player%s.", numInvalidPlayers, suffix.c_str());
+			HudNote("Removed %i note(s) with an invalid player%s.", numInvalidPlayers, suffix.str());
 		}
 		if(numOverlapping > 0)
 		{
-			HudNote("Removed %i overlapping note(s)%s.", numOverlapping, suffix.c_str());
+			HudNote("Removed %i overlapping note(s)%s.", numOverlapping, suffix.str());
 		}
 		if(numUnsorted > 0)
 		{
-			HudNote("Removed %i out of order note(s)%s.", numUnsorted, suffix.c_str());
+			HudNote("Removed %i out of order note(s)%s.", numUnsorted, suffix.str());
 		}
 		if (numInvalidQuant > 0)
 		{
-			HudNote("Removed %i note(s) with invalid quantization label(s)%s.", numInvalidQuant, suffix.c_str());
+			HudNote("Removed %i note(s) with invalid quantization label(s)%s.", numInvalidQuant, suffix.str());
 		}
 	}
 }

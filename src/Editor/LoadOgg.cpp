@@ -71,23 +71,23 @@ static long OvTell(void* loader)
 	return file.tellg();
 }
 
-static void ReadComment(const char* str, int len, const char* tag, std::string& out)
+static void ReadComment(const char* str, int len, const char* tag, String& out)
 {
 	const char* end = str + len;
-	int taglen = static_cast<int>(strlen(tag));
+	int taglen = strlen(tag);
 	if(taglen < len && memcmp(str, tag, taglen) == 0)
 	{
 		str += taglen;
 		while(str != end && (*str == ' ' || *str == '\t')) ++str;
 		if(str != end && *str == '=') ++str;
 		while(str != end && (*str == ' ' || *str == '\t')) ++str;
-		out = std::string(str, static_cast<size_t>(end - str));
+		Str::assign(out, str, end - str);
 	}
 }
 
 }; // anonymous namespace.
 
-SoundSource* LoadOgg(std::ifstream&& file, std::string& title, std::string& artist)
+SoundSource* LoadOgg(std::ifstream&& file, String& title, String& artist)
 {
     OggLoader* loader = new OggLoader;
     loader->file = std::move(file);

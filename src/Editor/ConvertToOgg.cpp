@@ -104,7 +104,7 @@ void OggConversionThread::exec()
 	WriteWaveHeader((WaveHeader*)(pipe->samples), music.getNumFrames(), music.getFrequency());
 
 	// Encode the PCM file with the oggenc2 command line utility.
-	std::string cmd = Str::fmt("oggenc2.exe -q6 -o \"%1\" -").arg(outPath);
+	String cmd = Str::fmt("oggenc2.exe -q6 -o \"%1\" -").arg(outPath);
 	
 	// Call oggenc2 with the command line parameters.
 	if(!gSystem->runSystemCommand(cmd, pipe, pipe->samples))

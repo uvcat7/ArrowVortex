@@ -15,16 +15,16 @@ struct GuiManager
 	static void create();
 	static void destroy();
 
-	static void registerWidgetClass(const std::string& name, GuiMain::CreateWidgetFunction func);
-	static GuiWidget* createWidget(const std::string& name, GuiContext* gui);
+	static void registerWidgetClass(StringRef name, GuiMain::CreateWidgetFunction func);
+	static GuiWidget* createWidget(StringRef name, GuiContext* gui);
 
 	static void removeWidget(GuiWidget* w);
 
-	static void setWidgetId(GuiWidget* w, const std::string& id);
-	static GuiWidget* findWidget(const std::string& id, GuiContext* gui);
+	static void setWidgetId(GuiWidget* w, StringRef id);
+	static GuiWidget* findWidget(StringRef id, GuiContext* gui);
 
-	static void setTooltip(const GuiWidget* w, const std::string& str);
-	static std::string getTooltip(const GuiWidget* w);
+	static void setTooltip(const GuiWidget* w, StringRef str);
+	static String getTooltip(const GuiWidget* w);
 
 	static void blockMouseOver(GuiWidget* w);
 	static void unblockMouseOver(GuiWidget* w);

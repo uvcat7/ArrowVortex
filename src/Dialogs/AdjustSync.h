@@ -23,7 +23,7 @@ public:
 	void onFindBPM();
 
 private:
-	WgSpinner* myCreateWidgetRow(const std::string&, double&, int, int, const char*, const char*);
+	WgSpinner* myCreateWidgetRow(StringRef, double&, int, int, const char*, const char*);
 	void myCreateWidgets();
 
 	void myResetBPMDetection();

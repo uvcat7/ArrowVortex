@@ -80,7 +80,7 @@ private:
 	vec2i max_size_;
 	vec2i pinned_position_;
 
-	std::string dialog_title_;
+	String dialog_title_;
 
 	BaseAction* current_action_;
 };

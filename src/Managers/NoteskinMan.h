@@ -45,7 +45,7 @@ struct NoteskinMan
 	virtual int getNumTypes() const = 0;
 
 	// Returns the name of the noteskin type.
-	virtual const std::string& getName(int type) const = 0;
+	virtual StringRef getName(int type) const = 0;
 
 	// Returns true if the noteskin type supports the active style, false otherwise.
 	virtual bool isSupported(int type) const = 0;

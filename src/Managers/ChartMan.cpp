@@ -54,7 +54,7 @@ void update(Chart* chart)
 // ================================================================================================
 // ChartManImpl :: step artist editing.
 
-void myQueueStepArtist(std::string artist)
+void myQueueStepArtist(String artist)
 {
 	WriteStream stream;
 	stream.writeStr(myChart->artist);
@@ -62,20 +62,20 @@ void myQueueStepArtist(std::string artist)
 	gHistory->addEntry(myApplyStepArtistId, stream.data(), stream.size(), myChart);
 }
 
-static std::string ApplyStepArtist(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyStepArtist(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	std::string msg;
-	std::string before = in.readStr();
-	std::string after = in.readStr();
+	String msg;
+	String before = in.readStr();
+	String after = in.readStr();
 	if(in.success())
 	{
-		const std::string& newVal = undo ? before : after;
+		StringRef newVal = undo ? before : after;
 
 		msg = bound.chart->description();
-		msg = msg + " :: ";
-		msg = msg + (undo ? "reverted" : "changed");
-		msg = msg + " step artist to ";
-		msg = msg + newVal;
+		msg += " :: ";
+		msg += (undo ? "reverted" : "changed");
+		msg += " step artist to ";
+		msg += newVal;
 
 		gSimfile->openChart(bound.chart);
 		bound.chart->artist = newVal;
@@ -95,9 +95,9 @@ void myQueueMeter(int meter)
 	gHistory->addEntry(myApplyMeterId, stream.data(), stream.size(), myChart);
 }
 
-static std::string ApplyMeter(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyMeter(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	int before = in.read<int>();
 	int after = in.read<int>();
 	if(in.success())
@@ -105,9 +105,9 @@ static std::string ApplyMeter(ReadStream& in, History::Bindings bound, bool undo
 		int newVal = undo ? before : after;
 
 		msg = bound.chart->description();
-		msg = msg + " :: ";
-		msg = msg + (undo ? "reverted" : "changed");
-		msg = msg + " meter to ";
+		msg += " :: ";
+		msg += (undo ? "reverted" : "changed");
+		msg += " meter to ";
 		Str::appendVal(msg, newVal);
 
 		gSimfile->openChart(bound.chart);
@@ -128,9 +128,9 @@ void myQueueDifficulty(Difficulty difficulty)
 	gHistory->addEntry(myApplyDifficultyId, stream.data(), stream.size(), myChart);
 }
 
-static std::string ApplyDifficulty(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static String ApplyDifficulty(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	std::string msg;
+	String msg;
 	int before = in.read<int>();
 	int after = in.read<int>();
 	if(in.success())
@@ -138,10 +138,10 @@ static std::string ApplyDifficulty(ReadStream& in, History::Bindings bound, bool
 		Difficulty newDiff = (Difficulty)(undo ? before : after);
 
 		msg = bound.chart->description();
-		msg = msg + " :: ";
-		msg = msg + (undo ? "reverted" : "changed");
-		msg = msg + " difficulty to ";
-		msg = msg + GetDifficultyName(newDiff);
+		msg += " :: ";
+		msg += (undo ? "reverted" : "changed");
+		msg += " difficulty to ";
+		msg += GetDifficultyName(newDiff);
 
 		gSimfile->openChart(bound.chart);
 		bound.chart->difficulty = newDiff;
@@ -161,7 +161,7 @@ void setDifficulty(Difficulty difficulty)
 	}
 }
 
-void setStepArtist(std::string artist)
+void setStepArtist(String artist)
 {
 	if(myChart && myChart->artist != artist)
 	{
@@ -190,9 +190,9 @@ bool isClosed() const
 	return (myChart == nullptr);
 }
 
-std::string getStepArtist() const
+String getStepArtist() const
 {
-	return myChart ? myChart->artist : std::string();
+	return myChart ? myChart->artist : String();
 }
 
 Difficulty getDifficulty() const
@@ -205,9 +205,9 @@ int getMeter() const
 	return myChart ? myChart->meter : 1;
 }
 
-std::string getDescription() const
+String getDescription() const
 {
-	return myChart ? myChart->description() : std::string();
+	return myChart ? myChart->description() : String();
 }
 
 const Chart* get() const
@@ -236,7 +236,7 @@ static Vector<BreakdownItem> ToBreakdown(const Vector<StreamItem>& items)
 			}
 			else
 			{
-				item.text = item.text + "-";
+				item.text += '-';
 			}
 		}
 		else

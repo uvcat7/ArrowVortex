@@ -80,15 +80,15 @@ static int* CreateMirrorTable(const XmrNode* node, const char* attrib, int numCo
 	return out;
 }
 
-static std::string IdToName(const std::string& id)
+static String IdToName(StringRef id)
 {
-	std::string out;
+	String out;
 	char prev = ' ';
 	for(char c : id)
 	{
 		if(c == '-') c = ' ';
 		if(prev == ' ' && c >= 'a' && c <= 'z') c += 'A' - 'a';
-		out = out + c;
+		out += c;
 		prev = c;
 	}
 	return out;
@@ -129,14 +129,14 @@ Style* NewStyle()
 	return out;
 }
 
-Style* CreateStyle(const std::string& id, int numCols, int numPlayers)
+Style* CreateStyle(StringRef id, int numCols, int numPlayers)
 {
 	Style* out = NewStyle();
 
 	out->id = id;
 	if(out->id.empty())
 	{
-		out->id = Str::fmt("kb%1-single").arg(numCols).str;
+		out->id = Str::fmt("kb%1-single").arg(numCols);
 	}
 
 	out->name = IdToName(out->id);
@@ -146,7 +146,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers)
 		int old = numCols;
 		numCols = clamp<int>(numCols, 1, SIM_MAX_COLUMNS);
 		HudError("Style %s has %i columns, ArrowVortex only supports 1-%i, using %i columns.",
-			id.c_str(), old, SIM_MAX_COLUMNS, numCols);
+			id.str(), old, SIM_MAX_COLUMNS, numCols);
 	}
 
 	if(numPlayers < 1 || numPlayers > SIM_MAX_PLAYERS)
@@ -154,7 +154,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers)
 		int old = numPlayers;
 		numPlayers = clamp<int>(numPlayers, 1, SIM_MAX_PLAYERS);
 		HudError("Style %s has %i players, ArrowVortex only supports 1-%i, using %i players.",
-			id.c_str(), old, SIM_MAX_PLAYERS, numPlayers);
+			id.str(), old, SIM_MAX_PLAYERS, numPlayers);
 	}
 
 	out->numCols = numCols;
@@ -166,7 +166,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers)
 Style* CreateStyle(const XmrNode* node)
 {
 
-	std::string id = node->get("id", "");
+	String id = node->get("id", "");
 	int numCols = node->get("numCols", 0);
 	int numPlayers = node->get("numPlayers", 1);
 
@@ -179,13 +179,13 @@ Style* CreateStyle(const XmrNode* node)
 	else if(numCols < 1 || numCols > SIM_MAX_COLUMNS)
 	{
 		HudError("Style %s has %i columns, ArrowVortex only supports 1-%i, ignoring style.",
-			id.c_str(), numCols, SIM_MAX_COLUMNS);
+			id.str(), numCols, SIM_MAX_COLUMNS);
 		return nullptr;
 	}
 	else if(numPlayers < 1 || numPlayers > SIM_MAX_PLAYERS)
 	{
 		HudError("Style %s has %i players, ArrowVortex only supports 1-%i, ignoring style.",
-			id.c_str(), numPlayers, SIM_MAX_PLAYERS);
+			id.str(), numPlayers, SIM_MAX_PLAYERS);
 		return nullptr;
 	}
 
@@ -290,21 +290,21 @@ StyleManImpl()
 // ================================================================================================
 // StyleManImpl :: member functions.
 
-static std::string getFallbackText(int numCols, int numPlayers)
+static String getFallbackText(int numCols, int numPlayers)
 {
-	std::string out;
+	String out;
 	if(numPlayers > 1)
 	{
-		out = Str::fmt("creating a fallback style (%1 columns, %1 players)").arg(numCols).arg(numPlayers).str;
+		out = Str::fmt("creating a fallback style (%1 columns, %1 players)").arg(numCols).arg(numPlayers);
 	}
 	else
 	{
-		out = Str::fmt("creating a fallback style (%1 columns)").arg(numCols).str;
+		out = Str::fmt("creating a fallback style (%1 columns)").arg(numCols);
 	}
 	return out;
 }
 
-const Style* createFallbackStyle(const std::string& id, int numCols, int numPlayers)
+const Style* createFallbackStyle(StringRef id, int numCols, int numPlayers)
 {
 	auto style = CreateStyle(id, numCols, numPlayers);
 	style->index = myStyles.size();
@@ -312,7 +312,7 @@ const Style* createFallbackStyle(const std::string& id, int numCols, int numPlay
 	return style;
 }
 
-const Style* findStyle(const std::string& styleId)
+const Style* findStyle(StringRef styleId)
 {
 	for(int i = 0; i < myStyles.size(); ++i)
 	{
@@ -324,7 +324,7 @@ const Style* findStyle(const std::string& styleId)
 	return nullptr;
 }
 
-const Style* findStyle(const std::string& chartName, int numCols, int numPlayers)
+const Style* findStyle(StringRef chartName, int numCols, int numPlayers)
 {
 	// First, check if an existing style matches the requested column and player count.
 	for(int i = 0; i < myStyles.size(); ++i)
@@ -337,12 +337,12 @@ const Style* findStyle(const std::string& chartName, int numCols, int numPlayers
 	}
 
 	// If that fails, create a fallback style with the given parameters.
-	std::string text = getFallbackText(numCols, numPlayers);
-	HudWarning("%s has an unknown style, %s.", chartName.c_str(), text.c_str());
-	return createFallbackStyle(std::string(), numCols, numPlayers);
+	String text = getFallbackText(numCols, numPlayers);
+	HudWarning("%s has an unknown style, %s.", chartName.str(), text.str());
+	return createFallbackStyle(String(), numCols, numPlayers);
 }
 
-const Style* findStyle(const std::string& chartName, int numCols, int numPlayers, const std::string& id)
+const Style* findStyle(StringRef chartName, int numCols, int numPlayers, StringRef id)
 {
 	/// Use lookup by column and player count if the id string is empty.
 	if(id.empty())
@@ -353,15 +353,15 @@ const Style* findStyle(const std::string& chartName, int numCols, int numPlayers
 			auto style = myStyles[i];
 			if(style->numCols == numCols && style->numPlayers == numPlayers)
 			{
-				HudWarning("%s is missing a style, using %s.", chartName.c_str(), style->name.c_str());
+				HudWarning("%s is missing a style, using %s.", chartName.str(), style->name.str());
 				return style;
 			}
 		}
 
 		// If not, create a fallback style with the requested column and player count.
-		std::string text = getFallbackText(numCols, numPlayers);
-		HudWarning("%s is missing a style, %s.", chartName.c_str(), text.c_str());
-		return createFallbackStyle(std::string(), numCols, numPlayers);
+		String text = getFallbackText(numCols, numPlayers);
+		HudWarning("%s is missing a style, %s.", chartName.str(), text.str());
+		return createFallbackStyle(String(), numCols, numPlayers);
 	}
 
 	/// Try to find a match in the list of loaded styles.
@@ -375,8 +375,8 @@ const Style* findStyle(const std::string& chartName, int numCols, int numPlayers
 	}
 
 	// If that fails, create a new style with the given parameters.
-	std::string text = getFallbackText(numCols, numPlayers);
-	HudWarning("%s has an unknown style %s, %s.", chartName.c_str(), id.c_str(), text.c_str());
+	String text = getFallbackText(numCols, numPlayers);
+	HudWarning("%s has an unknown style %s, %s.", chartName.str(), id.str(), text.str());
 	return createFallbackStyle(id, numCols, numPlayers);
 }
 

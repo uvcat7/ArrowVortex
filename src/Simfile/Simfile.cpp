@@ -30,8 +30,8 @@ void Simfile::sanitize()
 		auto chart = charts[i];
 		if(chart->style == nullptr)
 		{
-			std::string desc = chart->description();
-			HudWarning("%s is missing a style, ignoring chart.", desc.c_str());
+			String desc = chart->description();
+			HudWarning("%s is missing a style, ignoring chart.", desc.str());
 			charts.erase(i--);
 			delete chart;
 		}

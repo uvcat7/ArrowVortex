@@ -44,7 +44,7 @@ DialogAdjustTempo::DialogAdjustTempo()
 	myInsertTarget = 0;
 }
 
-WgSpinner* DialogAdjustTempo::myCreateWidgetRow(const std::string& label, int y, double& val, int action)
+WgSpinner* DialogAdjustTempo::myCreateWidgetRow(StringRef label, int y, double& val, int action)
 {
 	bool isBPM = (action == ACT_BPM_SET);
 

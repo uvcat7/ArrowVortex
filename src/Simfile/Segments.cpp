@@ -28,7 +28,7 @@ template <typename T>
 bool IsEquivalent(const T& seg, const T& other);
 
 template <typename T>
-std::string GetDescription(const T& seg);
+String GetDescription(const T& seg);
 
 // ================================================================================================
 // Segment wrapper functions.
@@ -80,7 +80,7 @@ static bool WrapEqu(const Segment* seg, const Segment* other)
 }
 
 template <typename T>
-static std::string WrapDsc(const Segment* seg)
+static String WrapDsc(const Segment* seg)
 {
 	return GetDescription<T>(*(const T*)seg);
 }
@@ -147,7 +147,7 @@ static bool IsEquivalent(const BpmChange& seg, const BpmChange& other)
 }
 
 template <>
-static std::string GetDescription(const BpmChange& seg)
+static String GetDescription(const BpmChange& seg)
 {
 	return Str::val(seg.bpm, 3, 6);
 }
@@ -201,7 +201,7 @@ static bool IsEquivalent(const Stop& seg, const Stop& other)
 }
 
 template <>
-static std::string GetDescription(const Stop& seg)
+static String GetDescription(const Stop& seg)
 {
 	return Str::val(seg.seconds, 3, 3);
 }
@@ -255,7 +255,7 @@ static bool IsEquivalent(const Delay& seg, const Delay& other)
 }
 
 template <>
-static std::string GetDescription(const Delay& seg)
+static String GetDescription(const Delay& seg)
 {
 	return Str::val(seg.seconds, 3, 3);
 }
@@ -309,7 +309,7 @@ static bool IsEquivalent(const Warp& seg, const Warp& other)
 }
 
 template <>
-static std::string GetDescription(const Warp& seg)
+static String GetDescription(const Warp& seg)
 {
 	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
 }
@@ -353,7 +353,7 @@ static void Decode(ReadStream& in, TimeSignature& seg)
 }
 
 template <>
-static std::string GetDescription(const TimeSignature& seg)
+static String GetDescription(const TimeSignature& seg)
 {
 	int beatsPerMeasure = seg.rowsPerMeasure / ROWS_PER_BEAT;
 	return Str::fmt("%1/%2").arg(beatsPerMeasure).arg(seg.beatNote);
@@ -408,7 +408,7 @@ static void Decode(ReadStream& in, TickCount& seg)
 }
 
 template <>
-static std::string GetDescription(const TickCount& seg)
+static String GetDescription(const TickCount& seg)
 {
 	return Str::val(seg.ticks);
 }
@@ -464,7 +464,7 @@ static void Decode(ReadStream& in, Combo& seg)
 }
 
 template <>
-static std::string GetDescription(const Combo& seg)
+static String GetDescription(const Combo& seg)
 {
 	return Str::fmt("%1/%2").arg(seg.hitCombo).arg(seg.missCombo);
 }
@@ -522,7 +522,7 @@ static void Decode(ReadStream& in, Speed& seg)
 }
 
 template <>
-static std::string GetDescription(const Speed& seg)
+static String GetDescription(const Speed& seg)
 {
 	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'T' : 'B');
 }
@@ -576,7 +576,7 @@ static void Decode(ReadStream& in, Scroll& seg)
 }
 
 template <>
-static std::string GetDescription(const Scroll& seg)
+static String GetDescription(const Scroll& seg)
 {
 	return Str::val(seg.ratio);
 }
@@ -630,7 +630,7 @@ static void Decode(ReadStream& in, Fake& seg)
 }
 
 template <>
-static std::string GetDescription(const Fake& seg)
+static String GetDescription(const Fake& seg)
 {
 	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
 }
@@ -665,7 +665,7 @@ Label::Label()
 {
 }
 
-Label::Label(int row, std::string str)
+Label::Label(int row, String str)
 	: Segment(row), str(str)
 {
 }
@@ -683,7 +683,7 @@ static void Decode(ReadStream& in, Label& seg)
 }
 
 template <>
-static std::string GetDescription(const Label& seg)
+static String GetDescription(const Label& seg)
 {
 	return seg.str;
 }

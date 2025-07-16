@@ -63,7 +63,7 @@ int WavLoader::readFrames(int frames, short* buffer)
 
 }; // anonymous namespace
 
-SoundSource* LoadWav(std::ifstream&& file, std::string& title, std::string& artist)
+SoundSource* LoadWav(std::ifstream&& file, String& title, String& artist)
 {
 	// Read the wave header.
 	WaveHeader header;

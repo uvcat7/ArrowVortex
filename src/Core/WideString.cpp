@@ -255,7 +255,7 @@ static uint32_t ReadU16(const uint16_t*& p, const uint16_t* end)
 	return c;
 }
 
-static void WriteU8(std::string& str, uint32_t c)
+static void WriteU8(String& str, uint32_t c)
 {
 	if(c < 0x80)
 	{
@@ -294,9 +294,9 @@ static void WriteU16(WideString& str, uint32_t c)
 
 }; // anonymous namespace.
 
-std::string Narrow(const wchar_t* s, int len)
+String Narrow(const wchar_t* s, int len)
 {
-	std::string out;
+	String out;
 	if(sizeof(wchar_t) == sizeof(uint16_t))
 	{
 		for(auto p = (const uint16_t*)s, end = p + len; p != end;)
@@ -326,12 +326,12 @@ WideString Widen(const char* s, int len)
 	return out;
 }
 
-std::string Narrow(const wchar_t* s)
+String Narrow(const wchar_t* s)
 {
 	return Narrow(s, wcslen(s));
 }
 
-std::string Narrow(const WideString& s)
+String Narrow(const WideString& s)
 {
 	return Narrow(s.str(), s.size());
 }
@@ -341,9 +341,9 @@ WideString Widen(const char* s)
 	return Widen(s, strlen(s));
 }
 
-WideString Widen(const std::string& s)
+WideString Widen(StringRef s)
 {
-	return Widen(s.data(), s.length());
+	return Widen(s.begin(), s.len());
 }
 
 }; // namespace Vortex

@@ -485,41 +485,41 @@ ShortcutsImpl()
 // ================================================================================================
 // ShortcutsImpl :: API functions.
 
-std::string Shortcuts::getNotation(Action::Type action, bool fullList = false)
+String Shortcuts::getNotation(Action::Type action, bool fullList = false)
 {
-	std::string out;
+	String out;
 	for(auto& shortcut : shortcutMappings_)
 	{
 		if(shortcut.action->code == action)
 		{
-			if (out.length())
+			if (out.len())
 			{
-				out = out + ", ";
+				out += ", ";
 			}
 
 			if(shortcut.keyflags & Keyflag::CTRL)
 			{
-				out = out + "Ctrl+";
+				out += "Ctrl+";
 			}
 			if(shortcut.keyflags & Keyflag::SHIFT)
 			{
-				out = out + "Shift+";
+				out += "Shift+";
 			}
 			if(shortcut.keyflags & Keyflag::ALT)
 			{
-				out = out + "Alt+";
+				out += "Alt+";
 			}
 			if(shortcut.key == nullptr)
 			{
-				out = out + (shortcut.scrollUp ? "Scroll Up" : "Scroll Down");
+				out += shortcut.scrollUp ? "Scroll Up" : "Scroll Down";
 			}
 			else if(shortcut.key->chr)
 			{
-				out = out + shortcut.key->chr;
+				out += shortcut.key->chr;
 			}
 			else
 			{
-				out = out + shortcut.key->name;
+				out += shortcut.key->name;
 			}
 
 			if (!fullList)

@@ -70,7 +70,7 @@ void DialogChartProperties::onChanges(int changes)
 			myRating = gChart->getMeter();
 			myStepArtist = gChart->getStepArtist();
 			myDifficulty = gChart->getDifficulty();
-			myStyleList->addItem(gStyle->get()->name.c_str());
+			myStyleList->addItem(gStyle->get()->name.str());
 			
 		}
 		else
@@ -167,13 +167,13 @@ void DialogChartProperties::myCalcRating()
 // ================================================================================================
 // Note information.
 
-static void StringifyNoteInfo(std::string& out, const char* name, int count)
+static void StringifyNoteInfo(String& out, const char* name, int count)
 {
 	if(count > 0)
 	{
-		if(out.length()) out = out + ", ";
-		out = out + Str::fmt("%1 %2").arg(count).arg(name).str;
-		if(count > 1) out = out + "s";
+		if(out.len()) out += ", ";
+		out += Str::fmt("%1 %2").arg(count).arg(name).str;
+		if(count > 1) out += 's';
 	}
 }
 
@@ -242,7 +242,7 @@ void DialogChartProperties::myUpdateNoteInfo()
 
 void DialogChartProperties::myCopyNoteInfo()
 {
-	std::string out;
+	String out;
 	if(gChart->isOpen())
 	{
 		StringifyNoteInfo(out, "step", gNotes->getNumSteps());
@@ -258,8 +258,8 @@ void DialogChartProperties::myCopyNoteInfo()
 	}
 	else
 	{
-		gSystem->setClipboardText(out.c_str());
-		HudInfo("%s%s", "Note info copied to clipboard: ", out.c_str());
+		gSystem->setClipboardText(out.str());
+		HudInfo("%s%s", "Note info copied to clipboard: ", out.str());
 	}
 }
 
@@ -321,7 +321,7 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(WgLabel* measureCou
 	{
 		auto& item = breakdown[i];
 
-		Text::arrange(Text::TL, TextStyle(), item.text.c_str());
+		Text::arrange(Text::TL, TextStyle(), item.text.str());
 		int w = max(16, Text::getSize().x + 8);
 
 		if(i >= myButtons.size())
@@ -330,7 +330,7 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(WgLabel* measureCou
 		}
 
 		WgButton* button = myButtons[i];
-		button->text.set(item.text.c_str());
+		button->text.set(item.text.str());
 		button->setSize(w, 20);
 		button->onPress.bind(this, &BreakdownWidget::selectStream, vec2i{item.row, item.endrow});
 	}
@@ -428,15 +428,15 @@ void DialogChartProperties::myCopyBreakdown()
 	}
 	else
 	{
-		std::string out;
+		String out;
 		for(auto& item : breakdown)
 		{
-			out = out + item.text;
-			out = out + "/";
+			out += item.text;
+			out += '/';
 		}
 		Str::pop_back(out);
 		gSystem->setClipboardText(out);
-		HudInfo("%s%s", "Stream breakdown copied to clipboard: ", out.c_str());
+		HudInfo("%s%s", "Stream breakdown copied to clipboard: ", out.str());
 	}
 }
 

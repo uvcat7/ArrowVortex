@@ -7,7 +7,7 @@ namespace Vortex {
 
 struct TempoBox
 {
-	std::string str;
+	String str;
 	int row;
 	Segment::Type type;
 	signed int x : 16;

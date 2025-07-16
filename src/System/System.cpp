@@ -9,6 +9,7 @@
 #include <System/File.h>
 #include <System/Debug.h>
 
+#include <Core/String.h>
 #include <Core/WideString.h>
 #include <Core/StringUtils.h>
 #include <Core/Shader.h>
@@ -106,7 +107,7 @@ static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO, MB_YES
 static int sDlgIcon[System::NUM_ICONS] = {0, MB_ICONASTERISK, MB_ICONWARNING, MB_ICONHAND};
 
 // Shows an open/save message box and returns the path selected by the user.
-static std::string ShowFileDialog(std::string title, std::string path, std::string filters, int* index, bool save)
+static String ShowFileDialog(String title, String path, String filters, int* index, bool save)
 {
 	WideString wfilter = Widen(filters);
 	WideString wtitle = Widen(title);
@@ -185,18 +186,18 @@ void MItem::addSeperator()
 {
 	AppendMenuW((HMENU)this, MF_SEPARATOR, 0, nullptr);
 }
-void MItem::addItem(int item, const std::string& text)
+void MItem::addItem(int item, StringRef text)
 {
 	AppendMenuW((HMENU)this, MF_STRING, item, Widen(text).str());
 }
 
-void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed)
+void MItem::addSubmenu(MItem* submenu, StringRef text, bool grayed)
 {
 	int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
 	AppendMenuW((HMENU)this, MF_STRING | MF_POPUP, (UINT_PTR)submenu, Widen(text).str());
 }
 
-void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text, bool grayed)
+void MItem::replaceSubmenu(int pos, MItem* submenu, StringRef text, bool grayed)
 {
 	int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
 	DeleteMenu((HMENU)this, pos, MF_BYPOSITION);
@@ -229,7 +230,7 @@ InputEvents myEvents;
 vec2i myMousePos, mySize;
 std::bitset<Key::MAX_VALUE> myKeyState;
 std::bitset<Mouse::MAX_VALUE> myMouseState;
-std::string myTitle;
+String myTitle;
 WideString myInput;
 DWORD myStyle, myExStyle;
 HWND myHWND;
@@ -380,7 +381,7 @@ void forwardArgs()
 {
 	int numArgs = 0;
 	LPWSTR* wideArgs = CommandLineToArgvW(GetCommandLineW(), &numArgs);
-	Vector<std::string> args(numArgs, std::string());
+	Vector<String> args(numArgs, String());
 	for(int i = 0; i < numArgs; ++i)
 	{
 		args[i] = Narrow(wideArgs[i], wcslen(wideArgs[i]));
@@ -439,7 +440,7 @@ void CALLBACK messageLoop()
 		// Check if there were text input events.
 		if (!myInput.empty())
 		{
-			myEvents.addTextInput(Narrow(myInput).c_str());
+			myEvents.addTextInput(Narrow(myInput).str());
 			myInput.clear();
 		}
 
@@ -541,7 +542,7 @@ void CALLBACK messageLoop()
 // ================================================================================================
 // SystemImpl :: clipboard functions.
 
-bool setClipboardText(const std::string& text)
+bool setClipboardText(StringRef text)
 {
 	bool result = false;
 	if(OpenClipboard(nullptr))
@@ -569,9 +570,9 @@ bool setClipboardText(const std::string& text)
 	return result;
 }
 
-std::string getClipboardText() const
+String getClipboardText() const
 {
-	std::string str;
+	String str;
 	if(OpenClipboard(nullptr))
 	{
 		HANDLE hData = GetClipboardData(CF_UNICODETEXT);
@@ -795,7 +796,7 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 
 			// Get the number of files dropped.
 			UINT numFiles = DragQueryFileW((HDROP)wp, 0xFFFFFFFF, nullptr, 0);
-			std::vector<std::string> files(numFiles);
+			std::vector<String> files(numFiles);
 
 			for (UINT i = 0; i < numFiles; ++i)
 			{
@@ -813,7 +814,7 @@ bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result)
 			std::vector<const char*> filePtrs;
 			for (const auto& file : files)
 			{
-				filePtrs.push_back(file.c_str());
+				filePtrs.push_back(file.str());
 			}
 			myEvents.addFileDrop(filePtrs.data(), static_cast<int>(filePtrs.size()), pos.x, pos.y);
 		}
@@ -864,7 +865,7 @@ static LRESULT CALLBACK GlobalProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 // ================================================================================================
 // SystemImpl :: dialog boxes.
 
-Result showMessageDlg(const std::string& title, const std::string& text, Buttons b, Icon i)
+Result showMessageDlg(StringRef title, StringRef text, Buttons b, Icon i)
 {
 	WideString wtitle = Widen(title), wtext = Widen(text);
 	int flags = sDlgType[b] | sDlgIcon[i], result = R_OK;
@@ -877,12 +878,12 @@ Result showMessageDlg(const std::string& title, const std::string& text, Buttons
 	return R_CANCEL;
 }
 
-std::string openFileDlg(const std::string& title, const std::string& filename, const std::string& filters)
+String openFileDlg(StringRef title, StringRef filename, StringRef filters)
 {
 	return ShowFileDialog(title, filename, filters, nullptr, false);
 }
 
-std::string saveFileDlg(const std::string& title, const std::string& filename, const std::string& filters, int* index)
+String saveFileDlg(StringRef title, StringRef filename, StringRef filters, int* index)
 {
 	return ShowFileDialog(title, filename, filters, index, true);
 }
@@ -890,12 +891,12 @@ std::string saveFileDlg(const std::string& title, const std::string& filename, c
 // ================================================================================================
 // SystemImpl :: misc/get/set functions.
 
-bool runSystemCommand(const std::string& cmd)
+bool runSystemCommand(StringRef cmd)
 {
 	return runSystemCommand(cmd, nullptr, nullptr);
 }
 
-bool runSystemCommand(const std::string& cmd, CommandPipe* pipe, void* buffer)
+bool runSystemCommand(StringRef cmd, CommandPipe* pipe, void* buffer)
 {
 	bool result = false;
 
@@ -954,12 +955,12 @@ bool runSystemCommand(const std::string& cmd, CommandPipe* pipe, void* buffer)
 	return result;
 }
 
-void openWebpage(const std::string& link)
+void openWebpage(StringRef link)
 {
 	ShellExecuteW(0, 0, Widen(link).str(), 0, 0, SW_SHOW);
 }
 
-void setWorkingDir(const std::string& path)
+void setWorkingDir(StringRef path)
 {
 	SetCurrentDirectoryW(Widen(path).str());
 }
@@ -988,12 +989,12 @@ void* getHWND() const
 	return myHWND;
 }
 
-std::string getExeDir() const
+String getExeDir() const
 {
 	return Narrow(sExeDir);
 }
 
-std::string getRunDir() const
+String getRunDir() const
 {
 	return Narrow(sRunDir);
 }
@@ -1018,7 +1019,7 @@ vec2i getMousePos() const
 	return myMousePos;
 }
 
-void setWindowTitle(const std::string& text)
+void setWindowTitle(StringRef text)
 {
 	if(!(myTitle == text))
 	{
@@ -1032,7 +1033,7 @@ vec2i getWindowSize() const
 	return mySize;
 }
 
-const std::string& getWindowTitle() const
+StringRef getWindowTitle() const
 {
 	return myTitle;
 }
@@ -1060,18 +1061,18 @@ System* gSystem = nullptr;
 }; // namespace Vortex
 using namespace Vortex;
 
-std::string System::getLocalTime()
+String System::getLocalTime()
 {
 	time_t t = time(0);
 	tm* now = localtime(&t);
-	std::string time = asctime(localtime(&t));
+	String time = asctime(localtime(&t));
 	if(time.back() == '\n') Str::pop_back(time);
 	return time;
 }
 
-std::string System::getBuildData()
+String System::getBuildData()
 {
-	std::string date(__DATE__);
+	String date(__DATE__);
 	if(date[4] == ' ') date.begin()[4] = '0';
 	return date;
 }
@@ -1087,8 +1088,8 @@ static void ApplicationStart()
 
 	// Log the application start-up time.
 	Debug::openLogFile();
-	Debug::log("Starting ArrowVortex :: %s\n", System::getLocalTime().c_str());
-	Debug::log("Build: %s\n", System::getBuildData().c_str());
+	Debug::log("Starting ArrowVortex :: %s\n", System::getLocalTime().str());
+	Debug::log("Build: %s\n", System::getBuildData().str());
 	Debug::logBlankLine();
 }
 
@@ -1098,7 +1099,7 @@ static void ApplicationEnd()
 	time_t t = time(0);
 	tm* now = localtime(&t);
 	Debug::logBlankLine();
-	Debug::log("Closing ArrowVortex :: %s", System::getLocalTime().c_str());
+	Debug::log("Closing ArrowVortex :: %s", System::getLocalTime().str());
 }
 
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, char*, int)

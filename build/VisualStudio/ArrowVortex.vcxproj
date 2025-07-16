@@ -330,6 +330,7 @@
     <ClCompile Include="..\..\src\Core\Renderer.cpp" />
     <ClCompile Include="..\..\src\Core\Shader.cpp" />
     <ClCompile Include="..\..\src\Core\Slot.cpp" />
+    <ClCompile Include="..\..\src\Core\String.cpp" />
     <ClCompile Include="..\..\src\Core\StringUtils.cpp" />
     <ClCompile Include="..\..\src\Core\Text.cpp" />
     <ClCompile Include="..\..\src\Core\TextDraw.cpp" />
@@ -439,6 +440,7 @@
     <ClInclude Include="..\..\src\Core\Renderer.h" />
     <ClInclude Include="..\..\src\Core\Shader.h" />
     <ClInclude Include="..\..\src\Core\Slot.h" />
+    <ClInclude Include="..\..\src\Core\String.h" />
     <ClInclude Include="..\..\src\Core\StringUtils.h" />
     <ClInclude Include="..\..\src\Core\Text.h" />
     <ClInclude Include="..\..\src\Core\TextDraw.h" />

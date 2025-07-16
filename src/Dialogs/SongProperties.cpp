@@ -70,11 +70,11 @@ DialogSongProperties::DialogSongProperties()
 // GuiWidget functions.
 
 template <typename T>
-static WgLineEdit* CreateField(RowLayout& layout, const std::string& label, std::string& str, T func)
+static WgLineEdit* CreateField(RowLayout& layout, StringRef label, String& str, T func)
 {
 	WgLineEdit* edit = layout.add<WgLineEdit>(label);
 	edit->text.bind(&str);
-	edit->onChange.bind<void, std::string&>(func, str);
+	edit->onChange.bind<void, String&>(func, str);
 	return edit;
 }
 
@@ -88,23 +88,23 @@ void DialogSongProperties::myCreateWidgets()
 
 	GuiWidget* w;
 
-	w = CreateField(myLayout, "Title", myTitle, [](std::string& s){ gMetadata->setTitle(s); });
+	w = CreateField(myLayout, "Title", myTitle, [](String& s){ gMetadata->setTitle(s); });
 	w->setTooltip("Title of the song");
 
-	w = CreateField(myLayout, "Subtitle", mySubtitle, [](std::string& s){ gMetadata->setSubtitle(s); });
+	w = CreateField(myLayout, "Subtitle", mySubtitle, [](String& s){ gMetadata->setSubtitle(s); });
 	w->setTooltip("Subtitle of the song");
 
-	w = CreateField(myLayout, "Artist", myArtist, [](std::string& s){ gMetadata->setArtist(s); });
+	w = CreateField(myLayout, "Artist", myArtist, [](String& s){ gMetadata->setArtist(s); });
 	w->setTooltip("Artist of the song");
 
-	w = CreateField(myLayout, "Credit",   myCredit,   [](std::string& s){ gMetadata->setCredit(s); });
+	w = CreateField(myLayout, "Credit",   myCredit,   [](String& s){ gMetadata->setCredit(s); });
 	w->setTooltip("Author of the simfile");
 
 	myLayout.row().col(418);
 	myLayout.add<WgSeperator>();
 	myLayout.row().col(72).col(314).col(24);
 
-	w = CreateField(myLayout, "Music", myMusic, [](std::string& s){ gMetadata->setMusicPath(s); });
+	w = CreateField(myLayout, "Music", myMusic, [](String& s){ gMetadata->setMusicPath(s); });
 	w->setTooltip("Path of the music file");
 
 	auto findMusic = myLayout.add<WgButton>();
@@ -112,7 +112,7 @@ void DialogSongProperties::myCreateWidgets()
 	findMusic->text.set("{g:search}");
 	findMusic->setTooltip("Search the stepfile directory for audio files");
 
-	w = CreateField(myLayout, "BG", myBackground, [](std::string& s){ gMetadata->setBackgroundPath(s); });
+	w = CreateField(myLayout, "BG", myBackground, [](String& s){ gMetadata->setBackgroundPath(s); });
 	w->setTooltip("Path of the background image\nRecommended size: 640x480 (DDR/ITG) or larger");
 
 	auto findBG = myLayout.add<WgButton>();
@@ -120,7 +120,7 @@ void DialogSongProperties::myCreateWidgets()
 	findBG->text.set("{g:search}");
 	findBG->setTooltip("Search the stepfile directory for background images");
 
-	w = CreateField(myLayout, "Banner", myBanner, [](std::string& s){ gMetadata->setBannerPath(s); });
+	w = CreateField(myLayout, "Banner", myBanner, [](String& s){ gMetadata->setBannerPath(s); });
 	w->setTooltip("Path of the banner image\nRecommended size: 256x80 / 512x160 (DDR), 418x164 (ITG)");
 
 	auto findBanner = myLayout.add<WgButton>();
@@ -130,7 +130,7 @@ void DialogSongProperties::myCreateWidgets()
 
 	//myLayout.row().col(72).col(342);
 
-	w = CreateField(myLayout, "CD Title", myCdTitle, [](std::string& s){ gMetadata->setCdTitlePath(s); });
+	w = CreateField(myLayout, "CD Title", myCdTitle, [](String& s){ gMetadata->setCdTitlePath(s); });
 	w->setTooltip("Path of the CD title image (logo of the simfile author)\nRecommended size: around 64x48 (DDR/ITG)");
 
 	auto findCDTitle = myLayout.add<WgButton>();
@@ -268,14 +268,14 @@ void DialogSongProperties::myUpdateBanner()
 	if(gSimfile->isOpen())
 	{
 		auto meta = gSimfile->get();
-		std::string filename = meta->banner;
-		if(filename.length())
+		String filename = meta->banner;
+		if(filename.len())
 		{
-			std::string path = gSimfile->getDir() + filename;
-			myBannerWidget->tex = Texture(path.c_str());
+			String path = gSimfile->getDir() + filename;
+			myBannerWidget->tex = Texture(path.str());
 			if(myBannerWidget->tex.handle() == 0)
 			{
-				HudWarning("Could not open \"%s\".", filename.c_str());
+				HudWarning("Could not open \"%s\".", filename.str());
 			}
 		}
 	}
@@ -317,7 +317,7 @@ void DialogSongProperties::onPlayPreview()
 
 void DialogSongProperties::onFindMusic()
 {
-	std::string path = gMetadata->findMusicFile();
+	String path = gMetadata->findMusicFile();
 	if(path.empty())
 	{
 		HudNote("Could not find any audio files...");
@@ -330,7 +330,7 @@ void DialogSongProperties::onFindMusic()
 
 void DialogSongProperties::onFindBanner()
 {
-	std::string path = gMetadata->findBannerFile();
+	String path = gMetadata->findBannerFile();
 	if(path.empty())
 	{
 		HudNote("Could not find any banner art...");
@@ -343,7 +343,7 @@ void DialogSongProperties::onFindBanner()
 
 void DialogSongProperties::onFindBG()
 {
-	std::string path = gMetadata->findBackgroundFile();
+	String path = gMetadata->findBackgroundFile();
 	if(path.empty())
 	{
 		HudNote("Could not find any background art...");
@@ -356,7 +356,7 @@ void DialogSongProperties::onFindBG()
 
 void DialogSongProperties::onFindCdTitle()
 {
-	std::string path = gMetadata->findCdTitleFile();
+	String path = gMetadata->findCdTitleFile();
 	if (path.empty())
 	{
 		HudNote("Could not find any CD Title art...");

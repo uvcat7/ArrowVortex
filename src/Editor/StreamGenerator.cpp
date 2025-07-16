@@ -4,6 +4,7 @@
 #include <System/System.h>
 #include <Editor/Editor.h>
 
+#include <Core/String.h>
 #include <Core/Utils.h>
 
 #include <Managers/MetadataMan.h>

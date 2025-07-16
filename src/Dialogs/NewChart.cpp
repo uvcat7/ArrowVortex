@@ -1,5 +1,6 @@
 #include <Dialogs/NewChart.h>
 
+#include <Core/String.h>
 #include <Core/Draw.h>
 #include <Core/WidgetsLayout.h>
 

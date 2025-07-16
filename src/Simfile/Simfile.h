@@ -24,10 +24,10 @@ enum SimFormat
 /// Hold data for a foreground/background change.
 struct BgChange
 {
-	std::string effect;
-	std::string file, file2;
-	std::string color, color2;
-	std::string transition;
+	String effect;
+	String file, file2;
+	String color, color2;
+	String transition;
 	double startBeat;
 	double rate;
 };
@@ -43,21 +43,21 @@ struct Simfile : NonCopyable
 	Vector<Chart*> charts;
 	Tempo* tempo;
 
-	std::string dir;
-	std::string file;
+	String dir;
+	String file;
 	SimFormat format;
 
-	std::string title, titleTr;
-	std::string subtitle, subtitleTr;
-	std::string artist, artistTr;
-	std::string genre;
-	std::string credit;
+	String title, titleTr;
+	String subtitle, subtitleTr;
+	String artist, artistTr;
+	String genre;
+	String credit;
 
-	std::string music;
-	std::string banner;
-	std::string background;
-	std::string cdTitle;
-	std::string lyricsPath;
+	String music;
+	String banner;
+	String background;
+	String cdTitle;
+	String lyricsPath;
 
 	Vector<BgChange> fgChanges;
 	Vector<BgChange> bgChanges[2];

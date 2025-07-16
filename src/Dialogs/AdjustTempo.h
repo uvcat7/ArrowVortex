@@ -17,7 +17,7 @@ public:
 	void onAction(int id);
 
 private:
-	WgSpinner* myCreateWidgetRow(const std::string& label, int y, double& val, int action);
+	WgSpinner* myCreateWidgetRow(StringRef label, int y, double& val, int action);
 	void myCreateWidgets();
 
 	double myBPM, myStop, myOffset, myBeatsToInsert;

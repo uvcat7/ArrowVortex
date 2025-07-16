@@ -139,7 +139,7 @@ void SegmentGroup::decode(ReadStream& in)
 	}
 }
 
-static std::string GetSegmentDescription(uint32_t num, const char* singular, const char* plural)
+static String GetSegmentDescription(uint32_t num, const char* singular, const char* plural)
 {
 	switch(num)
 	{
@@ -149,7 +149,7 @@ static std::string GetSegmentDescription(uint32_t num, const char* singular, con
 	return Str::fmt("%1 %2").arg(num).arg(plural);
 }
 
-std::string SegmentGroup::description() const
+String SegmentGroup::description() const
 {
 	int numTypes = 0, numSegments = 0, lastType = 0;
 	ForEachType(type)
@@ -169,7 +169,7 @@ std::string SegmentGroup::description() const
 	return GetSegmentDescription(numSegments, "segment", "segments");
 }
 
-std::string SegmentGroup::descriptionValues() const
+String SegmentGroup::descriptionValues() const
 {
 	int numTypes = 0, numSegments = 0, lastType = 0;
 	ForEachType(type)
@@ -182,7 +182,7 @@ std::string SegmentGroup::descriptionValues() const
 
 	if (numTypes <= 1)
 	{
-		Vector<std::string> info;
+		Vector<String> info;
 
 		auto& list = myLists[lastType];
 		auto meta = Segment::meta[lastType];

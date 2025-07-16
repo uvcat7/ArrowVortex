@@ -17,7 +17,7 @@ private:
 	void myCreateChart();
 
 	WgDroplist* myStyleList;
-	std::string myStepArtist;
+	String myStepArtist;
 	int myRating, myDifficulty, myStyle;
 };
 

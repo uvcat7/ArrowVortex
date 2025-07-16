@@ -136,9 +136,9 @@ WaveformImpl()
 
 static void SaveColor(XmrNode* n, const char* name, colorf col)
 {
-	std::string r = Str::val(col.r, 0, 2), g = Str::val(col.g, 0, 2);
-	std::string b = Str::val(col.b, 0, 2), a = Str::val(col.a, 0, 2);
-	const char* str[] = {r.c_str(), g.c_str(), b.c_str(), a.c_str()};
+	String r = Str::val(col.r, 0, 2), g = Str::val(col.g, 0, 2);
+	String b = Str::val(col.b, 0, 2), a = Str::val(col.a, 0, 2);
+	const char* str[] = {r.str(), g.str(), b.str(), a.str()};
 	n->addAttrib(name, str, 4);
 }
 
@@ -154,13 +154,13 @@ static const char* ToString(Luminance lum)
 	return "uniform";
 }
 
-static WaveShape ToWaveShape(const std::string& str)
+static WaveShape ToWaveShape(StringRef str)
 {
 	if(str == "signed") return WS_SIGNED;
 	return WS_RECTIFIED;
 }
 
-static Luminance ToLuminance(const std::string& str)
+static Luminance ToLuminance(StringRef str)
 {
 	if(str == "amplitude") return LL_AMPLITUDE;
 	return LL_UNIFORM;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Core.h>
+#include <Core/String.h>
 
 namespace Vortex {
 
@@ -155,14 +155,14 @@ public:
 
 	/// Binds a read-only String.
 	void bind(const char* str);
-	void bind(const std::string* str);
+	void bind(const String* str);
 
 	/// Binds a read-write String.
-	void bind(std::string* str);
+	void bind(String* str);
 
 	/// Assigns a string to the current binding, if the binding is writable.
 	void set(const char* str);
-	void set(const std::string& str);
+	void set(StringRef str);
 
 	/// Returns the string contents of the current binding.
 	const char* get() const;
