@@ -7,6 +7,7 @@
 #include <Core/Draw.h>
 #include <Core/Shader.h>
 #include <Core/StringUtils.h>
+#include <Core/WideString.h>
 
 #include <System/System.h>
 #include <System/File.h>
@@ -326,7 +327,7 @@ void loadSettings(XmrDoc& settings)
 	    if (path == nullptr)
 	        return;
 
-        if (std::ifstream testPath(path); testPath.good())
+        if (std::ifstream testPath(Widen(path).str()); testPath.good())
             myFontPath = path;
 	}
 }
@@ -407,7 +408,7 @@ static std::string findSimfile(const Path& path, bool ignoreAudio)
 	const char** extEnd = extList + (ignoreAudio ? 4 : 7);
 
 	// Check if the path is a directory.
-	if(path.attributes() & File::ATR_DIR)
+	if(fs::is_directory(path.str))
 	{
 		// If so, look for loadable files in the given directory.
 		auto curPriority = extEnd;

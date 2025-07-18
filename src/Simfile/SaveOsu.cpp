@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <fstream>
 
 #include <Core/WideString.h>
 #include <Core/Utils.h>
@@ -32,27 +33,27 @@ static int ToMilliseconds(double time)
 	return (int)(time * 1000.0 + 0.5);
 }
 
-static void WriteBlock(FileWriter& out, const char* name)
+static void WriteBlock(std::ofstream& out, const char* name)
 {
-	out.printf("\n[%s]\n", name);
+	out << "\n[" << name << "]\n";
 }
 
-static void Write(FileWriter& out, const char* str)
+static void Write(std::ofstream& out, const char* str)
 {
-	out.printf("%s\n", str);
+	out << str << '\n';
 }
 
-static void Write(FileWriter& out, const char* name, const char* val)
+static void Write(std::ofstream& out, const char* name, const char* val)
 {
-	out.printf("%s:%s\n", name, val);
+	out << name << ':' << val << '\n';
 }
 
-static void Write(FileWriter& out, const char* name, const std::string& val)
+static void Write(std::ofstream& out, const char* name, const std::string& val)
 {
 	Write(out, name, val.c_str());
 }
 
-static void Write(FileWriter& out, const char* name, int val)
+static void Write(std::ofstream& out, const char* name, int val)
 {
 	Write(out, name, Str::val(val));
 }
@@ -118,7 +119,7 @@ static void ConvertStop(Vector<ExportTP>& tps,
 	tps.push_back({cur->endTime, cur->spr});
 }
 
-static void WriteTimingPoints(FileWriter& out, const Chart* chart, const TimingData& timing, const Tempo* tempo)
+static void WriteTimingPoints(std::ofstream& out, const Chart* chart, const TimingData& timing, const Tempo* tempo)
 {
 	Vector<ExportTP> tps;
 	tps.reserve(32);
@@ -126,67 +127,63 @@ static void WriteTimingPoints(FileWriter& out, const Chart* chart, const TimingD
 	// Create a list of timing point from the tempo.
 	auto it = timing.events.begin();
 	auto end = timing.events.end();
-	for(; it != end; ++it)
+	for (; it != end; ++it)
 	{
-		if(it->endTime > it->time)
+		if (it->endTime > it->time)
 		{
 			auto next = it + 1;
-			if(next == end) next = nullptr;
+			if (next == end) next = nullptr;
 			ConvertStop(tps, it, next, chart);
 		}
 		else
 		{
-			tps.push_back({it->time, it->spr});
+			tps.push_back({ it->time, it->spr });
 		}
 	}
 
 	// Output the timing points.
-	for(auto& tp : tps)
+	for (auto& tp : tps)
 	{
 		double msPerBeat = tp.spr * 48.0 * 1000.0;
 		double time = tp.time;
-		if(time < 0)
+		if (time < 0)
 		{
 			double secPerMeasure = (msPerBeat / 1000.0) * 4.0;
 			time = secPerMeasure - fmod(-time, secPerMeasure);
 		}
-		out.printf("%i,%f,4,1,0,100,1,0\n", ToMilliseconds(time), msPerBeat);
+		out << ToMilliseconds(time) << ',' << msPerBeat << ",4,1,0,100,1,0\n";
 	}
 }
 
 // ===================================================================================
 // Notes exporting.
 
-static void WriteNotes(FileWriter& out, const Chart* chart, const TimingData& timing)
+static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData& timing)
 {
 	int numCols = chart->style->numCols;
 	int colWidth = 512 / numCols;
 
 	// Export the notes as hit objects.
 	TempoTimeTracker tracker(timing);
-	for(auto& note : chart->notes)
+	for (auto& note : chart->notes)
 	{
-		if(note.type != NOTE_MINE)
+		if (note.type != NOTE_MINE)
 		{
 			// Conver the note's [column, row] to [x, time].
 			int x = note.col * colWidth + colWidth / 2;
 			double time = tracker.advance(note.row);
 			double endtime = time;
-			if(note.endrow > note.row)
+			if (note.endrow > note.row)
 			{
 				endtime = timing.rowToTime(note.endrow);
 			}
 
 			// Write the output hitobject.
-			out.printf("%i,192,%i", x, ToMilliseconds(time));
-			if(endtime > time)
-			{
-				out.printf(",128,0,%i:0:0:0:0:\n", ToMilliseconds(endtime));
-			}
+			out << x << ",192," << ToMilliseconds(time);
+			if (endtime > time)
+				out << ",128,0," << ToMilliseconds(endtime) << ":0:0:0:0:\n";
 			else
-			{
-				out.printf(",1,0,0:0:0:0:\n");
-			}
+				out << ",1,0,0:0:0:0:\n";
 		}
 	}
 }
@@ -197,8 +194,8 @@ static void WriteNotes(FileWriter& out, const Chart* chart, const TimingData& ti
 static void SaveChart(const std::string& path, const Simfile* sim, const Chart* chart)
 {
 	// Open the output file.
-	FileWriter out;
-	if(!out.open(path)) return;
+	std::ofstream out(path);
+	if (out.fail()) return;
 
 	// Write the version number;
 	Write(out, "osu file format v14");
@@ -253,10 +250,8 @@ static void SaveChart(const std::string& path, const Simfile* sim, const Chart* 
 	WriteBlock(out, "Events");
 
 	Write(out, "//Background and Video events");
-	if(sim->background.length())
-	{
-		out.printf("0,0,\"%s\",0,0\n", sim->background.c_str());
-	}
+	if (sim->background.length())
+		out << "0,0,\"" << sim->background.length() << "\",0,0\n";
 	Write(out, "//Break Periods");
 	Write(out, "//Storyboard Layer 0 (Background)");
 	Write(out, "//Storyboard Layer 1 (Fail");
@@ -274,11 +269,8 @@ static void SaveChart(const std::string& path, const Simfile* sim, const Chart* 
 	WriteTimingPoints(out, chart, timing, tempo);
 
 	// Write notes.
-	if(chart)
-	{
-		WriteBlock(out, "HitObjects");
-		WriteNotes(out, chart, timing);
-	}
+	WriteBlock(out, "HitObjects");
+	WriteNotes(out, chart, timing);
 
 	out.close();
 }
