@@ -208,10 +208,10 @@ static LRESULT CALLBACK CBTProc(INT nCode, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-static int ShowMessageBox(HWND hWnd, LPSTR lpText, LPSTR lpCaption, UINT uType)
+static int ShowMessageBox(HWND hWnd, LPCSTR lpcText, LPCSTR lpcCaption, UINT uType)
 {
 	sHook = SetWindowsHookEx(WH_CBT, &CBTProc, 0, GetCurrentThreadId());
-	return MessageBox(hWnd, lpText, lpCaption, uType);
+	return MessageBox(hWnd, lpcText, lpcCaption, uType);
 }
 
 bool assrt(const char* exp, const char* file, int line, const char* func, const char* fmt, ...)
