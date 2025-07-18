@@ -94,10 +94,13 @@ MusicImpl()
 
 	bool success;
 
-	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, std::string(), std::string());
+	// used to ignore possible title/artist strings
+	std::string discardedField;
+
+	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, discardedField, discardedField);
 	if(!success) HudError("%s", "Failed to load beat tick.\n");
 
-	success = myNoteTick.sound.load("assets/sound note tick.wav", false, std::string(), std::string());
+	success = myNoteTick.sound.load("assets/sound note tick.wav", false, discardedField, discardedField);
 	if(!success) HudError("%s", "Failed to load note tick.\n");
 }
 
