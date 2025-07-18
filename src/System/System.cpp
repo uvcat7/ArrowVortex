@@ -220,7 +220,7 @@ namespace {
 
 struct SystemImpl : public System {
 
-wchar_t* myClassName;
+const wchar_t* myClassName;
 HINSTANCE myInstance;
 std::chrono::steady_clock::time_point myApplicationStartTime;
 Cursor::Icon myCursor;
