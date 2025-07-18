@@ -791,7 +791,7 @@ static void aubio_specdesc_do(aubio_specdesc_t *o, cvec_t * fftgrain, fvec_t * o
 	o->funcpointer(o, fftgrain, onset);
 }
 
-static aubio_specdesc_t * new_aubio_specdesc(char_t * onset_mode, uint_t size)
+static aubio_specdesc_t * new_aubio_specdesc(const char_t * onset_mode, uint_t size)
 {
 	aubio_specdesc_t * o = AUBIO_NEW(aubio_specdesc_t);
 	uint_t rsize = size / 2 + 1;
@@ -954,7 +954,7 @@ static uint_t aubio_onset_set_silence(aubio_onset_t * o, smpl_t silence) {
 }
 
 /* Allocate memory for an onset detection */
-static aubio_onset_t * new_aubio_onset(char_t * onset_mode,
+static aubio_onset_t * new_aubio_onset(const char_t * onset_mode,
 	uint_t buf_size, uint_t hop_size, uint_t samplerate)
 {
 	aubio_onset_t * o = AUBIO_NEW(aubio_onset_t);
@@ -1043,7 +1043,7 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 {
 	static const int windowlen = 256;
 	static const int bufsize = windowlen * 4;
-	static char* method = "complex";
+	static const char* method = "complex";
 
 	if(numThreads > 1)
 	{
