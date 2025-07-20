@@ -4,41 +4,12 @@
 #include <Core/WideString.h>
 #include <Core/StringUtils.h>
 
-#include <vector>
-#include <array>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <shellapi.h>
-#undef DeleteFile
-#undef MoveFile
-#undef ERROR
-
-#include <errno.h>
-#include <stdio.h>
+#include <string>
+#include <fstream>
+#include <filesystem>
 
 namespace Vortex {
 namespace {
-
-// ================================================================================================
-// Utility functions.
-
-static FILE* OpenFile(const std::string& path, bool write)
-{
-	FILE* file;
-	WideString wpath = Widen(path);
-	if(!(file = _wfopen(wpath.str(), write ? L"wb" : L"rb")))
-	{
-		const char* reason = "file not found";
-		if(errno == EACCES) reason = "permission denied, file might be read only";
-		else if(write) reason = "unable to create file";
-		Debug::blockBegin(Debug::ERROR, "could not open file");
-		Debug::log("file: %s\n", path.c_str());
-		Debug::log("reason: %s\n", reason);
-		Debug::blockEnd();
-	}
-	return (FILE*)file;
-}
 
 // ================================================================================================
 // Path iteration functions.
@@ -287,19 +258,6 @@ void Path::dropFile()
 	Str::erase(str, static_cast<int>(file - &str[0]));
 }
 
-int Path::attributes() const
-{
-	DWORD out = 0, a = GetFileAttributesW(Widen(str).str());
-	if(a != INVALID_FILE_ATTRIBUTES)
-	{
-		out |= File::ATR_EXISTS;
-		if(a & FILE_ATTRIBUTE_DIRECTORY) out |= File::ATR_DIR;
-		if(a & FILE_ATTRIBUTE_HIDDEN)    out |= File::ATR_HIDDEN;
-		if(a & FILE_ATTRIBUTE_READONLY)  out |= File::ATR_READ_ONLY;
-	}
-	return out;
-}
-
 bool Path::hasExt(const char* ext) const
 {
 	auto file = GetFileStart(str);
@@ -363,231 +321,70 @@ Path Path::operator + (const std::string& items) const
 }
 
 // ================================================================================================
-// File reader.
-
-FileReader::FileReader() : file(nullptr)
-{
-}
-
-FileReader::~FileReader()
-{
-	close();
-}
-
-bool FileReader::open(const std::string& path)
-{
-	close();
-	file = OpenFile(path, false);
-	return (file != nullptr);
-}
-
-void FileReader::close()
-{
-	if (file)
-	{
-		fclose(static_cast<FILE*>(file));
-		file = nullptr;
-	}
-}
-
-size_t FileReader::size() const
-{
-	if (!file) return 0;
-	long pos = ftell(static_cast<FILE*>(file));
-	fseek(static_cast<FILE*>(file), 0, SEEK_END);
-	size_t size = ftell(static_cast<FILE*>(file));
-	fseek(static_cast<FILE*>(file), pos, SEEK_SET);
-	return size;
-}
-
-long FileReader::tell() const
-{
-	return file ? ftell(static_cast<FILE*>(file)) : -1;
-}
-
-size_t FileReader::read(void* ptr, size_t size, size_t count)
-{
-	return file ? fread(ptr, size, count, static_cast<FILE*>(file)) : 0;
-}
-
-int FileReader::seek(long offset, int origin)
-{
-	return file ? fseek(static_cast<FILE*>(file), offset, origin) : -1;
-}
-
-void FileReader::skip(size_t n)
-{
-	if (file) fseek(static_cast<FILE*>(file), static_cast<long>(n), SEEK_CUR);
-}
-
-bool FileReader::eof()
-{
-	return file ? feof(static_cast<FILE*>(file)) != 0 : true;
-}
-
-// ================================================================================================
-// File writer.
-
-FileWriter::FileWriter() : file(nullptr)
-{
-}
-
-FileWriter::~FileWriter()
-{
-	close();
-}
-
-bool FileWriter::open(const std::string& path)
-{
-	close();
-	file = OpenFile(path, true);
-	return (file != nullptr);
-}
-
-void FileWriter::close()
-{
-	if(file)
-	{
-		fclose(static_cast<FILE*>(file));
-	}
-	file = nullptr;
-}
-
-size_t FileWriter::write(const void* ptr, size_t size, size_t count)
-{
-	return fwrite(ptr, size, count, (FILE*)file);
-}
-
-void FileWriter::printf(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	vfprintf(static_cast<FILE*>(file), fmt, args);
-	va_end(args);
-}
-
-// ================================================================================================
 // File utilities.
 
 namespace File {
 
-static bool isNewline(char c)
-{
-	return (c == '\n' || c == '\r');
-}
-
-long getSize(const std::string& path)
-{
-	FILE* fp = OpenFile(path, false);
-	if(!fp) return 0;
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	fclose(fp);
-	return size;
-}
-
 std::string getText(const std::string& path, bool* success)
 {
-	FILE* fp = OpenFile(path, false);
-	if(!fp) { if(success) *success = false;  return std::string(); }
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	std::string out(size, 0);
-	fseek(fp, 0, SEEK_SET);
-	fread(&out[0], 1, size, fp);
-	fclose(fp);
-	if(success) *success = true;
-	return out;
+	fs::path wpath(Widen(path).str());
+	std::ifstream in(wpath);
+	if (in.fail()) 
+	{
+		HudError("Failed to open file: %s", strerror(errno));
+		if (success != nullptr)
+			*success = false;
+		return {};
+	}
+
+	std::string str(std::istreambuf_iterator<char>(in), {});
+	if (success != nullptr)
+		*success = true;
+	return str;
 }
 
 Vector<std::string> getLines(const std::string& path, bool* success)
 {
-	constexpr size_t kBufferSize = 256;
-	constexpr size_t kNumberOne = 1;
-
-	Vector<std::string> out;
-	FILE* fp = OpenFile(path, false);
-	if(!fp) { if(success) *success = false; return out; }
-	out.append();
-	std::array<char, kBufferSize> buffer;
-	for (size_t bytesRead; bytesRead = fread(buffer.data(), kNumberOne, buffer.size(), fp);)
+	std::ifstream in(Widen(path).str());
+	if (in.fail())
 	{
-		if(bytesRead > 0 && isNewline(buffer[0]) && out.back().length())
-		{
-			out.append();
-		}
-		for (size_t pos = 0, end = 0; pos < bytesRead;)
-		{
-			while(pos < bytesRead && isNewline(buffer[pos]))
-			{
-				++pos, ++end;
-			}
-			while(end < bytesRead && !isNewline(buffer[end]))
-			{
-				++end;
-			}
-			if(end > pos)
-			{
-				Str::append(out.back(), buffer.data() + pos, end - pos);
-			}
-			if(end < bytesRead && isNewline(buffer[end]))
-			{
-				out.append();
-			}
-			pos = end;
-		}
+		HudError("Failed to open file: %s", strerror(errno));
+		if (success != nullptr)
+			*success = false;
+		return {};
 	}
-	if(out.back().empty())
-	{
-		out.pop_back();
-	}
-	fclose(fp);
-	if(success) *success = true;
-	return out;
-}
 
-static void LogMoveFileError(const std::string& path, const std::string& newPath)
-{
-	int code = GetLastError();
-	Debug::blockBegin(Debug::ERROR, "could not move file");
-	Debug::log("old path: %s\n", path.c_str());
-	Debug::log("new path: %s\n", newPath.c_str());
-	Debug::log("windows error code: %i\n", code);
-	Debug::blockEnd();
+	Vector<std::string> v;
+	std::string line;
+
+	while (std::getline(in, line))
+		v.push_back(line);
+
+	if (success != nullptr)
+		*success = true;
+	return v;
 }
 
 bool moveFile(const std::string& path, const std::string& newPath, bool replace)
 {
-	WideString wpath = Widen(path), wnew = Widen(newPath);
-	DWORD flags = replace ? MOVEFILE_REPLACE_EXISTING : 0;
-	BOOL result = MoveFileExW(wpath.str(), wnew.str(), flags);
-	if(result == FALSE) LogMoveFileError(path, newPath);
-	return result != FALSE;
-}
-
-bool createFolder(const std::string& path)
-{
-	WideString wpath = Widen(path);
-	return (CreateDirectoryW(wpath.str(), nullptr) != 0);
-}
-
-bool deleteFile(const std::string& path)
-{
-	WideString wpath = Widen(path);
-	return (DeleteFileW(wpath.str()) != 0);
-}
-
-bool deleteFolder(const std::string& path)
-{
-	WideString wpath = Widen(path);
-	wpath.push_back(0);
-	SHFILEOPSTRUCTW file_op =
+	fs::path widePath(Widen(path).str());
+	fs::path wideNewPath(Widen(newPath).str());
+	try
 	{
-		NULL, FO_DELETE, wpath.str(), L"\0\0",
-		FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
-		false, 0, L""
-	};
-	return (SHFileOperationW(&file_op) == 0);
+		if (replace && fs::exists(wideNewPath))
+			fs::remove(wideNewPath);
+		fs::rename(widePath, wideNewPath);
+		return true;
+	}
+	catch (const fs::filesystem_error& e)
+	{
+		Debug::blockBegin(Debug::ERROR, "could not move file");
+		Debug::log("path1: %s\n", e.path1());
+		Debug::log("path2: %s\n", e.path2());
+		Debug::log("windows error code: %s\n", e.what());
+		Debug::blockEnd();
+		return false;
+	}
 }
 
 static bool HasValidExt(const std::string& filename, const Vector<std::string>& filters)
@@ -603,54 +400,40 @@ static bool HasValidExt(const std::string& filename, const Vector<std::string>& 
 	return filters.empty();
 }
 
-static void AddFilesInDir(Vector<Path>& out, const WideString& path, bool recursive, bool findDirs, const Vector<std::string>& filters)
+template<typename DirectoryIter>
+static void AddFilesInDir(Vector<Path>& out, const DirectoryIter& it, bool findDirs, const Vector<std::string>& filters)
 {
-	WIN32_FIND_DATAW ffd;
-	WideString searchpath = path;
-	searchpath.append(L"\\*");
-	HANDLE hFind = FindFirstFileW(searchpath.str(), &ffd);
-	if(hFind != INVALID_HANDLE_VALUE)
+	for (const auto& entry : it)
 	{
-		do {
-			if(wcscmp(ffd.cFileName, L".") != 0 && wcscmp(ffd.cFileName, L"..") != 0)
-			{
-				bool isSubDirectory = (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-				if(isSubDirectory)
-				{
-					WideString subpath(path);
-					subpath.append(L"\\");
-					subpath.append(ffd.cFileName);
-					if(recursive)
-					{
-						AddFilesInDir(out, subpath, true, findDirs, filters);
-					}
-					if(findDirs)
-					{
-						out.push_back({Narrow(subpath), std::string(), std::string()});
-					}
-				}
-				else
-				{
-					if(!findDirs)
-					{
-						std::string filename = Narrow(ffd.cFileName);
-						if(HasValidExt(filename, filters))
-						{
-							out.push_back({Narrow(path), filename});
-						}
-					}
-				}
-			}
-		} while(FindNextFileW(hFind, &ffd) != 0);
+		Path aw_path(Narrow(entry.path().c_str()));
+		if (fs::is_regular_file(entry) && !findDirs)
+		{
+			if (HasValidExt(aw_path, filters))
+				out.push_back(aw_path);
+		}
+
+		if (fs::is_directory(entry) && findDirs)
+			out.push_back(aw_path);
 	}
-	FindClose(hFind);
+}
+
+static void AddFilesInDir(Vector<Path>& out, const WideString& wpath, bool recursive, bool findDirs, const Vector<std::string>& filters)
+{
+	fs::path path(wpath.str());
+	if (fs::is_regular_file(path))
+		return;
+
+	if (recursive)
+		AddFilesInDir(out, fs::recursive_directory_iterator(path), findDirs, filters);
+	else
+		AddFilesInDir(out, fs::directory_iterator(path), findDirs, filters);
 }
 
 Vector<Path> findFiles(const std::string& path, bool recursive, const char* filters)
 {
 	Vector<Path> out;
 
-	if(path.empty()) return out;
+	if (path.empty()) return out;
 
 	// Extract filters from the filter String.
 	Vector<std::string> filterlist;
@@ -665,20 +448,14 @@ Vector<Path> findFiles(const std::string& path, bool recursive, const char* filt
 		}
 	}
 
+	fs::path wpath(Widen(path).str());
+
 	// If the given path is not a directory but a file, return it as-is.
-	WideString wpath = Widen(path);
-	DWORD attr = GetFileAttributesW(wpath.str());
-	if(attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) == 0)
-	{
-		if(HasValidExt(path.c_str(), filterlist))
-		{
-			out.push_back(path);
-		}
-	}
-	else // Search for files.
-	{
-		AddFilesInDir(out, wpath, recursive, false, filterlist);
-	}
+	if (fs::is_regular_file(wpath) && HasValidExt(path, filterlist))
+		out.push_back(path);
+
+	if (fs::is_directory(wpath))
+		AddFilesInDir(out, Widen(path), recursive, false, filterlist);
 
 	return out;
 }
@@ -686,7 +463,7 @@ Vector<Path> findFiles(const std::string& path, bool recursive, const char* filt
 Vector<Path> findDirs(const std::string& path, bool recursive)
 {
 	Vector<Path> out;
-	AddFilesInDir(out, Widen(path), recursive, true, Vector<std::string>());
+	AddFilesInDir(out, Widen(path), recursive, true, {});
 	return out;
 }
 

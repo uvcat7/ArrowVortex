@@ -7,6 +7,7 @@
 #include <Core/Core.h>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
+#include <Core/WideString.h>
 
 #include <stdint.h>
 #include <limits.h>
@@ -248,7 +249,7 @@ bool Sound::load(const char* path, bool threaded, std::string& title, std::strin
 	SoundSource* source = nullptr;
 
 	// Try to open the file.
-    if (std::ifstream file(path, std::ios::in | std::ios::binary); file.good())
+    if (std::ifstream file(Widen(path).str(), std::ios::in | std::ios::binary); file.good())
 	{
 		// Call the load function associated with the extension.
 		std::string ext = Path(path).ext();
