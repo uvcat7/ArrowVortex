@@ -25,7 +25,7 @@ enum DisplayType {
 
 struct DialogLabelBreakdown::LabelButton : public GuiWidget {
 
-LabelButton(GuiContext* gui, TileRect2* bar, int row, String time, String text)
+LabelButton(GuiContext* gui, TileRect2* bar, int row, std::string time, std::string text)
 	: GuiWidget(gui)
 	, myBar(bar)
 	, myRow(row)
@@ -78,13 +78,13 @@ void onDraw() override
 	// Draw the button text.
 	recti left = { rect_.x, rect_.y, 74, 20 };
 
-	color32 color = RGBAtoColor32(139, 148, 148, 255);
+	uint32_t color = RGBAtoColor32(139, 148, 148, 255);
 	myBar->draw(left, 0, color);
 
-	Text::arrange(Text::MR, myDisplayTime.str());
+	Text::arrange(Text::MR, myDisplayTime.c_str());
 	Text::draw(vec2i{ left.x + left.w - 6, left.y + 10 });
 
-	Text::arrange(Text::ML, textStyle, myDisplayText.str());
+	Text::arrange(Text::ML, textStyle, myDisplayText.c_str());
 	Text::draw(vec2i{ left.x + left.w + 6, left.y + 10 });
 
 	// Interaction effects.
@@ -99,8 +99,8 @@ void onDraw() override
 }
 
 int myRow;
-String myDisplayTime;
-String myDisplayText;
+std::string myDisplayTime;
+std::string myDisplayText;
 TileRect2* myBar;
 };
 
@@ -209,8 +209,8 @@ void updateButtons()
 	auto seg = list.begin(), segEnd = list.end();
 	while (seg != segEnd)
 	{
-		String time = displayTime(seg->row);
-		String text = segs->getRow<Label>(seg->row).str;
+		std::string time = displayTime(seg->row);
+		std::string text = segs->getRow<Label>(seg->row).str;
 		myButtons.push_back(new LabelButton(getGui(), &myButtonTex, seg->row, time, text));
 		++seg;
 	}
@@ -222,7 +222,7 @@ void setDisplayType(int type)
 	updateButtons();
 }
 
-String displayTime(int row) const
+std::string displayTime(int row) const
 {
 	if (myDisplayType == BEAT) {
 		return Str::val((double)row / ROWS_PER_BEAT, 3, 3);
@@ -238,7 +238,7 @@ String displayTime(int row) const
 
 void copyLabels()
 {
-	String out;
+	std::string out;
 	for (auto button : myButtons)
 	{
 		out += button->myDisplayTime;
@@ -247,7 +247,7 @@ void copyLabels()
 		out += "\n";
 	}
 	if(out.empty()) {
-		HudInfo("%s", "There is no labels to copy...");
+		HudInfo("%s", "There are no labels to copy...");
 	}
 	else {
 		gSystem->setClipboardText(out);
@@ -360,7 +360,7 @@ void DialogLabelBreakdown::onChange()
 	if (gSimfile->isClosed()) return;
 
 	int row = gView->getCursorRow();
-	if (strpbrk(myLabelText.str(), ";,=") != nullptr) {
+	if (strpbrk(myLabelText.c_str(), ";,=") != nullptr) {
 		HudWarning("A Label cannot contain commas, semicolons, or equal signs; they will be replaced with underscores.");
 		Str::replace(myLabelText, ",", "_");
 		Str::replace(myLabelText, ";", "_");

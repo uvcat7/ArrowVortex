@@ -26,7 +26,7 @@ private:
 	struct LabelButton;
 	struct LabelList;
 	LabelList* myList;
-	String myLabelText;
+	std::string myLabelText;
 	int myDisplayType;
 	WgCycleButton* myDisplayTypeList;
 };
