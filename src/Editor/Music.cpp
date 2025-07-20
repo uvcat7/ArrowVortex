@@ -94,12 +94,12 @@ MusicImpl()
 
 	bool success;
 
-	std::string ignoredField;
+	std::string emptyString;
 
-	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, ignoredField, ignoredField);
+	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, emptyString, emptyString);
 	if(!success) HudError("%s", "Failed to load beat tick.\n");
 
-	success = myNoteTick.sound.load("assets/sound note tick.wav", false, ignoredField, ignoredField);
+	success = myNoteTick.sound.load("assets/sound note tick.wav", false, emptyString, emptyString);
 	if(!success) HudError("%s", "Failed to load note tick.\n");
 }
 
