@@ -160,11 +160,11 @@ static std::string Concatenate(const std::string& first, const std::string& seco
 
 	// Reconstruct the rest of the path from the items.
 	auto i = items.begin();
-	Str::append(out, i->p, static_cast<int>(i->n));
+	Str::append(out, i->p, i->n);
 	for(++i; i != items.end(); ++i)
 	{
 		Str::append(out, '\\');
-		Str::append(out, i->p, static_cast<int>(i->n));
+		Str::append(out, i->p, i->n);
 	}
 
 	// End with a slash if requested.
@@ -307,7 +307,7 @@ std::string Path::brief() const
 	std::string out = top();
 	if(out.length() > 20)
 	{
-		Str::erase(out, 3, static_cast<int>(out.length()) - 16);
+		Str::erase(out, 3, out.length() - 16);
 		Str::insert(out, 3, '~');
 	}
 	return out;
