@@ -94,12 +94,13 @@ MusicImpl()
 
 	bool success;
 
-	std::string emptyString;
+	std::string placeholderTitle;
+	std::string placeholderArtist;
 
-	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, emptyString, emptyString);
+	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, placeholderTitle, placeholderArtist);
 	if(!success) HudError("%s", "Failed to load beat tick.\n");
 
-	success = myNoteTick.sound.load("assets/sound note tick.wav", false, emptyString, emptyString);
+	success = myNoteTick.sound.load("assets/sound note tick.wav", false, placeholderTitle, placeholderArtist);
 	if(!success) HudError("%s", "Failed to load note tick.\n");
 }
 
