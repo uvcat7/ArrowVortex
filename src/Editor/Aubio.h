@@ -176,7 +176,7 @@ typedef enum
 
 /** Utility functions */
 
-fvec_t * new_aubio_window(const char_t * window_type, uint_t length);
+fvec_t * new_aubio_window(aubio_window_type window_type, uint_t length);
 
 smpl_t fvec_median(fvec_t * input);
 uint_t fvec_peakpick(fvec_t * onset, uint_t pos);

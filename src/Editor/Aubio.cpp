@@ -81,40 +81,12 @@ void lvec_zeros(lvec_t *s) {
 
 /* MISC */
 
-uint_t fvec_set_window(fvec_t *win, const char_t *window_type)
+uint_t fvec_set_window(fvec_t *win, aubio_window_type window_type)
 {
 	smpl_t * w = win->data;
 	uint_t i, size = win->length;
-	aubio_window_type wintype;
-	if(window_type == nullptr) {
-		AUBIO_ERR("window type cannot be nullptr.\n");
-		return 1;
-	}
-	else if(strcmp(window_type, "rectangle") == 0)
-		wintype = aubio_win_rectangle;
-	else if(strcmp(window_type, "hamming") == 0)
-		wintype = aubio_win_hamming;
-	else if(strcmp(window_type, "hanning") == 0)
-		wintype = aubio_win_hanning;
-	else if(strcmp(window_type, "hanningz") == 0)
-		wintype = aubio_win_hanningz;
-	else if(strcmp(window_type, "blackman") == 0)
-		wintype = aubio_win_blackman;
-	else if(strcmp(window_type, "blackman_harris") == 0)
-		wintype = aubio_win_blackman_harris;
-	else if(strcmp(window_type, "gaussian") == 0)
-		wintype = aubio_win_gaussian;
-	else if(strcmp(window_type, "welch") == 0)
-		wintype = aubio_win_welch;
-	else if(strcmp(window_type, "parzen") == 0)
-		wintype = aubio_win_parzen;
-	else if(strcmp(window_type, "default") == 0)
-		wintype = aubio_win_default;
-	else {
-		AUBIO_ERR("unknown window type `%s`.\n", window_type);
-		return 1;
-	}
-	switch(wintype) {
+
+	switch(window_type) {
 	case aubio_win_rectangle:
 		for(i = 0; i<size; i++)
 			w[i] = 0.5;
@@ -170,7 +142,7 @@ uint_t fvec_set_window(fvec_t *win, const char_t *window_type)
 	return 0;
 }
 
-fvec_t * new_aubio_window(const char_t * window_type, uint_t length)
+fvec_t * new_aubio_window(aubio_window_type window_type, uint_t length)
 {
 	fvec_t * win = new_fvec(length);
 	uint_t err;

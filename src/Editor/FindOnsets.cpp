@@ -372,7 +372,7 @@ static aubio_pvoc_t * new_aubio_pvoc(uint_t win_s, uint_t hop_s)
 	/* new input output */
 	pv->dataold = new_fvec(win_s - hop_s);
 	pv->synthold = new_fvec(win_s - hop_s);
-	pv->w = new_aubio_window("hanningz", win_s);
+	pv->w = new_aubio_window(aubio_window_type::aubio_win_hanningz, win_s);
 
 	pv->hop_s = hop_s;
 	pv->win_s = win_s;
