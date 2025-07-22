@@ -15,7 +15,7 @@
 #include <functional>
 #include <atomic>
 
-#define MarkProgress(number, text) { if(*data->terminate) {return;} data->progress = number; }
+#define MarkProgress(number, text) { if(data->terminate.stop_requested()) {return;} data->progress = number; }
 
 typedef double real;
 
@@ -44,7 +44,7 @@ struct SerializedTempo
 	float* samples;
 	int samplerate;
 	int numFrames;
-	uint8_t* terminate;
+	std::stop_token terminate;
 	std::atomic_int progress;
 	TempoResults result;
 };
@@ -575,7 +575,7 @@ TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames)
 {
 	auto& music = gMusic->getSamples();
 
-	data_.terminate = &terminationFlag_;
+	data_.terminate = getStopToken();
 	data_.progress = 0;
 	
 	data_.numFrames = numFrames;

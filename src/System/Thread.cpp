@@ -9,7 +9,6 @@ namespace Vortex {
 
 BackgroundThread::BackgroundThread()
 {
-	terminationFlag_ = 0;
 	done = false;
 }
 
@@ -31,7 +30,6 @@ void BackgroundThread::start()
 
 void BackgroundThread::terminate()
 {
-	terminationFlag_ = 1;
 	thread.request_stop();
 	waitUntilDone();
 }
@@ -42,6 +40,11 @@ void BackgroundThread::waitUntilDone()
 		return;
 	}
 	thread.join();
+}
+
+std::stop_token BackgroundThread::getStopToken()
+{
+	return thread.get_stop_token();
 }
 
 bool BackgroundThread::isDone() const

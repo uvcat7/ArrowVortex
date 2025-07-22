@@ -24,13 +24,13 @@ public:
 	/// Waits until the thread has terminated, after which the function returns.
 	void waitUntilDone();
 
+	std::stop_token getStopToken();
+
 	/// Returns true if the thread has terminated, false if the thread is still running.
 	bool isDone() const;
 
 	/// The worker function called by the thread created in "start".
 	virtual void exec() = 0;
-protected:
-	uint8_t terminationFlag_;
 private:
 	std::jthread thread;
 	bool done;
