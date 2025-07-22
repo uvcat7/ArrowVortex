@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <thread>
 
 namespace Vortex {
 
@@ -28,11 +29,11 @@ public:
 
 	/// The worker function called by the thread created in "start".
 	virtual void exec() = 0;
-
 protected:
 	uint8_t terminationFlag_;
 private:
-	void* data_;  // TODO: replace with a more descriptive variable name.
+	std::jthread thread;
+	bool done;
 };
 
 }; // namespace Vortex
