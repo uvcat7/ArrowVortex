@@ -44,7 +44,6 @@ struct SerializedTempo
 	float* samples;
 	int samplerate;
 	int numFrames;
-	int numThreads;
 	uint8_t* terminate;
 	std::atomic_int progress;
 	TempoResults result;
@@ -52,7 +51,7 @@ struct SerializedTempo
 
 struct GapData
 {
-	GapData(int numThreads, int maxInterval, int downsample, int numOnsets, const Onset* onsets);
+	GapData(int maxInterval, int downsample, int numOnsets, const Onset* onsets);
 	~GapData();
 
 	const Onset* onsets;
@@ -98,7 +97,7 @@ static void NormalizeFitness(real& fitness, const real* coefs, real interval)
 // ================================================================================================
 // Gap confidence evaluation
 
-GapData::GapData(int numThreads, int bufferSize, int downsample, int numOnsets, const Onset* onsets)
+GapData::GapData(int bufferSize, int downsample, int numOnsets, const Onset* onsets)
 	: numOnsets(numOnsets)
 	, onsets(onsets)
 	, downsample(downsample)
@@ -106,8 +105,8 @@ GapData::GapData(int numThreads, int bufferSize, int downsample, int numOnsets, 
 	, bufferSize(bufferSize)
 {
 	window = AlignedMalloc<real>(windowSize);
-	wrappedPos = AlignedMalloc<int>(numOnsets * numThreads);
-	wrappedOnsets = AlignedMalloc<real>(bufferSize * numThreads);
+	wrappedPos = AlignedMalloc<int>(numOnsets);
+	wrappedOnsets = AlignedMalloc<real>(bufferSize);
 	CreateHammingWindow(window, windowSize);
 }
 
@@ -265,35 +264,14 @@ static real IntervalToBPM(const IntervalTester& test, int i)
 	return (test.samplerate * 60.0) / (i + test.minInterval);
 }
 
-static void FillCoarseIntervals(IntervalTester& test, GapData& gapdata, int numThreads)
+static void FillCoarseIntervals(IntervalTester& test, GapData& gapdata)
 {
 	int numCoarseIntervals = (test.numIntervals + IntervalDelta - 1) / IntervalDelta;
-	if(numThreads > 1)
+	for(int i = 0; i < numCoarseIntervals; ++i)
 	{
-		struct IntervalThreads : public ParallelThreads
-		{
-			IntervalTester* test;
-			GapData* gapdata;
-			void exec(int i, int thread)
-			{
-				int index = i * IntervalDelta;
-				int interval = test->minInterval + index;
-				test->fitness[index] = std::max(0.001, GetConfidenceForInterval(*gapdata, thread, interval));
-			}
-		};
-		IntervalThreads threads;
-		threads.test = &test;
-		threads.gapdata = &gapdata;
-		threads.run(numCoarseIntervals, numThreads);
-	}
-	else
-	{
-		for(int i = 0; i < numCoarseIntervals; ++i)
-		{
-			int index = i * IntervalDelta;
-			int interval = test.minInterval + index;
-			test.fitness[index] = std::max(0.001, GetConfidenceForInterval(gapdata, 0, interval));
-		}
+		int index = i * IntervalDelta;
+		int interval = test.minInterval + index;
+		test.fitness[index] = std::max(0.001, GetConfidenceForInterval(gapdata, 0, interval));
 	}
 }
 
@@ -382,11 +360,11 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets)
 	}
 
 	IntervalTester test(data->samplerate, numOnsets, onsets);
-	GapData* gapdata = new GapData(data->numThreads, test.maxInterval, IntervalDownsample, numOnsets, onsets);
+	GapData* gapdata = new GapData(test.maxInterval, IntervalDownsample, numOnsets, onsets);
 
 	// Loop through every 10th possible BPM, later we will fill in those that look interesting.
 	memset(test.fitness, 0, test.numIntervals * sizeof(real));
-	FillCoarseIntervals(test, *gapdata, data->numThreads);
+	FillCoarseIntervals(test, *gapdata);
 	int numCoarseIntervals = (test.numIntervals + IntervalDelta - 1) / IntervalDelta;
 	MarkProgress(2, "Fill course intervals");
 
@@ -414,7 +392,7 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets)
 
 	// At this point we stop the downsampling and upgrade to a more precise gap window.
 	delete gapdata;
-	gapdata = new GapData(data->numThreads, test.maxInterval, 0, numOnsets, onsets);
+	gapdata = new GapData(test.maxInterval, 0, numOnsets, onsets);
 
 	// Round BPM values to integers when possible, and remove weaker duplicates.
 	std::stable_sort(tempo.begin(), tempo.end(), TempoSort());
@@ -552,7 +530,7 @@ static void CalculateOffset(SerializedTempo* data, Onset* onsets, int numOnsets)
 	// Create gapdata buffers for testing.
 	real maxInterval = 0.0;
 	for(auto& t : tempo) maxInterval = std::max(maxInterval, samplerate * 60.0 / t.bpm);
-	GapData gapdata(1, (int)(maxInterval + 1.0), 1, numOnsets, onsets);
+	GapData gapdata((int)(maxInterval + 1.0), 1, numOnsets, onsets);
 
 	// Fill in onset values for each BPM.
 	for(auto& t : tempo)
@@ -600,7 +578,6 @@ TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames)
 	data_.terminate = &terminationFlag_;
 	data_.progress = 0;
 	
-	data_.numThreads = ParallelThreads::concurrency();
 	data_.numFrames = numFrames;
 	data_.samplerate = music.getFrequency();
 
