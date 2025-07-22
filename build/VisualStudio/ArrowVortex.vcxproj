@@ -137,7 +137,7 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>mad_debug.lib;libogg_debug.lib;libvorbis_debug.lib;libvorbisfile_debug.lib;freetype_debug.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -167,7 +167,7 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>mad_debug.lib;libogg_debug.lib;libvorbis_debug.lib;libvorbisfile_debug.lib;freetype_debug.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -200,7 +200,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <StringPooling>true</StringPooling>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>mad.lib;libogg.lib;libvorbis.lib;libvorbisfile.lib;freetype.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -234,7 +234,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <StringPooling>true</StringPooling>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>mad.lib;libogg.lib;libvorbis.lib;libvorbisfile.lib;freetype.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -268,7 +268,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <StringPooling>true</StringPooling>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;freetype.lib;mad.lib;winmm.lib;libogg_static.lib;libvorbis_static.lib;libvorbisfile_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -302,7 +302,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\dummy\dummy\%(RelativeDir)\</ObjectFileName>
       <StringPooling>true</StringPooling>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;freetype.lib;mad.lib;winmm.lib;libogg_static.lib;libvorbis_static.lib;libvorbisfile_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
