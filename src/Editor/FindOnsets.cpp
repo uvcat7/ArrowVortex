@@ -8,6 +8,7 @@
 #include <System/Thread.h>
 
 #include <math.h>
+#include <mutex>
 
 // double to float conversion.
 #pragma warning(disable: 4244)
@@ -1049,7 +1050,7 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 	{
 		struct OnsetThreads : public ParallelThreads
 		{
-			CriticalSection lock;
+			std::mutex lock;
 			const float* samples;
 			int numFrames, numThreads, samplerate;
 			Vector<Onset> onsets;
@@ -1079,9 +1080,8 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 						int pos = aubio_onset_get_last(onset) + paddedBegin;
 						if(pos >= beginPos && pos < endPos)
 						{
-							lock.lock();
+							std::scoped_lock onsetLock(lock);
 							onsets.push_back({pos, 1.0});
-							lock.unlock();
 						}
 					}
 				}

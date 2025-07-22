@@ -54,18 +54,4 @@ public:
 	virtual void exec(int item, int thread) = 0;
 };
 
-/// A wrapper around critical section.
-class CriticalSection
-{
-public:
-	CriticalSection();
-	~CriticalSection();
-
-	void lock();
-	void unlock();
-
-private:
-	void* criticalSectionHandle;
-};
-
 }; // namespace Vortex
