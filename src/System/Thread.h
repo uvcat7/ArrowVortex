@@ -2,6 +2,7 @@
 
 #include <Core/Core.h>
 #include <thread>
+#include <atomic>
 
 namespace Vortex {
 
@@ -33,7 +34,7 @@ public:
 	virtual void exec() = 0;
 private:
 	std::jthread thread;
-	bool done;
+	std::atomic_bool done;
 };
 
 }; // namespace Vortex
