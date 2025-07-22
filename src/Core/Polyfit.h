@@ -4,6 +4,7 @@
 #include <Core/Vector.h>
 
 #include <math.h>
+#include <algorithm>
 
 namespace mathalgo {
 
