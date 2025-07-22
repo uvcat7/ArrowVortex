@@ -920,7 +920,7 @@ XmrResult XmrDoc::loadFile(const char* path)
 
 	// Open the XMR file.
 	std::ifstream file(Widen(path).str());
-	if(file.bad())
+	if(file.fail())
 	{
 		xstring err(16);
 		err.append("could not open file");
@@ -962,7 +962,7 @@ XmrResult XmrDoc::saveFile(const char* path, XmrSaveSettings settings)
 
 	// Open the output file.
 	std::ofstream file(path);
-	if(file.bad())
+	if(file.fail())
 	{
 		xstring err(16);
 		err.append("could not open file");
