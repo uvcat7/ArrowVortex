@@ -8,6 +8,7 @@
 #include <System/Thread.h>
 
 #include <math.h>
+#include <mutex>
 
 // double to float conversion.
 #pragma warning(disable: 4244)
@@ -1045,72 +1046,21 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 	static const int bufsize = windowlen * 4;
 	static const char* method = "complex";
 
-	if(numThreads > 1)
+	auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
+	fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
+	for(int i = 0; i <= numFrames - windowlen; i += windowlen)
 	{
-		struct OnsetThreads : public ParallelThreads
+		memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);
+		aubio_onset_do(onset, samplevec, beatvec);
+		if(beatvec->data[0] > 0)
 		{
-			CriticalSection lock;
-			const float* samples;
-			int numFrames, numThreads, samplerate;
-			Vector<Onset> onsets;
-
-			OnsetThreads(const float* inSamples, int inFrames, int inThreads, int inSamplerate)
-			{
-				samples = inSamples;
-				numFrames = inFrames;
-				numThreads = inThreads;
-				samplerate = inSamplerate;
-			}
-			void exec(int item, int thread) override
-			{
-				int framesPerThread = numFrames / numThreads;
-				auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
-				fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
-				int beginPos = framesPerThread * (thread + 0);
-				int endPos = framesPerThread * (thread + 1);
-				int paddedBegin = max(beginPos - bufsize, 0);
-				int paddedEnd = min(endPos + bufsize, numFrames - windowlen);
-				for(int i = paddedBegin; i < paddedEnd; i += windowlen)
-				{
-					memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);
-					aubio_onset_do(onset, samplevec, beatvec);
-					if(beatvec->data[0] > 0)
-					{
-						int pos = aubio_onset_get_last(onset) + paddedBegin;
-						if(pos >= beginPos && pos < endPos)
-						{
-							lock.lock();
-							onsets.push_back({pos, 1.0});
-							lock.unlock();
-						}
-					}
-				}
-				del_fvec(samplevec);
-				del_fvec(beatvec);
-				del_aubio_onset(onset);
-			}
-		};
-		OnsetThreads threads = {samples, numFrames, numThreads, samplerate};
-		threads.run(numThreads);
-	}
-	else
-	{
-		auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
-		fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
-		for(int i = 0; i <= numFrames - windowlen; i += windowlen)
-		{
-			memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);
-			aubio_onset_do(onset, samplevec, beatvec);
-			if(beatvec->data[0] > 0)
-			{
-				int pos = aubio_onset_get_last(onset);
-				if(pos >= 0) out.push_back({pos, 1.0});
-			}
+			int pos = aubio_onset_get_last(onset);
+			if(pos >= 0) out.push_back({pos, 1.0});
 		}
-		del_fvec(samplevec);
-		del_fvec(beatvec);
-		del_aubio_onset(onset);
 	}
+	del_fvec(samplevec);
+	del_fvec(beatvec);
+	del_aubio_onset(onset);
 }
 
 }; // namespace Vortex
