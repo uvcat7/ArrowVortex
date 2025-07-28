@@ -19,8 +19,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
       - name: Check formatting with clang-format
         run: >
-          clang-format --dry-run --Werror -style=file \
-          $(find src/ -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.hpp' \))
+          clang-format --dry-run --Werror -style=file $(find src/ -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.hpp' \))
         shell: bash
       - name: Obtain oggenc2.exe
         run: >
