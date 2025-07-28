@@ -1,0 +1,131 @@
+# This clang-tidy configuration is from chromium/src:
+
+# Copyright 2015 The Chromium Authors
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+#    * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution.
+#    * Neither the name of Google LLC nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---
+  Checks:          '-*,
+                    bugprone-argument-comment,
+                    bugprone-assert-side-effect,
+                    bugprone-bool-pointer-implicit-conversion,
+                    bugprone-dangling-handle,
+                    bugprone-forward-declaration-namespace,
+                    bugprone-inaccurate-erase,
+                    bugprone-redundant-branch-condition,
+                    bugprone-string-constructor,
+                    bugprone-string-integer-assignment,
+                    bugprone-suspicious-memset-usage,
+                    bugprone-suspicious-realloc-usage,
+                    bugprone-terminating-continue,
+                    bugprone-undefined-memory-manipulation,
+                    bugprone-unique-ptr-array-mismatch,
+                    bugprone-unused-raii,
+                    bugprone-use-after-move,
+                    bugprone-virtual-near-miss,
+                    google-build-explicit-make-pair,
+                    google-default-arguments,
+                    google-explicit-constructor,
+                    google-objc-avoid-nsobject-new,
+                    google-readability-casting,
+                    google-upgrade-googletest-case,
+                    misc-misleading-identifier,
+                    misc-homoglyph,
+                    modernize-avoid-bind,
+                    modernize-concat-nested-namespaces,
+                    modernize-loop-convert,
+                    modernize-make-shared,
+                    modernize-make-unique,
+                    modernize-redundant-void-arg,
+                    modernize-replace-random-shuffle,
+                    modernize-shrink-to-fit,
+                    modernize-use-bool-literals,
+                    modernize-use-default-member-init,
+                    modernize-use-emplace,
+                    modernize-use-equals-default,
+                    modernize-use-equals-delete,
+                    modernize-use-noexcept,
+                    modernize-use-nullptr,
+                    modernize-use-override,
+                    modernize-use-transparent-functors,
+                    readability-redundant-member-init'
+  # DISABLED CHECKS:
+  # An analysis was done of the following checks and they were deemed to either
+  # have too high of a false positive rate, or were redundant/useless (e.g.
+  # never fired once in the entirety of chromium). We list them here so that
+  # future editors of this file are aware these checks have already been
+  # considered and accordingly rejected.
+  #                 bugprone-undelegated-constructor
+  #                 bugprone-macro-repeated-side-effects
+  #                 bugprone-misplaced-operator-in-strlen-in-alloc
+  #                 bugprone-misplaced-pointer-arithmetic-in-alloc
+  #                 bugprone-multiple-statement-macro
+  #                 bugprone-no-escape
+  #                 bugprone-posix-return
+  #                 bugprone-shared-ptr-array-mismatch
+  #                 bugprone-spuriously-wake-up-functions
+  #                 bugprone-standalone-empty
+  #                 bugprone-stringview-nullptr
+  #                 bugprone-suspicious-enum-usage
+  #                 bugprone-unhandled-exception-at-new
+  CheckOptions:
+    - key:          bugprone-assert-side-effect.AssertMacros
+      value:        assert,DCHECK
+    - key:          bugprone-dangling-handle.HandleClasses
+      value:        ::std::basic_string_view;::std::span;::absl::string_view;::base::BasicStringPiece;::base::span
+    - key:          bugprone-string-constructor.StringNames
+      value:        ::std::basic_string;::std::basic_string_view;::base::BasicStringPiece;::absl::string_view
+    - key:          modernize-use-default-member-init.UseAssignment
+      value:        1
+    # crbug.com/1342136, crbug.com/1343915: At times, this check makes
+    # suggestions that break builds. Safe mode allows us to sidestep that.
+    - key:          modernize-use-transparent-functors.SafeMode
+      value:        1
+    # This relaxes modernize-use-emplace in some cases; we might want to make it
+    # more aggressive in the future. See discussion on
+    # https://groups.google.com/a/chromium.org/g/cxx/c/noMMTNYiM0w .
+    - key:          modernize-use-emplace.IgnoreImplicitConstructors
+      value:        1
+    # Use of `std::ranges::reverse_view` is inconsistent with
+    # Chromium style. Recommend `base::Reversed` instead.
+    - key:          modernize-loop-convert.MakeReverseRangeFunction
+      value:        base::Reversed
+    - key:          modernize-loop-convert.MakeReverseRangeHeader
+      value:        base/containers/adapters.h
+    # Exclude some third_party headers from modification as file paths are not
+    # starting from repository root in replacement suggestion.
+    # 'build/linux/debian' excludes system headers as they don't have
+    # appropriate IWYU pragmas.
+    # https://clang.llvm.org/extra/clang-tidy/checks/misc/include-cleaner.html
+    - key: misc-include-cleaner.IgnoreHeaders
+      value:        (gmock/gmock|gtest/gtest|third_party|build/linux/debian).*
+
+  ExtraArgs:
+    # b/382774818: disable unknown pragma warnings until we can figure out why
+    # unknown pragmas are being warned about.
+    - -Wno-unknown-pragmas
+...
