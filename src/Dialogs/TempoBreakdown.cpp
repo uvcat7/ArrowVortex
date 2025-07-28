@@ -14,131 +14,109 @@ namespace Vortex {
 // ================================================================================================
 // ChartList
 
-static int GetTempoListH()
-{
-	auto segments = gTempo->getSegments();
-	int h = 0;
-	if(segments)
-	{
-		for(auto list = segments->begin(), listEnd = segments->end(); list != listEnd; ++list)
-		{
-			if(list->size())
-			{
-				h += 26 + list->size() * 16;
-			}
-		}
-	}
-	return max(h, 16);
+static int GetTempoListH() {
+    auto segments = gTempo->getSegments();
+    int h = 0;
+    if (segments) {
+        for (auto list = segments->begin(), listEnd = segments->end();
+             list != listEnd; ++list) {
+            if (list->size()) {
+                h += 26 + list->size() * 16;
+            }
+        }
+    }
+    return max(h, 16);
 }
 
 struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
+    ~TempoList() {}
 
-~TempoList()
-{
-}
+    TempoList(GuiContext* gui) : WgScrollRegion(gui) {
+        setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
+    }
 
-TempoList(GuiContext* gui)
-	: WgScrollRegion(gui)
-{
-	setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
-}
+    void onUpdateSize() override {
+        scroll_height_ = GetTempoListH();
+        ClampScrollPositions();
+    }
 
-void onUpdateSize() override
-{
-	scroll_height_ = GetTempoListH();
-	ClampScrollPositions();
-}
+    void onDraw() override {
+        if (gSimfile->isClosed()) return;
 
-void onDraw() override
-{
-	if(gSimfile->isClosed()) return;
+        int x = rect_.x;
+        int y = rect_.y - scroll_position_y_;
+        recti view = {rect_.x, rect_.y, getViewWidth(), getViewHeight()};
 
-	int x = rect_.x;
-	int y = rect_.y - scroll_position_y_;
-	recti view = {rect_.x, rect_.y, getViewWidth(), getViewHeight()};
-	
-	TextStyle style;
-	style.textFlags = 0;
+        TextStyle style;
+        style.textFlags = 0;
 
-	Renderer::pushScissorRect(view);
+        Renderer::pushScissorRect(view);
 
-	Draw::fill({view.x + view.w / 2, view.y, 1, view.h}, Color32(26));
+        Draw::fill({view.x + view.w / 2, view.y, 1, view.h}, Color32(26));
 
-	auto segments = gTempo->getSegments();
-	for(auto list = segments->begin(), listEnd = segments->end(); list != listEnd; ++list)
-	{
-		if(list->size())
-		{
-			auto meta = Segment::meta[list->type()];
-			auto seg = list->begin(), segEnd = list->end();
+        auto segments = gTempo->getSegments();
+        for (auto list = segments->begin(), listEnd = segments->end();
+             list != listEnd; ++list) {
+            if (list->size()) {
+                auto meta = Segment::meta[list->type()];
+                auto seg = list->begin(), segEnd = list->end();
 
-			Draw::fill({x, y, view.w, 20}, Color32(26));
-			Text::arrange(Text::MC, style, meta->plural);
-			Text::draw({x, y, view.w, 20});
-			y += 26;
+                Draw::fill({x, y, view.w, 20}, Color32(26));
+                Text::arrange(Text::MC, style, meta->plural);
+                Text::draw({x, y, view.w, 20});
+                y += 26;
 
-			while(seg != segEnd && y < view.y - 20)
-			{
-				y += 16, ++seg;
-			}
-			while(seg != segEnd && y < view.y + view.h + 20)
-			{
-				std::string str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
-				Text::arrange(Text::MR, style, str.c_str());
-				Text::draw(vec2i{x + view.w / 2 - 6, y + 8});
+                while (seg != segEnd && y < view.y - 20) {
+                    y += 16, ++seg;
+                }
+                while (seg != segEnd && y < view.y + view.h + 20) {
+                    std::string str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
+                    Text::arrange(Text::MR, style, str.c_str());
+                    Text::draw(vec2i{x + view.w / 2 - 6, y + 8});
 
-				str = meta->getDescription(seg.ptr);
-				Text::arrange(Text::ML, style, str.c_str());
-				Text::draw(vec2i{x + view.w / 2 + 6, y + 8});
+                    str = meta->getDescription(seg.ptr);
+                    Text::arrange(Text::ML, style, str.c_str());
+                    Text::draw(vec2i{x + view.w / 2 + 6, y + 8});
 
-				y += 16, ++seg;
-			}
-		}
-	}
+                    y += 16, ++seg;
+                }
+            }
+        }
 
-	Renderer::popScissorRect();
+        Renderer::popScissorRect();
 
-	WgScrollRegion::onDraw();
-}
+        WgScrollRegion::onDraw();
+    }
 
-}; // TimingData
+};  // TimingData
 
 // ================================================================================================
 // DialogTempoBreakdown
 
-DialogTempoBreakdown::~DialogTempoBreakdown()
-{
-	delete myList;
+DialogTempoBreakdown::~DialogTempoBreakdown() { delete myList; }
+
+DialogTempoBreakdown::DialogTempoBreakdown() {
+    setTitle("TEMPO BREAKDOWN");
+    setWidth(200);
+
+    setMinimumHeight(32);
+    setResizeable(false, true);
+
+    myList = new TempoList(getGui());
 }
 
-DialogTempoBreakdown::DialogTempoBreakdown()
-{
-	setTitle("TEMPO BREAKDOWN");
-	setWidth(200);
-
-	setMinimumHeight(32);
-	setResizeable(false, true);
-
-	myList = new TempoList(getGui());
+void DialogTempoBreakdown::onUpdateSize() {
+    myList->updateSize();
+    int h = myList->getScrollHeight();
+    setMinimumHeight(min(64, h));
+    setMaximumHeight(min(1024, h));
 }
 
-void DialogTempoBreakdown::onUpdateSize()
-{
-	myList->updateSize();
-	int h = myList->getScrollHeight();
-	setMinimumHeight(min(64, h));
-	setMaximumHeight(min(1024, h));
+void DialogTempoBreakdown::onTick() {
+    myList->arrange(getInnerRect());
+    myList->tick();
 }
 
-void DialogTempoBreakdown::onTick()
-{
-	myList->arrange(getInnerRect());
-	myList->tick();
-}
+void DialogTempoBreakdown::onDraw() { myList->draw(); }
 
-void DialogTempoBreakdown::onDraw()
-{
-	myList->draw();
-}
-
-}; // namespace Vortex
+};  // namespace Vortex

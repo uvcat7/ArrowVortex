@@ -17,7 +17,8 @@ bool ParseNextTag(char*& p, char*& outTag, char*& outVal);
 bool ParseNextItem(char*& p, char*& outVal, char seperator = ',');
 
 /// Parses the next item in a list of value sets (e.g. "V1=V2=V3,V4=V5=V6,...").
-bool ParseNextItem(char*& p, char** outVals, int numVals, char setSeperator = ',', char valSeperator = '=');
+bool ParseNextItem(char*& p, char** outVals, int numVals,
+                   char setSeperator = ',', char valSeperator = '=');
 
 /// Parses the given string and converts it to bool.
 bool ParseBool(const char* str, bool& outVal);
@@ -34,10 +35,12 @@ bool ParseBeat(const char* str, int& outRow);
 // ================================================================================================
 // Simfile importing and exporting.
 
-/// Loads a simfile from the given path and writes the output data to song and charts.
+/// Loads a simfile from the given path and writes the output data to song and
+/// charts.
 bool LoadSimfile(Simfile& simfile, const std::string& path);
 
-/// Saves the given simfile, to the path specified in the simfile, in the given save format.
+/// Saves the given simfile, to the path specified in the simfile, in the given
+/// save format.
 bool SaveSimfile(const Simfile& simfile, SimFormat format, bool backup);
 
-}; // namespace Vortex
+};  // namespace Vortex

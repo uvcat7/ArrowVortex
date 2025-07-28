@@ -7,22 +7,21 @@
 
 namespace Vortex {
 
-class DialogGenerateNotes : public EditorDialog, public InputHandler
-{
-public:
-	~DialogGenerateNotes();
-	DialogGenerateNotes();
+class DialogGenerateNotes : public EditorDialog, public InputHandler {
+   public:
+    ~DialogGenerateNotes();
+    DialogGenerateNotes();
 
-	void onChanges(int changes) override;
+    void onChanges(int changes) override;
 
-private:
-	void myCreateWidgets();
-	void myGenerateNotes();
+   private:
+    void myCreateWidgets();
+    void myGenerateNotes();
 
-	StreamGenerator streamGenerator_;
-	WgDroplist* spacingDroplist_;
-	int footSelectionIndex_;
-	int spacingValue_;
+    StreamGenerator streamGenerator_;
+    WgDroplist* spacingDroplist_;
+    int footSelectionIndex_;
+    int spacingValue_;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

@@ -6,19 +6,18 @@
 
 namespace Vortex {
 
-class DialogZoom : public EditorDialog
-{
-public:
-	~DialogZoom();
-	DialogZoom();
+class DialogZoom : public EditorDialog {
+   public:
+    ~DialogZoom();
+    DialogZoom();
 
-	void onTick() override;
-	void onAction(int id);
+    void onTick() override;
+    void onAction(int id);
 
-private:
-	void myCreateWidgets();
+   private:
+    void myCreateWidgets();
 
-	double myZoomLevel, myScaleLevel;
+    double myZoomLevel, myScaleLevel;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex
