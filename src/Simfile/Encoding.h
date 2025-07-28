@@ -8,6 +8,4 @@ namespace Vortex {
 
 struct ExpandedNote;
 
-
-
-}; // namespace Vortex
+};  // namespace Vortex

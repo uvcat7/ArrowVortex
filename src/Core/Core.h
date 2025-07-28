@@ -6,21 +6,35 @@
 
 namespace Vortex {
 
-template <typename T> struct vec2t { T x, y; };
-template <typename T> struct vec3t { T x, y, z; };
-template <typename T> struct rectt { T x, y, w, h; };
-template <typename T> struct areat { T l, t, r, b; };
+template <typename T>
+struct vec2t {
+    T x, y;
+};
+template <typename T>
+struct vec3t {
+    T x, y, z;
+};
+template <typename T>
+struct rectt {
+    T x, y, w, h;
+};
+template <typename T>
+struct areat {
+    T l, t, r, b;
+};
 
-typedef vec2t<int>    vec2i;
-typedef vec2t<float>  vec2f;
+typedef vec2t<int> vec2i;
+typedef vec2t<float> vec2f;
 typedef vec2t<double> vec2d;
-typedef vec3t<float>  vec3f;
-typedef rectt<int>    recti;
-typedef rectt<float>  rectf;
-typedef areat<int>    areai;
-typedef areat<float>  areaf;
+typedef vec3t<float> vec3f;
+typedef rectt<int> recti;
+typedef rectt<float> rectf;
+typedef areat<int> areai;
+typedef areat<float> areaf;
 
-struct colorf { float r, g, b, a; };
+struct colorf {
+    float r, g, b, a;
+};
 
 struct TileBar;
 struct TileRect;
@@ -52,4 +66,4 @@ extern void HudInfo(const char* fmt, ...);
 extern void HudWarning(const char* fmt, ...);
 extern void HudError(const char* fmt, ...);
 
-}; // namespace Vortex
+};  // namespace Vortex

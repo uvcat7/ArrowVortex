@@ -5,12 +5,11 @@
 
 namespace Vortex {
 
-struct OggConversionThread : public BackgroundThread
-{
-	OggConversionThread();
-	uint8_t progress;
-	std::string outPath, error;
-	void exec() override;
+struct OggConversionThread : public BackgroundThread {
+    OggConversionThread();
+    uint8_t progress;
+    std::string outPath, error;
+    void exec() override;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex
