@@ -61,6 +61,24 @@ Game styles:
 - Pump Double
 - Pump Couple
 
+## Building
+
+General dependencies:
+- vcpkg
+- Visual Studio (tested on VS2022) with C++20 support
+- CMake (at least 3.30)
+
+### Command line
+After installing both, use CMake like so:
+
+```
+> mkdir build && cd build
+> cmake -DCMAKE_TOOLCHAIN_FILE={path to vcpkg}\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static-md ..
+> cmake --build .
+```
+
+### Via Visual Studio 2022
+
 ## About this project
 
 Unfortunately, the source code for the 2017-02-25 release of ArrowVortex has been lost to time. The only surviving archive of source code was a development snapshot from 2016. A small group of volunteer developers put a lot of time and effort into restoring the full functionality of the 2017 release of ArrowVortex.
