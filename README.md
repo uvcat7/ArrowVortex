@@ -69,7 +69,7 @@ General dependencies:
 - CMake (at least 3.30)
 
 ### Command line
-After installing both, use CMake like so:
+After installing dependencies, use CMake like so:
 
 ```
 > mkdir build && cd build
@@ -78,6 +78,15 @@ After installing both, use CMake like so:
 ```
 
 ### Via Visual Studio 2022
+
+Same build commands, but add VS2022 generator:
+
+```
+> mkdir build && cd build
+> cmake -DCMAKE_TOOLCHAIN_FILE={path to vcpkg}\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static-md ..
+```
+
+After that, you can now open up build/ArrowVortex.sln and build inside VS2022.
 
 ## About this project
 
