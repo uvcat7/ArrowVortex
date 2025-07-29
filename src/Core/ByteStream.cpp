@@ -1,5 +1,4 @@
 #include <Core/ByteStream.h>
-#include <Core/String.h>
 #include <Core/Utils.h>
 
 #include <string.h>
@@ -159,10 +158,10 @@ void WriteStream::writeNum(uint32_t num)
 	}
 }
 
-void WriteStream::writeStr(StringRef str)
+void WriteStream::writeStr(const std::string& str)
 {
-	writeNum(str.len());
-	write(str.str(), str.len());
+	writeNum(str.length());
+	write(str.data(), str.length());
 }
 
 // ================================================================================================
@@ -312,20 +311,20 @@ uint32_t ReadStream::readNum()
 	return out;
 }
 
-String ReadStream::readStr()
+std::string ReadStream::readStr()
 {
-	String out;
+	std::string out;
 	uint32_t len = readNum();
 	auto newPos = read_position_ + len;
 	if(newPos <= end_position_)
 	{
 		auto str = read_position_;
 		read_position_ = newPos;
-		return String((const char*)str, len);
+		return std::string((const char*)str, len);
 	}
 	read_position_ = end_position_;
 	is_read_successful_ = false;
-	return String();
+	return std::string();
 }
 
 void ReadStream::readNum(uint32_t& num)
@@ -333,7 +332,7 @@ void ReadStream::readNum(uint32_t& num)
 	num = readNum();
 }
 
-void ReadStream::readStr(String& str)
+void ReadStream::readStr(std::string& str)
 {
 	str = readStr();
 }

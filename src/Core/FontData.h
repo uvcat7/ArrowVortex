@@ -70,7 +70,7 @@ struct FontData
 	GlyphCache* currentCache;
 	int currentSize;
 	void* ftface;
-	String path;
+	std::string path;
 	FontData* next;
 	int refs;
 	int loadflags;

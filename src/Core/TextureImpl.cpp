@@ -29,7 +29,7 @@ ImageLoader::Format TexLoadFormats[] =
 
 struct TextureManagerInstance
 {
-	typedef std::map<String, Texture::Data*> TexMap;
+	typedef std::map<std::string, Texture::Data*> TexMap;
 	typedef Vector<Texture::Data*> TexList;
 
 	TexMap files;
@@ -68,9 +68,9 @@ Texture::Data* TextureManager::load(const char* path, Texture::Format fmt, bool 
 	if(!TM) return nullptr;
 
 	// Combine path/format/mipmap information to form the key String.
-	String key(path);
-	key += ('0' + fmt);
-	key += (mipmap ? 'y' : 'n');
+	std::string key(path);
+	key = key + ("0" + fmt);
+	key = key + (mipmap ? "y" : "n");
 
 	// Check if the image is already loaded.
 	auto it = TM->files.find(key);
@@ -545,10 +545,10 @@ void Texture::LogInfo()
 	Debug::log("amount: %i\n", TM->textures.size());
 	for(auto tex : TM->textures)
 	{
-		const String* key = Map::findKey(TM->files, tex);
-		String path = key ? Str::substr(*key, 0, key->len() - 2) : "-- no path --";
+		const std::string* key = Map::findKey(TM->files, tex);
+		std::string path = key ? Str::substr(*key, 0, key->length() - 2) : "-- no path --";
 
-		Debug::log("\npath   : %s\n", path.str());
+		Debug::log("\npath   : %s\n", path.c_str());
 		Debug::log("size   : %i x %i\n", tex->w, tex->h);
 		Debug::log("refs   : %i\n", tex->refs);
 		Debug::log("cached : %i\n", tex->cached);

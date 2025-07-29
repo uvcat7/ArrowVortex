@@ -21,7 +21,7 @@ struct Editor
 
 	/// Closes the current simfile and tries to load a new simfile from the given path. If closing
 	/// is aborted or loading fails, false is returned. If loading succeeds, true is returned.
-	virtual bool openSimfile(StringRef path) = 0;
+	virtual bool openSimfile(const std::string& path) = 0;
 
 	/// Calls "openSimfile" with a path from the list of recently opened files.
 	virtual bool openSimfile(int recentFileIndex) = 0;
@@ -40,7 +40,7 @@ struct Editor
 	virtual int getNumRecentFiles() = 0;
 
 	/// Returns the path string of a recently opened file.
-	virtual StringRef getRecentFile(int recentFileIndex) = 0;
+	virtual const std::string& getRecentFile(int recentFileIndex) = 0;
 
 	/// Use this to report changes in the simfile (combination of flags from "VortexChangesMade").
 	virtual void reportChanges(int changes) = 0;
@@ -52,7 +52,7 @@ struct Editor
 	virtual void onDialogClosed(int dialogId) = 0;
 
 	/// Called by system when the application starts, with the command line arguments.
-	virtual void onCommandLineArgs(const String* args, int numArgs) = 0;
+	virtual void onCommandLineArgs(const std::string* args, int numArgs) = 0;
 
 	/// Called by system when a menu action is selected by the user.
 	virtual void onMenuAction(int action) = 0;

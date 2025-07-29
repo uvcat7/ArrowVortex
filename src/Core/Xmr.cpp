@@ -2,6 +2,7 @@
 
 #include <System/File.h>
 #include <System/Debug.h>
+#include <Core/WideString.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -9,6 +10,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <filesystem>
+#include <string>
 
 namespace Vortex {
 namespace {
@@ -917,8 +919,8 @@ XmrResult XmrDoc::loadFile(const char* path)
 	SetError(this, nullptr);
 
 	// Open the XMR file.
-	std::ifstream file(path);
-	if(file.bad())
+	std::ifstream file(Widen(path).str());
+	if(file.fail())
 	{
 		xstring err(16);
 		err.append("could not open file");
@@ -960,7 +962,7 @@ XmrResult XmrDoc::saveFile(const char* path, XmrSaveSettings settings)
 
 	// Open the output file.
 	std::ofstream file(path);
-	if(file.bad())
+	if(file.fail())
 	{
 		xstring err(16);
 		err.append("could not open file");
@@ -969,13 +971,13 @@ XmrResult XmrDoc::saveFile(const char* path, XmrSaveSettings settings)
 	}
 
 	// Write the string to the output file.
-	String str = saveString(settings);
-	file.write(str.begin(), str.len());
+	std::string str = saveString(settings);
+	file.write(str.data(), str.length());
 
 	return XMR_SUCCESS;
 }
 
-String XmrDoc::saveString(XmrSaveSettings settings)
+std::string XmrDoc::saveString(XmrSaveSettings settings)
 {
 	SetError(this, nullptr);
 	xstring str(1024);
@@ -990,7 +992,7 @@ String XmrDoc::saveString(XmrSaveSettings settings)
 	int last = str.size - 1;
 	if(last >= 0 && str.data[last] == '\n') --str.size;
 
-	return String(str.data, str.size);
+	return std::string(str.data, str.size);
 }
 
 }; // namespace Vortex

@@ -1,4 +1,5 @@
 ﻿#include <Core/StringUtils.h>
+#include <Core/WideString.h>
 #include <Core/Utils.h>
 
 #include <System/File.h>
@@ -24,7 +25,7 @@ namespace {
 enum SeperatorPos { END_OF_LINE, START_OF_LINE };
 enum ForceWrite { ALWAYS, SONG_ONLY, NEVER };
 
-static const int MEASURE_SUBDIV[] = {4, 8, 12, 16, 24, 32, 48, 64, 96, 192};
+static const int MEASURE_SUBDIV[] = { 4, 8, 12, 16, 24, 32, 48, 64, 96, 192 };
 static const int NUM_MEASURE_SUBDIV = 10;
 static const int ROWS_PER_NOTE_SECTION = 192;
 static const int MIN_SECTIONS_PER_MEASURE = 4;
@@ -46,18 +47,29 @@ struct ExportData
 // ================================================================================================
 // Generic write functions.
 
-static void GiveUnicodeWarning(StringRef path, StringRef name)
+static void GiveUnicodeWarning(const std::string& path, const std::string& name)
 {
-	if(Str::isUnicode(path))
+	if (Str::isUnicode(path))
 	{
 		HudWarning("The %s path contains unicode characters,\n"
-			"which might not work on some versions of Stepmania/ITG.", name.str());
+			"which might not work on some versions of Stepmania/ITG.", name.c_str());
 	}
 }
 
-static String Escape(const char* name, const char* str)
+static std::string Escape(const char* name, const char* str)
 {
-	String s = (String)str;
+	std::string s(str);
+	//These characters must be escaped in the .sm/.ssc file
+	Str::replace(s, "\\", "\\\\");
+	Str::replace(s, ":", "\\:");
+	Str::replace(s, ";", "\\;");
+	Str::replace(s, ";", "\\#");
+	return s;
+}
+
+static std::string Escape(const std::string& name, const std::string& _str)
+{
+	std::string s(_str);
 	//These characters must be escaped in the .sm/.ssc file
 	Str::replace(s, "\\", "\\\\");
 	Str::replace(s, ":", "\\:");
@@ -73,45 +85,45 @@ static bool ShouldWrite(ExportData& data, ForceWrite when, bool hasValue, bool s
 	return versionOk && writeOk;
 }
 
-static void WriteTag(ExportData& data, const char* tag, StringRef value, ForceWrite when, bool sscOnly)
+static void WriteTag(ExportData& data, const std::string& tag, const std::string& value, ForceWrite when, bool sscOnly)
 {
-	if(ShouldWrite(data, when, value.len() != 0, sscOnly))
+	if (ShouldWrite(data, when, value.length() != 0, sscOnly))
 	{
-	    data.file << "#" << tag << ':' << value.str() << ";\n";
+		data.file << "#" << tag << ':' << value << ";\n";
 	}
 }
 
-static void WriteTag(ExportData& data, const char* tag, double value, ForceWrite when, bool sscOnly)
+static void WriteTag(ExportData& data, const std::string& tag, double value, ForceWrite when, bool sscOnly)
 {
-	if(ShouldWrite(data, when, value != 0, sscOnly))
+	if (ShouldWrite(data, when, value != 0, sscOnly))
 	{
-	    data.file << std::fixed << std::setprecision(6)
+		data.file << std::fixed << std::setprecision(6)
 			<< "#" << tag << ':' << value << ";\n";
 	}
 }
 
-static void WriteTag(ExportData& data, const char* tag, int value, ForceWrite when, bool sscOnly)
+static void WriteTag(ExportData& data, const std::string& tag, int value, ForceWrite when, bool sscOnly)
 {
-	if(ShouldWrite(data, when, value != 0, sscOnly))
+	if (ShouldWrite(data, when, value != 0, sscOnly))
 	{
-	    data.file << "#" << tag << ':' << value << ";\n";
+		data.file << "#" << tag << ':' << value << ";\n";
 	}
 }
 
-static void WriteTextTag(ExportData& data, const char* tag, StringRef value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
+static void WriteTextTag(ExportData& data, const std::string& tag, const std::string& value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
 {
-	if(alt && value.empty())
+	if (alt && value.empty())
 	{
 		WriteTag(data, tag, Escape(tag, alt), when, sscOnly);
 	}
 	else
 	{
 
-		WriteTag(data, tag, Escape(tag, value.str()), when, sscOnly);
+		WriteTag(data, tag, Escape(tag, value.c_str()), when, sscOnly);
 	}
 }
 
-static void WritePathTag(ExportData& data, const char* tag, StringRef value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
+static void WritePathTag(ExportData& data, const char* tag, const std::string& value, ForceWrite when, bool sscOnly, const char* alt = nullptr)
 {
 	GiveUnicodeWarning(value, tag);
 	WriteTextTag(data, tag, value, when, sscOnly, alt);
@@ -120,27 +132,27 @@ static void WritePathTag(ExportData& data, const char* tag, StringRef value, For
 template <typename T, typename F>
 static void WriteTag(ExportData& data, const char* tag, const T& list, SeperatorPos pos, char seperator, ForceWrite when, bool sscOnly, F func)
 {
-	if(ShouldWrite(data, when, list.size() != 0, sscOnly))
+	if (ShouldWrite(data, when, list.size() != 0, sscOnly))
 	{
 		auto& file = data.file;
-	    file << "#" << tag << ":";
-		for(auto it = list.begin(); it != list.end();)
+		file << "#" << tag << ":";
+		for (auto it = list.begin(); it != list.end();)
 		{
-			if(it != list.begin() && pos == START_OF_LINE)
+			if (it != list.begin() && pos == START_OF_LINE)
 			{
-			    file << seperator;
+				file << seperator;
 			}
 			func(*it);
-			if(++it != list.end() && pos == END_OF_LINE)
+			if (++it != list.end() && pos == END_OF_LINE)
 			{
-			    file << seperator;
+				file << seperator;
 			}
-			if(list.size() > 1)
+			if (list.size() > 1)
 			{
-			    file << '\n';
+				file << '\n';
 			}
 		}
-	    file << ";\n";
+		file << ";\n";
 	}
 }
 
@@ -150,27 +162,27 @@ static void WriteSegments(ExportData& data, const char* tag, const Tempo* tempo,
 {
 	auto begin = tempo->segments->begin<T>();
 	auto end = tempo->segments->end<T>();
-	if(ShouldWrite(data, when, begin != end, sscOnly))
+	if (ShouldWrite(data, when, begin != end, sscOnly))
 	{
 		auto& file = data.file;
-	    file << "#" << tag << ":";
-		for(auto it = begin; it != end; ++it)
+		file << "#" << tag << ":";
+		for (auto it = begin; it != end; ++it)
 		{
-			if(it != begin && pos == START_OF_LINE)
+			if (it != begin && pos == START_OF_LINE)
 			{
-			    file << seperator;
+				file << seperator;
 			}
 			func(*it);
-			if(it + 1 != end && pos == END_OF_LINE)
+			if (it + 1 != end && pos == END_OF_LINE)
 			{
-			    file << seperator;
+				file << seperator;
 			}
-			if(begin + 1 < end)
+			if (begin + 1 < end)
 			{
-			    file << '\n';
+				file << '\n';
 			}
 		}
-	    file << ";\n";
+		file << ";\n";
 	}
 }
 
@@ -185,155 +197,155 @@ static void WriteOffset(ExportData& data, const Tempo* tempo)
 static void WriteBpms(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<BpmChange>(data, "BPMS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
-	[&](const BpmChange& change)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-	        << ToBeat(change.row) << '='
-	        << std::setprecision(6) << change.bpm;
-	});
+		[&](const BpmChange& change)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(change.row) << '='
+				<< std::setprecision(6) << change.bpm;
+		});
 }
 
 static void WriteStops(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Stop>(data, "STOPS", tempo, START_OF_LINE, ',', SONG_ONLY, false,
-	[&](const Stop& stop)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-	        << ToBeat(stop.row) << '='
-	        << stop.seconds;
-	});
+		[&](const Stop& stop)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(stop.row) << '='
+				<< stop.seconds;
+		});
 }
 
 static void WriteDelays(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Delay>(data, "DELAYS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Delay& delay)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-	        << ToBeat(delay.row) << '='
-	        << delay.seconds;
-	});
+		[&](const Delay& delay)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(delay.row) << '='
+				<< delay.seconds;
+		});
 }
 
 static void WriteWarps(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Warp>(data, "WARPS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Warp& warp)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(warp.row) << '='
-            << ToBeat(warp.numRows);
-	});
+		[&](const Warp& warp)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(warp.row) << '='
+				<< ToBeat(warp.numRows);
+		});
 }
 
 static void WriteSpeeds(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Speed>(data, "SPEEDS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Speed& speed)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-	        << ToBeat(speed.row) << '='
-            << speed.ratio << '='
-            << speed.delay << '='
-            << speed.unit;
-	});
+		[&](const Speed& speed)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(speed.row) << '='
+				<< speed.ratio << '='
+				<< speed.delay << '='
+				<< speed.unit;
+		});
 }
 
 static void WriteScrolls(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Scroll>(data, "SCROLLS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Scroll& scroll)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(scroll.row) << '='
-            << scroll.ratio;
-	});
+		[&](const Scroll& scroll)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(scroll.row) << '='
+				<< scroll.ratio;
+		});
 }
 
 static void WriteTickCounts(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<TickCount>(data, "TICKCOUNTS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const TickCount& tick)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(tick.row) << '='
-            << tick.ticks;
-	});
+		[&](const TickCount& tick)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(tick.row) << '='
+				<< tick.ticks;
+		});
 }
 
 static void WriteTimeSignatures(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<TimeSignature>(data, "TIMESIGNATURES", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const TimeSignature& sig)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(sig.row) << '='
-            << static_cast<int>(ToBeat(sig.rowsPerMeasure)) << '='
-	        << sig.beatNote;
-	});
+		[&](const TimeSignature& sig)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(sig.row) << '='
+				<< static_cast<int>(ToBeat(sig.rowsPerMeasure)) << '='
+				<< sig.beatNote;
+		});
 }
 
 static void WriteLabels(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Label>(data, "LABELS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Label& label)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(label.row) << '='
-            << label.str.str();
-	});
+		[&](const Label& label)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(label.row) << '='
+				<< label.str;
+		});
 }
 
 static void WriteAttacks(ExportData& data, const Tempo* tempo)
 {
 	WriteTag(data, "ATTACKS", tempo->attacks, START_OF_LINE, ':', NEVER, true,
-	[&](const Attack& attack)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-	        << "TIME=" << attack.time << ':'
-	        << ((attack.unit == ATTACK_END) ? "END=" : "LEN=") << attack.duration << ":"
-	        << "MODS=" << attack.mods.str();
-	});
+		[&](const Attack& attack)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< "TIME=" << attack.time << ':'
+				<< ((attack.unit == ATTACK_END) ? "END=" : "LEN=") << attack.duration << ":"
+				<< "MODS=" << attack.mods;
+		});
 }
 
 static void WriteKeySounds(ExportData& data, const Tempo* tempo)
 {
 	WriteTag(data, "KEYSOUNDS", tempo->keysounds, END_OF_LINE, ',', NEVER, true,
-	[&](StringRef str)
-	{
-	    data.file << str.str();
-	});
+		[&](const std::string& str)
+		{
+			data.file << str;
+		});
 }
 
 static void WriteCombos(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Combo>(data, "COMBOS", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Combo& combo)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(combo.row) << '='
-            << combo.hitCombo;
-		if(combo.hitCombo != combo.missCombo)
-		    data.file << '=' << combo.missCombo;
-	});
+		[&](const Combo& combo)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(combo.row) << '='
+				<< combo.hitCombo;
+			if (combo.hitCombo != combo.missCombo)
+				data.file << '=' << combo.missCombo;
+		});
 }
 
 static void WriteFakes(ExportData& data, const Tempo* tempo)
 {
 	WriteSegments<Fake>(data, "FAKES", tempo, END_OF_LINE, ',', NEVER, true,
-	[&](const Fake& fake)
-	{
-	    data.file << std::fixed << std::setprecision(6)
-            << ToBeat(fake.row) << '='
-            << ToBeat(fake.numRows);
-	});
+		[&](const Fake& fake)
+		{
+			data.file << std::fixed << std::setprecision(6)
+				<< ToBeat(fake.row) << '='
+				<< ToBeat(fake.numRows);
+		});
 }
 
 static void WriteDisplayBpm(ExportData& data, const Tempo* tempo)
 {
-	if(tempo->displayBpmType == BPM_CUSTOM)
+	if (tempo->displayBpmType == BPM_CUSTOM)
 	{
-		if(tempo->displayBpmRange.min == tempo->displayBpmRange.max)
+		if (tempo->displayBpmRange.min == tempo->displayBpmRange.max)
 		{
 			WriteTag(data, "DISPLAYBPM", tempo->displayBpmRange.min, ALWAYS, false);
 		}
@@ -345,7 +357,7 @@ static void WriteDisplayBpm(ExportData& data, const Tempo* tempo)
 			WriteTag(data, "DISPLAYBPM", fmt, ALWAYS, false);
 		}
 	}
-	else if(tempo->displayBpmType == BPM_RANDOM)
+	else if (tempo->displayBpmType == BPM_RANDOM)
 	{
 		WriteTag(data, "DISPLAYBPM", "*", ALWAYS, false);
 	}
@@ -371,9 +383,9 @@ static void WriteTempo(ExportData& data, const Tempo* tempo)
 	WriteFakes(data, tempo);
 	WriteDisplayBpm(data, tempo);
 
-	for(auto& misc : tempo->misc)
+	for (auto& misc : tempo->misc)
 	{
-		WriteTag(data, misc.tag.str(), misc.val, ALWAYS, false);
+		WriteTag(data, misc.tag.c_str(), misc.val, ALWAYS, false);
 	}
 }
 
@@ -383,32 +395,32 @@ static void WriteTempo(ExportData& data, const Tempo* tempo)
 static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgChange>& bgs)
 {
 	WriteTag(data, tag, bgs, END_OF_LINE, ',', ALWAYS, false,
-	[&](const BgChange& bg)
-	{
-		if(bg.effect.empty() && bg.file2.empty() && bg.transition.empty() && bg.color.empty() && bg.color2.empty())
+		[&](const BgChange& bg)
 		{
-		    data.file << std::fixed << std::setprecision(6)
-                << bg.startBeat << '='
-                << bg.file.str()
-		        << bg.rate
-		        << "=0=0=1";
-		}
-		else
-		{
-		    data.file << std::fixed << std::setprecision(6)
-		        << bg.startBeat << '='
-		        << bg.file.str() << '='
-		        << bg.rate << '='
-		        << (bg.transition == "CrossFade") << '='
-		        << (bg.effect == "StretchRewind") << '='
-		        << (bg.effect != "StretchNoLoop") << '='
-		        << bg.effect.str() << '='
-		        << bg.file2.str() << '='
-		        << bg.transition.str() << '='
-		        << bg.color.str() << '='
-		        << bg.color2.str() << '=';
-		}
-	});
+			if (bg.effect.empty() && bg.file2.empty() && bg.transition.empty() && bg.color.empty() && bg.color2.empty())
+			{
+				data.file << std::fixed << std::setprecision(6)
+					<< bg.startBeat << '='
+					<< bg.file
+					<< bg.rate
+					<< "=0=0=1";
+			}
+			else
+			{
+				data.file << std::fixed << std::setprecision(6)
+					<< bg.startBeat << '='
+					<< bg.file << '='
+					<< bg.rate << '='
+					<< (bg.transition == "CrossFade") << '='
+					<< (bg.effect == "StretchRewind") << '='
+					<< (bg.effect != "StretchNoLoop") << '='
+					<< bg.effect << '='
+					<< bg.file2 << '='
+					<< bg.transition << '='
+					<< bg.color << '='
+					<< bg.color2 << '=';
+			}
+		});
 }
 
 // ================================================================================================
@@ -416,19 +428,19 @@ static void WriteBgChanges(ExportData& data, const char* tag, const Vector<BgCha
 
 static char GetNoteChar(uint32_t type)
 {
-	if(type == NOTE_STEP_OR_HOLD)
+	if (type == NOTE_STEP_OR_HOLD)
 	{
 		return '1';
 	}
-	else if(type == NOTE_MINE)
+	else if (type == NOTE_MINE)
 	{
 		return 'M';
 	}
-	else if(type == NOTE_LIFT)
+	else if (type == NOTE_LIFT)
 	{
 		return 'L';
 	}
-	else if(type == NOTE_FAKE)
+	else if (type == NOTE_FAKE)
 	{
 		return 'F';
 	}
@@ -440,18 +452,18 @@ static char GetHoldChar(uint32_t type)
 	return (type == NOTE_STEP_OR_HOLD) ? '2' : '4';
 }
 
-static String RadarToString(const Vector<double>& list)
+static std::string RadarToString(const Vector<double>& list)
 {
-	String out;
-	if(list.empty())
+	std::string out;
+	if (list.empty())
 	{
 		out = "0,0,0,0,0";
 	}
 	else
 	{
-		for(auto it = list.begin(); it != list.end(); ++it)
+		for (auto it = list.begin(); it != list.end(); ++it)
 		{
-			if(out.len()) Str::append(out, ',');
+			if (out.length()) Str::append(out, ',');
 			Str::appendVal(out, *it, 0, 6);
 		}
 	}
@@ -460,27 +472,27 @@ static String RadarToString(const Vector<double>& list)
 
 static const char* GetDifficultyString(Difficulty difficulty)
 {
-	switch(difficulty)
+	switch (difficulty)
 	{
-		case DIFF_BEGINNER:  return "Beginner";
-		case DIFF_EASY:      return "Easy";
-		case DIFF_MEDIUM:    return "Medium";
-		case DIFF_HARD:      return "Hard";
-		case DIFF_CHALLENGE: return "Challenge";
+	case DIFF_BEGINNER:  return "Beginner";
+	case DIFF_EASY:      return "Easy";
+	case DIFF_MEDIUM:    return "Medium";
+	case DIFF_HARD:      return "Hard";
+	case DIFF_CHALLENGE: return "Challenge";
 	};
 	return "Edit";
 }
 
 static inline bool TestSectionCompression(const char* section, int width, int quant)
 {
-	String zeroline(width, '0');
+	std::string zeroline(width, '0');
 	float mod = (float)ROWS_PER_NOTE_SECTION / quant;
 	for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j)
 	{
 		float rem = round(fmod(j, mod));
 		// Check all the compressed rows and make sure they are empty
 		if (rem > 0 && rem < static_cast<int>(mod)
-			&& memcmp(section + j * width, zeroline.str(), width))
+			&& memcmp(section + j * width, zeroline.c_str(), width))
 		{
 			return false;
 		}
@@ -511,7 +523,7 @@ static void WriteSections(ExportData& data)
 	int numCols = chart->style->numCols;
 	int numPlayers = chart->style->numPlayers;
 
-	if(numPlayers == 0 || numCols == 0) return;
+	if (numPlayers == 0 || numCols == 0) return;
 
 	// Allocate a buffer for one uncompressed section of notes.
 	int sectionSize = ROWS_PER_NOTE_SECTION * numCols;
@@ -520,7 +532,7 @@ static void WriteSections(ExportData& data)
 	char* section = sectionVec.data();
 
 	// Export note data for each player.
-	for(int pn = 0; pn < numPlayers; ++pn)
+	for (int pn = 0; pn < numPlayers; ++pn)
 	{
 		int startRow = 0;
 		int remainingHolds = 0;
@@ -534,21 +546,21 @@ static void WriteSections(ExportData& data)
 		const Note* end = chart->notes.end();
 
 		// Write all notes for the current player in blocks of one section.
-		for(; it != end || remainingHolds > 0; startRow += ROWS_PER_NOTE_SECTION)
+		for (; it != end || remainingHolds > 0; startRow += ROWS_PER_NOTE_SECTION)
 		{
 			memset(section, '0', sectionSize);
 			int endRow = startRow + ROWS_PER_NOTE_SECTION;
 
 			// Advance to the first note in the current section.
-			for(; it != end && (int)it->row < startRow; ++it);
+			for (; it != end && (int)it->row < startRow; ++it);
 
 			// Write the notes of the current player to the section data.
-			for(; it != end && (int)it->row < endRow; ++it)
+			for (; it != end && (int)it->row < endRow; ++it)
 			{
-				if((int)it->player == pn)
+				if ((int)it->player == pn)
 				{
 					int pos = (it->row - startRow) * numCols + it->col;
-					if(it->row == it->endrow)
+					if (it->row == it->endrow)
 					{
 						section[pos] = GetNoteChar(it->type);
 					}
@@ -556,9 +568,9 @@ static void WriteSections(ExportData& data)
 					{
 						section[pos] = GetHoldChar(it->type);
 						auto hold = holds[it->col];
-						if(hold)
+						if (hold)
 						{
-							if((int)hold->endrow >= startRow && (int)hold->endrow < endRow)
+							if ((int)hold->endrow >= startRow && (int)hold->endrow < endRow)
 							{
 								int pos = ((int)hold->endrow - startRow) * numCols + (int)hold->col;
 								section[pos] = '3';
@@ -572,14 +584,14 @@ static void WriteSections(ExportData& data)
 			}
 
 			// Write the remaining hold ends to the section data.
-			if(remainingHolds > 0)
+			if (remainingHolds > 0)
 			{
-				for(int col = 0; col < numCols; ++col)
+				for (int col = 0; col < numCols; ++col)
 				{
 					auto hold = holds[col];
-					if(hold)
+					if (hold)
 					{
-						if((int)hold->endrow >= startRow && (int)hold->endrow < endRow)
+						if ((int)hold->endrow >= startRow && (int)hold->endrow < endRow)
 						{
 							int pos = (hold->endrow - startRow) * numCols + hold->col;
 							section[pos] = '3';
@@ -602,21 +614,21 @@ static void WriteSections(ExportData& data)
 			}
 			for (int k = 0; k < count; ++k, m += pitch)
 			{
-			    for (int i = 0; i < numCols; i++)
-			        data.file << m[i];
-			    data.file << '\n';
+				for (int i = 0; i < numCols; i++)
+					data.file << m[i];
+				data.file << '\n';
 			}
 
 			// Write a comma if this is not the last section.
-			if(it != end || remainingHolds > 0)
-			    data.file << ",\n";
+			if (it != end || remainingHolds > 0)
+				data.file << ",\n";
 		}
 
 		// Write an ampersand if this is not the last player.
-		if(pn != numPlayers - 1)
-		    data.file << "&\n";
+		if (pn != numPlayers - 1)
+			data.file << "&\n";
 	}
-    data.file << ";\n";
+	data.file << ";\n";
 }
 
 static void WriteChart(ExportData& data)
@@ -626,48 +638,48 @@ static void WriteChart(ExportData& data)
 	// Make sure each difficulty type is only exported once.
 	Difficulty diff = chart->difficulty;
 	int sd = chart->style->index * NUM_DIFFICULTIES + chart->difficulty;
-	if(data.diffs.find(sd) != data.diffs.size())
+	if (data.diffs.find(sd) != data.diffs.size())
 	{
 		Difficulty oldDiff = diff;
-		String oldDesc = chart->description();
+		std::string oldDesc = chart->description();
 		diff = DIFF_EDIT;
-		String newDesc = chart->description();
+		std::string newDesc = chart->description();
 
 		HudWarning("Duplicate difficulties, saving (%s) as (%s) instead",
-			oldDesc.str(), newDesc.str());
+			oldDesc.c_str(), newDesc.c_str());
 	}
-	else if(chart->difficulty != DIFF_EDIT)
+	else if (chart->difficulty != DIFF_EDIT)
 	{
 		data.diffs.push_back(sd);
 	}
 
 	// Write the output chart data.
-    data.file << "//--------------- " << chart->style->id.str() << " - " << chart->artist.str() << " ----------------\n";
+	data.file << "//--------------- " << chart->style->id << " - " << chart->artist << " ----------------\n";
 
-	String chartStyle = Escape("chart style", chart->style->id.str());
-	String chartArtist = Escape("chart artist", chart->artist.str());
+	std::string chartStyle = Escape("chart style", chart->style->id);
+	std::string chartArtist = Escape("chart artist", chart->artist);
 
-	if(data.ssc)
+	if (data.ssc)
 	{
-		WriteTag(data, "NOTEDATA", String(), ALWAYS, true);
-		WriteTag(data, "STEPSTYPE", chartStyle.str(), ALWAYS, true);
-		WriteTag(data, "DESCRIPTION", chartArtist.str(), ALWAYS, true);
+		WriteTag(data, "NOTEDATA", std::string(), ALWAYS, true);
+		WriteTag(data, "STEPSTYPE", chartStyle, ALWAYS, true);
+		WriteTag(data, "DESCRIPTION", chartArtist, ALWAYS, true);
 		WriteTag(data, "DIFFICULTY", GetDifficultyString(diff), ALWAYS, true);
 		WriteTag(data, "METER", chart->meter, ALWAYS, true);
-		WriteTag(data, "RADARVALUES", RadarToString(chart->radar).str(), ALWAYS, true);
+		WriteTag(data, "RADARVALUES", RadarToString(chart->radar), ALWAYS, true);
 
-		if(chart->tempo) WriteTempo(data, chart->tempo);
+		if (chart->tempo) WriteTempo(data, chart->tempo);
 
-	    data.file << "#NOTES:\n";
+		data.file << "#NOTES:\n";
 	}
 	else
 	{
-	    data.file << "#NOTES:\n";
-	    data.file << "     " << chartStyle.str() << ":\n";
-	    data.file << "     " << chartArtist.str() << ":\n";
-	    data.file << "     " << GetDifficultyString(diff) << ":\n";
-	    data.file << "     " << chart->meter << ":\n";
-	    data.file << "     " << RadarToString(chart->radar).str() << ":\n";
+		data.file << "#NOTES:\n";
+		data.file << "     " << chartStyle << ":\n";
+		data.file << "     " << chartArtist << ":\n";
+		data.file << "     " << GetDifficultyString(diff) << ":\n";
+		data.file << "     " << chart->meter << ":\n";
+		data.file << "     " << RadarToString(chart->radar) << ":\n";
 	}
 
 	WriteSections(data);
@@ -684,25 +696,26 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	data.sim = sim;
 
 	Path path = sim->dir + sim->file + (ssc ? ".ssc" : ".sm");
+	fs::path fpath(Widen(path.str).str());
 
 	// If a backup file is requested, rename the existing sim before saving over it.
-	if(backup && (path.attributes() & File::ATR_EXISTS))
+	if(backup && fs::exists(fpath))
 	{
-		if(!File::moveFile(path.str, path.str + ".old", true))
+		if (!File::moveFile(path.str, path.str + ".old", true))
 		{
-			String name = path.filename();
-			HudError("Could not backup \"%s\".", name.str());
+			std::string name = path.filename();
+			HudError("Could not backup \"%s\".", name.c_str());
 		}
 	}
 
 	// Open the output file.
-    data.file.open(path.str.str());
+    data.file.open(fpath);
 	if(data.file.fail())
 	    return false;
 	GiveUnicodeWarning(path, "sim");
 
 	// Start with a version tag for SSC files.
-	if(ssc) WriteTag(data, "VERSION", "0.83", ALWAYS, true);
+	if (ssc) WriteTag(data, "VERSION", "0.83", ALWAYS, true);
 
 	WriteTextTag(data, "TITLE", sim->title, ALWAYS, false, "unknown");
 	WriteTextTag(data, "SUBTITLE", sim->subtitle, ALWAYS, false);
@@ -722,11 +735,11 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	WriteTag(data, "SAMPLELENGTH", sim->previewLength, ALWAYS, false);
 	WriteTag(data, "SELECTABLE", sim->isSelectable ? "YES" : "NO", ALWAYS, false);
 
-	if(sim->previewLength > 0 && sim->previewLength < 3)
+	if (sim->previewLength > 0 && sim->previewLength < 3)
 	{
 		HudWarning("The music preview is shorter than 3 seconds, which will default to 12 seconds in ITG.");
 	}
-	else if(sim->previewLength > 30)
+	else if (sim->previewLength > 30)
 	{
 		HudWarning("The music preview is longer than 30 seconds, which will default to 12 seconds in ITG.");
 	}
@@ -734,20 +747,20 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup)
 	WriteTempo(data, sim->tempo);
 
 	WriteBgChanges(data, "BGCHANGES", sim->bgChanges[0]);
-	if(sim->bgChanges[1].size())
+	if (sim->bgChanges[1].size())
 	{
 		WriteBgChanges(data, "BGCHANGES2", sim->bgChanges[1]);
 	}
 	WriteBgChanges(data, "FGCHANGES", sim->fgChanges);
 
-	for(auto& chart : sim->charts)
+	for (auto& chart : sim->charts)
 	{
 		data.chart = chart;
 		WriteChart(data);
 		data.chart = nullptr;
 	}
 
-	HudInfo("Saved: %s", path.filename().str());
+	HudInfo("Saved: %s", path.filename().c_str());
 
 	return true;
 }

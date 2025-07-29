@@ -187,7 +187,7 @@ static void ReadFontSize(const uint8_t* param, int len)
 static void ReadFontChange(const uint8_t* param, int len)
 {
 	// Resolve the path of the font file (could be an asset name).
-	String path((const char*)param, len);
+	std::string path((const char*)param, len);
 
 	// Look for the font in the font manager.
 	FontData* font = FontManager::find(path);
@@ -280,7 +280,7 @@ static const Glyph* ReadMarkup(const uint8_t* str)
 		case ID1('F'):
 			ReadFontChange(param, paramLen); break;
 		case ID1('G'):
-			return FontManager::getGlyph(String((const char*)param, paramLen));
+			return FontManager::getGlyph(std::string((const char*)param, paramLen));
 		case ID2('L', 'B'):
 			return GetGlyph('{');
 		case ID2('R', 'B'):
@@ -827,9 +827,9 @@ Text::CursorPos Text::getCursorPos(vec2i textPos, int charIndex)
 	return {textPos.x + line.x + line.w, textPos.y + line.y + line.top, line.bottom - line.top};
 }
 
-String Text::escapeMarkup(const char* str)
+std::string Text::escapeMarkup(const char* str)
 {
-	String out;
+	std::string out;
 	for(; *str; ++str)
 	{
 		if(*str == '{')

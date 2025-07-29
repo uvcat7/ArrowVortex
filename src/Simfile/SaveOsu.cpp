@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <fstream>
 
 #include <Core/WideString.h>
 #include <Core/Utils.h>
@@ -20,9 +21,6 @@
 
 #include <Managers/StyleMan.h>
 
-#include <cmath>
-#include <fstream>
-
 namespace Vortex {
 namespace Osu {
 namespace {
@@ -37,22 +35,22 @@ static int ToMilliseconds(double time)
 
 static void WriteBlock(std::ofstream& out, const char* name)
 {
-    out << "\n[" << name << "]\n";
+	out << "\n[" << name << "]\n";
 }
 
 static void Write(std::ofstream& out, const char* str)
 {
-    out << str << '\n';
+	out << str << '\n';
 }
 
 static void Write(std::ofstream& out, const char* name, const char* val)
 {
-    out << name << ':' << val << '\n';
+	out << name << ':' << val << '\n';
 }
 
-static void Write(std::ofstream& out, const char* name, StringRef val)
+static void Write(std::ofstream& out, const char* name, const std::string& val)
 {
-	Write(out, name, val.str());
+	Write(out, name, val.c_str());
 }
 
 static void Write(std::ofstream& out, const char* name, int val)
@@ -129,31 +127,31 @@ static void WriteTimingPoints(std::ofstream& out, const Chart* chart, const Timi
 	// Create a list of timing point from the tempo.
 	auto it = timing.events.begin();
 	auto end = timing.events.end();
-	for(; it != end; ++it)
+	for (; it != end; ++it)
 	{
-		if(it->endTime > it->time)
+		if (it->endTime > it->time)
 		{
 			auto next = it + 1;
-			if(next == end) next = nullptr;
+			if (next == end) next = nullptr;
 			ConvertStop(tps, it, next, chart);
 		}
 		else
 		{
-			tps.push_back({it->time, it->spr});
+			tps.push_back({ it->time, it->spr });
 		}
 	}
 
 	// Output the timing points.
-	for(auto& tp : tps)
+	for (auto& tp : tps)
 	{
 		double msPerBeat = tp.spr * 48.0 * 1000.0;
 		double time = tp.time;
-		if(time < 0)
+		if (time < 0)
 		{
 			double secPerMeasure = (msPerBeat / 1000.0) * 4.0;
 			time = secPerMeasure - fmod(-time, secPerMeasure);
 		}
-	    out << ToMilliseconds(time) << ',' << msPerBeat << ",4,1,0,100,1,0\n";
+		out << ToMilliseconds(time) << ',' << msPerBeat << ",4,1,0,100,1,0\n";
 	}
 }
 
@@ -167,25 +165,25 @@ static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData&
 
 	// Export the notes as hit objects.
 	TempoTimeTracker tracker(timing);
-	for(auto& note : chart->notes)
+	for (auto& note : chart->notes)
 	{
-		if(note.type != NOTE_MINE)
+		if (note.type != NOTE_MINE)
 		{
 			// Conver the note's [column, row] to [x, time].
 			int x = note.col * colWidth + colWidth / 2;
 			double time = tracker.advance(note.row);
 			double endtime = time;
-			if(note.endrow > note.row)
+			if (note.endrow > note.row)
 			{
 				endtime = timing.rowToTime(note.endrow);
 			}
 
 			// Write the output hitobject.
-		    out << x << ",192," << ToMilliseconds(time);
-			if(endtime > time)
-			    out << ",128,0," << ToMilliseconds(endtime) << ":0:0:0:0:\n";
+			out << x << ",192," << ToMilliseconds(time);
+			if (endtime > time)
+				out << ",128,0," << ToMilliseconds(endtime) << ":0:0:0:0:\n";
 			else
-			    out << ",1,0,0:0:0:0:\n";
+				out << ",1,0,0:0:0:0:\n";
 		}
 	}
 }
@@ -193,11 +191,11 @@ static void WriteNotes(std::ofstream& out, const Chart* chart, const TimingData&
 // ===================================================================================
 // Chart exporting.
 
-static void SaveChart(StringRef path, const Simfile* sim, const Chart* chart)
+static void SaveChart(const std::string& path, const Simfile* sim, const Chart* chart)
 {
 	// Open the output file.
-	std::ofstream out(path.str());
-	if(out.fail()) return;
+	std::ofstream out(path);
+	if (out.fail()) return;
 
 	// Write the version number;
 	Write(out, "osu file format v14");
@@ -225,9 +223,9 @@ static void SaveChart(StringRef path, const Simfile* sim, const Chart* chart)
 	// Write metadata.
 	WriteBlock(out, "Metadata");
 
-	Write(out, "Title", sim->titleTr.len() ? sim->titleTr : sim->title);
+	Write(out, "Title", sim->titleTr.length() ? sim->titleTr : sim->title);
 	Write(out, "TitleUnicode", sim->title);
-	Write(out, "Artist", sim->artistTr.len() ? sim->artistTr : sim->artist);
+	Write(out, "Artist", sim->artistTr.length() ? sim->artistTr : sim->artist);
 	Write(out, "ArtistUnicode", sim->artist);
 	Write(out, "Creator", chart ? chart->artist : "Unknown");
 	Write(out, "Version", chart ? GetDifficultyName(chart->difficulty) : "Normal");
@@ -252,8 +250,8 @@ static void SaveChart(StringRef path, const Simfile* sim, const Chart* chart)
 	WriteBlock(out, "Events");
 
 	Write(out, "//Background and Video events");
-	if(sim->background.len())
-	    out << "0,0,\"" << sim->background.str() << "\",0,0\n";
+	if (sim->background.length())
+		out << "0,0,\"" << sim->background.length() << "\",0,0\n";
 	Write(out, "//Break Periods");
 	Write(out, "//Storyboard Layer 0 (Background)");
 	Write(out, "//Storyboard Layer 1 (Fail");
@@ -285,25 +283,25 @@ bool SaveOsu(const Simfile* sim, bool backup)
 	{
 		Path path(sim->dir + sim->file + ".osu");
 		SaveChart(path, sim, nullptr);
-		HudInfo("Saved: %s", path.filename().str());
+		HudInfo("Saved: %s", path.filename().c_str());
 	}
 	else
 	{
-		std::map<String, int> duplicateCounters;
+		std::map<std::string, int> duplicateCounters;
 		for(auto chart : sim->charts)
 		{
-			String path = sim->dir + sim->file;
-			path += " [";
-			path += GetDifficultyName(chart->difficulty);
+			std::string path = sim->dir + sim->file;
+			path = path + " [";
+			path = path + GetDifficultyName(chart->difficulty);
 			int& counter = duplicateCounters[path];
 			if(++counter > 1)
 			{
-				path += Str::fmt(" %1").arg(counter).str;
+				path = path + Str::fmt(" %1").arg(counter).str;
 			}
-			path += "].osu";
+			path = path + "].osu";
 			SaveChart(path, sim, chart);
 		}
-		HudInfo("Saved: %s", sim->file.str());
+		HudInfo("Saved: %s", sim->file.c_str());
 	}	
 
 	return true;

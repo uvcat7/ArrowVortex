@@ -51,3 +51,6 @@ Code from the following projects is included in this repository:
     src/Editor/Aubio.h and src/Editor/FindOnsets.cpp
     https://github.com/aubio/aubio
 
+ 8. Code from the stb library, which is in public domain, is present in
+    src/Core/ImageLoader.cpp
+    https://github.com/nothings/stb
