@@ -9,7 +9,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_LCD_FILTER_H
-#include <ftglyph.h>
+#include FT_GLYPH_H
 
 namespace Vortex {
 

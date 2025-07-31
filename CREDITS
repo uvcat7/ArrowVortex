@@ -28,16 +28,16 @@ status of the original code as provided to them.
 Code from the following projects is included in this repository:
 
  1. freetype , using the FreeType License, which is compatible with GPLv3
-    See lib/freetype/ or https://freetype.org/license.html for more info.
+    See https://freetype.org/license.html for more info.
 
  2. libogg & libvorbis, using its BSD-style license, which is compatible with
-    GPLv3. See lib/libvorbis/license or https://gitlab.xiph.org/xiph for more info.
+    GPLv3. See https://gitlab.xiph.org/xiph for more info.
 
  3. libmad, using the GPL license (libmad allows for GPLv2 or any later version)
-    See lib/freetype/ or https://www.underbit.com/products/mad/ for more info.
+    See https://www.underbit.com/products/mad/ for more info.
 
  4. lua, using its GPLv3-compatible permissive license
-    See lib/lua/ or https://www.lua.org/license.html for more info.
+    See https://www.lua.org/license.html for more info.
 
  5. Code from liir.c by Exstrom Labratories, which is GPL, is present in
     src/Editor/Butterworth.cpp

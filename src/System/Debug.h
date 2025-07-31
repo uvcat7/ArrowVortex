@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <chrono>
 
-#ifndef _DEBUG
+#ifdef NDEBUG
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
 #endif
