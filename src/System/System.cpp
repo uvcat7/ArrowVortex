@@ -454,9 +454,9 @@ void CALLBACK messageLoop()
 
 #ifdef DEBUG
 		auto inputTime = Debug::getElapsedTime();
-#endif
 
 		VortexCheckGlError();
+#endif
 
 		gEditor->tick();
 
