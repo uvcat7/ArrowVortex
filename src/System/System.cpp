@@ -347,7 +347,7 @@ SystemImpl()
 	Debug::log("swap interval support :: %s\n", wglSwapInterval ? "OK" : "MISSING");
 	if(wglSwapInterval)
 	{
-		wglSwapInterval(-1);
+		wglSwapInterval(1);
 		VortexCheckGlError();
 	}
 
