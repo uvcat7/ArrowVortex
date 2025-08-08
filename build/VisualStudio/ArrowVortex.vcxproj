@@ -355,6 +355,7 @@
     <ClCompile Include="..\..\src\Dialogs\DancingBot.cpp" />
     <ClCompile Include="..\..\src\Dialogs\Dialog.cpp" />
     <ClCompile Include="..\..\src\Dialogs\GenerateNotes.cpp" />
+    <ClCompile Include="..\..\src\Dialogs\LabelBreakdown.cpp" />
     <ClCompile Include="..\..\src\Dialogs\NewChart.cpp" />
     <ClCompile Include="..\..\src\Dialogs\SongProperties.cpp" />
     <ClCompile Include="..\..\src\Dialogs\TempoBreakdown.cpp" />
@@ -462,6 +463,7 @@
     <ClInclude Include="..\..\src\Dialogs\DancingBot.h" />
     <ClInclude Include="..\..\src\Dialogs\Dialog.h" />
     <ClInclude Include="..\..\src\Dialogs\GenerateNotes.h" />
+    <ClInclude Include="..\..\src\Dialogs\LabelBreakdown.h" />
     <ClInclude Include="..\..\src\Dialogs\NewChart.h" />
     <ClInclude Include="..\..\src\Dialogs\SongProperties.h" />
     <ClInclude Include="..\..\src\Dialogs\TempoBreakdown.h" />
