@@ -1,6 +1,6 @@
 #include <Editor/Sound.h>
 
-#include <libmad/include/mad.h>
+#include <mad.h>
 
 #include <stdio.h>
 #include <string.h>

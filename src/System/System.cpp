@@ -1,4 +1,4 @@
-#ifdef _DEBUG
+#ifndef NDEBUG
 #define CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -402,7 +402,7 @@ void CALLBACK messageLoop()
 
 	if(!myInitSuccesful) return;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 	long long frames = 0;
 	auto lowcounts = 0;
 	std::list<double> fpsList, sleepList, frameList, inputList, waitList;
@@ -452,7 +452,7 @@ void CALLBACK messageLoop()
 		// Reset the mouse cursor.
 		myCursor = Cursor::ARROW;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 		auto inputTime = Debug::getElapsedTime();
 
 		VortexCheckGlError();
@@ -463,7 +463,7 @@ void CALLBACK messageLoop()
 		// Display.
 		SwapBuffers(myHDC);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 		auto renderTime = Debug::getElapsedTime();
 #endif
 		// Tick function.
@@ -483,7 +483,7 @@ void CALLBACK messageLoop()
 		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
 		prevTime = curTime;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 		// Do frame statistics
 		// Note that these will be wrong with VSync enabled.
 		fpsList.push_front(deltaTime.count());
@@ -1106,7 +1106,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, char*, int)
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF);
 
 	ApplicationStart();
-#ifdef DEBUG
+#ifndef NDEBUG
 	Debug::openConsole();
 #endif
 	gSystem = new SystemImpl;

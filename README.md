@@ -61,17 +61,13 @@ Game styles:
 - Pump Double
 - Pump Couple
 
-## About this project
-
-Unfortunately, the source code for the 2017-02-25 release of ArrowVortex has been lost to time. The only surviving archive of source code was a development snapshot from 2016. A small group of volunteer developers put a lot of time and effort into restoring the full functionality of the 2017 release of ArrowVortex.
-
-Some new features were introduced as well when preparing this release, and some bugs present in the 2017 version have been fixed as well.
+# About this project
 
 ## Building ArrowVortex
 
-In order to compile ArrowVortex on your own PC, Visual Studio is required. It is recommended to use Visual Studio 2022 with the "Desktop development for C++" components installed.
+The project uses CMake for building and vcpkg for package management. Currently Visual Studio is recommended for building the solution, since the project is Windows-only. The Visual Studio Build Tools are required.
 
-Simply open `build/VisualStudio/ArrowVortex.sln` in Visual Studio, and build the project.
+See the [build details](BUILDING.md) for more information.
 
 ## License
 
@@ -79,4 +75,4 @@ ArrowVortex is provided under the GPLv3 license, or at your option, any later ve
 
 The original author provided the volunteer developers with an archive of the source code, which did not include a formal license. The original author explicitly requested that any new code developed by the volunteer developers be released under a license which prevents the code from being used in closed source software. The volunteer developers, as a separate party, have acted in good faith to comply with this request and bear no liability for the licensing status of the original code as provided to them.
 
-For licensing info on the dependent projects and a list of contributors, see the CREDITS file.
+For licensing info on the dependent projects and a list of contributors, see the [CREDITS file](CREDITS).
