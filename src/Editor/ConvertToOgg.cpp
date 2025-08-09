@@ -55,7 +55,7 @@ struct OggConversionPipe : public System::CommandPipe
 {
 	int read()
 	{
-		if(*terminateFlag)
+		if(terminateFlag.stop_requested())
 		{
 			return 0;
 		}
@@ -79,7 +79,7 @@ struct OggConversionPipe : public System::CommandPipe
 	int totalFrames, framesLeft;
 	const short* srcL, *srcR;
 	short samples[4096 * 2];
-	uint8_t* terminateFlag;
+	std::stop_token terminateFlag;
 };
 
 }; // Anonymous namepspace.
@@ -100,7 +100,7 @@ void OggConversionThread::exec()
 	pipe->srcR = music.samplesR();
 	pipe->firstChunk = true;
 	pipe->progress = &progress;
-	pipe->terminateFlag = &terminationFlag_;
+	pipe->terminateFlag = getStopToken();
 	WriteWaveHeader((WaveHeader*)(pipe->samples), music.getNumFrames(), music.getFrequency());
 
 	// Encode the PCM file with the oggenc2 command line utility.

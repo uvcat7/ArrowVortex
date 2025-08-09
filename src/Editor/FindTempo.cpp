@@ -15,7 +15,7 @@
 #include <functional>
 #include <atomic>
 
-#define MarkProgress(number, text) { if(*data->terminate) {return;} data->progress = number; }
+#define MarkProgress(number, text) { if(data->terminate.stop_requested()) {return;} data->progress = number; }
 
 typedef double real;
 
@@ -44,15 +44,14 @@ struct SerializedTempo
 	float* samples;
 	int samplerate;
 	int numFrames;
-	int numThreads;
-	uint8_t* terminate;
+	std::stop_token terminate;
 	std::atomic_int progress;
 	TempoResults result;
 };
 
 struct GapData
 {
-	GapData(int numThreads, int maxInterval, int downsample, int numOnsets, const Onset* onsets);
+	GapData(int maxInterval, int downsample, int numOnsets, const Onset* onsets);
 	~GapData();
 
 	const Onset* onsets;
@@ -98,7 +97,7 @@ static void NormalizeFitness(real& fitness, const real* coefs, real interval)
 // ================================================================================================
 // Gap confidence evaluation
 
-GapData::GapData(int numThreads, int bufferSize, int downsample, int numOnsets, const Onset* onsets)
+GapData::GapData(int bufferSize, int downsample, int numOnsets, const Onset* onsets)
 	: numOnsets(numOnsets)
 	, onsets(onsets)
 	, downsample(downsample)
@@ -106,8 +105,8 @@ GapData::GapData(int numThreads, int bufferSize, int downsample, int numOnsets, 
 	, bufferSize(bufferSize)
 {
 	window = AlignedMalloc<real>(windowSize);
-	wrappedPos = AlignedMalloc<int>(numOnsets * numThreads);
-	wrappedOnsets = AlignedMalloc<real>(bufferSize * numThreads);
+	wrappedPos = AlignedMalloc<int>(numOnsets);
+	wrappedOnsets = AlignedMalloc<real>(bufferSize);
 	CreateHammingWindow(window, windowSize);
 }
 
@@ -119,13 +118,13 @@ GapData::~GapData()
 }
 
 // Returns the confidence value that indicates how many onsets are close to the given gap position.
-static real GapConfidence(const GapData& gapdata, int threadId, int gapPos, int interval)
+static real GapConfidence(const GapData& gapdata, int gapPos, int interval)
 {
 	int numOnsets = gapdata.numOnsets;
 	int windowSize = gapdata.windowSize;
 	int halfWindowSize = windowSize / 2;
 	const real* window = gapdata.window;
-	const real* wrappedOnsets = gapdata.wrappedOnsets + gapdata.bufferSize * threadId;
+	const real* wrappedOnsets = gapdata.wrappedOnsets;
 	real area = 0.0;
 
 	int beginOnset = gapPos - halfWindowSize;
@@ -162,14 +161,14 @@ static real GapConfidence(const GapData& gapdata, int threadId, int gapPos, int 
 }
 
 // Returns the confidence of the best gap value for the given interval.
-static real GetConfidenceForInterval(const GapData& gapdata, int threadId, int interval)
+static real GetConfidenceForInterval(const GapData& gapdata, int interval)
 {
 	int downsample = gapdata.downsample;
 	int numOnsets = gapdata.numOnsets;
 	const Onset* onsets = gapdata.onsets;
 
-	int* wrappedPos = gapdata.wrappedPos + gapdata.numOnsets * threadId;
-	real* wrappedOnsets = gapdata.wrappedOnsets + gapdata.bufferSize * threadId;
+	int* wrappedPos = gapdata.wrappedPos;
+	real* wrappedOnsets = gapdata.wrappedOnsets;
 	memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
 
 	// Make a histogram of onset strengths for every position in the interval.
@@ -186,9 +185,9 @@ static real GetConfidenceForInterval(const GapData& gapdata, int threadId, int i
 	for(int i = 0; i < numOnsets; ++i)
 	{
 		int pos = wrappedPos[i];
-		real confidence = GapConfidence(gapdata, threadId, pos, reducedInterval);
+		real confidence = GapConfidence(gapdata, pos, reducedInterval);
 		int offbeatPos = (pos + reducedInterval / 2) % reducedInterval;
-		confidence += GapConfidence(gapdata, threadId, offbeatPos, reducedInterval) * 0.5;
+		confidence += GapConfidence(gapdata, offbeatPos, reducedInterval) * 0.5;
 
 		if(confidence > highestConfidence)
 		{
@@ -200,13 +199,13 @@ static real GetConfidenceForInterval(const GapData& gapdata, int threadId, int i
 }
 
 // Returns the confidence of the best gap value for the given BPM value.
-static real GetConfidenceForBPM(const GapData& gapdata, int threadId, IntervalTester& test, real bpm)
+static real GetConfidenceForBPM(const GapData& gapdata, IntervalTester& test, real bpm)
 {
 	int numOnsets = gapdata.numOnsets;
 	const Onset* onsets = gapdata.onsets;
 
-	int* wrappedPos = gapdata.wrappedPos + gapdata.numOnsets * threadId;
-	real* wrappedOnsets = gapdata.wrappedOnsets + gapdata.bufferSize * threadId;
+	int* wrappedPos = gapdata.wrappedPos;
+	real* wrappedOnsets = gapdata.wrappedOnsets;
 	memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
 
 	// Make a histogram of i strengths for every position in the interval.
@@ -224,9 +223,9 @@ static real GetConfidenceForBPM(const GapData& gapdata, int threadId, IntervalTe
 	for(int i = 0; i < numOnsets; ++i)
 	{
 		int pos = wrappedPos[i];
-		real confidence = GapConfidence(gapdata, threadId, pos, interval);
+		real confidence = GapConfidence(gapdata, pos, interval);
 		int offbeatPos = (pos + interval / 2) % interval;
-		confidence += GapConfidence(gapdata, threadId, offbeatPos, interval) * 0.5;
+		confidence += GapConfidence(gapdata, offbeatPos, interval) * 0.5;
 
 		if(confidence > highestConfidence)
 		{
@@ -265,35 +264,14 @@ static real IntervalToBPM(const IntervalTester& test, int i)
 	return (test.samplerate * 60.0) / (i + test.minInterval);
 }
 
-static void FillCoarseIntervals(IntervalTester& test, GapData& gapdata, int numThreads)
+static void FillCoarseIntervals(IntervalTester& test, GapData& gapdata)
 {
 	int numCoarseIntervals = (test.numIntervals + IntervalDelta - 1) / IntervalDelta;
-	if(numThreads > 1)
+	for(int i = 0; i < numCoarseIntervals; ++i)
 	{
-		struct IntervalThreads : public ParallelThreads
-		{
-			IntervalTester* test;
-			GapData* gapdata;
-			void exec(int i, int thread)
-			{
-				int index = i * IntervalDelta;
-				int interval = test->minInterval + index;
-				test->fitness[index] = std::max(0.001, GetConfidenceForInterval(*gapdata, thread, interval));
-			}
-		};
-		IntervalThreads threads;
-		threads.test = &test;
-		threads.gapdata = &gapdata;
-		threads.run(numCoarseIntervals, numThreads);
-	}
-	else
-	{
-		for(int i = 0; i < numCoarseIntervals; ++i)
-		{
-			int index = i * IntervalDelta;
-			int interval = test.minInterval + index;
-			test.fitness[index] = std::max(0.001, GetConfidenceForInterval(gapdata, 0, interval));
-		}
+		int index = i * IntervalDelta;
+		int interval = test.minInterval + index;
+		test.fitness[index] = std::max(0.001, GetConfidenceForInterval(gapdata, interval));
 	}
 }
 
@@ -306,7 +284,7 @@ static vec2i FillIntervalRange(IntervalTester& test, GapData& gapdata, int begin
 	{
 		if(*fit == 0)
 		{
-			*fit = GetConfidenceForInterval(gapdata, 0, interval);
+			*fit = GetConfidenceForInterval(gapdata, interval);
 			NormalizeFitness(*fit, test.coefs, (real)interval);
 			*fit = std::max(*fit, 0.1);
 		}
@@ -362,8 +340,8 @@ static void RoundBPMValues(IntervalTester& test, GapData& gapdata, TempoResults&
 		}
 		else if(diff < 0.05)
 		{
-			real old = GetConfidenceForBPM(gapdata, 0, test, t.bpm);
-			real cur = GetConfidenceForBPM(gapdata, 0, test, roundBPM);
+			real old = GetConfidenceForBPM(gapdata, test, t.bpm);
+			real cur = GetConfidenceForBPM(gapdata, test, roundBPM);
 			if(cur > old * 0.99) t.bpm = roundBPM;
 		}
 	}
@@ -382,11 +360,11 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets)
 	}
 
 	IntervalTester test(data->samplerate, numOnsets, onsets);
-	GapData* gapdata = new GapData(data->numThreads, test.maxInterval, IntervalDownsample, numOnsets, onsets);
+	GapData* gapdata = new GapData(test.maxInterval, IntervalDownsample, numOnsets, onsets);
 
 	// Loop through every 10th possible BPM, later we will fill in those that look interesting.
 	memset(test.fitness, 0, test.numIntervals * sizeof(real));
-	FillCoarseIntervals(test, *gapdata, data->numThreads);
+	FillCoarseIntervals(test, *gapdata);
 	int numCoarseIntervals = (test.numIntervals + IntervalDelta - 1) / IntervalDelta;
 	MarkProgress(2, "Fill course intervals");
 
@@ -414,7 +392,7 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets)
 
 	// At this point we stop the downsampling and upgrade to a more precise gap window.
 	delete gapdata;
-	gapdata = new GapData(data->numThreads, test.maxInterval, 0, numOnsets, onsets);
+	gapdata = new GapData(test.maxInterval, 0, numOnsets, onsets);
 
 	// Round BPM values to integers when possible, and remove weaker duplicates.
 	std::stable_sort(tempo.begin(), tempo.end(), TempoSort());
@@ -425,7 +403,7 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets)
 	if(tempo.size() >= 2 && tempo[0].fitness / tempo[1].fitness < 1.05)
 	{
 		for(auto& t : tempo)
-			t.fitness = GetConfidenceForBPM(*gapdata, 0, test, t.bpm);
+			t.fitness = GetConfidenceForBPM(*gapdata, test, t.bpm);
 		std::stable_sort(tempo.begin(), tempo.end(), TempoSort());
 	}
 
@@ -498,9 +476,9 @@ static real GetBaseOffsetValue(const GapData& gapdata, int samplerate, real bpm)
 	for(int i = 0; i < numOnsets; ++i)
 	{
 		int pos = wrappedPos[i];
-		real confidence = GapConfidence(gapdata, 0, pos, interval);
+		real confidence = GapConfidence(gapdata, pos, interval);
 		int offbeatPos = (pos + interval / 2) % interval;
-		confidence += GapConfidence(gapdata, 0, offbeatPos, interval) * 0.5;
+		confidence += GapConfidence(gapdata, offbeatPos, interval) * 0.5;
 
 		if(confidence > highestConfidence)
 		{
@@ -552,7 +530,7 @@ static void CalculateOffset(SerializedTempo* data, Onset* onsets, int numOnsets)
 	// Create gapdata buffers for testing.
 	real maxInterval = 0.0;
 	for(auto& t : tempo) maxInterval = std::max(maxInterval, samplerate * 60.0 / t.bpm);
-	GapData gapdata(1, (int)(maxInterval + 1.0), 1, numOnsets, onsets);
+	GapData gapdata((int)(maxInterval + 1.0), 1, numOnsets, onsets);
 
 	// Fill in onset values for each BPM.
 	for(auto& t : tempo)
@@ -597,10 +575,9 @@ TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames)
 {
 	auto& music = gMusic->getSamples();
 
-	data_.terminate = &terminationFlag_;
+	data_.terminate = getStopToken();
 	data_.progress = 0;
 	
-	data_.numThreads = ParallelThreads::concurrency();
 	data_.numFrames = numFrames;
 	data_.samplerate = music.getFrequency();
 
