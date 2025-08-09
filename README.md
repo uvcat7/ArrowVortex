@@ -67,6 +67,15 @@ Unfortunately, the source code for the 2017-02-25 release of ArrowVortex has bee
 
 Some new features were introduced as well when preparing this release, and some bugs present in the 2017 version have been fixed as well.
 
+## Contributing to the project
+
+If you would like to report bugs or suggest simple features to add, please use the issue templates to do so. Make sure an issue for your problem doesn't exist before you create a new one.
+When the changes you would like to add are of a larger scope (e.g. adding a new subsystem to the editor or redesigning a popup window), make a discussion instead.
+
+Pull requests to add features and fix bugs are always welcomed. Please reach out to @uvcat7 with any questions.
+
+After a contribution, @uvcat7 will add you to the repository as a collaborator.
+
 ## Building ArrowVortex
 
 In order to compile ArrowVortex on your own PC, Visual Studio is required. It is recommended to use Visual Studio 2022 with the "Desktop development for C++" components installed.
