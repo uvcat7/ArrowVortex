@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Get AV
         uses: actions/checkout@v4
-      - name: Get MSBuild
-        uses: microsoft/setup-msbuild@v2
       - name: Obtain oggenc2.exe
         run: >
           curl https://www.rarewares.org/files/ogg/oggenc2.88-1.3.7-x64.zip --output oggenc.zip &&
