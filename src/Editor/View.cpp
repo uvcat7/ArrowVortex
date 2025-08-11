@@ -101,6 +101,7 @@ void loadSettings(XmrNode& settings)
 		view->get("scaleLevel", &myScaleLevel);
 		view->get("receptorX", &myReceptorX);
 		view->get("receptorY", &myReceptorY);
+		view->get("previewOffset", &myPreviewOffset);
 
 		myCustomSnap = min(max(myCustomSnap, 5), 191);
 		myZoomLevel = min(max(myZoomLevel, -2.0), 16.0);
@@ -124,6 +125,7 @@ void saveSettings(XmrNode& settings)
 	view->addAttrib("scaleLevel", (long)myScaleLevel);
 	view->addAttrib("receptorX", (long)myReceptorX);
 	view->addAttrib("receptorY", (long)myReceptorY);
+	view->addAttrib("previewOffset", (long)myPreviewOffset);
 }
 
 // ================================================================================================
