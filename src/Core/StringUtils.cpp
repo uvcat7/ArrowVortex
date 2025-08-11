@@ -746,7 +746,7 @@ Fmt& Fmt::arg(const char* s, size_t n)
 
 	// Insert the string at the marker position.
 	str.erase(str.begin() + markerPos, str.begin() + markerPos + markerLen);
-	insert(str, markerPos, s);
+	insert(str, markerPos, s, n);
 
 	return *this;
 }

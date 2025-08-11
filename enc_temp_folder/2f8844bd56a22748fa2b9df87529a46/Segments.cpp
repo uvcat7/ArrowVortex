@@ -203,7 +203,7 @@ static bool IsEquivalent(const Stop& seg, const Stop& other)
 template <>
 static std::string GetDescription(const Stop& seg)
 {
-	return Str::val(seg.seconds, 3, 6);
+	return Str::val(seg.seconds, 3, 3);
 }
 
 static const SegmentMeta StopMeta =
@@ -257,7 +257,7 @@ static bool IsEquivalent(const Delay& seg, const Delay& other)
 template <>
 static std::string GetDescription(const Delay& seg)
 {
-	return Str::val(seg.seconds, 3, 6);
+	return Str::val(seg.seconds, 3, 3);
 }
 
 static const SegmentMeta DelayMeta =
@@ -311,7 +311,7 @@ static bool IsEquivalent(const Warp& seg, const Warp& other)
 template <>
 static std::string GetDescription(const Warp& seg)
 {
-	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 6);
+	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
 }
 
 static const SegmentMeta WarpMeta =
@@ -632,7 +632,7 @@ static void Decode(ReadStream& in, Fake& seg)
 template <>
 static std::string GetDescription(const Fake& seg)
 {
-	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 6);
+	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
 }
 
 template <>
