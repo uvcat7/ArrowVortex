@@ -405,3 +405,4 @@ shell.nix
 vcpkg_installed
 build
 out
+enc_temp_folder
