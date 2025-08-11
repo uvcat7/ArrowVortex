@@ -59,9 +59,9 @@ void openConsole()
 
 	AllocConsole();
 
-	long hOut = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_WTEXT);
-	long hIn = _open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_WTEXT);
-	long hErr = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_WTEXT);
+	long hOut = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_WTEXT);
+	long hIn = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_WTEXT);
+	long hErr = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_WTEXT);
 
 	*stdout = *_fdopen(hOut, "w");
 	*stdin = *_fdopen(hIn, "r");

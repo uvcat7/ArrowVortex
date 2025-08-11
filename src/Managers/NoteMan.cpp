@@ -13,7 +13,6 @@
 #include <Managers/SimfileMan.h>
 #include <Simfile/Parsing.h>
 #include <Simfile/TimingData.h>
-#include <Simfile/Encoding.h>
 
 #include <Editor/Editor.h>
 #include <Editor/History.h>

@@ -137,7 +137,7 @@ void lvec_ones(lvec_t *s);
 #define MAX(a,b)  ( a > b ? a : b)
 #define MIN(a,b)  ( a < b ? a : b)
 
-#define ELEM_SWAP(a,b) { register smpl_t t=(a);(a)=(b);(b)=t; }
+#define ELEM_SWAP(a,b) { smpl_t t=(a);(a)=(b);(b)=t; }
 
 #define VERY_SMALL_NUMBER 2.e-42 //1.e-37
 

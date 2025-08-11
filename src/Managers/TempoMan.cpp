@@ -10,7 +10,6 @@
 #include <Simfile/SegmentList.h>
 #include <Simfile/SegmentGroup.h>
 #include <Simfile/TimingData.h>
-#include <Simfile/Encoding.h>
 
 #include <Managers/SimfileMan.h>
 
