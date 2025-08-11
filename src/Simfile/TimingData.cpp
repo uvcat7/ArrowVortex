@@ -144,7 +144,7 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end, in
 				warpRows += ((const Warp*)it->seg)->numRows;
 				break;
 			}
-		} while(++it != end && it->seg->row <= row);
+		} while(++it != end && it->seg->row < row);
 
 		// Check if the warp ended during the current segments.
 		if(spr > 0 && time > targetTime && warpRows == 0)
@@ -197,7 +197,7 @@ static void CreateEvents(Vector<Event>& out, double time, MergedTS* it, MergedTS
 				warp += ((const Warp*)it->seg)->numRows;
 				break;
 			}
-		} while(++it != end && it->seg->row <= row);
+		} while(++it != end && it->seg->row < row);
 
 		double rowTime = time + delay;
 		double endTime = rowTime + stop;
