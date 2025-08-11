@@ -281,9 +281,9 @@ static void CreateScrollRows(Vector<ScrollRow>& out, const Scroll* it, const Scr
 			}
 		}
 	}
-	if (out.empty())
+	if (out.empty() || out.at(0).row > 0)
 	{
-		out.push_back({ 0, 0, 1 });
+		out.insert(0, { 0, 0, 1 }, 1);
 	}
 }
 
@@ -300,9 +300,9 @@ static void CreateScrollSpeeds(Vector<ScrollSpeed>& out, const Speed* it, const 
 		previous = it->ratio;
 		++it;
 	}
-	if(out.empty())
+	if(out.empty() || out.at(0).row > 0)
 	{
-		out.push_back({0, 0, 1, 1, 0, 0});
+		out.insert(0, { 0, 0, 1, 1, 0, 0 }, 1);
 	}
 }
 
