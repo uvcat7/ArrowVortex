@@ -46,7 +46,7 @@ struct ExpandedNote
 	uint32_t isWarped : 1;
 
 	/// 1 indicates a faked note, 0 indicates a regular note.
-	uint isFake : 1;
+	uint32_t isFake : 1;
 
 	/// 1 indicates selected, 0 indicates not selected.
 	uint32_t isSelected : 1;

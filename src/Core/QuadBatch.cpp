@@ -122,7 +122,7 @@ void BatchSprite::draw(QuadBatchTC *out, int x, int y, int y2, uint32_t col)
 {
 	int w = width * DrawScale / 512;
 	int vp[8] = { x - w, y, x + w, y, x - w, y2, x + w, y2 };
-	uint vc[4] = { col, col, col, col };
+	uint32_t vc[4] = { col, col, col, col };
 
 	out->push();
 	memcpy(out->pos, vp, sizeof(int) * 8);

@@ -331,7 +331,7 @@ void tick()
 	// handle preview receptor dragging.
 	else if(myIsDraggingReceptorsPreview)
 	{
-		auto mx = gSystem->getMousePos().x - CenterX(myRect) - myReceptorX;
+		auto mx = gSystem->getMousePos().x - CenterX(rect_) - myReceptorX;
 		auto ofs = (mx << 8) / (int)(64 * myScaleLevel);
 		myPreviewOffset = ofs;
 	}
