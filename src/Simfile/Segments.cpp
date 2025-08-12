@@ -203,7 +203,7 @@ static bool IsEquivalent(const Stop& seg, const Stop& other)
 template <>
 static std::string GetDescription(const Stop& seg)
 {
-	return Str::val(seg.seconds, 3, 3);
+	return Str::val(seg.seconds, 3, 6);
 }
 
 static const SegmentMeta StopMeta =
@@ -257,7 +257,7 @@ static bool IsEquivalent(const Delay& seg, const Delay& other)
 template <>
 static std::string GetDescription(const Delay& seg)
 {
-	return Str::val(seg.seconds, 3, 3);
+	return Str::val(seg.seconds, 3, 6);
 }
 
 static const SegmentMeta DelayMeta =
@@ -311,7 +311,7 @@ static bool IsEquivalent(const Warp& seg, const Warp& other)
 template <>
 static std::string GetDescription(const Warp& seg)
 {
-	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
+	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 6);
 }
 
 static const SegmentMeta WarpMeta =
@@ -524,7 +524,7 @@ static void Decode(ReadStream& in, Speed& seg)
 template <>
 static std::string GetDescription(const Speed& seg)
 {
-	return Str::fmt("%1/%2/%3").arg(seg.ratio).arg(seg.delay).arg(seg.unit ? 'T' : 'B');
+	return Str::fmt("%1/%2/%3").arg(seg.ratio, 0, 6).arg(seg.delay, 0, 6).arg(seg.unit ? 'T' : 'B');
 }
 
 template <>
@@ -632,7 +632,7 @@ static void Decode(ReadStream& in, Fake& seg)
 template <>
 static std::string GetDescription(const Fake& seg)
 {
-	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 3);
+	return Str::val(seg.numRows * BEATS_PER_ROW, 3, 6);
 }
 
 template <>
