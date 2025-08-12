@@ -1,0 +1,9 @@
+{
+    "cmake.environment": {
+        "VCPKG_ROOT": "/home/nobbele/.local/share/vcpkg"
+    },
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=/home/nobbele/.local/share/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "-DVCPKG_TARGET_TRIPLET=x64-mingw-static"
+    ]
+}

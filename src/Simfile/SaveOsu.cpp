@@ -4,6 +4,7 @@
 #include <map>
 #include <algorithm>
 #include <fstream>
+#include <cmath>
 
 #include <Core/WideString.h>
 #include <Core/Utils.h>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/ByteStream.h"
+
 namespace Vortex {
 
 struct Segment;

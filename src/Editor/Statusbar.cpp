@@ -196,112 +196,112 @@ void draw()
 // ================================================================================================
 // StatusbarImpl :: toggle/check functions.
 
-void StatusbarImpl::toggleChart()
+void toggleChart()
 {
 	myShowChart = !myShowChart;
 	gMenubar->update(Menubar::STATUSBAR_CHART);
 }
 
-void StatusbarImpl::toggleSnap()
+void toggleSnap()
 {
 	myShowSnap = !myShowSnap;
 	gMenubar->update(Menubar::STATUSBAR_SNAP);
 }
 
-void StatusbarImpl::toggleBpm()
+void toggleBpm()
 {
 	myShowBpm = !myShowBpm;
 	gMenubar->update(Menubar::STATUSBAR_BPM);
 }
 
-void StatusbarImpl::toggleRow()
+void toggleRow()
 {
 	myShowRow = !myShowRow;
 	gMenubar->update(Menubar::STATUSBAR_ROW);
 }
 
-void StatusbarImpl::toggleBeat()
+void toggleBeat()
 {
 	myShowBeat = !myShowBeat;
 	gMenubar->update(Menubar::STATUSBAR_BEAT);
 }
 
-void StatusbarImpl::toggleMeasure()
+void toggleMeasure()
 {
 	myShowMeasure = !myShowMeasure;
 	gMenubar->update(Menubar::STATUSBAR_MEASURE);
 }
 
-void StatusbarImpl::toggleTime()
+void toggleTime()
 {
 	myShowTime = !myShowTime;
 	gMenubar->update(Menubar::STATUSBAR_TIME);
 }
 
-void StatusbarImpl::toggleTimingMode()
+void toggleTimingMode()
 {
 	myShowTimingMode = !myShowTimingMode;
 	gMenubar->update(Menubar::STATUSBAR_TIMING_MODE);
 }
 
-void StatusbarImpl::toggleScroll()
+void toggleScroll()
 {
 	myShowScroll = !myShowScroll;
 	gMenubar->update(Menubar::STATUSBAR_SCROLL);
 }
 
-void StatusbarImpl::toggleSpeed()
+void toggleSpeed()
 {
 	myShowSpeed = !myShowSpeed;
 	gMenubar->update(Menubar::STATUSBAR_SPEED);
 }
 
-bool StatusbarImpl::hasChart()
+bool hasChart()
 {
 	return myShowChart;
 }
 
-bool StatusbarImpl::hasSnap()
+bool hasSnap()
 {
 	return myShowSnap;
 }
 
-bool StatusbarImpl::hasBpm()
+bool hasBpm()
 {
 	return myShowBpm;
 }
 
-bool StatusbarImpl::hasRow()
+bool hasRow()
 {
 	return myShowRow;
 }
 
-bool StatusbarImpl::hasBeat()
+bool hasBeat()
 {
 	return myShowBeat;
 }
 
-bool StatusbarImpl::hasMeasure()
+bool hasMeasure()
 {
 	return myShowMeasure;
 }
 
-bool StatusbarImpl::hasTime()
+bool hasTime()
 {
 	return myShowTime;
 }
 
-bool StatusbarImpl::hasTimingMode()
+bool hasTimingMode()
 {
 	return myShowTimingMode;
 }
 
-bool StatusbarImpl::hasScroll()
+bool hasScroll()
 {
 	return myShowScroll;
 }
 
-bool StatusbarImpl::hasSpeed()
+bool hasSpeed()
 {
 	return myShowSpeed;
 }

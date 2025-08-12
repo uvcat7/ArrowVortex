@@ -1,6 +1,7 @@
 #include <Editor/View.h>
 
 #include <algorithm>
+#include <cmath>
 
 #include <Core/Utils.h>
 #include <Core/Xmr.h>

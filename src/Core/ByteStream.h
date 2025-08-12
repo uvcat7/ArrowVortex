@@ -22,40 +22,29 @@ public:
 	void writeNum(uint32_t num);
 	void writeStr(const std::string& str);
 
-	template <unsigned int S>
-	inline void writeSz(const void* val)
-	{
-		write(val, S);
-	}
-
-	template <>
-	inline void writeSz<1>(const void* val)
-	{
-		write8(val);
-	}
-
-	template <>
-	inline void writeSz<2>(const void* val)
-	{
-		write16(val);
-	}
-
-	template <>
-	inline void writeSz<4>(const void* val)
-	{
-		write32(val);
-	}
-
-	template <>
-	inline void writeSz<8>(const void* val)
-	{
-		write64(val);
-	}
-
 	template <typename T>
 	inline void write(const T& val)
 	{
-		writeSz<sizeof(T)>(&val);
+		switch (sizeof(T)) {
+			case 1:
+				write8(&val);
+				break;
+
+			case 2:
+				write16(&val);
+				break;
+
+			case 4:
+				write32(&val);
+				break;
+
+			case 8:
+				write64(&val);
+				break;
+
+			default:
+				write(&val, static_cast<int>(sizeof(T)));
+		}
 	}
 
 	// Returns true if all write operations have succeeded.
@@ -94,47 +83,36 @@ public:
 	void readNum(uint32_t& num);
 	void readStr(std::string& str);
 
-	template <size_t S>
-	inline void readSz(void* out)
-	{
-		read(out, S);
-	}
-
-	template <>
-	inline void readSz<1>(void* out)
-	{
-		read8(out);
-	}
-
-	template <>
-	inline void readSz<2>(void* out)
-	{
-		read16(out);
-	}
-
-	template <>
-	inline void readSz<4>(void* out)
-	{
-		read32(out);
-	}
-
-	template <>
-	inline void readSz<8>(void* out)
-	{
-		read64(out);
-	}
-
 	template <typename T>
 	inline void read(T& out)
 	{
-		readSz<sizeof(T)>(&out);
+		switch (sizeof(T)) {
+			case 1:
+				read8(&out);
+				break;
+			
+			case 2:
+				read16(&out);
+				break;
+
+			case 4:
+				read32(&out);
+				break;
+
+			case 8:
+				read64(&out);
+				break;
+
+			default:
+				read(&out, static_cast<int>(sizeof(T)));
+		}
 	}
 
 	template <typename T>
 	inline T read()
 	{
 		T out = T();
-		readSz<sizeof(T)>(&out);
+		read(out);
 		return out;
 	}
 

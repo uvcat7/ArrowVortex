@@ -2,6 +2,7 @@
 
 #include <map>
 #include <algorithm>
+#include <cmath>
 
 #include <Core/Vector.h>
 #include <Core/Utils.h>
@@ -254,7 +255,7 @@ static void ParseTimingPoints(OsuFile& out, Parser& parser)
 			if(spb > 0)
 			{
 				double bpm = 60.0 / spb;
-				double roundBPM = round(bpm);
+				double roundBPM = std::round(bpm);
 				if(abs(bpm - roundBPM) < 0.001) bpm = roundBPM;
 				out.timingPoints[time] = {bpm, 1.0};
 				parser.bpm = bpm;

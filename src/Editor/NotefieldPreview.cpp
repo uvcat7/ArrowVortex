@@ -468,7 +468,7 @@ void drawNotes()
 // ================================================================================================
 // NotefieldPreviewImpl :: toggle/check functions.
 
-int NotefieldPreviewImpl::getY()
+int getY()
 {
 	return myY;
 }
@@ -484,20 +484,20 @@ DrawMode getMode()
 	return myDrawMode;
 }
 
-void NotefieldPreviewImpl::toggleEnabled()
+void toggleEnabled()
 {
 	myEnabled = !myEnabled;
 	gView->adjustForPreview(myEnabled);
 	gMenubar->update(Menubar::PREVIEW_ENABLED);
 }
 
-void NotefieldPreviewImpl::toggleShowBeatLines()
+void toggleShowBeatLines()
 {
 	myShowBeatLines = !myShowBeatLines;
 	gMenubar->update(Menubar::PREVIEW_SHOW_BEATLINES);
 }
 
-void NotefieldPreviewImpl::toggleReverseScroll()
+void toggleReverseScroll()
 {
 	myUseReverseScroll = !myUseReverseScroll;
 	gMenubar->update(Menubar::PREVIEW_SHOW_REVERSE_SCROLL);

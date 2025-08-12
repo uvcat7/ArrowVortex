@@ -24,7 +24,7 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
-#include <gl/gl.h>
+#include <GL/gl.h>
 #undef ERROR
 
 #include <chrono>
@@ -35,6 +35,7 @@
 #include <bitset>
 #include <list>
 #include <vector>
+#include <cmath>
 
 #undef DELETE
 
@@ -358,10 +359,10 @@ SystemImpl()
 	// Make sure the window is centered on the desktop.
 	mySize = {1200, 900};
 	RECT wr;
-	wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
-	wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
-	wr.right = wr.left + max(mySize.x, 0);
-	wr.bottom = wr.top + max(mySize.y, 0);
+	wr.left = std::max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
+	wr.top = std::max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
+	wr.right = wr.left + std::max(mySize.x, 0);
+	wr.bottom = wr.top + std::max(mySize.y, 0);
 	AdjustWindowRectEx(&wr, myStyle, FALSE, myExStyle);
 	int flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
 	SetWindowPos(myHWND, nullptr, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top, flags);
@@ -480,7 +481,7 @@ void CALLBACK messageLoop()
 
 		// End of frame
 		auto curTime = Debug::getElapsedTime();
-		deltaTime = duration<double>((float)min(max(0, duration<double>(curTime - prevTime).count()), 0.25));
+		deltaTime = duration<double>((float)std::min(std::max(0.0, duration<double>(curTime - prevTime).count()), 0.25));
 		prevTime = curTime;
 
 #ifndef NDEBUG
@@ -599,7 +600,7 @@ LPCWSTR getCursorResource()
 	{
 		IDC_ARROW, IDC_HAND, IDC_IBEAM, IDC_SIZEALL, IDC_SIZEWE, IDC_SIZENS, IDC_SIZENESW, IDC_SIZENWSE,
 	};
-	return cursorMap[min(max(0, myCursor), Cursor::NUM_CURSORS - 1)];
+	return cursorMap[std::min(std::max(0, (int)myCursor), (int)Cursor::NUM_CURSORS - 1)];
 }
 
 int getKeyFlags() const

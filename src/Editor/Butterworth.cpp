@@ -46,6 +46,7 @@
 
 #include <vector>
 
+#undef M_PI
 #define M_PI 3.14159265358
 
 static double* binomial_mult(int n, double *p);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Simfile/Tempo.h>
+#include <Simfile/SegmentGroup.h>
 
 namespace Vortex {
 

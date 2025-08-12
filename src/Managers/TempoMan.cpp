@@ -21,6 +21,7 @@
 #include <Editor/TempoBoxes.h>
 
 #include <algorithm>
+#include <cfloat>
 
 #define TEMPO_MAN ((TempoManImpl*)gTempo)
 

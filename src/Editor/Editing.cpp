@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <set>
+#include <cmath>
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
@@ -370,7 +371,7 @@ void finishNotePlacement(int col)
 
 		if (note.quant > 0 && note.quant <= 192)
 		{
-			note.quant = min(192u, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
+			note.quant = min(192, note.quant * gView->getSnapQuant() / gcd(note.quant, gView->getSnapQuant()));
 		}
 		else
 		{

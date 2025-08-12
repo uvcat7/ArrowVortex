@@ -3,6 +3,7 @@
 #include <map>
 #include <algorithm>
 #include <numeric>
+#include <cmath>
 
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
@@ -407,7 +408,7 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p, int quantization)
 				// Make sure we set the note to its largest quantization to avoid data loss
 				if (data.quants[col] > 0 && hold->quant > 0)
 				{
-					hold->quant = min(192u, quantization * hold->quant / gcd(quantization, hold->quant));
+					hold->quant = std::min(192, quantization * hold->quant / gcd(quantization, hold->quant));
 				}
 				else // There was some error, so always play safe and use 192
 				{
@@ -554,7 +555,7 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style, 
 				// Handle abnormal numbers of lines loading
 				if (ROWS_PER_NOTE_SECTION % numLines != 0)
 				{
-					ofs = ((int)round(192.0f / numLines * (i + 1)) - (int)round(192.0f / numLines * i));
+					ofs = ((int)std::round(192.0f / numLines * (i + 1)) - (int)std::round(192.0f / numLines * i));
 				}
 				line += numCols;
 				row += ofs;

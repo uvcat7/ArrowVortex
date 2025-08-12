@@ -48,7 +48,7 @@ void Tempo::sanitize(const Chart* owner)
 	auto end = segments->end<BpmChange>();
 	if(bpmc == end || bpmc->row != 0)
 	{
-		double bpm = (bpmc != end) ? bpmc->bpm : SIM_DEFAULT_BPM;
+		double bpm = (bpmc != end) ? bpmc->bpm : (double)SIM_DEFAULT_BPM;
 		segments->insert(BpmChange(0, bpm));
 		std::string suffix;
 		if(owner)
