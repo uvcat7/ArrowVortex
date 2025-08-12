@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 project(ArrowVortex)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
+set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
