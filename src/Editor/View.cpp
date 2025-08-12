@@ -21,6 +21,7 @@
 #include <Managers/SimfileMan.h>
 
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/Editing.h>
 #include <Editor/Minimap.h>
 #include <Editor/Selection.h>
@@ -43,9 +44,9 @@ double myCursorTime, myCursorBeat;
 double myPixPerSec, myPixPerRow;
 int myCursorRow;
 
-int myReceptorY, myReceptorX;
+int myReceptorY, myReceptorX, myPreviewOffset;
 double myZoomLevel, myScaleLevel;
-bool myIsDraggingReceptors;
+bool myIsDraggingReceptors, myIsDraggingReceptorsPreview;
 bool myUseTimeBasedView;
 bool myUseReverseScroll;
 bool myUseChartPreview;
@@ -67,6 +68,7 @@ ViewImpl()
 	, myCursorRow(0)
 	, myReceptorY(192)
 	, myReceptorX(0)
+	, myPreviewOffset(640)
 	, myZoomLevel(8)
 	, myScaleLevel(4)
 	, mySnapType(ST_NONE)
@@ -75,6 +77,7 @@ ViewImpl()
 	, myUseReverseScroll(false)
 	, myUseChartPreview(false)
 	, myIsDraggingReceptors(false)
+	, myIsDraggingReceptorsPreview(false)
 	, myPixPerSec(32)
 	, myPixPerRow(16 * BEATS_PER_ROW)
 {
@@ -98,6 +101,7 @@ void loadSettings(XmrNode& settings)
 		view->get("scaleLevel", &myScaleLevel);
 		view->get("receptorX", &myReceptorX);
 		view->get("receptorY", &myReceptorY);
+		view->get("previewOffset", &myPreviewOffset);
 
 		myCustomSnap = min(max(myCustomSnap, 5), 191);
 		myZoomLevel = min(max(myZoomLevel, -2.0), 16.0);
@@ -121,6 +125,7 @@ void saveSettings(XmrNode& settings)
 	view->addAttrib("scaleLevel", (long)myScaleLevel);
 	view->addAttrib("receptorX", (long)myReceptorX);
 	view->addAttrib("receptorY", (long)myReceptorY);
+	view->addAttrib("previewOffset", (long)myPreviewOffset);
 }
 
 // ================================================================================================
@@ -152,8 +157,14 @@ void onMouseScroll(MouseScroll& evt) override
 
 void onMousePress(MousePress& evt) override
 {
+	// Dragging the preview receptors.
+	if(evt.button == Mouse::LMB && isMouseOverReceptorsPreview(evt.x, evt.y) && evt.unhandled())
+	{
+		myIsDraggingReceptorsPreview = true;
+		evt.setHandled();
+	}
 	// Dragging the receptors.
-	if(evt.button == Mouse::LMB && isMouseOverReceptors(evt.x, evt.y) && evt.unhandled())
+	else if(evt.button == Mouse::LMB && isMouseOverReceptors(evt.x, evt.y) && evt.unhandled())
 	{
 		myIsDraggingReceptors = true;
 		evt.setHandled();
@@ -174,6 +185,11 @@ void onMouseRelease(MouseRelease& evt) override
 	if(evt.button == Mouse::LMB && myIsDraggingReceptors)
 	{
 		myIsDraggingReceptors = false;
+	}
+	// Finish receptor dragging.
+	else if(evt.button == Mouse::LMB && myIsDraggingReceptorsPreview)
+	{
+		myIsDraggingReceptorsPreview = false;
 	}
 }
 
@@ -314,10 +330,18 @@ void tick()
 		myReceptorX = gSystem->getMousePos().x - CenterX(rect_);
 		myReceptorY = gSystem->getMousePos().y - rect_.y;
 	}
+	// handle preview receptor dragging.
+	else if(myIsDraggingReceptorsPreview)
+	{
+		auto mx = gSystem->getMousePos().x - CenterX(rect_) - myReceptorX;
+		auto ofs = (mx << 8) / (int)(64 * myScaleLevel);
+		myPreviewOffset = ofs;
+	}
 
 	// Set cursor to arrows when hovering over/dragging the receptors.
 	vec2i mpos = gSystem->getMousePos();
-	if(myIsDraggingReceptors || isMouseOverReceptors(mpos.x, mpos.y))
+	if(myIsDraggingReceptors || isMouseOverReceptors(mpos.x, mpos.y)
+		|| myIsDraggingReceptorsPreview || isMouseOverReceptorsPreview(mpos.x, mpos.y))
 	{
 		gSystem->setCursor(Cursor::SIZE_ALL);
 	}
@@ -706,6 +730,16 @@ const recti& getRect() const
 	return rect_;
 }
 
+void adjustForPreview(bool enabled)
+{
+	myReceptorX += applyZoom(enabled ? -myPreviewOffset : myPreviewOffset) / 2;
+}
+
+int getPreviewOffset() const
+{
+	return applyZoom(myPreviewOffset);
+}
+
 int applyZoom(int v) const
 {
 	return (v * (int)(64 * myScaleLevel)) >> 8;
@@ -806,6 +840,17 @@ bool isMouseOverReceptors(int x, int y) const
 		auto c = getReceptorCoords();
 		int dy = applyZoom(gChart->isClosed() ? 8 : 32);
 		return (x >= c.xl && x < c.xr && abs(y - myReceptorY) <= dy);
+	}
+	return false;
+}
+
+bool isMouseOverReceptorsPreview(int x, int y) const
+{
+	if(!GuiMain::isCapturingMouse())
+	{
+		auto c = getReceptorCoords();
+		int dy = applyZoom(gChart->isClosed() ? 8 : 32);
+		return (x >= c.xl + getPreviewOffset() && x < c.xr + getPreviewOffset() && abs(y - gNotefieldPreview->getY()) <= dy);
 	}
 	return false;
 }

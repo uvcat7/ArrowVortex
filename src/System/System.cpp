@@ -356,7 +356,7 @@ SystemImpl()
 	Debug::logBlankLine();
 
 	// Make sure the window is centered on the desktop.
-	mySize = {900, 900};
+	mySize = {1200, 900};
 	RECT wr;
 	wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
 	wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);

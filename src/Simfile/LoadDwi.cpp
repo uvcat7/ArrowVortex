@@ -1,4 +1,5 @@
 ﻿#include <Core/Core.h>
+#include <Core/StringUtils.h>
 
 #include <algorithm>
 
@@ -188,7 +189,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols, const ch
 		SetColumnMap(map, numCols, pad);
 		char* n = params[2 + pad];
 		int holds[8] = {};
-		int quantization = 192 / 8, row = 0;
+		int quantization = 24, row = 0;
 		while(*n)
 		{
 			switch(*n)
@@ -201,9 +202,9 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols, const ch
 			case  '[': quantization = 8; ++n; break;
 			case  '{': quantization = 4; ++n; break;
 			case  '`': quantization = 1; ++n; break;
-			case  ')':
-			case  ']':
-			case  '}':
+			case  ')': quantization = 24; ++n; break;
+			case  ']': quantization = 24; ++n; break;
+			case  '}': quantization = 24; ++n; break;
 			case '\'': quantization = 32; ++n; break;
 			default:
 				n = ReadNoteRow(n, chart->notes, row, map, holds, quantization);
@@ -365,6 +366,36 @@ bool LoadDwi(const std::string& path, Simfile* sim)
 	while(ParseNextTag(p, tag, val))
 	{
 		ParseTag(sim, tag, val);
+	}
+	
+	// Some things are not stored in the .dwi file, look for them
+	// Basic guesses only
+	auto paths = File::findFiles(sim->dir, false);
+	auto simname = sim->file;
+	simname = simname.substr(0, simname.find_last_of("."));
+	Str::toLower(simname);
+	for (auto& path : paths)
+	{
+		std::string f(path.filename());
+		std::string fl(f);
+		Str::toLower(fl);
+
+		if (fl.starts_with("!") && sim->cdTitle.empty())
+		{
+			sim->cdTitle = f;
+		}
+		else if (fl.compare(simname + ".mp3") == 0 && sim->music.empty())
+		{
+			sim->music = f;
+		}
+		else if (fl.compare(simname + ".png") == 0)
+		{
+			sim->banner = f;
+		}
+		else if (fl.compare(simname + "-bg.png") == 0)
+		{
+			sim->background = f;
+		}
 	}
 
 	sim->format = SIM_DWI;

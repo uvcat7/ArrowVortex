@@ -9,6 +9,7 @@
 #include <Editor/Statusbar.h>
 #include <Editor/Editing.h>
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/Waveform.h>
 #include <Editor/Selection.h>
 #include <Editor/TextOverlay.h>
@@ -278,6 +279,19 @@ void Action::perform(Type action)
 	CASE(TOGGLE_CHART_PREVIEW)
 		gView->toggleChartPreview();
 
+	CASE(PREVIEW_TOGGLE_ENABLED)
+		gNotefieldPreview->toggleEnabled();
+	CASE(PREVIEW_TOGGLE_SHOW_BEAT_LINES)
+		gNotefieldPreview->toggleShowBeatLines();
+	CASE(PREVIEW_TOGGLE_REVERSE_SCROLL)
+		gNotefieldPreview->toggleReverseScroll();
+	CASE(PREVIEW_VIEW_CMOD)
+		gNotefieldPreview->setMode(NotefieldPreview::CMOD);
+	CASE(PREVIEW_VIEW_XMOD)
+		gNotefieldPreview->setMode(NotefieldPreview::XMOD);
+	CASE(PREVIEW_VIEW_XMOD_ALL)
+		gNotefieldPreview->setMode(NotefieldPreview::XMOD_ALL);
+
 	CASE(MINIMAP_SET_NOTES)
 		gMinimap->setMode(Minimap::NOTES);
 	CASE(MINIMAP_SET_DENSITY)
@@ -361,6 +375,10 @@ void Action::perform(Type action)
 		gStatusbar->toggleTime();
 	CASE(TOGGLE_STATUS_TIMING_MODE)
 		gStatusbar->toggleTimingMode();
+	CASE(TOGGLE_STATUS_SCROLL)
+		gStatusbar->toggleScroll();
+	CASE(TOGGLE_STATUS_SPEED)
+		gStatusbar->toggleSpeed();
 
 	CASE(SHOW_SHORTCUTS)
 		gTextOverlay->show(TextOverlay::SHORTCUTS);

@@ -84,7 +84,12 @@ void BatchSprite::draw(QuadBatchT* out, int x, int y, int y2)
 	memcpy(out->uvs, uvs, sizeof(float) * 8);
 }
 
-void BatchSprite::draw(QuadBatchTC* out, int x, int y, uint8_t alpha)
+void BatchSprite::draw(QuadBatchTC* out, int x, int y)
+{
+	draw(out, x, y, (uint32_t)RGBAtoColor32(255, 255, 255, 255));
+}
+
+void BatchSprite::draw(QuadBatchTC *out, int x, int y, uint8_t alpha)
 {
 	draw(out, x, y, (uint32_t)RGBAtoColor32(255, 255, 255, alpha));
 }
@@ -103,7 +108,29 @@ void BatchSprite::draw(QuadBatchTC* out, int x, int y, uint32_t col)
 	memcpy(out->col, vc, sizeof(uint32_t) * 4);
 }
 
-void BatchSprite::draw(QuadBatchTC* out, float x, float y, float rotation, float scale, uint32_t color)
+void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2)
+{
+	draw(out, x, y, y2, (uint32_t)RGBAtoColor32(255, 255, 255, 255));
+}
+
+void BatchSprite::draw(QuadBatchTC *out, int x, int y, int y2, uint8_t alpha)
+{
+	draw(out, x, y, y2, (uint32_t)RGBAtoColor32(255, 255, 255, alpha));
+}
+
+void BatchSprite::draw(QuadBatchTC *out, int x, int y, int y2, uint32_t col)
+{
+	int w = width * DrawScale / 512;
+	int vp[8] = { x - w, y, x + w, y, x - w, y2, x + w, y2 };
+	uint32_t vc[4] = { col, col, col, col };
+
+	out->push();
+	memcpy(out->pos, vp, sizeof(int) * 8);
+	memcpy(out->uvs, uvs, sizeof(float) * 8);
+	memcpy(out->col, vc, sizeof(uint32_t) * 4);
+}
+
+void BatchSprite::draw(QuadBatchTC *out, float x, float y, float rotation, float scale, uint32_t color)
 {
 	float rsin = (float)sin(rotation);
 	float rcos = (float)cos(rotation);

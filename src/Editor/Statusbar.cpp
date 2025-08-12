@@ -15,6 +15,8 @@
 #include <Editor/Common.h>
 #include <Editor/View.h>
 
+#include <Simfile/SegmentGroup.h>
+
 #include <Managers/MetadataMan.h>
 #include <Managers/SimfileMan.h>
 #include <Managers/ChartMan.h>
@@ -35,6 +37,8 @@ bool myShowBeat;
 bool myShowMeasure;
 bool myShowTime;
 bool myShowTimingMode;
+bool myShowScroll;
+bool myShowSpeed;
 
 // ================================================================================================
 // StatusbarImpl :: constructor / destructor.
@@ -53,6 +57,8 @@ StatusbarImpl()
 	myShowMeasure = true;
 	myShowTime = true;
 	myShowTimingMode = true;
+	myShowScroll = false;
+	myShowSpeed = false;
 }
 
 // ================================================================================================
@@ -71,6 +77,8 @@ void loadSettings(XmrNode& settings)
 		statusbar->get("showMeasure", &myShowMeasure);
 		statusbar->get("showTime", &myShowTime);
 		statusbar->get("showTimingMode", &myShowTimingMode);
+		statusbar->get("myShowScroll", &myShowScroll);
+		statusbar->get("myShowSpeed", &myShowSpeed);
 	}
 }
 
@@ -86,6 +94,8 @@ void saveSettings(XmrNode& settings)
 	statusbar->addAttrib("showMeasure", myShowMeasure);
 	statusbar->addAttrib("showTime", myShowTime);
 	statusbar->addAttrib("showTimingMode", myShowTimingMode);
+	statusbar->addAttrib("myShowScroll", myShowScroll);
+	statusbar->addAttrib("myShowSpeed", myShowSpeed);
 }
 
 // ================================================================================================
@@ -153,9 +163,23 @@ void draw()
 		}
 	}
 
+	if(myShowScroll)
+	{
+		int row = gView->getCursorRow();
+		double ratio = gTempo->getSegments()->getRecent<Scroll>(row).ratio;
+		info.push_back(Str::fmt("{tc:888}Scroll:{tc} %1").arg(ratio, 2, 2));
+	}
+	if(myShowSpeed)
+	{
+		double beat = gView->getCursorBeat();
+		double time = gView->getCursorTime();
+		double speed = gTempo->positionToSpeed(beat, time);
+		info.push_back(Str::fmt("{tc:888}Speed:{tc} %1").arg(speed, 3, 3));
+	}
+
 	if(info.size())
 	{
-		std::string str = Str::join(info, " ");
+		std::string str = Str::join(info, "  ");
 		Text::arrange(Text::MC, textStyle, str.c_str());
 
 		recti view = gView->getRect();
@@ -220,6 +244,17 @@ void StatusbarImpl::toggleTimingMode()
 	gMenubar->update(Menubar::STATUSBAR_TIMING_MODE);
 }
 
+void StatusbarImpl::toggleScroll()
+{
+	myShowScroll = !myShowScroll;
+	gMenubar->update(Menubar::STATUSBAR_SCROLL);
+}
+
+void StatusbarImpl::toggleSpeed()
+{
+	myShowSpeed = !myShowSpeed;
+	gMenubar->update(Menubar::STATUSBAR_SPEED);
+}
 
 bool StatusbarImpl::hasChart()
 {
@@ -259,6 +294,16 @@ bool StatusbarImpl::hasTime()
 bool StatusbarImpl::hasTimingMode()
 {
 	return myShowTimingMode;
+}
+
+bool StatusbarImpl::hasScroll()
+{
+	return myShowScroll;
+}
+
+bool StatusbarImpl::hasSpeed()
+{
+	return myShowSpeed;
 }
 
 }; // StatusbarImpl

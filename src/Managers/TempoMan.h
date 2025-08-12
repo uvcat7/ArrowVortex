@@ -57,6 +57,15 @@ struct TempoMan
 	/// Returns the BPM at the given row.
 	virtual double getBpm(int row) const = 0;
 
+	/// Returns the translated row at a given row.
+	virtual double rowToScroll(int row) const = 0;
+
+	/// Returns the translated beat at a given beat.
+	virtual double beatToScroll(double beat) const = 0;
+
+	/// Returns the Speed value at a given position. Both values are needed as speed can use beats or time.
+	virtual double positionToSpeed(double beat, double time) const = 0;
+
 	/// Editing functions.
 	virtual void modify(const SegmentEdit& edit) = 0;
 	virtual void modify(const SegmentEdit& edit, bool clearRegion) = 0;

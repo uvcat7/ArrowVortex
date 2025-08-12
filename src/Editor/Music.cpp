@@ -663,7 +663,7 @@ void updateNoteTicks()
 
 	for(auto& note : *gNotes)
 	{
-		if(!(note.isMine | note.isWarped | (note.type == NOTE_FAKE)))
+		if(!(note.isMine | note.isWarped | note.isFake))
 		{
 			int frame = (int)((note.time + ofs) * freq);
 			myNoteTick.frames.push_back(frame);

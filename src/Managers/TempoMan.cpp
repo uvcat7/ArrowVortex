@@ -766,6 +766,21 @@ double getBpm(int row) const
 	return SIM_DEFAULT_BPM;
 }
 
+double rowToScroll(int row) const
+{
+	return myTimingData.rowToScroll(row);
+}
+
+double beatToScroll(double beat) const
+{
+	return myTimingData.beatToScroll(beat);
+}
+
+double positionToSpeed(double beat, double time) const
+{
+	return myTimingData.positionToSpeed(beat, time);
+}
+
 // ================================================================================================
 // TempoManImpl :: get functions.
 

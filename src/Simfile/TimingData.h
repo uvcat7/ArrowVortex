@@ -18,6 +18,21 @@ struct TimingData
 	{
 		int row, measure, rowsPerMeasure;
 	};
+	struct ScrollRow
+	{
+		int row;
+		double positionRow, ratio;
+	};
+	struct ScrollSpeed
+	{
+		int row;
+		int unit;
+		double start, end, delay, rowTime;
+	};
+	struct ScrollFake
+	{
+		int row, length;
+	};
 
 	TimingData();
 
@@ -38,8 +53,20 @@ struct TimingData
 	// Returns the measure corresponding to the given beat.
 	double beatToMeasure(double beat) const;
 
+	/// Returns the translated row at a given row.
+	double rowToScroll(int row) const;
+
+	/// Returns the translated beat at a given beat.
+	double beatToScroll(double beat) const;
+
+	/// Returns the Speed value at a given position. Both values are needed as speed can use beats or time.
+	double positionToSpeed(double beat, double time) const;
+
 	Vector<Event> events;
 	Vector<TimeSig> sigs;
+	Vector<ScrollRow> scrolls;
+	Vector<ScrollSpeed> speeds;
+	Vector<ScrollFake> fakes;
 };
 
 // ================================================================================================

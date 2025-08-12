@@ -30,6 +30,7 @@
 #include <Editor/Selection.h>
 #include <Editor/Editing.h>
 #include <Editor/Common.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/TextOverlay.h>
 #include <Editor/View.h>
 #include <Editor/Editor.h>
@@ -67,7 +68,7 @@ struct DrawPosHelper
 		}
 		else
 		{
-			advanceFunc = RowBasedAvance;
+			advanceFunc = RowBasedAdvance;
 			getFunc = RowBasedGet;
 		}
 	}
@@ -80,8 +81,7 @@ struct DrawPosHelper
 	{
 		return getFunc(this, row, time);
 	}
-
-	static int RowBasedAvance(DrawPosHelper* dp, int row)
+	static int RowBasedAdvance(DrawPosHelper* dp, int row)
 	{
 		return (int)(dp->baseY + dp->deltaY * (double)row);
 	}
@@ -276,6 +276,8 @@ void draw()
 	// Draw stuff.
 	drawBackground();
 
+	gNotefieldPreview->draw();
+
 	if(myShowBeatLines) drawBeatLines();
 	if(drawWaveform) gWaveform->drawPeaks();
 	if(gTempoBoxes->hasShowBoxes()) drawStopsAndWarps();
@@ -353,7 +355,7 @@ void drawBeatLines()
 
 	bool zoomedIn = (gView->getScaleLevel() >= 2);
 	int viewH = gView->getHeight();
-	
+
 	// We keep track of the measure labels to render them afterwards.
 	struct MeasureLabel { int measure, y; };
 	Vector<MeasureLabel> labels(8);
@@ -404,7 +406,7 @@ void drawBeatLines()
 				int measureEnd = row + it->rowsPerMeasure;
 				while(beatRow < measureEnd)
 				{
-					if (beatRow > drawEndRow)
+					if(beatRow > drawEndRow)
 						break;
 
 					int y = drawPos.advance(beatRow);
@@ -560,7 +562,6 @@ void drawReceptorGlow()
 	{
 		auto note = prevNotes[c];
 		if(!note) continue;
-		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
 
 		double lum = 1.5 - (time - note->endtime) * 6.0;
 		uint8_t alpha = (uint8_t)clamp((int)(lum * 255.0), 0, 255);
@@ -613,10 +614,11 @@ void drawSnapDiamonds()
 void drawNotes()
 {
 	const int numCols = gStyle->getNumCols();
-	const int centerX = gView->getRect().x + gView->getWidth() / 2;
 	const int scale = gView->getNoteScale();
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
 	const int maxY = gView->getHeight() + 32;
+	const bool isPreview = !gMusic->isPaused() && gView->hasChartPreview();
+	const double currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
 
 	auto noteskin = gNoteskin->get();
 
@@ -644,8 +646,7 @@ void drawNotes()
 		}
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
-		if (!gMusic->isPaused() && gView->hasChartPreview()
-			&& (targetY > by != gView->hasReverseScroll()) && note.type != NOTE_MINE)
+		if(isPreview && note.type != NOTE_MINE && note.endrow < currentRow)
 		{
 			continue;
 		}
@@ -668,8 +669,7 @@ void drawNotes()
 			int tailH = tail.height * signedScale / 512;
 
 			//If we are doing chart preview, only show the part of the tail past the targets, and don't show the arrow
-			if (!gMusic->isPaused() && gView->hasChartPreview() && 
-				((targetY > y && targetY <= by && !gView->hasReverseScroll()) || (targetY < y && targetY >= by && gView->hasReverseScroll())))
+			if(isPreview && currentRow >= note.row && currentRow <= note.endrow)
 			{
 				body.draw(&batch, x, targetY + bodyY, by + bodyY);
 				tail.draw(&batch, x, by - tailH, by + tailH);
