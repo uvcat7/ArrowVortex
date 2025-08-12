@@ -190,8 +190,8 @@ void WgColorPicker::Expanded::draw()
 	Draw::fill({rect_.x - 8, rect_.y + rect_.h / 2 - 8, 16, 16}, Colors::white, dlg.vshape.handle());
 
 	recti ar = getAr();
-	color32 t = ToColor32(HSVtoRGB(myCol, 1.0f));
-	color32 b = ToColor32(HSVtoRGB(myCol, 0.0f));
+	uint32_t t = ToColor32(HSVtoRGB(myCol, 1.0f));
+	uint32_t b = ToColor32(HSVtoRGB(myCol, 0.0f));
 	GuiDraw::checkerboard(ar, Colors::white);
 	Draw::fill(ar, t, t, b, b, false);
 
@@ -206,8 +206,8 @@ void WgColorPicker::Expanded::draw()
 	}
 
 	recti sr = getSr();
-	color32 tl = ToColor32({myCol.h, 0, 1, 1}), tr = ToColor32({myCol.h, 1, 1, 1});
-	color32 bl = ToColor32({myCol.h, 0, 0, 1}), br = ToColor32({myCol.h, 1, 0, 1});
+	uint32_t tl = ToColor32({myCol.h, 0, 1, 1}), tr = ToColor32({myCol.h, 1, 1, 1});
+	uint32_t bl = ToColor32({myCol.h, 0, 0, 1}), br = ToColor32({myCol.h, 1, 0, 1});
 	Draw::fill(sr, tl, tr, bl, br, true);
 
 	int sx = sr.x + (int)(sr.w * myCol.s);

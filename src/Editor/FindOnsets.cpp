@@ -8,6 +8,7 @@
 #include <System/Thread.h>
 
 #include <math.h>
+#include <mutex>
 
 // double to float conversion.
 #pragma warning(disable: 4244)
@@ -372,7 +373,7 @@ static aubio_pvoc_t * new_aubio_pvoc(uint_t win_s, uint_t hop_s)
 	/* new input output */
 	pv->dataold = new_fvec(win_s - hop_s);
 	pv->synthold = new_fvec(win_s - hop_s);
-	pv->w = new_aubio_window("hanningz", win_s);
+	pv->w = new_aubio_window(aubio_window_type::aubio_win_hanningz, win_s);
 
 	pv->hop_s = hop_s;
 	pv->win_s = win_s;
@@ -791,7 +792,7 @@ static void aubio_specdesc_do(aubio_specdesc_t *o, cvec_t * fftgrain, fvec_t * o
 	o->funcpointer(o, fftgrain, onset);
 }
 
-static aubio_specdesc_t * new_aubio_specdesc(char_t * onset_mode, uint_t size)
+static aubio_specdesc_t * new_aubio_specdesc(const char_t * onset_mode, uint_t size)
 {
 	aubio_specdesc_t * o = AUBIO_NEW(aubio_specdesc_t);
 	uint_t rsize = size / 2 + 1;
@@ -954,7 +955,7 @@ static uint_t aubio_onset_set_silence(aubio_onset_t * o, smpl_t silence) {
 }
 
 /* Allocate memory for an onset detection */
-static aubio_onset_t * new_aubio_onset(char_t * onset_mode,
+static aubio_onset_t * new_aubio_onset(const char_t * onset_mode,
 	uint_t buf_size, uint_t hop_size, uint_t samplerate)
 {
 	aubio_onset_t * o = AUBIO_NEW(aubio_onset_t);
@@ -1043,74 +1044,23 @@ void FindOnsets(const float* samples, int samplerate, int numFrames, int numThre
 {
 	static const int windowlen = 256;
 	static const int bufsize = windowlen * 4;
-	static char* method = "complex";
+	static const char* method = "complex";
 
-	if(numThreads > 1)
+	auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
+	fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
+	for(int i = 0; i <= numFrames - windowlen; i += windowlen)
 	{
-		struct OnsetThreads : public ParallelThreads
+		memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);
+		aubio_onset_do(onset, samplevec, beatvec);
+		if(beatvec->data[0] > 0)
 		{
-			CriticalSection lock;
-			const float* samples;
-			int numFrames, numThreads, samplerate;
-			Vector<Onset> onsets;
-
-			OnsetThreads(const float* inSamples, int inFrames, int inThreads, int inSamplerate)
-			{
-				samples = inSamples;
-				numFrames = inFrames;
-				numThreads = inThreads;
-				samplerate = inSamplerate;
-			}
-			void exec(int item, int thread) override
-			{
-				int framesPerThread = numFrames / numThreads;
-				auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
-				fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
-				int beginPos = framesPerThread * (thread + 0);
-				int endPos = framesPerThread * (thread + 1);
-				int paddedBegin = max(beginPos - bufsize, 0);
-				int paddedEnd = min(endPos + bufsize, numFrames - windowlen);
-				for(int i = paddedBegin; i < paddedEnd; i += windowlen)
-				{
-					memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);
-					aubio_onset_do(onset, samplevec, beatvec);
-					if(beatvec->data[0] > 0)
-					{
-						int pos = aubio_onset_get_last(onset) + paddedBegin;
-						if(pos >= beginPos && pos < endPos)
-						{
-							lock.lock();
-							onsets.push_back({pos, 1.0});
-							lock.unlock();
-						}
-					}
-				}
-				del_fvec(samplevec);
-				del_fvec(beatvec);
-				del_aubio_onset(onset);
-			}
-		};
-		OnsetThreads threads = {samples, numFrames, numThreads, samplerate};
-		threads.run(numThreads);
-	}
-	else
-	{
-		auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
-		fvec_t* samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
-		for(int i = 0; i <= numFrames - windowlen; i += windowlen)
-		{
-			memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);
-			aubio_onset_do(onset, samplevec, beatvec);
-			if(beatvec->data[0] > 0)
-			{
-				int pos = aubio_onset_get_last(onset);
-				if(pos >= 0) out.push_back({pos, 1.0});
-			}
+			int pos = aubio_onset_get_last(onset);
+			if(pos >= 0) out.push_back({pos, 1.0});
 		}
-		del_fvec(samplevec);
-		del_fvec(beatvec);
-		del_aubio_onset(onset);
 	}
+	del_fvec(samplevec);
+	del_fvec(beatvec);
+	del_aubio_onset(onset);
 }
 
 }; // namespace Vortex

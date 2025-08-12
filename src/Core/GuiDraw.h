@@ -39,7 +39,7 @@ struct GuiDraw
 	struct Misc
 	{
 		Texture checkerboard;
-		color32 colDisabled;
+		uint32_t colDisabled;
 		TileRect imgSelect;
 	};
 
@@ -55,7 +55,7 @@ struct GuiDraw
 
 	static void button(TileRect* tr, const recti& r, bool hover, bool focus);
 
-	static void checkerboard(recti r, color32 color);
+	static void checkerboard(recti r, uint32_t color);
 };
 
 }; // namespace Vortex

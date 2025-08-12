@@ -32,7 +32,7 @@ static const int MAP_WIDTH = 16;
 static const int TEXTURE_SIZE = 256; //sqrt(MAP_HEIGHT_MAX * MAP_WIDTH)
 static const int NUM_PIECES = MAP_HEIGHT / TEXTURE_SIZE;
 
-static const color32 arrowcol[9] =
+static const uint32_t arrowcol[9] =
 {
 	RGBAtoColor32(255,   0,   0, 255), // Red.
 	RGBAtoColor32( 12,  74, 206, 255), // Blue.
@@ -44,40 +44,40 @@ static const color32 arrowcol[9] =
 	RGBAtoColor32(  0, 198,   0, 255), // Green.
 	RGBAtoColor32(132, 132, 132, 255), // Gray.
 };
-static const color32 freezecol =
+static const uint32_t freezecol =
 {
 	RGBAtoColor32(64, 128, 0, 255) // Green
 };
-static const color32 rollcol =
+static const uint32_t rollcol =
 {
 	RGBAtoColor32(96, 96, 128, 255), // Blue gray
 };
-static const color32 minecol =
+static const uint32_t minecol =
 {
 	RGBAtoColor32(192, 192, 192, 255), // Light gray
 };
 
 struct SetPixelData
 {
-	uint* pixels;
+	uint32_t* pixels;
 	int noteW;
 	double pixPerOfs, startOfs;
 };
 
-static void SetPixels(const SetPixelData& spd, int x, double tor, color32 color)
+static void SetPixels(const SetPixelData& spd, int x, double tor, uint32_t color)
 {
 	int y = clamp((int)((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
-	uint* dst = spd.pixels + y * MAP_WIDTH + x;
+	uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
 	for(int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
 }
 
-static void SetPixels(const SetPixelData& spd, int x, double tor, double end, color32 color)
+static void SetPixels(const SetPixelData& spd, int x, double tor, double end, uint32_t color)
 {
 	int yt = clamp((int)((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
 	int yb = clamp((int)((end - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
 	for(int y = yt; y <= yb; ++y)
 	{
-		uint* dst = spd.pixels + y * MAP_WIDTH + x;
+		uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
 		for(int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
 	}
 }
@@ -134,10 +134,10 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			int rowtype = ToRowType(note.row);
 			if(note.endrow > note.row)
 			{
-				color32 color = (note.isRoll) ? rollcol : freezecol;
+				uint32_t color = (note.isRoll) ? rollcol : freezecol;
 				SetPixels(spd, colx[note.col], note.time, note.endtime, color);
 			}
-			color32 color;
+			uint32_t color;
 			if(note.isSelected)
 			{
 				color = RGBAtoColor32(255, 255, 255, 255);
@@ -156,10 +156,10 @@ void renderNotes(SetPixelData& spd, const int* colx)
 			int rowtype = ToRowType(note.row);
 			if(note.endrow > note.row)
 			{
-				color32 color = (note.isRoll) ? rollcol : freezecol;
+				uint32_t color = (note.isRoll) ? rollcol : freezecol;
 				SetPixels(spd, colx[note.col], note.row, note.endrow, color);
 			}
-			color32 color;
+			uint32_t color;
 			if(note.isSelected)
 			{
 				color = RGBAtoColor32(255, 255, 255, 255);
@@ -178,9 +178,9 @@ static int BlendI32(int a, int b, int f)
 	return a + (((b - a) * f) >> 8);
 }
 
-static void SetDensityRow(uint* pixels, int y, double density)
+static void SetDensityRow(uint32_t* pixels, int y, double density)
 {
-	static const uchar colors[] =
+	static const uint8_t colors[] =
 	{
 		 64, 192, 192,
 		128, 255,  64,
@@ -194,10 +194,10 @@ static void SetDensityRow(uint* pixels, int y, double density)
 	int r = BlendI32(colors[ci + 0], colors[ci + 3], bf);
 	int g = BlendI32(colors[ci + 1], colors[ci + 4], bf);
 	int b = BlendI32(colors[ci + 2], colors[ci + 5], bf);
-	uint col = Color32(r, g, b);
+	uint32_t col = Color32(r, g, b);
 
 	int w = clamp((int)(density * 0.05), 4, MAP_WIDTH) / 2;
-	uint* dst = pixels + y * MAP_WIDTH + MAP_WIDTH / 2 - w;
+	uint32_t* dst = pixels + y * MAP_WIDTH + MAP_WIDTH / 2 - w;
 	for(int i = -w; i < w; ++i, ++dst) *dst = col;
 }
 
@@ -297,7 +297,7 @@ void onChanges(int changes)
 
 	if((changes & bits) == 0) return;
 
-	Vector<uint> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
+	Vector<uint32_t> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
 
 	// The height of the chart region is based on the time elapsed between the first and last row.
 	double timeStart = gTempo->rowToTime(0);
@@ -343,8 +343,8 @@ void onChanges(int changes)
 	// Update the texture strips.
 	for(int i = 0; i < NUM_PIECES; ++i)
 	{
-		uint* buf = buffer.data();
-		auto src = (const uchar*)(buf + i * MAP_WIDTH * TEXTURE_SIZE);
+		uint32_t* buf = buffer.data();
+		auto src = (const uint8_t*)(buf + i * MAP_WIDTH * TEXTURE_SIZE);
 		myImage.modify(i * MAP_WIDTH, 0, MAP_WIDTH, TEXTURE_SIZE, src);
 	}
 }
@@ -383,7 +383,7 @@ void tick()
 	}
 }
 
-void drawRegion(int x, int w, double ofsA, double ofsB, color32 color)
+void drawRegion(int x, int w, double ofsA, double ofsB, uint32_t color)
 {
 	recti chartRect = myGetMapRect();
 	double pixPerOfs = (double)chartRect.h / (myChartEndOfs - myChartBeginOfs);

@@ -11,16 +11,16 @@ namespace Vortex {
 
 struct RowLayout::Col
 {
-	uint width : 30;
-	uint adjust : 1;
-	uint expand : 1;
+	uint32_t width : 30;
+	uint32_t adjust : 1;
+	uint32_t expand : 1;
 };
 
 struct RowLayout::Row
 {
 	Row() : expand(0) {}
 
-	uint expand : 1;
+	uint32_t expand : 1;
 
 	Vector<RowLayout::Col> cols;
 	Vector<GuiWidget*> widgets;
@@ -83,7 +83,7 @@ void RowLayout::onUpdateSize()
 				h = max(h, size.y);
 				if(cols[c].adjust)
 				{
-					cols[c].width = max(cols[c].width, (uint)size.x);
+					cols[c].width = max(cols[c].width, (uint32_t)size.x);
 				}
 			}
 

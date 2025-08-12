@@ -7,6 +7,7 @@
 #include <Core/Draw.h>
 #include <Core/Shader.h>
 #include <Core/StringUtils.h>
+#include <Core/WideString.h>
 
 #include <System/System.h>
 #include <System/File.h>
@@ -46,14 +47,18 @@
 #include <Dialogs/AdjustSync.h>
 #include <Dialogs/DancingBot.h>
 #include <Dialogs/TempoBreakdown.h>
+#include <Dialogs/LabelBreakdown.h>
 #include <Dialogs/GenerateNotes.h>
 #include <Dialogs/WaveformSettings.h>
 #include <Dialogs/Zoom.h>
 #include <Dialogs/CustomSnap.h>
 
+#include <algorithm>
+#include <fstream>
+
 namespace Vortex {
 
-extern String VerifySaveLoadIdentity(const Simfile& simfile);
+extern std::string VerifySaveLoadIdentity(const Simfile& simfile);
 
 namespace {
 
@@ -82,12 +87,12 @@ static const char saveFilters[] =
 
 static const int MAX_RECENT_FILES = 10;
 
-static String ClipboardGet()
+static std::string ClipboardGet()
 {
 	return gSystem->getClipboardText();
 }
 
-static void ClipboardSet(String text)
+static void ClipboardSet(std::string text)
 {
 	gSystem->setClipboardText(text);
 }
@@ -99,7 +104,7 @@ static const char* ToString(BackgroundStyle style)
 	return "stretch";
 }
 
-static BackgroundStyle ToBackgroundStyle(StringRef str)
+static BackgroundStyle ToBackgroundStyle(const std::string& str)
 {
 	if(str == "letterbox") return BG_STYLE_LETTERBOX;
 	if(str == "crop") return BG_STYLE_CROP;
@@ -113,7 +118,7 @@ static const char* ToString(SimFormat format)
 	return "sm";
 }
 
-static SimFormat ToSimFormat(StringRef str)
+static SimFormat ToSimFormat(const std::string& str)
 {
 	if(str == "ssc") return SIM_SSC;
 	if(str == "osu") return SIM_OSU;
@@ -129,10 +134,10 @@ GuiContext* gui_;
 DialogEntry myDialogs[NUM_DIALOG_IDS];
 int myChanges;
 Texture myLogo;
-Vector<String> myRecentFiles;
+Vector<std::string> myRecentFiles;
 
 int myFontSize;
-String myFontPath;
+std::string myFontPath;
 
 bool myUseMultithreading;
 bool myUseVerticalSync;
@@ -193,7 +198,7 @@ void init()
 
 	// Initialize the default text style.
 	TextStyle text;
-	text.font = Font(myFontPath.str(), Text::HINT_AUTO);
+	text.font = Font(myFontPath.c_str(), Text::HINT_AUTO);
 	text.fontSize = myFontSize;
 	text.textColor = Colors::white;
 	text.shadowColor = RGBAtoColor32(0, 0, 0, 128);
@@ -320,8 +325,11 @@ void loadSettings(XmrDoc& settings)
 		interface->get("fontSize", &myFontSize);
 
 		const char* path = interface->get("fontPath");
-		FileReader testPath;
-		if(path && testPath.open(path)) myFontPath = path;
+	    if (path == nullptr)
+	        return;
+
+        if (std::ifstream testPath(Widen(path).str()); testPath.good())
+            myFontPath = path;
 	}
 }
 
@@ -339,7 +347,7 @@ void saveGeneralSettings(XmrNode& settings)
 
 	XmrNode* interface = settings.addChild("interface");
 
-	interface->addAttrib("fontPath", myFontPath.str());
+	interface->addAttrib("fontPath", myFontPath.c_str());
 	interface->addAttrib("fontSize", (long)myFontSize);
 }
 
@@ -376,17 +384,15 @@ void loadRecentFiles()
 
 void saveRecentFiles()
 {
-	FileWriter out;
-	if(out.open("settings/recent files.txt"))
+	std::ofstream out("settings/recent files.txt");
+	if (out.good())
 	{
-		for(int i = 0; i < myRecentFiles.size(); ++i)
+		for (int i = 0; i < myRecentFiles.size(); ++i)
 		{
 			auto& file = myRecentFiles[i];
-			out.write(file.str(), 1, file.len());
-			if(i != myRecentFiles.size() - 1)
-			{
-				out.write("\n", 1, 1);
-			}
+			out.write(file.c_str(), file.length());
+			if (i != myRecentFiles.size() - 1)
+				out << '\n';
 		}
 	}
 }
@@ -394,22 +400,22 @@ void saveRecentFiles()
 // ================================================================================================
 // EditorImpl :: saving and loading of simfiles.
 
-static String findSimfile(const Path& path, bool ignoreAudio)
+static std::string findSimfile(const Path& path, bool ignoreAudio)
 {
-	String out;
+	std::string out;
 
 	// Make a list of loadable extensions, from high priority to low priority.
 	static const char* extList[] = {"ssc", "sm", "dwi", "osu", "ogg", "mp3", "wav"};
 	const char** extEnd = extList + (ignoreAudio ? 4 : 7);
 
 	// Check if the path is a directory.
-	if(path.attributes() & File::ATR_DIR)
+	if(fs::is_directory(path.str))
 	{
 		// If so, look for loadable files in the given directory.
 		auto curPriority = extEnd;
 		for(auto& file : File::findFiles(path, false))
 		{
-			String ext = file.ext();
+			std::string ext = file.ext();
 			Str::toLower(ext);
 			auto priority = std::find(extList, extEnd, ext);
 			if(priority != extEnd && priority < curPriority)
@@ -439,7 +445,7 @@ bool closeSimfile()
 	// Check if the user wants to discard unsaved changes.
 	if(gHistory->hasUnsavedChanges())
 	{
-		String title = gSimfile->get()->title;
+		std::string title = gSimfile->get()->title;
 		if(title.empty()) title = "the current file";
 		Str::fmt msg("Do you want to save changes to %1?");
 		msg.arg(title);
@@ -468,15 +474,15 @@ bool closeSimfile()
 
 bool openSimfile()
 {
-	String filters(loadFilters, sizeof(loadFilters));
-	String path = gSystem->openFileDlg("Open file", String(), filters);
+	std::string filters(loadFilters, sizeof(loadFilters));
+	std::string path = gSystem->openFileDlg("Open file", std::string(), filters);
 	return openSimfile(path);
 }
 
-bool openSimfile(StringRef path)
+bool openSimfile(const std::string& path)
 {
 	bool result = false;
-	if(path.len() && closeSimfile())
+	if(path.length() && closeSimfile())
 	{
 		if(gSimfile->load(path))
 		{
@@ -505,7 +511,7 @@ bool openNextSimfile(bool iterateForward)
 
 	// Make a list of all simfiles in the current pack.
 	Path packDir = gSimfile->getDir();
-	String curDir = packDir.dirWithoutSlash();
+	std::string curDir = packDir.dirWithoutSlash();
 	packDir.pop();
 	auto songDirs = File::findDirs(packDir, false);
 
@@ -513,7 +519,7 @@ bool openNextSimfile(bool iterateForward)
 	int index = -1;
 	for(int i = 0; i < songDirs.size(); ++i)
 	{
-		if(songDirs[i] == curDir)
+		if(songDirs[i].str == curDir)
 		{
 			index = i;
 		}
@@ -525,13 +531,13 @@ bool openNextSimfile(bool iterateForward)
 	}
 
 	// Find the previous/next simfile with a different directory.
-	String path;
+	std::string path;
 	if(iterateForward)
 	{
 		while(++index < songDirs.size())
 		{
 			path = findSimfile(songDirs[index], true);
-			if(path.len()) break;
+			if(path.length()) break;
 		}
 		if(index == songDirs.size())
 		{
@@ -544,7 +550,7 @@ bool openNextSimfile(bool iterateForward)
 		while(--index >= 0)
 		{
 			path = findSimfile(songDirs[index], true);
-			if(path.len()) break;
+			if(path.length()) break;
 		}
 		if(index < 0)
 		{
@@ -564,8 +570,8 @@ bool saveSimfile(bool showSaveAsDialog)
 
 	SimFormat saveFmt = myDefaultSaveFormat;
 	
-	String dir = gSimfile->getDir();
-	String file = gSimfile->getFile();
+	std::string dir = gSimfile->getDir();
+	std::string file = gSimfile->getFile();
 
 	// Give priority to the load format.
 	SimFormat fmt = gSimfile->get()->format;
@@ -599,8 +605,8 @@ bool saveSimfile(bool showSaveAsDialog)
 		};
 
 		// Show the save file dialog.
-		String str = dir + file;
-		String filters(saveFilters, sizeof(saveFilters));
+		std::string str = dir + file;
+		std::string filters(saveFilters, sizeof(saveFilters));
 		str = gSystem->saveFileDlg("save file", str, filters, &filterIndex);
 		if(str.empty()) return false;
 
@@ -641,7 +647,7 @@ bool saveSimfile(bool showSaveAsDialog)
 	// Save the simfile.
 	if(!gSimfile->save(dir, file, saveFmt))
 	{
-		HudError("Could not save %s", file.str());
+		HudError("Could not save %s", file.c_str());
 	}
 
 	// Signal to the edit history that the current state is the saved state.
@@ -653,7 +659,7 @@ bool saveSimfile(bool showSaveAsDialog)
 // ================================================================================================
 // EditorImpl :: recent files.
 
-void addToRecentfiles(String path)
+void addToRecentfiles(std::string path)
 {
 	myRecentFiles.erase_values(path);
 	myRecentFiles.insert(0, path, 1);
@@ -672,7 +678,7 @@ int getNumRecentFiles()
 	return myRecentFiles.size();
 }
 
-StringRef getRecentFile(int index)
+const std::string& getRecentFile(int index)
 {
 	return myRecentFiles[index];
 }
@@ -743,6 +749,8 @@ void handleDialogOpening(DialogId id, recti rect)
 		dlg = new DialogSongProperties; break;
 	case DIALOG_TEMPO_BREAKDOWN:
 		dlg = new DialogTempoBreakdown; break;
+	case DIALOG_LABEL_BREAKDOWN:
+		dlg = new DialogLabelBreakdown; break;
 	case DIALOG_WAVEFORM_SETTINGS:
 		dlg = new DialogWaveformSettings; break;
 	case DIALOG_ZOOM:
@@ -780,12 +788,12 @@ void onDialogClosed(int id)
 // ================================================================================================
 // EditorImpl :: event handling.
 
-void onCommandLineArgs(const String* args, int numArgs)
+void onCommandLineArgs(const std::string* args, int numArgs)
 {
-	if(numArgs >= 2 && args[1].len())
+	if(numArgs >= 2 && args[1].length())
 	{
 		Path argPath(gSystem->getRunDir(), args[1]);
-		String simfilePath = findSimfile(argPath, false);
+		std::string simfilePath = findSimfile(argPath, false);
 		openSimfile(simfilePath);
 	}
 }
@@ -795,7 +803,7 @@ void onFileDrop(FileDrop& evt)
 	if(evt.count >= 1)
 	{
 		Path dropPath(evt.files[0]);
-		String simfilePath = findSimfile(dropPath, false);
+		std::string simfilePath = findSimfile(dropPath, false);
 		openSimfile(simfilePath);
 	}
 }
@@ -852,7 +860,7 @@ void reportChanges(int changes)
 
 void updateTitle()
 {
-	String title, subtitle;
+	std::string title, subtitle;
 	auto meta = gSimfile->get();
 	if(meta)
 	{
@@ -860,17 +868,17 @@ void updateTitle()
 		subtitle = meta->subtitle;
 	}
 	bool hasChanges = gHistory->hasUnsavedChanges();
-	if(title.len() || subtitle.len())
+	if(title.length() || subtitle.length())
 	{
-		if(title.len() && subtitle.len()) title += " ";
-		title += subtitle;
-		if(hasChanges) title += "*";
-		title += " :: ArrowVortex";
+		if(title.length() && subtitle.length()) title = title + " ";
+		title = title + subtitle;
+		if(hasChanges) title = title + "*";
+		title = title + " :: ArrowVortex";
 	}
 	else
 	{
 		title = "ArrowVortex";
-		if(hasChanges) title += "*";
+		if(hasChanges) title = title + "*";
 	}
 	gSystem->setWindowTitle(title);
 }

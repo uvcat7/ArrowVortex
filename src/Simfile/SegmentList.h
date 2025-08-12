@@ -13,11 +13,11 @@ struct SegmentIter
 {
 	inline void operator -- ()
 	{
-		ptr = (Segment*)(((uchar*)ptr) - stride);
+		ptr = (Segment*)(((uint8_t*)ptr) - stride);
 	}
 	inline void operator ++ ()
 	{
-		ptr = (Segment*)(((uchar*)ptr) + stride);
+		ptr = (Segment*)(((uint8_t*)ptr) + stride);
 	}
 	inline bool operator != (const SegmentIter& other)
 	{
@@ -32,18 +32,18 @@ struct SegmentIter
 		return ptr;
 	}
 	Segment* ptr;
-	uint stride;
+	uint32_t stride;
 };
 
 struct SegmentConstIter
 {
 	inline void operator -- ()
 	{
-		ptr = (const Segment*)(((const uchar*)ptr) - stride);
+		ptr = (const Segment*)(((const uint8_t*)ptr) - stride);
 	}
 	inline void operator ++ ()
 	{
-		ptr = (const Segment*)(((const uchar*)ptr) + stride);
+		ptr = (const Segment*)(((const uint8_t*)ptr) + stride);
 	}
 	inline bool operator != (const SegmentConstIter& other)
 	{
@@ -58,7 +58,7 @@ struct SegmentConstIter
 		return ptr;
 	}
 	const Segment* ptr;
-	uint stride;
+	uint32_t stride;
 };
 
 // ================================================================================================
@@ -132,10 +132,10 @@ private:
 	friend class SegmentGroup;
 
 	// Returns a pointer to the begin of the segment data.
-	const uchar* rawBegin() const { return mySegs; }
+	const uint8_t* rawBegin() const { return mySegs; }
 
 	// Returns a pointer to the end of the segment data.
-	const uchar* rawEnd() const { return mySegs + myNum * myStride; }
+	const uint8_t* rawEnd() const { return mySegs + myNum * myStride; }
 
 	// Replaces the contents with a copy of the given list.
 	void assign(const List& other);
@@ -162,7 +162,7 @@ private:
 private:
 	void myReserve(int num);
 
-	uchar* mySegs;
+	uint8_t* mySegs;
 	int myNum, myStride, myCap;
 	Segment::Type myType;
 };

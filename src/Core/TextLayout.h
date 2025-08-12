@@ -10,10 +10,10 @@
 namespace Vortex {
 
 // Tells how many trailing bytes follow a given UTF-8 leading byte.
-extern const uchar utf8TrailingBytes[256];
+extern const uint8_t utf8TrailingBytes[256];
 
 // Used in UTF-8 multibyte decoding to cancel out the non-charcode bits.
-extern const uint utf8MultibyteResidu[6];
+extern const uint32_t utf8MultibyteResidu[6];
 
 // Character glyph in a text layout.
 struct LGlyph
@@ -38,8 +38,8 @@ struct LMarkup
 
 	union
 	{
-		color32 setTextColor;
-		color32 setShadowColor;
+		uint32_t setTextColor;
+		uint32_t setShadowColor;
 	};
 };
 
@@ -54,22 +54,22 @@ struct LLine
 struct LQuad
 {
 	int line, x, w;
-	color32 color;
+	uint32_t color;
 };
 
 // Contains the entire text layout.
 struct LLayout
 {
-	struct QuadData { bool enabled; int x; color32 color; };
+	struct QuadData { bool enabled; int x; uint32_t color; };
 
 	const Glyph* previousGlyph;
 
 	FontData* baseFont, *font;
 	int baseFontSize, fontSize;
-	color32 baseTextColor, textColor;
-	color32 baseShadowColor, shadowColor;
+	uint32_t baseTextColor, textColor;
+	uint32_t baseShadowColor, shadowColor;
 
-	uint flags;
+	uint32_t flags;
 	Text::Align align;
 	bool useKerning;
 

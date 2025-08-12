@@ -343,7 +343,7 @@ void DialogData::draw()
 	{
 		if(is_closeable_)
 		{
-			color32 col = Color32((action == ACT_CLOSE) ? 200 : 100);
+			uint32_t col = Color32((action == ACT_CLOSE) ? 200 : 100);
 			Draw::sprite(icons.cross, {buttonX, r.y + FRAME_TITLEBAR_H / 2}, col);
 			buttonX -= FRAME_BUTTON_W;
 			titleTextW -= FRAME_BUTTON_W;
@@ -355,7 +355,7 @@ void DialogData::draw()
 		if(is_minimizable_)
 		{
 			auto& tex = minimized_state_ ? icons.plus : icons.minus;
-			color32 col = Color32((action == ACT_MINIMIZE) ? 200 : 100);
+			uint32_t col = Color32((action == ACT_MINIMIZE) ? 200 : 100);
 			Draw::sprite(tex, {buttonX, r.y + FRAME_TITLEBAR_H / 2}, col);
 			buttonX -= FRAME_BUTTON_W;
 			titleTextW -= FRAME_BUTTON_W;
@@ -368,7 +368,7 @@ void DialogData::draw()
 	if(is_pinnable_)
 	{
 		auto& tex = pinned_state_ ? icons.unpin : icons.pin;
-		color32 col = Color32((action == ACT_PIN) ? 200 : 100);
+		uint32_t col = Color32((action == ACT_PIN) ? 200 : 100);
 		Draw::sprite(tex, {buttonX, r.y + FRAME_TITLEBAR_H / 2}, col);
 		buttonX -= FRAME_BUTTON_W;
 		titleTextW -= FRAME_BUTTON_W;
@@ -381,7 +381,7 @@ void DialogData::draw()
 	// Draw the title text.
 	TextStyle style;
 	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	Text::arrange(Text::MC, style, titleTextW - 8, dialog_title_.str());
+	Text::arrange(Text::MC, style, titleTextW - 8, dialog_title_.c_str());
 	Text::draw({r.x, r.y, titleTextW, FRAME_TITLEBAR_H});
 
 	// Draw inner dialog area.
@@ -511,7 +511,7 @@ void GuiDialog::setPosition(int x, int y)
 	DATA->rect_.y = y;
 }
 
-void GuiDialog::setTitle(StringRef str)
+void GuiDialog::setTitle(const std::string& str)
 {
 	DATA->dialog_title_ = str;
 }

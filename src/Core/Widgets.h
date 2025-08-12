@@ -2,7 +2,6 @@
 
 #include <Core/Slot.h>
 #include <Core/Vector.h>
-#include <Core/String.h>
 #include <Core/Draw.h>
 #include <Core/Text.h>
 #include <Core/Gui.h>
@@ -114,11 +113,11 @@ public:
 protected:
 	void ScrollbarUpdateValue(int v);
 	int scrollbar_end_, scrollbar_page_;
-	uint scrollbar_action_ : 9;
-	uint scrollbar_grab_position_ : 16;
+	uint32_t scrollbar_action_ : 9;
+	uint32_t scrollbar_grab_position_ : 16;
 
 private:
-	uint GetScrollbarActionAtPosition(int x, int y);
+	uint32_t GetScrollbarActionAtPosition(int x, int y);
 };
 
 /// Base scroll region widgets.
@@ -152,17 +151,17 @@ protected:
 	void PostTick();
 	void ClampScrollPositions();
 
-	uint scroll_type_horizontal_ : 2;
-	uint scroll_type_vertical_ : 2;
-	uint is_horizontal_scrollbar_active_ : 1;
-	uint is_vertical_scrollbar_active_ : 1;
-	uint scroll_region_action_ : 9;
-	uint scroll_region_grab_position_ : 16;
+	uint32_t scroll_type_horizontal_ : 2;
+	uint32_t scroll_type_vertical_ : 2;
+	uint32_t is_horizontal_scrollbar_active_ : 1;
+	uint32_t is_vertical_scrollbar_active_ : 1;
+	uint32_t scroll_region_action_ : 9;
+	uint32_t scroll_region_grab_position_ : 16;
 	int scroll_width_, scroll_height_;
 	int scroll_position_x_, scroll_position_y_;
 
 private:
-	uint getScrollRegionActionAt_(int x, int y);
+	uint32_t getScrollRegionActionAt_(int x, int y);
 };
 
 // Vertical Scrollbar GuiWidget.
@@ -196,7 +195,7 @@ public:
 	void onDraw() override;
 
 	void hideBackground();
-	void addItem(StringRef text);
+	void addItem(const std::string& text);
 	void clearItems();	
 
 	void scroll(bool up);
@@ -211,10 +210,10 @@ protected:
 	recti ItemRect() const;
 
 	WgScrollbarV* scrollbar_;
-	Vector<String> selectlist_items_;
+	Vector<std::string> selectlist_items_;
 	int scroll_position_;
-	uint is_interacted_ : 1;
-	uint show_background_ : 1;
+	uint32_t is_interacted_ : 1;
+	uint32_t show_background_ : 1;
 };
 
 /// Vertical Drop Down List GuiWidget.
@@ -231,7 +230,7 @@ public:
 	void onTick() override;
 	void onDraw() override;
 
-	void addItem(StringRef text);
+	void addItem(const std::string& text);
 	void clearItems();
 
 	IntSlot value;
@@ -241,7 +240,7 @@ protected:
 	void CloseDroplist();
 
 	WgSelectList* selectlist_widget_;
-	Vector<String> droplist_items_;
+	Vector<std::string> droplist_items_;
 	int selected_index_;
 };
 
@@ -256,14 +255,14 @@ public:
 	void onMouseRelease(MouseRelease& evt) override;
 	void onDraw() override;
 
-	void addItem(StringRef text);
+	void addItem(const std::string& text);
 	void clearItems();
 
 	IntSlot value;
 	CallSlot onChange;
 
 protected:
-	Vector<String> cycle_items_;
+	Vector<std::string> cycle_items_;
 };
 
 /// Single Line Text Editor GuiWidget.
@@ -296,14 +295,14 @@ private:
 	void DeleteSection();
 	vec2i TextPosition() const;
 
-	String lineedit_text_;
+	std::string lineedit_text_;
 	int lineedit_max_length_, lineedit_drag_;
 	vec2i lineedit_cursor_;
 	float lineedit_blink_time_, lineedit_scroll_offset_;
-	uint is_numerical_ : 1;
-	uint is_editable_ : 1;
-	uint force_scroll_update_ : 1;
-	uint lineedit_show_background_ : 1;
+	uint32_t is_numerical_ : 1;
+	uint32_t is_editable_ : 1;
+	uint32_t force_scroll_update_ : 1;
+	uint32_t lineedit_show_background_ : 1;
 	TextStyle lineedit_style_;
 };
 
@@ -340,7 +339,7 @@ private:
 	double spinner_display_value_;
 	int spinner_min_decimal_places_;
 	int spinner_max_decimal_places_;
-	String spinner_text_;
+	std::string spinner_text_;
 };
 
 /// Color picker widget.

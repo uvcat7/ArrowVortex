@@ -13,7 +13,7 @@ struct QuadBatchC
 	void flush();
 
 	int* pos;
-	color32* col;
+	uint32_t* col;
 };
 
 // Quad batch with vertices, and texture coordinates.
@@ -34,7 +34,7 @@ struct QuadBatchTC
 
 	int* pos;
 	float* uvs;
-	color32* col;
+	uint32_t* col;
 };
 
 namespace Renderer
@@ -59,7 +59,7 @@ namespace Renderer
 	void bindShader(DefaultShader shader);
 
 	void setColor(colorf color);
-	void setColor(color32 color);
+	void setColor(uint32_t color);
 	void resetColor();
 
 	void pushScissorRect(int x, int y, int w, int h);
@@ -68,12 +68,12 @@ namespace Renderer
 
 	void drawQuads(int numQuads, const int* pos);
 	void drawQuads(int numQuads, const int* pos, const float* uvs);
-	void drawQuads(int numQuads, const int* pos, const color32* col);
-	void drawQuads(int numQuads, const int* pos, const float* uvs, const color32* col);
-	void drawQuads(int numQuads, const float* pos, const float* uvs, const color32* col);
+	void drawQuads(int numQuads, const int* pos, const uint32_t* col);
+	void drawQuads(int numQuads, const int* pos, const float* uvs, const uint32_t* col);
+	void drawQuads(int numQuads, const float* pos, const float* uvs, const uint32_t* col);
 
-	void drawTris(int numTris, const uint* indices, const int* pos);
-	void drawTris(int numTris, const uint* indices, const int* pos, const float* uvs);
+	void drawTris(int numTris, const uint32_t* indices, const int* pos);
+	void drawTris(int numTris, const uint32_t* indices, const int* pos, const float* uvs);
 
 	QuadBatchC batchC();
 	QuadBatchT batchT();

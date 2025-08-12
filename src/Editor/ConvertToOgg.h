@@ -3,15 +3,13 @@
 #include <System/Thread.h>
 #include <System/Debug.h>
 
-#include <Core/String.h>
-
 namespace Vortex {
 
 struct OggConversionThread : public BackgroundThread
 {
 	OggConversionThread();
-	uchar progress;
-	String outPath, error;
+	uint8_t progress;
+	std::string outPath, error;
 	void exec() override;
 };
 

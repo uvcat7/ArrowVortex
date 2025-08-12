@@ -30,7 +30,7 @@ enum DisplayBpm { BPM_ACTUAL, BPM_CUSTOM, BPM_RANDOM };
 enum AttackUnit { ATTACK_LENGTH, ATTACK_END };
 
 /// Represents an attack (SM5).
-struct Attack { double time, duration; String mods; AttackUnit unit; };
+struct Attack { double time, duration; std::string mods; AttackUnit unit; };
 
 /// Represents a BPM range.
 struct BpmRange { double min, max; };
@@ -52,7 +52,7 @@ struct Tempo : NonCopyable
 
 	double offset;
 	Vector<Attack> attacks;
-	Vector<String> keysounds;
+	Vector<std::string> keysounds;
 	Vector<Property> misc;
 	SegmentGroup* segments;
 

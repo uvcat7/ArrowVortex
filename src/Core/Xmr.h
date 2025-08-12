@@ -189,7 +189,7 @@ struct XmrDoc : public XmrNode
 	XmrResult saveFile(const char* path, XmrSaveSettings settings);
 
 	/// Writes the XMR document to a string and returns it.
-	String saveString(XmrSaveSettings settings);
+	std::string saveString(XmrSaveSettings settings);
 
 	/// Description of the last occured error.
 	const char* lastError;

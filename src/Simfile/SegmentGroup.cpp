@@ -110,7 +110,7 @@ void SegmentGroup::encode(WriteStream& out) const
 		{
 			auto meta = Segment::meta[type];
 			out.writeNum(list.size());
-			out.write<uchar>(type);
+			out.write<uint8_t>(type);
 			for(auto it = list.begin(), end = list.end(); it != end; ++it)
 			{
 				meta->encode(out, it.ptr);
@@ -122,10 +122,10 @@ void SegmentGroup::encode(WriteStream& out) const
 
 void SegmentGroup::decode(ReadStream& in)
 {
-	uint num = in.readNum();
+	uint32_t num = in.readNum();
 	while(num > 0)
 	{
-		uchar type = in.read<uchar>();
+		uint8_t type = in.read<uint8_t>();
 		if(type < Segment::NUM_TYPES)
 		{
 			auto meta = Segment::meta[type];
@@ -139,7 +139,7 @@ void SegmentGroup::decode(ReadStream& in)
 	}
 }
 
-static String GetSegmentDescription(uint num, const char* singular, const char* plural)
+static std::string GetSegmentDescription(uint32_t num, const char* singular, const char* plural)
 {
 	switch(num)
 	{
@@ -149,7 +149,7 @@ static String GetSegmentDescription(uint num, const char* singular, const char* 
 	return Str::fmt("%1 %2").arg(num).arg(plural);
 }
 
-String SegmentGroup::description() const
+std::string SegmentGroup::description() const
 {
 	int numTypes = 0, numSegments = 0, lastType = 0;
 	ForEachType(type)
@@ -169,7 +169,7 @@ String SegmentGroup::description() const
 	return GetSegmentDescription(numSegments, "segment", "segments");
 }
 
-String SegmentGroup::descriptionValues() const
+std::string SegmentGroup::descriptionValues() const
 {
 	int numTypes = 0, numSegments = 0, lastType = 0;
 	ForEachType(type)
@@ -182,7 +182,7 @@ String SegmentGroup::descriptionValues() const
 
 	if (numTypes <= 1)
 	{
-		Vector<String> info;
+		Vector<std::string> info;
 
 		auto& list = myLists[lastType];
 		auto meta = Segment::meta[lastType];

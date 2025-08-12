@@ -51,7 +51,7 @@ Mixer* myMixer;
 Sound mySamples;
 std::chrono::steady_clock::time_point myPlayTimer;
 TickData myBeatTick, myNoteTick;
-String myTitle, myArtist;
+std::string myTitle, myArtist;
 int myMusicSpeed;
 int myMusicVolume;
 int myTickOffsetMs;
@@ -94,10 +94,13 @@ MusicImpl()
 
 	bool success;
 
-	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, String(), String());
+	std::string placeholderTitle;
+	std::string placeholderArtist;
+
+	success = myBeatTick.sound.load("assets/sound beat tick.wav", false, placeholderTitle, placeholderArtist);
 	if(!success) HudError("%s", "Failed to load beat tick.\n");
 
-	success = myNoteTick.sound.load("assets/sound note tick.wav", false, String(), String());
+	success = myNoteTick.sound.load("assets/sound note tick.wav", false, placeholderTitle, placeholderArtist);
 	if(!success) HudError("%s", "Failed to load note tick.\n");
 }
 
@@ -143,8 +146,8 @@ void load()
 
 	if(gSimfile->isClosed()) return;
 
-	String dir = gSimfile->getDir();
-	String file = gSimfile->get()->music;
+	std::string dir = gSimfile->getDir();
+	std::string file = gSimfile->get()->music;
 
 	if(file.empty())
 	{
@@ -154,7 +157,7 @@ void load()
 
 	Path path(dir, file);
 	bool success = mySamples.load(
-		path.str.str(), gEditor->hasMultithreading(), myTitle, myArtist);
+		path.str.c_str(), gEditor->hasMultithreading(), myTitle, myArtist);
 
 	if(success && mySamples.getFrequency() > 0)
 	{
@@ -168,7 +171,7 @@ void load()
 	else
 	{
 		mySamples.clear();
-		HudError("Could not load \"%s\".", path.filename().str());
+		HudError("Could not load \"%s\".", path.filename().c_str());
 	}
 }
 
@@ -357,8 +360,8 @@ void startOggConversion()
 {
 	if(gSimfile->isClosed()) return;
 
-	String dir = gSimfile->getDir();
-	String file = gSimfile->get()->music;
+	std::string dir = gSimfile->getDir();
+	std::string file = gSimfile->get()->music;
 
 	Path path(dir, file);
 	if(path.hasExt("ogg"))
@@ -419,7 +422,7 @@ void finishOggConversion()
 		}
 		else
 		{
-			HudError("Conversion failed: %s.", myOggConversionThread->error.str());
+			HudError("Conversion failed: %s.", myOggConversionThread->error.c_str());
 		}
 		delete myOggConversionThread;
 		myOggConversionThread = nullptr;
@@ -535,12 +538,12 @@ double getSongLength()
 	return (double)mySamples.getNumFrames() / (double)mySamples.getFrequency();
 }
 
-StringRef getTitle()
+const std::string& getTitle()
 {
 	return myTitle;
 }
 
-StringRef getArtist()
+const std::string& getArtist()
 {
 	return myArtist;
 }

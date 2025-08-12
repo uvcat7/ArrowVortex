@@ -32,8 +32,8 @@ struct TextDrawData
 	ShaderData alphaShader;
 
 	// Markup properties.
-	color32 textColor;
-	color32 shadowColor;
+	uint32_t textColor;
+	uint32_t shadowColor;
 
 	// Vertex data.
 	int glyphCount;
@@ -51,7 +51,7 @@ static void CreateShaders()
 {
 	VortexCheckGlError();
 
-	String err;
+	std::string err;
 
 	const char* textShaderVert =
 		"varying vec2 uvs;"
