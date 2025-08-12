@@ -16,95 +16,93 @@ extern const uint8_t utf8TrailingBytes[256];
 extern const uint32_t utf8MultibyteResidu[6];
 
 // Character glyph in a text layout.
-struct LGlyph
-{
-	const Glyph* glyph;
-	int x, charIndex;
+struct LGlyph {
+    const Glyph* glyph;
+    int x, charIndex;
 };
 
 // Markup tag in a text layout.
-struct LMarkup
-{
-	struct SetFloat { float value; };
+struct LMarkup {
+    struct SetFloat {
+        float value;
+    };
 
-	enum Type
-	{
-		SET_TEXT_COLOR,
-		SET_SHADOW_COLOR,
-	};
+    enum Type {
+        SET_TEXT_COLOR,
+        SET_SHADOW_COLOR,
+    };
 
-	int glyphIndex;
-	Type type;
+    int glyphIndex;
+    Type type;
 
-	union
-	{
-		uint32_t setTextColor;
-		uint32_t setShadowColor;
-	};
+    union {
+        uint32_t setTextColor;
+        uint32_t setShadowColor;
+    };
 };
 
 // Line data in a text layout.
-struct LLine
-{
-	int beginGlyph, endGlyph;
-	int x, y, w, top, bottom;
+struct LLine {
+    int beginGlyph, endGlyph;
+    int x, y, w, top, bottom;
 };
 
 // Coloured quad in a text layout.
-struct LQuad
-{
-	int line, x, w;
-	uint32_t color;
+struct LQuad {
+    int line, x, w;
+    uint32_t color;
 };
 
 // Contains the entire text layout.
-struct LLayout
-{
-	struct QuadData { bool enabled; int x; uint32_t color; };
+struct LLayout {
+    struct QuadData {
+        bool enabled;
+        int x;
+        uint32_t color;
+    };
 
-	const Glyph* previousGlyph;
+    const Glyph* previousGlyph;
 
-	FontData* baseFont, *font;
-	int baseFontSize, fontSize;
-	uint32_t baseTextColor, textColor;
-	uint32_t baseShadowColor, shadowColor;
+    FontData *baseFont, *font;
+    int baseFontSize, fontSize;
+    uint32_t baseTextColor, textColor;
+    uint32_t baseShadowColor, shadowColor;
 
-	uint32_t flags;
-	Text::Align align;
-	bool useKerning;
+    uint32_t flags;
+    Text::Align align;
+    bool useKerning;
 
-	int textW, textH;
-	int maxLineW;   // Maximum line width.
-	int lineTop;    // Vertical offset from baseline to line top.
-	int lineBottom; // Vertical offset from baseline to line bottom.
-	int lineBeginGlyph, lineW;
-	int lineIndex;
-	int charIndex, nextCharIndex;
+    int textW, textH;
+    int maxLineW;    // Maximum line width.
+    int lineTop;     // Vertical offset from baseline to line top.
+    int lineBottom;  // Vertical offset from baseline to line bottom.
+    int lineBeginGlyph, lineW;
+    int lineIndex;
+    int charIndex, nextCharIndex;
 
-	TextStyle style, defaultStyle;
-	QuadData fgQuad;
-	QuadData bgQuad;
+    TextStyle style, defaultStyle;
+    QuadData fgQuad;
+    QuadData bgQuad;
 
-	Vector<LQuad> fgQuads;
-	Vector<LQuad> bgQuads;
-	Vector<LGlyph> glyphs;
-	Vector<LMarkup> markup;
-	Vector<LLine> lines;
+    Vector<LQuad> fgQuads;
+    Vector<LQuad> bgQuads;
+    Vector<LGlyph> glyphs;
+    Vector<LMarkup> markup;
+    Vector<LLine> lines;
 
-	int stringLength;
+    int stringLength;
 };
 
 struct TextLayout {
+    static void create();
+    static void destroy();
+    static void endFrame();
 
-static void create();
-static void destroy();
-static void endFrame();
+    static LLayout& get();
 
-static LLayout& get();
+    static vec2i getTextPos(recti rect);
+    static recti getTextBB(vec2i pos);
 
-static vec2i getTextPos(recti rect);
-static recti getTextBB(vec2i pos);
+};  // TextArranger.
 
-}; // TextArranger.
-
-}; // namespace Vortex
+};  // namespace Vortex

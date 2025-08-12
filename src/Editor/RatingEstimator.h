@@ -4,17 +4,16 @@
 
 namespace Vortex {
 
-class RatingEstimator
-{
-public:
-	~RatingEstimator();
+class RatingEstimator {
+   public:
+    ~RatingEstimator();
 
-	RatingEstimator(const char* databaseFile);
+    RatingEstimator(const char* databaseFile);
 
-	double estimateRating();
+    double estimateRating();
 
-private:
-	double* myWeights;
+   private:
+    double* myWeights;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

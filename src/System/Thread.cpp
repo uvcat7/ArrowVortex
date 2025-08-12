@@ -7,49 +7,37 @@
 
 namespace Vortex {
 
-BackgroundThread::BackgroundThread()
-{
-	done = false;
+BackgroundThread::BackgroundThread() { done = false; }
+
+BackgroundThread::~BackgroundThread() {}
+
+void BackgroundThread::start() {
+    if (isDone()) {
+        return;
+    }
+
+    thread = std::jthread([&]() {
+        exec();
+        done = true;
+    });
 }
 
-BackgroundThread::~BackgroundThread()
-{
+void BackgroundThread::terminate() {
+    thread.request_stop();
+    waitUntilDone();
 }
 
-void BackgroundThread::start()
-{
-	if (isDone()) {
-		return;
-	}
-
-	thread = std::jthread([&]() {
-		exec();
-		done = true;
-		});
+void BackgroundThread::waitUntilDone() {
+    if (!thread.joinable()) {
+        return;
+    }
+    thread.join();
 }
 
-void BackgroundThread::terminate()
-{
-	thread.request_stop();
-	waitUntilDone();
+std::stop_token BackgroundThread::getStopToken() {
+    return thread.get_stop_token();
 }
 
-void BackgroundThread::waitUntilDone()
-{
-	if (!thread.joinable()) {
-		return;
-	}
-	thread.join();
-}
+bool BackgroundThread::isDone() const { return done; }
 
-std::stop_token BackgroundThread::getStopToken()
-{
-	return thread.get_stop_token();
-}
-
-bool BackgroundThread::isDone() const
-{
-	return done;
-}
-
-}; // namespace Vortex
+};  // namespace Vortex

@@ -9,28 +9,27 @@
 
 namespace Vortex {
 
-class DialogWaveformSettings : public EditorDialog
-{
-public:
-	~DialogWaveformSettings();
-	DialogWaveformSettings();
+class DialogWaveformSettings : public EditorDialog {
+   public:
+    ~DialogWaveformSettings();
+    DialogWaveformSettings();
 
-private:
-	void myApplyPreset();
-	void myUpdateSettings();
-	void myEnableFilter();
-	void myDisableFilter();
-	void myToggleOverlayFilter();
+   private:
+    void myApplyPreset();
+    void myUpdateSettings();
+    void myEnableFilter();
+    void myDisableFilter();
+    void myToggleOverlayFilter();
 
-	Waveform::ColorScheme settingsColorScheme_;
-	int presetIndex_;
-	int luminanceValue_;
-	int waveShape_;
-	int antiAliasingMode_;
+    Waveform::ColorScheme settingsColorScheme_;
+    int presetIndex_;
+    int luminanceValue_;
+    int waveShape_;
+    int antiAliasingMode_;
 
-	int filterType_;
-	float filterStrength_;
-	bool isOverlayFilterActive_;
+    int filterType_;
+    float filterStrength_;
+    bool isOverlayFilterActive_;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

@@ -5,19 +5,18 @@
 
 namespace Vortex {
 
-class DialogTempoBreakdown : public EditorDialog
-{
-public:
-	void onUpdateSize() override;
-	void onTick() override;
-	void onDraw() override;
+class DialogTempoBreakdown : public EditorDialog {
+   public:
+    void onUpdateSize() override;
+    void onTick() override;
+    void onDraw() override;
 
-	~DialogTempoBreakdown();
-	DialogTempoBreakdown();
+    ~DialogTempoBreakdown();
+    DialogTempoBreakdown();
 
-private:
-	struct TempoList;
-	TempoList* myList;
+   private:
+    struct TempoList;
+    TempoList* myList;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex
