@@ -135,6 +135,7 @@ struct ChartManImpl : public ChartMan {
 
             gSimfile->openChart(bound.chart);
             bound.chart->difficulty = newDiff;
+            gSimfile->sortCharts();
             gEditor->reportChanges(VCM_CHART_PROPERTIES_CHANGED);
         }
         return msg;

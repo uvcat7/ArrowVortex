@@ -35,6 +35,9 @@ struct SimfileMan {
     /// Removes a chart from the chart list, and closes it if necessary.
     virtual void removeChart(const Chart* chart) = 0;
 
+    /// Sort chart order based on properties.
+    virtual void sortCharts() = 0;
+
     /// Opens one of the charts in the simfile for editing.
     virtual void openChart(int index) = 0;
 
