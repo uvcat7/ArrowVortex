@@ -2215,16 +2215,13 @@ static stbi_uc *ConvertImage(stbi_uc *data, int inChannels,
         stbi_uc *d = out + y * w * outChannels;
         switch (COMBO(fmt, inChannels)) {
             CASE(ImageLoader::RGBA, 1)
-            d[0] = s[0],
-            d[1] = s[0], d[2] = s[0], d[3] = 255;
+            d[0] = s[0], d[1] = s[0], d[2] = s[0], d[3] = 255;
             break;
             CASE(ImageLoader::RGBA, 2)
-            d[0] = s[0],
-            d[1] = s[0], d[2] = s[0], d[3] = s[1];
+            d[0] = s[0], d[1] = s[0], d[2] = s[0], d[3] = s[1];
             break;
             CASE(ImageLoader::RGBA, 3)
-            d[0] = s[0],
-            d[1] = s[1], d[2] = s[2], d[3] = 255;
+            d[0] = s[0], d[1] = s[1], d[2] = s[2], d[3] = 255;
             break;
 
             CASE(ImageLoader::RGB, 1) d[0] = s[0], d[1] = s[0], d[2] = s[0];
@@ -2237,12 +2234,10 @@ static stbi_uc *ConvertImage(stbi_uc *data, int inChannels,
             CASE(ImageLoader::LUMA, 1) d[0] = s[0], d[1] = 255;
             break;
             CASE(ImageLoader::LUMA, 3)
-            d[0] = ComputeY(s[0], s[1], s[2]),
-            d[1] = 255;
+            d[0] = ComputeY(s[0], s[1], s[2]), d[1] = 255;
             break;
             CASE(ImageLoader::LUMA, 4)
-            d[0] = ComputeY(s[0], s[1], s[2]),
-            d[1] = s[3];
+            d[0] = ComputeY(s[0], s[1], s[2]), d[1] = s[3];
             break;
 
             CASE(ImageLoader::LUM, 2) d[0] = s[0];
