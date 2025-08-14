@@ -33,7 +33,7 @@ private:
 	void myGetFeetPositions(vec3f* out, int player);
 
 	Vector<int> myPadLayout;
-	Vector<uint> myFeetBits;
+	Vector<uint32_t> myFeetBits;
 	BatchSprite myPadSpr[6];
 	BatchSprite myFeetSpr[2];
 	Texture myPadTex, myFeetTex;

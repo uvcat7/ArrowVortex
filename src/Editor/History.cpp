@@ -33,11 +33,11 @@ struct Entry
 
 struct EntryData
 {
-	uint id;
+	uint32_t id;
 	Chart* chart;
 	Tempo* tempo;
-	uint size;
-	const uchar* data;
+	uint32_t size;
+	const uint8_t* data;
 };
 
 struct EntryList
@@ -76,7 +76,7 @@ struct EntryList
 // ================================================================================================
 // HistoryImpl :: helper functions.
 
-static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Tempo* t)
+static Entry* CreateEntry(EditId id, const void* data, uint32_t size, Chart* c, Tempo* t)
 {
 	bool hasChart = (c != nullptr);
 	bool hasTempo = (t != nullptr);
@@ -84,20 +84,20 @@ static Entry* CreateEntry(EditId id, const void* data, uint size, Chart* c, Temp
 	WriteStream header;
 	header.write<Entry>({nullptr});
 
-	uint flags = (id << 2) | (hasTempo << 1) | (hasChart << 0);
+	uint32_t flags = (id << 2) | (hasTempo << 1) | (hasChart << 0);
 	header.writeNum(flags);
 	if(hasChart) header.write(c);
 	if(hasTempo) header.write(t);
 	header.writeNum(size);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 	HudNote("Creating entry [header=%ib, data=%ib, chart:%c, tempo:%c",
 		header.size(), size,
 		hasChart ? 'y' : 'n',
 		hasTempo ? 'y' : 'n');
 #endif
 
-	uchar* mem = (uchar*)malloc(header.size() + size);
+	uint8_t* mem = (uint8_t*)malloc(header.size() + size);
 	memcpy(mem, header.data(), header.size());
 	memcpy(mem + header.size(), data, size);
 
@@ -112,7 +112,7 @@ static EntryData DecodeEntry(const Entry* in)
 
 	EntryData out = {0, nullptr, nullptr, 0, nullptr};
 
-	uint flags;
+	uint32_t flags;
 	header.readNum(flags);
 	if(flags & 1) header.read(out.chart);
 	if(flags & 2) header.read(out.tempo);
@@ -128,7 +128,7 @@ static Entry* Advance(Entry* it, Bindings& bound)
 {
 	ReadStream header(it + 1, INT_MAX);
 
-	uint flags;
+	uint32_t flags;
 	header.readNum(flags);
 	if(flags & 1) header.read(bound.chart);
 	if(flags & 2) header.read(bound.tempo);
@@ -148,7 +148,7 @@ static void ReleaseEntry(Entry* in, bool hasBeenApplied)
 	free(in);
 }
 
-static String ApplyEntry(const Entry* in, Bindings bound, bool undo, bool redo)
+static std::string ApplyEntry(const Entry* in, Bindings bound, bool undo, bool redo)
 {
 	EntryData entry = DecodeEntry(in);
 
@@ -216,12 +216,12 @@ void pushEntry(Entry* entry)
 	++myAppliedEntries;
 	++myTotalEntries;
 
-	String msg = ApplyEntry(entry, bound, false, false);
+	std::string msg = ApplyEntry(entry, bound, false, false);
 
-	if(msg.len()) HudNote("%s", msg.str());
+	if(msg.length()) HudNote("%s", msg.c_str());
 }
 
-void addEntry(EditId id, const void* data, uint size, Chart* targetChart, Tempo* targetTempo)
+void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart, Tempo* targetTempo)
 {
 	if(id == 0 || id > (size_t)myCallbacks.size())
 	{
@@ -251,17 +251,17 @@ void addEntry(EditId id, const void* data, uint size, Chart* targetChart, Tempo*
 	}
 }
 
-void addEntry(EditId id, const void* data, uint size)
+void addEntry(EditId id, const void* data, uint32_t size)
 {
 	addEntry(id, data, size, nullptr, nullptr);
 }
 
-void addEntry(EditId id, const void* data, uint size, Tempo* targetTempo)
+void addEntry(EditId id, const void* data, uint32_t size, Tempo* targetTempo)
 {
 	addEntry(id, data, size, nullptr, targetTempo);
 }
 
-void addEntry(EditId id, const void* data, uint size, Chart* targetChart)
+void addEntry(EditId id, const void* data, uint32_t size, Chart* targetChart)
 {
 	addEntry(id, data, size, targetChart, nullptr);
 }
@@ -277,13 +277,13 @@ void redoEntry()
 		auto it = myEntries.head;
 		for(int i = 0; i < myAppliedEntries; ++i) it = Advance(it, bound);
 
-		String msg = ApplyEntry(it, bound, false, true);
+		std::string msg = ApplyEntry(it, bound, false, true);
 
 		++myAppliedEntries;
 
 		if(msg.empty()) msg = "---";
 		HudNote("{tc:4a4}{g:redo}{tc:666}[%i/%i]:{tc} %s",
-			myAppliedEntries, myTotalEntries, msg.str());
+			myAppliedEntries, myTotalEntries, msg.c_str());
 	}
 }
 
@@ -295,13 +295,13 @@ void undoEntry()
 		auto it = myEntries.head;
 		for(int i = 0; i < myAppliedEntries - 1; ++i) it = Advance(it, bound);
 
-		String msg = ApplyEntry(it, bound, true, false);
+		std::string msg = ApplyEntry(it, bound, true, false);
 
 		--myAppliedEntries;
 
 		if(msg.empty()) msg = "---";
 		HudNote("{tc:822}{g:undo}{tc:666}[%i/%i]:{tc} %s",
-			myAppliedEntries, myTotalEntries, msg.str());
+			myAppliedEntries, myTotalEntries, msg.c_str());
 	}
 }
 
@@ -368,7 +368,7 @@ static void ReleaseChain(ReadStream& in, bool hasBeenApplied)
 	}
 }
 
-static String ApplyChain(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyChain(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	auto list = in.read<EntryList>();
 	auto msg = in.readStr();
@@ -403,7 +403,7 @@ void startChain()
 	++myOpenChains;
 }
 
-void finishChain(String msg)
+void finishChain(std::string msg)
 {
 	myOpenChains = max(0, myOpenChains - 1);
 	if(myChain.head && myOpenChains == 0)

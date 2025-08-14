@@ -137,7 +137,7 @@ void lvec_ones(lvec_t *s);
 #define MAX(a,b)  ( a > b ? a : b)
 #define MIN(a,b)  ( a < b ? a : b)
 
-#define ELEM_SWAP(a,b) { register smpl_t t=(a);(a)=(b);(b)=t; }
+#define ELEM_SWAP(a,b) { smpl_t t=(a);(a)=(b);(b)=t; }
 
 #define VERY_SMALL_NUMBER 2.e-42 //1.e-37
 
@@ -176,7 +176,7 @@ typedef enum
 
 /** Utility functions */
 
-fvec_t * new_aubio_window(char_t * window_type, uint_t length);
+fvec_t * new_aubio_window(aubio_window_type window_type, uint_t length);
 
 smpl_t fvec_median(fvec_t * input);
 uint_t fvec_peakpick(fvec_t * onset, uint_t pos);

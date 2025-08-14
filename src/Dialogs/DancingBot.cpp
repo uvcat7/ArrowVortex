@@ -61,7 +61,7 @@ struct FeetPlanner
 	struct NotePair { const ExpandedNote* a, *b; };
 	bool footswitch, crossover;
 	NotePair curNote, nextNote[4];
-	uint* outBits;
+	uint32_t* outBits;
 	const Style* style;
 	const ExpandedNote* noteBegin;
 	vec2i curFeetPos[2];
@@ -409,7 +409,7 @@ void DialogDancingBot::onDraw()
 			{
 				int tile = myPadLayout[y * style->padWidth + x];
 				vec2i pos = myGetDrawPos({x, y});
-				myPadSpr[tile].draw(&batch, pos.x, pos.y, (uchar)255);
+				myPadSpr[tile].draw(&batch, pos.x, pos.y, (uint8_t)255);
 				if(tile == TT_BUTTON) myPushArrow(&batch, x, y);
 			}
 		}
@@ -423,7 +423,7 @@ void DialogDancingBot::onDraw()
 			if(alpha > 0)
 			{
 				vec2i pos = myGetDrawPos(style->padColPositions[col]);
-				myPadSpr[2].draw(&batch, pos.x, pos.y, (uchar)alpha);
+				myPadSpr[2].draw(&batch, pos.x, pos.y, (uint8_t)alpha);
 			}
 		}
 		batch.flush();
@@ -434,7 +434,7 @@ void DialogDancingBot::onDraw()
 		BatchSprite::setScale(160);
 		for(int p = 0; p < gStyle->getNumPlayers(); ++p)
 		{
-			uint color = p ? ToColor32({.5f, .5f, 1, 1}) : ToColor32({1, .5f, .5f, 1});
+			uint32_t color = p ? ToColor32({.5f, .5f, 1, 1}) : ToColor32({1, .5f, .5f, 1});
 
 			// Get current and target note for each foot.
 			vec3f feetPos[2];
@@ -526,7 +526,7 @@ void DialogDancingBot::myAssignFeetToNotes()
 	if(numNotes > 0 && style && style->padWidth > 0)
 	{
 		myFeetBits.resize(numNotes / 32 + 1);
-		memset(myFeetBits.data(), 0, sizeof(uint) * myFeetBits.size());
+		memset(myFeetBits.data(), 0, sizeof(uint32_t) * myFeetBits.size());
 		for(int pn = 0; pn != gStyle->getNumPlayers(); ++pn)
 		{
 			FeetPlanner planner;

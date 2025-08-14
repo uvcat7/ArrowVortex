@@ -2,14 +2,9 @@
 
 #include <cstdint>
 #include <chrono>
+#include <string>
 
 namespace Vortex {
-
-typedef uint64_t  ulong;
-typedef uint32_t   uint;
-typedef uint16_t ushort;
-typedef uint8_t  uchar;
-typedef uint32_t   color32;
 
 template <typename T> struct vec2t { T x, y; };
 template <typename T> struct vec3t { T x, y, z; };
@@ -27,7 +22,6 @@ typedef areat<float>  areaf;
 
 struct colorf { float r, g, b, a; };
 
-class String;
 struct TileBar;
 struct TileRect;
 struct TileRect2;
@@ -49,7 +43,6 @@ struct Noteskin;
 struct Simfile;
 struct TimingData;
 
-typedef const String& StringRef;
 typedef uint64_t TextureHandle;
 
 extern std::chrono::duration<double> deltaTime;

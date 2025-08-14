@@ -47,6 +47,8 @@ struct View
 	virtual int  snapRow(int row, SnapDir direction) = 0;
 	virtual bool isAlignedToSnap(int row) = 0;
 
+	virtual void adjustForPreview(bool enabled) = 0;
+	virtual int getPreviewOffset() const = 0;
 	virtual double getZoomLevel() const = 0;
 	virtual double getScaleLevel() const = 0;
 	virtual int applyZoom(int v) const = 0;

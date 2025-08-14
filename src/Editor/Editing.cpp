@@ -34,7 +34,7 @@ enum TweakMode { TWEAK_NONE, TWEAK_BPM, TWEAK_OFS };
 
 enum PlaceMode { PLACE_NONE, PLACE_NEW, PLACE_AFTER_REMOVE};
 
-struct PlacingNote { int player, startRow, endRow; PlaceMode mode; uint quant; };
+struct PlacingNote { int player, startRow, endRow; PlaceMode mode; uint32_t quant; };
 
 static int KeyToCol(Key::Code code)
 {
@@ -168,7 +168,7 @@ void onKeyPress(KeyPress& evt) override
 			}
 			NoteEdit edit;
 			auto note = gNotes->getNoteAt(row, col);
-			uint quant = gView->getSnapQuant();
+			uint32_t quant = gView->getSnapQuant();
 			if(note)
 			{
 				if(gMusic->isPaused())
@@ -180,7 +180,7 @@ void onKeyPress(KeyPress& evt) override
 			}
 			else
 			{
-				edit.add.append({row, row, (uint)col, (uint)myCurPlayer, NOTE_STEP_OR_HOLD, quant});
+				edit.add.append({row, row, (uint32_t)col, (uint32_t)myCurPlayer, NOTE_STEP_OR_HOLD, quant});
 				if(evt.keyflags & Keyflag::SHIFT)
 				{
 					edit.add.begin()->type = NOTE_MINE;
@@ -363,7 +363,7 @@ void finishNotePlacement(int col)
 			{
 				if((int)note.row > hold->row && (int)note.row <= hold->endrow && (int)note.endrow > hold->endrow)
 				{
-					note.row = (uint)hold->row;
+					note.row = (uint32_t)hold->row;
 				}
 			}
 		}
@@ -577,7 +577,7 @@ void changePlayerNumber()
 	// Check if the current style actually supports more than 1 player.
 	if(numPlayers <= 1)
 	{
-		HudNote("%s only has one player.", gStyle->get()->name.str());
+		HudNote("%s only has one player.", gStyle->get()->name.c_str());
 		return;
 	}
 
@@ -617,7 +617,7 @@ void changePlayerNumber()
 }
 
 template <typename T>
-static T readFromBuffer(Vector<uchar>& buffer, int& pos)
+static T readFromBuffer(Vector<uint8_t>& buffer, int& pos)
 {
 	if(pos + (int)sizeof(T) <= buffer.size())
 	{
@@ -633,7 +633,7 @@ void pasteNotePatterns()
 	/* TODO?
 	NoteList out = gSelection->getSelectedNotes();
 
-	Vector<uchar> buffer = GetClipboardData("notes");
+	Vector<uint8_t> buffer = GetClipboardData("notes");
 	if(buffer.empty()) return;
 
 	int readPos = 0;
@@ -1040,7 +1040,7 @@ void exportNotesAsLuaTable()
 	Debug::log("arrowtable = {");
 	for(auto it = chart->notes.begin(), end = chart->notes.end(), last = end - 1; it != end; ++it)
 	{
-		String beat = Str::val(it->row * BEATS_PER_ROW, 0, 3);
+		std::string beat = Str::val(it->row * BEATS_PER_ROW, 0, 3);
 		const char* fmt = (it == last) ? "{%s,%i}};\n" : "{%s,%i},";
 		Debug::log(fmt, beat, it->col);
 	}
@@ -1055,7 +1055,7 @@ void copySelectionToClipboard(bool remove)
 {
 	if(gSelection->getType() == Selection::NONE)
 	{
-		String time = Str::formatTime(gView->getCursorTime());
+		std::string time = Str::formatTime(gView->getCursorTime());
 		gSystem->setClipboardText(Str::fmt("%1").arg(time));
 		HudNote("Copied timestamp to Clipboard.");
 	}
@@ -1083,7 +1083,7 @@ void pasteFromClipboard(bool insert)
 	}
 	else
 	{
-		String text = gSystem->getClipboardText();
+		std::string text = gSystem->getClipboardText();
 		double target = Str::readTime(text);
 		if(target > 0)
 		{

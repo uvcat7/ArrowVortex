@@ -19,8 +19,8 @@ public:
 	void write32(const void* val);
 	void write64(const void* val);
 
-	void writeNum(uint num);
-	void writeStr(StringRef str);
+	void writeNum(uint32_t num);
+	void writeStr(const std::string& str);
 
 	template <unsigned int S>
 	inline void writeSz(const void* val)
@@ -65,10 +65,10 @@ public:
 	int size() const { return current_size_; }
 
 	// Returns a pointer to the start of the written data.
-	const uchar* data() const { return buffer_; }
+	const uint8_t* data() const { return buffer_; }
 
 private:
-	uchar* buffer_;
+	uint8_t* buffer_;
 	int current_size_, capacity_;
 	bool is_external_buffer_, is_write_successful_;
 };
@@ -88,11 +88,11 @@ public:
 	void read32(void* out);
 	void read64(void* out);
 
-	uint readNum();
-	String readStr();
+	uint32_t readNum();
+	std::string readStr();
 
-	void readNum(uint& num);
-	void readStr(String& str);
+	void readNum(uint32_t& num);
+	void readStr(std::string& str);
 
 	template <size_t S>
 	inline void readSz(void* out)
@@ -148,10 +148,10 @@ public:
 	size_t bytesleft() const { return end_position_ - read_position_; }
 
 	// Returns the current read position.
-	const uchar* pos() const { return read_position_; }
+	const uint8_t* pos() const { return read_position_; }
 
 private:
-	const uchar* read_position_, *end_position_;
+	const uint8_t* read_position_, *end_position_;
 	bool is_read_successful_;
 };
 

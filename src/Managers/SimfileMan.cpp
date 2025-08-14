@@ -151,7 +151,7 @@ void onChanges(int changes)
 // ================================================================================================
 // SimfileManImpl :: open and close functions.
 
-bool load(StringRef path)
+bool load(const std::string& path)
 {
 	close();
 
@@ -162,15 +162,15 @@ bool load(StringRef path)
 
 	// Extract the filename and extension.
 	Path file(path);
-	String filename = file.filename();
-	String ext = file.ext();
+	std::string filename = file.filename();
+	std::string ext = file.ext();
 	Str::toLower(ext);
 
 	// Create a new simfile.
 	mySimfile = new Simfile;
 	mySimfile->dir = file.dir();
 	mySimfile->file = file.name();
-	HudInfo("Opening: %s", filename.str());
+	HudInfo("Opening: %s", filename.c_str());
 	
 	// Check if we are loading a stepmania simfile.
 	if(ext == "sm" || ext == "ssc" || ext == "dwi" || ext == "osu" || ext == "osz")
@@ -220,7 +220,7 @@ bool load(StringRef path)
 	return true;
 }
 
-bool save(StringRef dir, StringRef name, SimFormat format)
+bool save(const std::string& dir, const std::string& name, SimFormat format)
 {
 	if(!mySimfile) return false;
 
@@ -267,9 +267,9 @@ static void ReleaseAddChart(ReadStream& in, bool hasBeenApplied)
 	}
 }
 
-static String ApplyAddChart(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyAddChart(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	auto chart = in.read<Chart*>();
 	if(in.success())
 	{
@@ -285,7 +285,7 @@ static String ApplyAddChart(ReadStream& in, History::Bindings bound, bool undo, 
 	return msg;
 }
 
-void addChart(const Style* style, String artist, Difficulty difficulty, int meter)
+void addChart(const Style* style, std::string artist, Difficulty difficulty, int meter)
 {
 	Chart* chart = new Chart;
 
@@ -309,9 +309,9 @@ static void ReleaseRemoveChart(ReadStream& in, bool hasBeenApplied)
 	}
 }
 
-static String ApplyRemoveChart(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyRemoveChart(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	auto chart = in.read<Chart*>();
 	if(in.success())
 	{
@@ -460,7 +460,7 @@ void removeChart(const Chart* chart)
 // ================================================================================================
 // SimfileManImpl :: low level chart functions.
 
-String applyAdd(Chart* chart)
+std::string applyAdd(Chart* chart)
 {
 	mySimfile->charts.push_back(chart);
 	sortCharts();
@@ -469,13 +469,13 @@ String applyAdd(Chart* chart)
 	return "Added chart: " + chart->description();
 }
 
-String applyRemove(Chart* chart)
+std::string applyRemove(Chart* chart)
 {
 	int pos = mySimfile->charts.find(chart);
 	if(pos == mySimfile->charts.size())
 	{
-		String err = "Failed to remove " + chart->description() + ", could not find it.";
-		HudError("%s", err.str());
+		std::string err = "Failed to remove " + chart->description() + ", could not find it.";
+		HudError("%s", err.c_str());
 	}
 	else
 	{
@@ -514,8 +514,8 @@ void openChart(int index)
 		myUpdateChart();
 		if(myChart)
 		{
-			String desc = myChart->description();
-			HudNote("Switched to %s :: %s", myChart->style->name.str(), desc.str());
+			std::string desc = myChart->description();
+			HudNote("Switched to %s :: %s", myChart->style->name.c_str(), desc.c_str());
 		}
 		else
 		{
@@ -553,14 +553,14 @@ void previousChart()
 // ================================================================================================
 // SimfileManImpl :: get functions.
 
-String getDir() const
+std::string getDir() const
 {
-	return mySimfile ? mySimfile->dir : String();
+	return mySimfile ? mySimfile->dir : std::string();
 }
 
-String getFile() const
+std::string getFile() const
 {
-	return mySimfile ? mySimfile->file : String();
+	return mySimfile ? mySimfile->file : std::string();
 }
 
 int getNumCharts() const

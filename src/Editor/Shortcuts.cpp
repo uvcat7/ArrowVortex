@@ -194,6 +194,7 @@ E(OPEN_DIALOG_ADJUST_TEMPO_SM5)
 E(OPEN_DIALOG_DANCING_BOT)
 E(OPEN_DIALOG_GENERATE_NOTES)
 E(OPEN_DIALOG_TEMPO_BREAKDOWN)
+E(OPEN_DIALOG_LABEL_BREAKDOWN)
 E(OPEN_DIALOG_WAVEFORM_SETTINGS)
 E(OPEN_DIALOG_CUSTOM_SNAP)
 E(OPEN_DIALOG_ZOOM)
@@ -342,6 +343,15 @@ E(TOGGLE_STATUS_BEAT)
 E(TOGGLE_STATUS_MEASURE)
 E(TOGGLE_STATUS_TIME)
 E(TOGGLE_STATUS_TIMING_MODE)
+E(TOGGLE_STATUS_SCROLL)
+E(TOGGLE_STATUS_SPEED)
+
+E(PREVIEW_TOGGLE_ENABLED)
+E(PREVIEW_TOGGLE_SHOW_BEAT_LINES)
+E(PREVIEW_TOGGLE_REVERSE_SCROLL)
+E(PREVIEW_VIEW_CMOD)
+E(PREVIEW_VIEW_XMOD)
+E(PREVIEW_VIEW_XMOD_ALL)
 
 E(SHOW_SHORTCUTS)
 E(SHOW_MESSAGE_LOG)
@@ -485,41 +495,41 @@ ShortcutsImpl()
 // ================================================================================================
 // ShortcutsImpl :: API functions.
 
-String Shortcuts::getNotation(Action::Type action, bool fullList = false)
+std::string Shortcuts::getNotation(Action::Type action, bool fullList = false)
 {
-	String out;
+	std::string out;
 	for(auto& shortcut : shortcutMappings_)
 	{
 		if(shortcut.action->code == action)
 		{
-			if (out.len())
+			if (out.length())
 			{
-				out += ", ";
+				out = out + ", ";
 			}
 
 			if(shortcut.keyflags & Keyflag::CTRL)
 			{
-				out += "Ctrl+";
+				out = out + "Ctrl+";
 			}
 			if(shortcut.keyflags & Keyflag::SHIFT)
 			{
-				out += "Shift+";
+				out = out + "Shift+";
 			}
 			if(shortcut.keyflags & Keyflag::ALT)
 			{
-				out += "Alt+";
+				out = out + "Alt+";
 			}
 			if(shortcut.key == nullptr)
 			{
-				out += shortcut.scrollUp ? "Scroll Up" : "Scroll Down";
+				out = out + (shortcut.scrollUp ? "Scroll Up" : "Scroll Down");
 			}
 			else if(shortcut.key->chr)
 			{
-				out += shortcut.key->chr;
+				out = out + shortcut.key->chr;
 			}
 			else
 			{
-				out += shortcut.key->name;
+				out = out + shortcut.key->name;
 			}
 
 			if (!fullList)

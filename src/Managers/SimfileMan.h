@@ -14,10 +14,10 @@ struct SimfileMan
 	virtual void onChanges(int changes) = 0;
 
 	/// Loads a new simfile from file and opens it for editing.
-	virtual bool load(StringRef path) = 0;
+	virtual bool load(const std::string& path) = 0;
 
 	/// Saves the simfile that is currently open for editing.
-	virtual bool save(StringRef dir, StringRef name, SimFormat format) = 0;
+	virtual bool save(const std::string& dir, const std::string& name, SimFormat format) = 0;
 
 	/// Closes the simfile that is currently open for editing.
 	virtual void close() = 0;
@@ -29,7 +29,7 @@ struct SimfileMan
 	virtual bool isClosed() const = 0;
 
 	/// Inserts a new chart into the chart list and opens it for editing.
-	virtual void addChart(const Style* style, String artist, Difficulty diff, int meter) = 0;
+	virtual void addChart(const Style* style, std::string artist, Difficulty diff, int meter) = 0;
 
 	/// Removes a chart from the chart list, and closes it if necessary.
 	virtual void removeChart(const Chart* chart) = 0;
@@ -47,10 +47,10 @@ struct SimfileMan
 	virtual void previousChart() = 0;
 
 	/// Returns the directory of the active simfile.
-	virtual String getDir() const = 0;
+	virtual std::string getDir() const = 0;
 
 	/// Returns the filename (without extension) of the active simfile.
-	virtual String getFile() const = 0;
+	virtual std::string getFile() const = 0;
 
 	/// Returns the number of charts in the active simfile.
 	virtual int getNumCharts() const = 0;

@@ -74,27 +74,27 @@ void onDraw() override
 	{
 		// Draw the left-side colored bar with difficulty and meter.
 		recti left = {rect_.x, rect_.y, min(r.w, 128), 20};
-		color32 color = ToColor(chart->difficulty);
+		uint32_t color = ToColor(chart->difficulty);
 		myBar->draw(left, 0, color);
 
 		Text::arrange(Text::ML, textStyle, GetDifficultyName(chart->difficulty));
 		Text::draw(vec2i{left.x + 4, left.y + 10});
 
-		Text::arrange(Text::MR, textStyle, Str::val(chart->meter).str());
+		Text::arrange(Text::MR, textStyle, Str::val(chart->meter).c_str());
 		Text::draw(vec2i{left.x + left.w - 6, left.y + 10});
 
 		// Draw the right-side step artist and note count.
 		if(r.w > left.w)
 		{
-			String stepCount = Str::val(chart->stepCount());
+			std::string stepCount = Str::val(chart->stepCount());
 
 			int maxW = r.w - left.w - 8;
 			recti right = {rect_.x + left.w, rect_.y, rect_.w - left.w, 20};
-			Text::arrange(Text::MR, textStyle, maxW, stepCount.str());
+			Text::arrange(Text::MR, textStyle, maxW, stepCount.c_str());
 			Text::draw(vec2i{right.x + right.w - 6, right.y + 10});
 
 			maxW = right.w - Text::getSize().x - 16;
-			Text::arrange(Text::ML, textStyle, maxW, chart->artist.str());
+			Text::arrange(Text::ML, textStyle, maxW, chart->artist.c_str());
 			Text::draw(vec2i{right.x + 6, right.y + 10});
 		}
 	}
@@ -222,7 +222,7 @@ void onDraw() override
 		if(chart && style != chart->style)
 		{
 			style = chart->style;
-			Text::arrange(Text::MC, textStyle, style->name.str());
+			Text::arrange(Text::MC, textStyle, style->name.c_str());
 			Text::draw(vec2i{x + w / 2, y + 10});
 			textStyle.textColor = Colors::white;
 			y += 24;

@@ -1,0 +1,82 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [ "beta", "release" ]
+  pull_request:
+    branches: [ "beta" ]
+  schedule:
+    - cron: '22 0 * * 1'
+
+env:
+  USERNAME: uvcat7
+  FEED_URL: https://nuget.pkg.github.com/uvcat7/index.json
+  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/uvcat7/index.json,readwrite"
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: windows-2022
+    permissions:
+      # required for all workflows
+      security-events: write
+
+      # required to fetch internal or private CodeQL packs
+      packages: read
+
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: actions
+          build-mode: none
+        - language: c-cpp
+          build-mode: manual
+          configure: >
+            cmake -Bbuild
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+          build: cmake --build build --parallel "$env:NUMBER_OF_PROCESSORS"
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+
+    - name: Add NuGet sources
+      shell: pwsh
+      if: matrix.language == 'c-cpp'
+      run: |
+        .$(vcpkg fetch nuget) `
+          sources add `
+          -Source "${{ env.FEED_URL }}" `
+          -StorePasswordInClearText `
+          -Name GitHubPackages `
+          -UserName "${{ env.USERNAME }}" `
+          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+        .$(vcpkg fetch nuget) `
+          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+          -Source "${{ env.FEED_URL }}"
+
+    - name: Configure
+      if: matrix.configure
+      run: ${{ matrix.configure }}
+
+    - name: Build
+      if: matrix.build
+      run: ${{ matrix.build }}
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"

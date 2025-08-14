@@ -43,7 +43,7 @@ MetadataManImpl()
 // ================================================================================================
 // MetadataManImpl :: string property editing.
 
-void myQueueStringProperty(String* target, StringRef value, const char* name)
+void myQueueStringProperty(std::string* target, const std::string& value, const char* name)
 {
 	WriteStream stream;
 	stream.write(target);
@@ -53,10 +53,10 @@ void myQueueStringProperty(String* target, StringRef value, const char* name)
 	gHistory->addEntry(myApplyStringPropertyId, stream.data(), stream.size());
 }
 
-static String ApplyStringProperty(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyStringProperty(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
-	auto target = in.read<String*>();
+	std::string msg;
+	auto target = in.read<std::string*>();
 	auto before = in.readStr();
 	auto after = in.readStr();
 	auto name = in.read<const char*>();
@@ -68,9 +68,9 @@ static String ApplyStringProperty(ReadStream& in, History::Bindings bound, bool 
 		*target = undo ? before : after;
 
 		msg = (isChange ? "Changed " : (isRemove ? "Removed " : "Added "));
-		msg += name;
-		msg += ": ";
-		msg += (isChange ? (before + " {g:arrow right} " + after) : (isRemove ? before : after));
+		msg = msg + name;
+		msg = msg + ": ";
+		msg = msg + (isChange ? (before + " {g:arrow right} " + after) : (isRemove ? before : after));
 
 		auto sim = bound.simfile;
 		int changes = VCM_SONG_PROPERTIES_CHANGED;
@@ -105,9 +105,9 @@ void myQueueMusicPreview(double start, double length)
 	gHistory->addEntry(myApplyMusicPreviewId, stream.data(), stream.size());
 }
 
-static String ApplyMusicPreview(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyMusicPreview(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	auto before = in.read<PreviewTime>();
 	auto after = in.read<PreviewTime>();
 	if(in.success())
@@ -120,9 +120,9 @@ static String ApplyMusicPreview(ReadStream& in, History::Bindings bound, bool un
 		else
 		{
 			msg = "Changed music preview: ";
-			msg += Str::formatTime(value.start);
-			msg += " - ";
-			msg += Str::formatTime(value.start + value.len);
+			msg = msg + Str::formatTime(value.start);
+			msg = msg + " - ";
+			msg = msg + Str::formatTime(value.start + value.len);
 		}
 
 		auto sim = bound.simfile;
@@ -136,7 +136,7 @@ static String ApplyMusicPreview(ReadStream& in, History::Bindings bound, bool un
 // ================================================================================================
 // MetadataManImpl :: set functions.
 
-void mySetString(String* target, StringRef value, const char* name)
+void mySetString(std::string* target, const std::string& value, const char* name)
 {
 	if(mySimfile && !(*target == value))
 	{
@@ -154,62 +154,62 @@ void setMusicPreview(double start, double length)
 	}
 }
 
-void setTitle(StringRef s)
+void setTitle(const std::string& s)
 {
 	mySetString(&mySimfile->title, s, "title");
 }
 
-void setTitleTranslit(StringRef s)
+void setTitleTranslit(const std::string& s)
 {
 	mySetString(&mySimfile->titleTr, s, "transliterated title");
 }
 
-void setSubtitle(StringRef s)
+void setSubtitle(const std::string& s)
 {
 	mySetString(&mySimfile->subtitle, s, "subtitle");
 }
 
-void setSubtitleTranslit(StringRef s)
+void setSubtitleTranslit(const std::string& s)
 {
 	mySetString(&mySimfile->subtitleTr, s, "transliterated subtitle");
 }
 
-void setArtist(StringRef s)
+void setArtist(const std::string& s)
 {
 	mySetString(&mySimfile->artist, s, "artist");
 }
 
-void setArtistTranslit(StringRef s)
+void setArtistTranslit(const std::string& s)
 {
 	mySetString(&mySimfile->artistTr, s, "transliterated artist");
 }
 
-void setGenre(StringRef s)
+void setGenre(const std::string& s)
 {
 	mySetString(&mySimfile->genre, s, "genre");
 }
 
-void setCredit(StringRef s)
+void setCredit(const std::string& s)
 {
 	mySetString(&mySimfile->credit, s, "credit");
 }
 
-void setMusicPath(StringRef s)
+void setMusicPath(const std::string& s)
 {
 	mySetString(&mySimfile->music, s, "music");
 }
 
-void setBannerPath(StringRef s)
+void setBannerPath(const std::string& s)
 {
 	mySetString(&mySimfile->banner, s, "banner");
 }
 
-void setBackgroundPath(StringRef s)
+void setBackgroundPath(const std::string& s)
 {
 	mySetString(&mySimfile->background, s, "background");
 }
 
-void setCdTitlePath(StringRef s)
+void setCdTitlePath(const std::string& s)
 {
 	mySetString(&mySimfile->cdTitle, s, "CD title");
 }
@@ -217,24 +217,24 @@ void setCdTitlePath(StringRef s)
 // ================================================================================================
 // MetadataManImpl :: autofill functions.
 
-String findImageFile(const char* full, const char* abbrev)
+std::string findImageFile(const char* full, const char* abbrev)
 {
 	auto paths = File::findFiles(gSimfile->getDir(), false);
 	for(auto& path : paths)
 	{
-		String f(path.filename());
+		std::string f(path.filename());
 		Str::toLower(f);
-		String cmp[] = {" ", "-", "_"};
+		std::string cmp[] = {" ", "-", "_"};
 		for(auto& s : cmp)
 		{
-			String prefix = abbrev + s;
-			String postfix = s + abbrev;
-			if(Str::startsWith(f, prefix.str()) || Str::endsWith(f, postfix.str()))
+			std::string prefix = abbrev + s;
+			std::string postfix = s + abbrev;
+			if(Str::startsWith(f, prefix.c_str()) || Str::endsWith(f, postfix.c_str()))
 			{
 				return path.filename();
 			}
 		}
-		if(Str::find(f, abbrev) != String::npos || Str::find(f, full) != String::npos)
+		if(Str::find(f, abbrev) != std::string::npos || Str::find(f, full) != std::string::npos)
 		{
 			return path.filename();
 		}
@@ -242,19 +242,19 @@ String findImageFile(const char* full, const char* abbrev)
 	paths = File::findFiles(gSimfile->getDir() + "..\\", false);
 	for (auto& path : paths)
 	{
-		String f(path.filename());
+		std::string f(path.filename());
 		Str::toLower(f);
-		String cmp[] = { " ", "-", "_" };
+		std::string cmp[] = { " ", "-", "_" };
 		for (auto& s : cmp)
 		{
-			String prefix = abbrev + s;
-			String postfix = s + abbrev;
-			if (Str::startsWith(f, prefix.str()) || Str::endsWith(f, postfix.str()))
+			std::string prefix = abbrev + s;
+			std::string postfix = s + abbrev;
+			if (Str::startsWith(f, prefix.c_str()) || Str::endsWith(f, postfix.c_str()))
 			{
 				return "..\\" + path.filename();
 			}
 		}
-		if (Str::find(f, abbrev) != String::npos || Str::find(f, full) != String::npos)
+		if (Str::find(f, abbrev) != std::string::npos || Str::find(f, full) != std::string::npos)
 		{
 			return "..\\" + path.filename();
 		}
@@ -262,9 +262,9 @@ String findImageFile(const char* full, const char* abbrev)
 	return {};
 }
 
-String findMusicFile()
+std::string findMusicFile()
 {
-	String out;
+	std::string out;
 	int priority = 0;
 	auto audioFiles = File::findFiles(gSimfile->getDir(), false, "ogg;wav;mp3");
 	for(auto& audioFile : audioFiles)
@@ -288,17 +288,17 @@ String findMusicFile()
 	return out;
 }
 
-String findBannerFile()
+std::string findBannerFile()
 {
 	return findImageFile("bn", "banner");
 }
 
-String findBackgroundFile()
+std::string findBackgroundFile()
 {
 	return findImageFile("bg", "background");
 }
 
-String findCdTitleFile()
+std::string findCdTitleFile()
 {
 	return findImageFile("cd", "title");
 }

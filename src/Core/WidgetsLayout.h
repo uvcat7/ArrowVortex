@@ -36,7 +36,7 @@ public:
 	}
 
 	template <typename T>
-	T* add(StringRef label)
+	T* add(const std::string& label)
 	{
 		add<WgLabel>()->text.set(label);
 		return add<T>();

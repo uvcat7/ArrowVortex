@@ -97,7 +97,7 @@ void update()
 		auto meta = Segment::meta[type];
 		for(auto seg = it->begin(), segEnd = it->end(); seg != segEnd; ++seg)
 		{
-			String desc = meta->getDescription(seg.ptr);
+			std::string desc = meta->getDescription(seg.ptr);
 			myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
 		}
 	}
@@ -115,7 +115,7 @@ void update()
 	int stacks[2] = {0, 0};
 	for(TempoBox& box : myBoxes)
 	{
-		Text::arrange(Text::MC, textStyle, box.str.str());
+		Text::arrange(Text::MC, textStyle, box.str.c_str());
 		int width = max(32, Text::getWidth() + 24);
 		box.width = width;
 		
@@ -244,7 +244,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; box != end; ++box)
 		{
-			uint set = pred(box);
+			uint32_t set = pred(box);
 			numSelected += set;
 			box->isSelected = set;
 		}
@@ -253,7 +253,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; box != end; ++box)
 		{
-			uint set = pred(box);
+			uint32_t set = pred(box);
 			numSelected += set & (box->isSelected ^ 1);
 			box->isSelected |= set;
 		}
@@ -262,7 +262,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; box != end; ++box)
 		{
-			uint set = pred(box);
+			uint32_t set = pred(box);
 			numSelected += set & box->isSelected;
 			box->isSelected &= set ^ 1;
 		}
@@ -374,7 +374,7 @@ void draw()
 		int flags = side * TileBar::FLIP_H;
 		recti r = {x, y - 16, (int)box.width, 32};
 
-		color32 color = Segment::meta[box.type]->color;
+		uint32_t color = Segment::meta[box.type]->color;
 		myBoxBar.draw(&batch, r, color, flags);
 		if(box.isSelected) myBoxHl.draw(&batch, r, Colors::white, flags);
 
@@ -393,7 +393,7 @@ void draw()
 		int side = Segment::meta[box.type]->side;
 		int x = baseX[side] + box.x + side * 4 - 2;
 
-		Text::arrange(Text::MC, textStyle, box.str.str());
+		Text::arrange(Text::MC, textStyle, box.str.c_str());
 		Text::draw(recti{x, y - 17, (int)box.width, 32});
 	}
 

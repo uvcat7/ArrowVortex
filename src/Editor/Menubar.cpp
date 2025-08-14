@@ -13,6 +13,7 @@
 #include <Editor/Editor.h>
 #include <Editor/Statusbar.h>
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/View.h>
 #include <Editor/Waveform.h>
 #include <Editor/Editing.h>
@@ -39,6 +40,7 @@ typedef System::MenuItem Item;
 Item* myFileMenu;
 Item* myVisualSyncMenu;
 Item* myViewMenu;
+Item* myPreviewMenu;
 Item* myMinimapMenu;
 Item* myBgStyleMenu;
 Item* myStatusMenu;
@@ -73,10 +75,10 @@ static void sep(Item* menu)
 
 static void add(Item* menu, Action::Type action, const char* str)
 {
-	String notation = gShortcuts->getNotation(action);
-	if(notation.len())
+	std::string notation = gShortcuts->getNotation(action);
+	if(notation.length())
 	{
-		String combined(str);
+		std::string combined(str);
 		Str::append(combined, '\t');
 		Str::append(combined, notation);
 		menu->addItem(action, combined);
@@ -89,12 +91,12 @@ static void add(Item* menu, Action::Type action, const char* str)
 
 static void add(Item* menu, Action::Type action, const wchar_t* str)
 {
-	add(menu, action, Narrow(str).str());
+	add(menu, action, Narrow(str).c_str());
 }
 
 static void add(Item* menu, int item, const wchar_t* str)
 {
-	menu->addItem(item, Narrow(str).str());
+	menu->addItem(item, Narrow(str).c_str());
 }
 
 static void add(Item* menu, int item, const char* str)
@@ -262,6 +264,7 @@ void init(Item* menu)
 	add(hTempo, OPEN_DIALOG_ADJUST_TEMPO_SM5, "Adjust tempo SM5...");
 	sep(hTempo);
 	add(hTempo, SWITCH_TO_SYNC_MODE, "Sync mode");
+	add(hTempo, OPEN_DIALOG_LABEL_BREAKDOWN, "Labels...");
 	add(hTempo, OPEN_DIALOG_TEMPO_BREAKDOWN, "Breakdown...");
 	sub(hTempo, myVisualSyncMenu, "Visual sync anchor");
 
@@ -290,6 +293,17 @@ void init(Item* menu)
 	add(hAudio, TOGGLE_NOTE_TICK, "Note tick");
 	sep(hAudio);
 	add(hAudio, CONVERT_MUSIC_TO_OGG, "Convert to ogg");
+
+	// View > Preview menu.
+	myPreviewMenu = newMenu();
+	add(myPreviewMenu, PREVIEW_TOGGLE_ENABLED, "Enabled");
+	sep(myPreviewMenu);
+	add(myPreviewMenu, PREVIEW_TOGGLE_SHOW_BEAT_LINES, "Show beat lines");
+	add(myPreviewMenu, PREVIEW_TOGGLE_REVERSE_SCROLL, "Reverse scroll");
+	sep(myPreviewMenu);
+	add(myPreviewMenu, PREVIEW_VIEW_CMOD, "Time based (C-mod)");
+	add(myPreviewMenu, PREVIEW_VIEW_XMOD, "Row based (X-mod)");
+	add(myPreviewMenu, PREVIEW_VIEW_XMOD_ALL, "X-mod All");
 
 	// View > Minimap menu.
 	Item* hViewMm = myMinimapMenu = newMenu();
@@ -355,6 +369,8 @@ void init(Item* menu)
 	add(myStatusMenu, TOGGLE_STATUS_MEASURE, "Show measure");
 	add(myStatusMenu, TOGGLE_STATUS_TIME, "Show time");
 	add(myStatusMenu, TOGGLE_STATUS_TIMING_MODE, "Show timing mode");
+	add(myStatusMenu, TOGGLE_STATUS_SCROLL, "Show scroll mod");
+	add(myStatusMenu, TOGGLE_STATUS_SPEED, "Show speed mod");
 
 	// View menu.
 	myViewMenu = newMenu();
@@ -372,6 +388,7 @@ void init(Item* menu)
 	sep(myViewMenu);
 	add(myViewMenu, OPEN_DIALOG_WAVEFORM_SETTINGS, "Waveform...");
 	add(myViewMenu, 0 /*dummy*/, "Noteskins");
+	sub(myViewMenu, myPreviewMenu, "Preview");
 	sub(myViewMenu, myMinimapMenu, "Minimap");
 	sub(myViewMenu, myBgStyleMenu, "Background");
 	sub(myViewMenu, hViewZoom, "Zoom");
@@ -478,6 +495,25 @@ void registerUpdateFunctions()
 		MENU->myViewMenu->setChecked(USE_ROW_BASED_VIEW, !gView->isTimeBased());
 		MENU->myViewMenu->setChecked(USE_TIME_BASED_VIEW, gView->isTimeBased());
 	};
+	myUpdateFunctions[PREVIEW_ENABLED] = []
+	{
+		MENU->myPreviewMenu->setChecked(PREVIEW_TOGGLE_ENABLED, gNotefieldPreview->hasEnabled());
+	};
+	myUpdateFunctions[PREVIEW_SHOW_BEATLINES] = []
+	{
+		MENU->myPreviewMenu->setChecked(PREVIEW_TOGGLE_SHOW_BEAT_LINES, gNotefieldPreview->hasShowBeatLines());
+	};
+	myUpdateFunctions[PREVIEW_SHOW_REVERSE_SCROLL] = []
+	{
+		MENU->myPreviewMenu->setChecked(PREVIEW_TOGGLE_REVERSE_SCROLL, gNotefieldPreview->hasReverseScroll());
+	};
+	myUpdateFunctions[PREVIEW_VIEW_MODE] = []
+	{
+		auto mode = gNotefieldPreview->getMode();
+		MENU->myPreviewMenu->setChecked(PREVIEW_VIEW_CMOD, mode == NotefieldPreview::CMOD);
+		MENU->myPreviewMenu->setChecked(PREVIEW_VIEW_XMOD, mode == NotefieldPreview::XMOD);
+		MENU->myPreviewMenu->setChecked(PREVIEW_VIEW_XMOD_ALL, mode == NotefieldPreview::XMOD_ALL);
+	};
 	myUpdateFunctions[VIEW_MINIMAP] = []
 	{
 		auto mode = gMinimap->getMode();
@@ -547,6 +583,14 @@ void registerUpdateFunctions()
 	myUpdateFunctions[STATUSBAR_TIMING_MODE] = []
 	{
 		MENU->myStatusMenu->setChecked(TOGGLE_STATUS_TIMING_MODE, gStatusbar->hasTimingMode());
+	};
+	myUpdateFunctions[STATUSBAR_SCROLL] = []
+	{
+		MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SCROLL, gStatusbar->hasScroll());
+	};
+	myUpdateFunctions[STATUSBAR_SPEED] = []
+	{
+		MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SPEED, gStatusbar->hasSpeed());
 	};
 }
 

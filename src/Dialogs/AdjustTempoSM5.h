@@ -19,7 +19,7 @@ public:
 	void onAction(int id);
 
 private:
-	WgSpinner* myCreateWidgetRow(StringRef label, int y, double& val, int action);
+	WgSpinner* myCreateWidgetRow(const std::string& label, int y, double& val, int action);
 	void myCreateWidgets();
 
 	double myDelay;
@@ -31,7 +31,7 @@ private:
 	int mySpeedUnit;
 	double myScrollRatio;
 	double myFakeBeats;
-	String myLabelText;
+	std::string myLabelText;
 };
 
 }; // namespace Vortex

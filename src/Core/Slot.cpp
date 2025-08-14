@@ -200,10 +200,10 @@ void ValueSlot::bind(const int* v)
 	data_ = new ConstIntPtr<int>(v);
 }
 
-void ValueSlot::bind(const uint* v)
+void ValueSlot::bind(const uint32_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new ConstIntPtr<uint>(v);
+	data_ = new ConstIntPtr<uint32_t>(v);
 }
 
 void ValueSlot::bind(const long* v)
@@ -212,10 +212,10 @@ void ValueSlot::bind(const long* v)
 	data_ = new ConstIntPtr<long>(v);
 }
 
-void ValueSlot::bind(const ulong* v)
+void ValueSlot::bind(const uint64_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new ConstIntPtr<ulong>(v);
+	data_ = new ConstIntPtr<uint64_t>(v);
 }
 
 void ValueSlot::bind(const float* v)
@@ -242,10 +242,10 @@ void ValueSlot::bind(int* v)
 	data_ = new IntPtr<int>(v);
 }
 
-void ValueSlot::bind(uint* v)
+void ValueSlot::bind(uint32_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new IntPtr<uint>(v);
+	data_ = new IntPtr<uint32_t>(v);
 }
 
 void ValueSlot::bind(long* v)
@@ -254,10 +254,10 @@ void ValueSlot::bind(long* v)
 	data_ = new IntPtr<long>(v);
 }
 
-void ValueSlot::bind(ulong* v)
+void ValueSlot::bind(uint64_t* v)
 {
 	ReleaseVal(data_);
-	data_ = new IntPtr<ulong>(v);
+	data_ = new IntPtr<uint64_t>(v);
 }
 
 void ValueSlot::bind(float* v)
@@ -381,8 +381,8 @@ struct BaseStr
 struct StringVal : public BaseStr
 {
 	void set(const char* s) { str = s; }
-	const char* get() const { return str.str(); }
-	String str;
+	const char* get() const { return str.c_str(); }
+	std::string str;
 };
 
 struct ConstCharPtr : public BaseStr
@@ -394,17 +394,17 @@ struct ConstCharPtr : public BaseStr
 
 struct StringPtr : public BaseStr
 {
-	StringPtr(String* s) : str(s) {}
+	StringPtr(std::string* s) : str(s) {}
 	void set(const char* s) { *str = s; }
-	const char* get() const { return str->str(); }
-	String* str;
+	const char* get() const { return str->c_str(); }
+	std::string* str;
 };
 
 struct ConstStringPtr : public BaseStr
 {
-	ConstStringPtr(const String* s) : str(s) {}
-	const char* get() const { return str->str(); }
-	const String* str;
+	ConstStringPtr(const std::string* s) : str(s) {}
+	const char* get() const { return str->c_str(); }
+	const std::string* str;
 };
 
 static void ReferenceStr(void* data)
@@ -453,13 +453,13 @@ void TextSlot::bind(const char* str)
 	data_ = new ConstCharPtr(str);
 }
 
-void TextSlot::bind(const String* str)
+void TextSlot::bind(const std::string* str)
 {
 	ReleaseStr(data_);
 	data_ = new ConstStringPtr(str);
 }
 
-void TextSlot::bind(String* str)
+void TextSlot::bind(std::string* str)
 {
 	ReleaseStr(data_);
 	data_ = new StringPtr(str);
@@ -470,9 +470,9 @@ void TextSlot::set(const char* str)
 	((BaseStr*)data_)->set(str);
 }
 
-void TextSlot::set(StringRef str)
+void TextSlot::set(const std::string& str)
 {
-	((BaseStr*)data_)->set(str.str());
+	((BaseStr*)data_)->set(str.c_str());
 }
 
 const char* TextSlot::get() const

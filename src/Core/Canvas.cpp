@@ -347,7 +347,7 @@ void Canvas::polygon(const float* x, const float* y, int vertexCount)
 
 Texture Canvas::createTexture(bool mipmap) const
 {
-	uchar* dst = (uchar*)malloc(canvas_width_*canvas_height_ * 4 * sizeof(uchar));
+	uint8_t* dst = (uint8_t*)malloc(canvas_width_*canvas_height_ * 4 * sizeof(uint8_t));
 	for(int i = 0; i < canvas_width_ * canvas_height_ * 4; ++i)
 	{
 		int v = (int)(canvas_data_[i] * 255.f + 0.5f);

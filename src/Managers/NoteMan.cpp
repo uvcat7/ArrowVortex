@@ -13,7 +13,6 @@
 #include <Managers/SimfileMan.h>
 #include <Simfile/Parsing.h>
 #include <Simfile/TimingData.h>
-#include <Simfile/Encoding.h>
 
 #include <Editor/Editor.h>
 #include <Editor/History.h>
@@ -97,6 +96,7 @@ void myUpdateNotes()
 
 	myUpdateNoteTimes();
 	myUpdateWarpedNotes();
+	myUpdateFakedNotes();
 	myUpdateNoteStats();
 	myUpdateCheckQuants();
 }
@@ -132,7 +132,7 @@ void myUpdateNoteTimes()
 
 void myUpdateWarpedNotes()
 {
-	uint insideWarp = 0;
+	uint32_t insideWarp = 0;
 	auto note = myNotes.begin(), noteEnd = myNotes.end();
 	auto& events = gTempo->getTimingData().events;
 	auto it = events.begin(), end = events.end();
@@ -157,6 +157,25 @@ void myUpdateWarpedNotes()
 	for(; note != noteEnd; ++note)
 	{
 		note->isWarped = 0;
+	}
+}
+
+void myUpdateFakedNotes()
+{
+	auto note = myNotes.begin(), noteEnd = myNotes.end();
+	auto& events = gTempo->getTimingData().fakes;
+	auto it = events.begin(), end = events.end();
+
+	for (; it != end; ++it)
+	{
+		for (; note != noteEnd; ++note)
+		{
+			note->isFake = note->type == NOTE_FAKE || note->row >= it->row && note->row <= it->row + it->length;
+		}
+	}
+	for (; note != noteEnd; ++note)
+	{
+		note->isFake = note->type == NOTE_FAKE;
 	}
 }
 
@@ -208,12 +227,13 @@ void updateTempo()
 {
 	myUpdateNoteTimes();
 	myUpdateWarpedNotes();
+	myUpdateFakedNotes();
 }
 
 // ================================================================================================
 // NotesManImpl :: editing helper functions.
 
-static String GetNoteName(const Note& note)
+static std::string GetNoteName(const Note& note)
 {
 	switch(note.type)
 	{
@@ -280,9 +300,9 @@ void myQueueAddNote(Note note)
 	gHistory->addEntry(myApplyAddNoteId, stream.data(), stream.size(), myChart);
 }
 
-static String ApplyAddNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyAddNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	Note note;
 	DecodeNote(in, note);
 	if(in.success())
@@ -299,7 +319,7 @@ static String ApplyAddNote(ReadStream& in, History::Bindings bound, bool undo, b
 			msg = "Added ";
 			NOTE_MAN->myApplyNotes(bound.chart, add, dummy, !redo);
 		}
-		msg += GetNoteName(note);
+		msg = msg + GetNoteName(note);
 	}
 	return msg;
 }
@@ -314,9 +334,9 @@ void myQueueRemoveNote(Note note)
 	gHistory->addEntry(myApplyRemNoteId, stream.data(), stream.size(), myChart);
 }
 
-static String ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	Note note;
 	DecodeNote(in, note);
 	if(in.success())
@@ -333,7 +353,7 @@ static String ApplyRemoveNote(ReadStream& in, History::Bindings bound, bool undo
 			msg = "Removed ";
 			NOTE_MAN->myApplyNotes(bound.chart, dummy, rem, !redo);
 		}
-		msg += GetNoteName(note);
+		msg = msg + GetNoteName(note);
 	}
 	return msg;
 }
@@ -350,9 +370,9 @@ void myQueueChangeNotes(const NoteEditResult& edit, const EditDescription* desc)
 	gHistory->addEntry(myApplyChangeNotesId, stream.data(), stream.size(), myChart);
 }
 
-static String ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
-	String msg;
+	std::string msg;
 	
 	NoteList add, rem;
 
@@ -365,11 +385,11 @@ static String ApplyChangeNotes(ReadStream& in, History::Bindings bound, bool und
 		{
 			int numNotes = max(add.size(), rem.size());
 			const char* format = (numNotes > 1) ? desc->plural : desc->singular;
-			msg = Str::fmt(format).arg(numNotes);
+			msg = Str::fmt(format).arg(numNotes).str;
 		}
 		else
 		{
-			Vector<String> info;
+			Vector<std::string> info;
 
 			if(add.size() == 1)
 			{
@@ -465,7 +485,7 @@ void myApplyInsertRowsOffset(Chart* chart, int startRow, int numRows)
 	}
 }
 
-String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
+std::string myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 {
 	auto startRow = in.read<int>();
 	auto numRows = in.read<int>();
@@ -510,10 +530,10 @@ String myApplyInsertRows(ReadStream& in, bool undo, bool redo)
 
 		target = in.read<Chart*>();
 	}
-	return String();
+	return std::string();
 }
 
-static String ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
+static std::string ApplyInsertRows(ReadStream& in, History::Bindings bound, bool undo, bool redo)
 {
 	return NOTE_MAN->myApplyInsertRows(in, undo, redo);
 }
@@ -557,7 +577,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; note != end; ++note)
 		{
-			uint set = pred(note);
+			uint32_t set = pred(note);
 			numSelected += set;
 			note->isSelected = set;
 		}
@@ -566,7 +586,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; note != end; ++note)
 		{
-			uint set = pred(note);
+			uint32_t set = pred(note);
 			numSelected += set & (note->isSelected ^ 1);
 			note->isSelected |= set;
 		}
@@ -575,7 +595,7 @@ int performSelection(SelectModifier mod, Predicate pred)
 	{
 		for(; note != end; ++note)
 		{
-			uint set = pred(note);
+			uint32_t set = pred(note);
 			numSelected += set & note->isSelected;
 			note->isSelected &= set ^ 1;
 		}
@@ -791,7 +811,7 @@ void copyToClipboard(bool timeBased)
 	if(numNotes > 0)
 	{
 		WriteStream stream;
-		stream.write<uchar>(timeBased);
+		stream.write<uint8_t>(timeBased);
 		if(timeBased)
 		{
 			notes.encode(stream, gTempo->getTimingData(), true);
@@ -807,11 +827,11 @@ void copyToClipboard(bool timeBased)
 
 void pasteFromClipboard(bool insert)
 {
-	Vector<uchar> buffer = GetClipboardData(clipboardTag);
+	Vector<uint8_t> buffer = GetClipboardData(clipboardTag);
 	ReadStream stream(buffer.data(), buffer.size());
 
 	// Check if the note data is time-based.
-	bool timeBased = (stream.read<uchar>() != 0);
+	bool timeBased = (stream.read<uint8_t>() != 0);
 
 	// Read the note data.
 	NoteEdit edit;
@@ -914,6 +934,7 @@ Vector<const ExpandedNote*> getNotesBeforeTime(double time) const
 	for(auto& n : myNotes)
 	{
 		if(n.time > time) break;
+		if(n.isMine | n.isWarped | n.isFake) continue;
 		cols[n.col] = &n;
 	}
 	return out;

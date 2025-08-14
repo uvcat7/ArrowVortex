@@ -30,6 +30,7 @@
 #include <Editor/Selection.h>
 #include <Editor/Editing.h>
 #include <Editor/Common.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/TextOverlay.h>
 #include <Editor/View.h>
 #include <Editor/Editor.h>
@@ -67,7 +68,7 @@ struct DrawPosHelper
 		}
 		else
 		{
-			advanceFunc = RowBasedAvance;
+			advanceFunc = RowBasedAdvance;
 			getFunc = RowBasedGet;
 		}
 	}
@@ -80,8 +81,7 @@ struct DrawPosHelper
 	{
 		return getFunc(this, row, time);
 	}
-
-	static int RowBasedAvance(DrawPosHelper* dp, int row)
+	static int RowBasedAdvance(DrawPosHelper* dp, int row)
 	{
 		return (int)(dp->baseY + dp->deltaY * (double)row);
 	}
@@ -125,7 +125,7 @@ BatchSprite myNoteLabels[2];
 
 Reference<TweakInfoBox> myTweakInfoBox;
 
-color32 mySongBgColor;
+uint32_t mySongBgColor;
 int myBgBrightness;
 
 int myColX[SIM_MAX_COLUMNS], myCX, myX, myY, myW;
@@ -169,22 +169,22 @@ void onChanges(int changes)
 	if(changes & VCM_BACKGROUND_PATH_CHANGED)
 	{
 		mySongBg = Texture();
-		String filename;
+		std::string filename;
 		if(gSimfile->isOpen())
 		{
 			filename = gSimfile->get()->background;
 		}
-		if(filename.len())
+		if(filename.length())
 		{
-			String path = gSimfile->getDir() + filename;
-			ImageLoader::Data img = ImageLoader::load(path.str(), ImageLoader::RGBA);
+			std::string path = gSimfile->getDir() + filename;
+			ImageLoader::Data img = ImageLoader::load(path.c_str(), ImageLoader::RGBA);
 			if(img.pixels == nullptr)
 			{
-				HudWarning("Could not open \"%s\".", filename.str());
+				HudWarning("Could not open \"%s\".", filename.c_str());
 			}
 			else
 			{
-				const uchar* src = img.pixels;
+				const uint8_t* src = img.pixels;
 				int64_t rsum = 0, gsum = 0, bsum = 0;
 				int numPixels = img.width * img.height;
 				for(int i = 0; i < numPixels; ++i)
@@ -276,6 +276,8 @@ void draw()
 	// Draw stuff.
 	drawBackground();
 
+	gNotefieldPreview->draw();
+
 	if(myShowBeatLines) drawBeatLines();
 	if(drawWaveform) gWaveform->drawPeaks();
 	if(gTempoBoxes->hasShowBoxes()) drawStopsAndWarps();
@@ -353,7 +355,7 @@ void drawBeatLines()
 
 	bool zoomedIn = (gView->getScaleLevel() >= 2);
 	int viewH = gView->getHeight();
-	
+
 	// We keep track of the measure labels to render them afterwards.
 	struct MeasureLabel { int measure, y; };
 	Vector<MeasureLabel> labels(8);
@@ -383,8 +385,8 @@ void drawBeatLines()
 
 	// Start drawing measures and beat lines.
 	auto batch = Renderer::batchC();
-	color32 halfColor = ToColor32({1, 1, 1, 0.4f});
-	color32 fullColor = ToColor32({1, 1, 1, 0.7f});
+	uint32_t halfColor = ToColor32({1, 1, 1, 0.4f});
+	uint32_t fullColor = ToColor32({1, 1, 1, 0.7f});
 	DrawPosHelper drawPos;
 	while(it != end && row < drawEndRow)
 	{
@@ -404,7 +406,7 @@ void drawBeatLines()
 				int measureEnd = row + it->rowsPerMeasure;
 				while(beatRow < measureEnd)
 				{
-					if (beatRow > drawEndRow)
+					if(beatRow > drawEndRow)
 						break;
 
 					int y = drawPos.advance(beatRow);
@@ -426,8 +428,8 @@ void drawBeatLines()
 	if(!zoomedIn) textStyle.fontSize = 9;
 	for(const auto& label : labels)
 	{
-		String info = Str::val(label.measure);
-		Text::arrange(Text::MR, textStyle, info.str());
+		std::string info = Str::val(label.measure);
+		Text::arrange(Text::MR, textStyle, info.c_str());
 		Text::draw(vec2i{myX - dist, label.y});
 	}
 }
@@ -435,9 +437,9 @@ void drawBeatLines()
 // ================================================================================================
 // NotefieldImpl :: segments.
 
-bool validSegmentRegion(int& t, int& b, int& viewTop, int viewBtm)
+bool validSegmentRegion(int& t, int& b, int viewTop, int viewBtm)
 {
-	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm);
+	bool draw = (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) || (t > viewTop && b < viewBtm) || (b > viewTop && t < viewBtm);
 	if(draw)
 	{
 		t = clamp(t, viewTop, viewBtm);
@@ -469,7 +471,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * it->rowTime);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = RGBAtoColor32(26, 128, 128, 128);
+					uint32_t col = RGBAtoColor32(26, 128, 128, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -479,7 +481,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * it->endTime);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = RGBAtoColor32(128, 128, 51, 128);
+					uint32_t col = RGBAtoColor32(128, 128, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -495,7 +497,7 @@ void drawStopsAndWarps()
 				int b = (int)(oy + dy * (it + 1)->row);
 				if(validSegmentRegion(t, b, viewTop, viewBtm))
 				{
-					color32 col = RGBAtoColor32(128, 26, 51, 128);
+					uint32_t col = RGBAtoColor32(128, 26, 51, 128);
 					Draw::fill(&batch, {myX, t, myW, b - t}, col);
 				}
 			}
@@ -521,13 +523,13 @@ void drawReceptors()
 		// Calculate the beat pulse value for the receptors.
 		double beat = gTempo->timeToBeat(gView->getCursorTime());
 		float beatfrac = (float)(beat - floor(beat));
-		uchar beatpulse = (uchar)min(max((int)((2 - beatfrac * 4)*255), 0), 255);
+		uint8_t beatpulse = (uint8_t)min(max((int)((2 - beatfrac * 4)*255), 0), 255);
 
 		// Draw the receptors.
 		auto batch = Renderer::batchTC();
 		for(int c = 0; c < cols; ++c)
 		{
-			noteskin->recepOff[c].draw(&batch, myColX[c], myY, (uchar)255);
+			noteskin->recepOff[c].draw(&batch, myColX[c], myY, (uint8_t)255);
 			noteskin->recepOn[c].draw(&batch, myColX[c], myY, beatpulse);
 		}
 		batch.flush();
@@ -560,10 +562,9 @@ void drawReceptorGlow()
 	{
 		auto note = prevNotes[c];
 		if(!note) continue;
-		if(note->isMine | note->isWarped | (note->type == NOTE_FAKE)) continue;
 
 		double lum = 1.5 - (time - note->endtime) * 6.0;
-		uchar alpha = (uchar)clamp((int)(lum * 255.0), 0, 255);
+		uint8_t alpha = (uint8_t)clamp((int)(lum * 255.0), 0, 255);
 		if(alpha > 0)
 		{
 			noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
@@ -598,13 +599,13 @@ void drawSnapDiamonds()
 		TextStyle textStyle;
 		textStyle.fontSize = gView->getZoomLevel() >= 4 ? 11 : 9;
 
-		String snap = Str::val(gView->getSnapQuant());
+		std::string snap = Str::val(gView->getSnapQuant());
 
 		for (int i = 0; i < 2; ++i)
 		{
 			int vx = x[i] + gView->applyZoom(i * 40 - 20);
 
-			Text::arrange(Text::MC, textStyle, snap.str());
+			Text::arrange(Text::MC, textStyle, snap.c_str());
 			Text::draw(vec2i{ vx, myY - 1 });
 		}
 	}
@@ -613,10 +614,11 @@ void drawSnapDiamonds()
 void drawNotes()
 {
 	const int numCols = gStyle->getNumCols();
-	const int centerX = gView->getRect().x + gView->getWidth() / 2;
 	const int scale = gView->getNoteScale();
 	const int signedScale = gView->hasReverseScroll() ? -scale : scale;
 	const int maxY = gView->getHeight() + 32;
+	const bool isPreview = !gMusic->isPaused() && gView->hasChartPreview();
+	const double currentRow = gView->getCursorBeat() * ROWS_PER_BEAT;
 
 	auto noteskin = gNoteskin->get();
 
@@ -644,8 +646,7 @@ void drawNotes()
 		}
 
 		// Simulate chart preview. We want to not show arrows that go past the targets (mines go past the targets in Stepmania, so we keep those.)
-		if (!gMusic->isPaused() && gView->hasChartPreview()
-			&& (targetY > by != gView->hasReverseScroll()) && note.type != NOTE_MINE)
+		if(isPreview && note.type != NOTE_MINE && note.endrow < currentRow)
 		{
 			continue;
 		}
@@ -668,8 +669,7 @@ void drawNotes()
 			int tailH = tail.height * signedScale / 512;
 
 			//If we are doing chart preview, only show the part of the tail past the targets, and don't show the arrow
-			if (!gMusic->isPaused() && gView->hasChartPreview() && 
-				((targetY > y && targetY <= by && !gView->hasReverseScroll()) || (targetY < y && targetY >= by && gView->hasReverseScroll())))
+			if(isPreview && currentRow >= note.row && currentRow <= note.endrow)
 			{
 				body.draw(&batch, x, targetY + bodyY, by + bodyY);
 				tail.draw(&batch, x, by - tailH, by + tailH);

@@ -14,7 +14,7 @@ class Vector
 public:
 	~Vector();
 	Vector();
-	Vector(Vector&& v);
+	Vector(Vector&& v) noexcept;
 	Vector(const Vector& v);
 	Vector& operator = (Vector v);
 
@@ -173,7 +173,7 @@ Vector<T>::Vector(int n)
 }
 
 template <typename T>
-Vector<T>::Vector(Vector&& v)
+Vector<T>::Vector(Vector&& v) noexcept
 	: data_(v.data_), size_(v.size_), capacity_(v.capacity_)
 {
 	v.data_ = nullptr;
@@ -461,7 +461,15 @@ void Vector<T>::EnsureCapacity(int n)
 	{
 		capacity_ <<= 1;
 		if(capacity_ < n) capacity_ = n;
-		data_ = (T*)realloc(data_, sizeof(T)*capacity_);
+		auto new_data_ = (T*)realloc(data_, sizeof(T) * capacity_);
+		if (new_data_)
+		{
+			data_ = new_data_;
+		}
+		else
+		{
+			throw std::bad_alloc();
+		}
 	}
 }
 

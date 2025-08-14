@@ -1,0 +1,78 @@
+Texture-notes     = "tex solo notes.png"
+Texture-receptors = "tex solo receptors.png"
+Texture-glow      = "tex solo glow.png"
+
+Receptor { col=0; x=-170 }
+Receptor { col=1; x=-102 }
+Receptor { col=2; x=-34 }
+Receptor { col=3; x=+34 }
+Receptor { col=4; x=+102 }
+Receptor { col=5; x=+170 }
+
+Receptor-on { size=64,64; src=0,0 }
+Receptor-on { col=1,4; src=0,64 }
+Receptor-on { col=0; rot=90 }
+Receptor-on { col=1; rot=0 }
+Receptor-on { col=2; rot=0 }
+Receptor-on { col=3; rot=180 }
+Receptor-on { col=4; rot=90 }
+Receptor-on { col=5; rot=270 }
+
+Receptor-off { size=64,64; src=64,0 }
+Receptor-off { col=1,4; src=64,64 }
+Receptor-off { col=0; rot=90 }
+Receptor-off { col=1; rot=0 }
+Receptor-off { col=2; rot=0 }
+Receptor-off { col=3; rot=180 }
+Receptor-off { col=4; rot=90 }
+Receptor-off { col=5; rot=270 }
+
+Receptor-glow { size=96,96; src=0,0 }
+Receptor-glow { col=1,4; src=96,0 }
+Receptor-glow { col=0; rot=90 }
+Receptor-glow { col=1; rot=0 }
+Receptor-glow { col=2; rot=0 }
+Receptor-glow { col=3; rot=180 }
+Receptor-glow { col=4; rot=90 }
+Receptor-glow { col=5; rot=270 }
+
+Note { size=64,64 }
+
+Note { col=0; rot=90 }
+Note { col=1; rot=0 }
+Note { col=2; rot=0 }
+Note { col=3; rot=180 }
+Note { col=4; rot=90 }
+Note { col=5; rot=270 }
+
+Note { row=4;   src=0,0 }
+Note { row=8;   src=64,0 }
+Note { row=12;  src=128,0 }
+Note { row=16;  src=192,0 }
+Note { row=24;  src=0,64 }
+Note { row=32;  src=64,64 }
+Note { row=48;  src=128,64 }
+Note { row=64;  src=192,64 }
+Note { row=192; src=0,128 }
+
+Note { col=1,4; row=4;   src=256,0 }
+Note { col=1,4; row=8;   src=320,0 }
+Note { col=1,4; row=12;  src=384,0 }
+Note { col=1,4; row=16;  src=448,0 }
+Note { col=1,4; row=24;  src=256,64 }
+Note { col=1,4; row=32;  src=320,64 }
+Note { col=1,4; row=48;  src=384,64 }
+Note { col=1,4; row=64;  src=448,64 }
+Note { col=1,4; row=192; src=256,128 }
+
+Mine { size=64,64; src=64,128 }
+
+Hold-body { size=64,0;  src=128,160 }
+Hold-body { col=1,4; y=-8; src=320,160 }
+Hold-tail { size=64,64; src=128,192 }
+Hold-tail { col=1,4; src=320,192 }
+
+Roll-body { size=64,0;  src=192,160 }
+Roll-body { col=1,4; y=-8; src=384,160 }
+Roll-tail { size=64,64; src=192,192 }
+Roll-tail { col=1,4; src=384,192 }
