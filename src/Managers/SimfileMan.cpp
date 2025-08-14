@@ -432,6 +432,7 @@ struct SimfileManImpl : public SimfileMan {
     // SimfileManImpl :: low level chart functions.
 
     std::string applyAdd(Chart* chart) {
+        myChartIndex = -1;
         mySimfile->charts.push_back(chart);
         sortCharts();
         openChart(chart);
