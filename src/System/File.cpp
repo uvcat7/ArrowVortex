@@ -321,8 +321,8 @@ bool moveFile(const std::string& path, const std::string& newPath,
         return true;
     } catch (const fs::filesystem_error& e) {
         Debug::blockBegin(Debug::ERROR, "could not move file");
-        Debug::log("path1: %s\n", e.path1());
-        Debug::log("path2: %s\n", e.path2());
+        Debug::log("path1: %s\n", e.path1().c_str());
+        Debug::log("path2: %s\n", e.path2().c_str());
         Debug::log("windows error code: %s\n", e.what());
         Debug::blockEnd();
         return false;

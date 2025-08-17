@@ -190,7 +190,7 @@ bool LoadSimfile(Simfile& sim, const std::string& path) {
         success = Osu::LoadOsu(filePath, &sim);
     } else {
         Debug::blockBegin(Debug::ERROR, "could not load sim");
-        Debug::log("file: %s\n", path);
+        Debug::log("file: %s\n", path.c_str());
         Debug::log("reason: unknown sim format\n");
         Debug::blockEnd();
     }

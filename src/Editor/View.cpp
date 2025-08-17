@@ -387,7 +387,7 @@ struct ViewImpl : public View, public InputHandler {
         if (myCustomSnap != size) {
             myCustomSnap = size;
             updateCustomSnapSteps();
-            HudNote("Custom Snap: %s", OrdinalSuffix(myCustomSnap));
+            HudNote("Custom Snap: %s", OrdinalSuffix(myCustomSnap).c_str());
             setSnapType(ST_CUSTOM);
         }
     }

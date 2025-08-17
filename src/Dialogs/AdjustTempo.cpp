@@ -5,7 +5,6 @@
 
 #include <Managers/TempoMan.h>
 #include <Managers/SimfileMan.h>
-#include <Simfile/SegmentGroup.h>
 
 #include <Editor/Selection.h>
 #include <Editor/View.h>
