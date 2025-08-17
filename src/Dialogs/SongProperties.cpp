@@ -72,11 +72,8 @@ DialogSongProperties::~DialogSongProperties() {
 
 DialogSongProperties::DialogSongProperties() {
     gNotefield->toggleShowSongPreview();
-
     setTitle("SIMFILE PROPERTIES");
-
     myCreateWidgets();
-
 	myUpdateProperties();
 	myUpdateBanner();
 	myUpdateCdTitle();
@@ -298,19 +295,15 @@ void DialogSongProperties::myUpdateBanner() {
     }
 }
 
-void DialogSongProperties::myUpdateCdTitle()
-{
+void DialogSongProperties::myUpdateCdTitle() {
 	myCdTitleWidget->tex = Texture();
-	if (gSimfile->isOpen())
-	{
+	if (gSimfile->isOpen()) {
 		auto meta = gSimfile->get();
 		std::string filename = meta->cdTitle;
-		if (filename.length())
-		{
+		if (filename.length()) {
 			std::string path = gSimfile->getDir() + filename;
 			myCdTitleWidget->tex = Texture(path.c_str());
-			if (myCdTitleWidget->tex.handle() == 0)
-			{
+			if (myCdTitleWidget->tex.handle() == 0) {
 				HudWarning("Could not open \"%s\".", filename.c_str());
 			}
 		}
