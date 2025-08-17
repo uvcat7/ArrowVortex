@@ -239,7 +239,7 @@ std::string findImageFile(const char* full, const char* abbrev)
 			return path.filename();
 		}
 	}
-	paths = File::findFiles(gSimfile->getDir() + "..\\", false);
+	paths = File::findFiles(gSimfile->getDir() + "../", false);
 	for (auto& path : paths)
 	{
 		std::string f(path.filename());
@@ -251,12 +251,12 @@ std::string findImageFile(const char* full, const char* abbrev)
 			std::string postfix = s + abbrev;
 			if (Str::startsWith(f, prefix.c_str()) || Str::endsWith(f, postfix.c_str()))
 			{
-				return "..\\" + path.filename();
+				return "../" + path.filename();
 			}
 		}
 		if (Str::find(f, abbrev) != std::string::npos || Str::find(f, full) != std::string::npos)
 		{
-			return "..\\" + path.filename();
+			return "../" + path.filename();
 		}
 	}
 	return {};

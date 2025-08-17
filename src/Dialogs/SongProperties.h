@@ -28,12 +28,14 @@ public:
 
 private:
 	struct BannerWidget;
+	struct CdTitleWidget;
 
 	void myCreateWidgets();
 	void myUpdateWidgets();
 
 	void myUpdateProperties();
 	void myUpdateBanner();
+	void myUpdateCdTitle();
 
 	void mySetProperty(int p);
 	void mySetDisplayBpm();
@@ -51,6 +53,7 @@ private:
 	BpmRange myDisplayBpmRange;
 
 	BannerWidget* myBannerWidget;
+	CdTitleWidget* myCdTitleWidget;
 	WgCycleButton* myBpmTypeList;
 	WgSpinner* mySpinMinBPM, *mySpinMaxBPM;
 	std::string myPreviewStart, myPreviewEnd;
