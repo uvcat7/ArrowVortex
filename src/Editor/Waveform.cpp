@@ -155,9 +155,9 @@ struct WaveformImpl : public Waveform {
     void loadSettings(XmrNode& settings) {
         XmrNode* waveform = settings.child("waveform");
         if (waveform) {
-            waveform->get("bgColor", (float*)&waveformColorScheme_.bg, 4);
-            waveform->get("waveColor", (float*)&waveformColorScheme_.wave, 4);
-            waveform->get("filterColor", (float*)&waveformColorScheme_.filter,
+            waveform->get("bgColor", reinterpret_cast<float*>(&waveformColorScheme_.bg), 4);
+            waveform->get("waveColor", reinterpret_cast<float*>(&waveformColorScheme_.wave), 4);
+            waveform->get("filterColor", reinterpret_cast<float*>(&waveformColorScheme_.filter),
                           4);
 
             const char* ll = waveform->get("luminance");
@@ -171,7 +171,7 @@ struct WaveformImpl : public Waveform {
         }
     }
 
-    void saveSettings(XmrNode& settings) {
+    void saveSettings(XmrNode& settings) override {
         XmrNode* waveform = settings.child("waveform");
         if (!waveform) waveform = settings.addChild("waveform");
 
@@ -181,53 +181,53 @@ struct WaveformImpl : public Waveform {
 
         waveform->addAttrib("luminance", ToString(waveformLuminance_));
         waveform->addAttrib("waveStyle", ToString(waveformShape_));
-        waveform->addAttrib("antiAliasing", (long)waveformAntiAliasingMode_);
+        waveform->addAttrib("antiAliasing", static_cast<long>(waveformAntiAliasingMode_));
     }
 
     // ================================================================================================
     // ViewImpl :: member functions.
 
-    void clearBlocks() {
+    void clearBlocks() override {
         for (auto block : waveformBlocks_) {
             block->id = UNUSED_BLOCK;
         }
     }
 
-    void setOverlayFilter(bool enabled) {
+    void setOverlayFilter(bool enabled) override {
         waveformOverlayFilter_ = enabled;
 
         clearBlocks();
     }
 
-    bool getOverlayFilter() { return waveformOverlayFilter_; }
+    bool getOverlayFilter() override { return waveformOverlayFilter_; }
 
-    void enableFilter(FilterType type, double strength) {
+    void enableFilter(FilterType type, double strength) override {
         delete waveformFilter_;
         waveformFilter_ = new WaveFilter(type, strength);
 
         clearBlocks();
     }
 
-    void disableFilter() {
+    void disableFilter() override {
         delete waveformFilter_;
         waveformFilter_ = nullptr;
 
         clearBlocks();
     }
 
-    int getWidth() {
+    int getWidth() override {
         return waveformBlockWidth_ * 2 + waveformSpacing_ * 2 + 8;
     }
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         if (changes & VCM_MUSIC_IS_LOADED) {
             if (waveformFilter_) waveformFilter_->update();
         }
     }
 
-    void tick() {}
+    void tick() override {}
 
-    void setPreset(Preset preset) {
+    void setPreset(Preset preset) override {
         switch (preset) {
             case PRESET_VORTEX:
                 waveformColorScheme_.bg = {0.0f, 0.0f, 0.0f, 1};
@@ -249,30 +249,30 @@ struct WaveformImpl : public Waveform {
         clearBlocks();
     }
 
-    void setColors(ColorScheme colors) { waveformColorScheme_ = colors; }
+    void setColors(ColorScheme colors) override { waveformColorScheme_ = colors; }
 
-    ColorScheme getColors() { return waveformColorScheme_; }
+    ColorScheme getColors() override { return waveformColorScheme_; }
 
-    void setLuminance(Luminance lum) {
+    void setLuminance(Luminance lum) override {
         waveformLuminance_ = lum;
         clearBlocks();
     }
 
-    Luminance getLuminance() { return waveformLuminance_; }
+    Luminance getLuminance() override { return waveformLuminance_; }
 
-    void setWaveShape(WaveShape style) {
+    void setWaveShape(WaveShape style) override {
         waveformShape_ = style;
         clearBlocks();
     }
 
-    WaveShape getWaveShape() { return waveformShape_; }
+    WaveShape getWaveShape() override { return waveformShape_; }
 
-    void setAntiAliasing(int level) {
+    void setAntiAliasing(int level) override {
         waveformAntiAliasingMode_ = level;
         clearBlocks();
     }
 
-    int getAntiAliasing() { return waveformAntiAliasingMode_; }
+    int getAntiAliasing() override { return waveformAntiAliasingMode_; }
 
     // ================================================================================================
     // Waveform :: luminance functions.
@@ -375,16 +375,16 @@ struct WaveformImpl : public Waveform {
                      bool filtered) {
         auto& music = gMusic->getSamples();
 
-        double samplesPerSec = (double)music.getFrequency();
+        double samplesPerSec = static_cast<double>(music.getFrequency());
         double samplesPerPixel = samplesPerSec / fabs(gView->getPixPerSec());
-        double samplesPerBlock = (double)TEX_H * samplesPerPixel;
+        double samplesPerBlock = static_cast<double>(TEX_H) * samplesPerPixel;
 
         int64_t srcFrames =
             filtered ? waveformFilter_->samplesL.size() : music.getNumFrames();
         int64_t samplePos =
-            max((int64_t)0, (int64_t)(samplesPerBlock * (double)blockId));
+            max(static_cast<int64_t>(0), static_cast<int64_t>(samplesPerBlock * static_cast<double>(blockId)));
         double sampleCount =
-            min((double)srcFrames - samplePos, samplesPerBlock);
+            min(static_cast<double>(srcFrames) - samplePos, samplesPerBlock);
 
         if (samplePos >= srcFrames || sampleCount <= 0) {
             // A crash could occur if we try to access out-of-bounds memory.
@@ -417,14 +417,14 @@ struct WaveformImpl : public Waveform {
         double ofs = 0;
         for (int y = 0; y < h; ++y) {
             // Determine the last sample of the line.
-            double end = min(sampleCount, (double)(y + 1) * advance);
+            double end = min(sampleCount, static_cast<double>(y + 1) * advance);
 
             // Find the minimum/maximum amplitude within the line.
             int minAmp = SHRT_MAX;
             int maxAmp = SHRT_MIN;
             while (ofs < end) {
-                maxAmp = max(maxAmp, (int)*(in + (int)round(ofs)));
-                minAmp = min(minAmp, (int)*(in + (int)round(ofs)));
+                maxAmp = max(maxAmp, static_cast<int>(*(in + static_cast<int>(round(ofs)))));
+                minAmp = min(minAmp, static_cast<int>(*(in + static_cast<int>(round(ofs)))));
                 ofs += sampleSkip;
             }
 
@@ -541,7 +541,7 @@ struct WaveformImpl : public Waveform {
         if (waveformBlockWidth_ != width) clearBlocks();
     }
 
-    void drawBackground() {
+    void drawBackground() override {
         updateBlockW();
 
         int w = waveformBlockWidth_ * 2 + waveformSpacing_ * 2 + 8;
@@ -551,7 +551,7 @@ struct WaveformImpl : public Waveform {
         Draw::fill({cx - w / 2, 0, w, h}, ToColor32(waveformColorScheme_.bg));
     }
 
-    void drawPeaks() {
+    void drawPeaks() override {
         updateBlockW();
 
         bool reversed = gView->hasReverseScroll();
@@ -580,7 +580,7 @@ struct WaveformImpl : public Waveform {
         int xl = cx - pw - border;
         int xr = cx + pw + border;
 
-        areaf uvs = {0, 0, waveformBlockWidth_ / (float)TEX_W, 1};
+        areaf uvs = {0, 0, waveformBlockWidth_ / static_cast<float>(TEX_W), 1};
         if (reversed) swapValues(uvs.t, uvs.b);
 
         int id = max(0, visibilityStartY / TEX_H);

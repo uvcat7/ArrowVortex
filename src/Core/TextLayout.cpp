@@ -69,14 +69,14 @@ static double ReadNumber(const uint8_t* p, int len) {
     // Integer part.
     for (; i < len && p[i] >= '0' && p[i] <= '9'; ++i) {
         out *= 10.0;
-        out += (double)(p[i] - '0');
+        out += static_cast<double>(p[i] - '0');
     }
 
     // Fractional part.
     if (p[i] == '.') {
         double mul = 0.1;
         for (++i; i < len && p[i] >= '0' && p[i] <= '9'; ++i) {
-            out += (double)(p[i] - '0') * mul;
+            out += static_cast<double>(p[i] - '0') * mul;
             mul *= 0.1;
         }
     }
@@ -154,16 +154,16 @@ static void ReadShadowColor(const uint8_t* param, int len) {
 }
 
 static void ReadFontSize(const uint8_t* param, int len) {
-    int fontSize = (int)(ReadNumber(param, len) + 0.5);
+    int fontSize = static_cast<int>(ReadNumber(param, len) + 0.5);
 
     if (len == 0) {
         fontSize = LD->baseFontSize;
     } else if (param[len - 1] == '%') {
         fontSize =
-            (int)(ReadNumber(param, len) * (double)LD->baseFontSize / 100.0 +
+            static_cast<int>(ReadNumber(param, len) * static_cast<double>(LD->baseFontSize) / 100.0 +
                   0.5);
     } else {
-        fontSize = (int)(ReadNumber(param, len) + 0.5);
+        fontSize = static_cast<int>(ReadNumber(param, len) + 0.5);
     }
     LD->fontSize = min(max(1, fontSize), 256);
     SetLineMetrics();
@@ -171,7 +171,7 @@ static void ReadFontSize(const uint8_t* param, int len) {
 
 static void ReadFontChange(const uint8_t* param, int len) {
     // Resolve the path of the font file (could be an asset name).
-    std::string path((const char*)param, len);
+    std::string path(reinterpret_cast<const char*>(param), len);
 
     // Look for the font in the font manager.
     FontData* font = FontManager::find(path);
@@ -262,7 +262,7 @@ static const Glyph* ReadMarkup(const uint8_t* str) {
                 break;
             case ID1('G'):
                 return FontManager::getGlyph(
-                    std::string((const char*)param, paramLen));
+                    std::string(reinterpret_cast<const char*>(param), paramLen));
             case ID2('L', 'B'):
                 return GetGlyph('{');
             case ID2('R', 'B'):
@@ -500,7 +500,7 @@ static void CreateLayout(const char* str) {
     // Make a list of every line of glyphs.
     bool isMultiline = !(LD->flags & Text::SINGLE_LINE);
     while (true) {
-        auto glyph = ReadGlyph((const uint8_t*)str);
+        auto glyph = ReadGlyph(reinterpret_cast<const uint8_t*>(str));
         if (!glyph) break;
 
         // Apply glyph advance.
@@ -562,7 +562,7 @@ static vec2i ArrangeText(const TextStyle& style, int maxLineWidth,
     LD->flags = style.textFlags;
     LD->align = align;
 
-    LD->font = LD->baseFont = (FontData*)style.font.data();
+    LD->font = LD->baseFont = static_cast<FontData*>(style.font.data());
     LD->fontSize = LD->baseFontSize = style.fontSize;
 
     LD->baseTextColor = LD->textColor = style.textColor;

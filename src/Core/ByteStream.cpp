@@ -11,7 +11,7 @@ namespace Vortex {
 // WriteStream.
 
 WriteStream::WriteStream() {
-    buffer_ = (uint8_t*)malloc(128);
+    buffer_ = static_cast<uint8_t*>(malloc(128));
     current_size_ = 0;
     capacity_ = 128;
     is_external_buffer_ = false;
@@ -19,7 +19,7 @@ WriteStream::WriteStream() {
 }
 
 WriteStream::WriteStream(void* out, int bytes) {
-    buffer_ = (uint8_t*)out;
+    buffer_ = static_cast<uint8_t*>(out);
     current_size_ = 0;
     capacity_ = bytes;
     is_external_buffer_ = true;
@@ -37,7 +37,7 @@ void WriteStream::write(const void* in, int bytes) {
         current_size_ = newSize;
     } else if (!is_external_buffer_) {
         capacity_ = max(capacity_ << 1, newSize);
-        buffer_ = (uint8_t*)realloc(buffer_, capacity_);
+        buffer_ = static_cast<uint8_t*>(realloc(buffer_, capacity_));
         memcpy(buffer_ + current_size_, in, bytes);
         current_size_ = newSize;
     } else {
@@ -47,12 +47,12 @@ void WriteStream::write(const void* in, int bytes) {
 
 void WriteStream::write8(const void* val) {
     if (current_size_ < capacity_) {
-        buffer_[current_size_] = *(const uint8_t*)val;
+        buffer_[current_size_] = *static_cast<const uint8_t*>(val);
         ++current_size_;
     } else if (!is_external_buffer_) {
         capacity_ <<= 1;
-        buffer_ = (uint8_t*)realloc(buffer_, capacity_);
-        buffer_[current_size_] = *(const uint8_t*)val;
+        buffer_ = static_cast<uint8_t*>(realloc(buffer_, capacity_));
+        buffer_[current_size_] = *static_cast<const uint8_t*>(val);
         ++current_size_;
     } else {
         is_write_successful_ = false;
@@ -62,12 +62,12 @@ void WriteStream::write8(const void* val) {
 void WriteStream::write16(const void* val) {
     int newSize = current_size_ + sizeof(uint16_t);
     if (newSize <= capacity_) {
-        *(uint16_t*)(buffer_ + current_size_) = *(const uint16_t*)val;
+        *reinterpret_cast<uint16_t*>(buffer_ + current_size_) = *static_cast<const uint16_t*>(val);
         current_size_ = newSize;
     } else if (!is_external_buffer_) {
         capacity_ <<= 1;
-        buffer_ = (uint8_t*)realloc(buffer_, capacity_);
-        *(uint16_t*)(buffer_ + current_size_) = *(const uint16_t*)val;
+        buffer_ = static_cast<uint8_t*>(realloc(buffer_, capacity_));
+        *reinterpret_cast<uint16_t*>(buffer_ + current_size_) = *static_cast<const uint16_t*>(val);
         current_size_ = newSize;
     } else {
         is_write_successful_ = false;
@@ -77,12 +77,12 @@ void WriteStream::write16(const void* val) {
 void WriteStream::write32(const void* val) {
     int newSize = current_size_ + sizeof(uint32_t);
     if (newSize <= capacity_) {
-        *(uint32_t*)(buffer_ + current_size_) = *(const uint32_t*)val;
+        *reinterpret_cast<uint32_t*>(buffer_ + current_size_) = *static_cast<const uint32_t*>(val);
         current_size_ = newSize;
     } else if (!is_external_buffer_) {
         capacity_ <<= 1;
-        buffer_ = (uint8_t*)realloc(buffer_, capacity_);
-        *(uint32_t*)(buffer_ + current_size_) = *(const uint32_t*)val;
+        buffer_ = static_cast<uint8_t*>(realloc(buffer_, capacity_));
+        *reinterpret_cast<uint32_t*>(buffer_ + current_size_) = *static_cast<const uint32_t*>(val);
         current_size_ = newSize;
     } else {
         is_write_successful_ = false;
@@ -92,12 +92,12 @@ void WriteStream::write32(const void* val) {
 void WriteStream::write64(const void* val) {
     int newSize = current_size_ + sizeof(uint64_t);
     if (newSize <= capacity_) {
-        *(uint64_t*)(buffer_ + current_size_) = *(const uint64_t*)val;
+        *reinterpret_cast<uint64_t*>(buffer_ + current_size_) = *static_cast<const uint64_t*>(val);
         current_size_ = newSize;
     } else if (!is_external_buffer_) {
         capacity_ <<= 1;
-        buffer_ = (uint8_t*)realloc(buffer_, capacity_);
-        *(uint64_t*)(buffer_ + current_size_) = *(const uint64_t*)val;
+        buffer_ = static_cast<uint8_t*>(realloc(buffer_, capacity_));
+        *reinterpret_cast<uint64_t*>(buffer_ + current_size_) = *static_cast<const uint64_t*>(val);
         current_size_ = newSize;
     } else {
         is_write_successful_ = false;
@@ -129,12 +129,12 @@ void WriteStream::writeStr(const std::string& str) {
 // ReadStream.
 
 ReadStream::ReadStream(const void* in, int bytes) {
-    read_position_ = (const uint8_t*)in;
+    read_position_ = static_cast<const uint8_t*>(in);
     end_position_ = read_position_ + bytes;
     is_read_successful_ = true;
 }
 
-ReadStream::~ReadStream() {}
+ReadStream::~ReadStream() = default;
 
 void ReadStream::skip(int bytes) {
     if (read_position_ + bytes <= end_position_) {
@@ -157,10 +157,10 @@ void ReadStream::read(void* out, int bytes) {
 
 void ReadStream::read8(void* out) {
     if (read_position_ != end_position_) {
-        *(uint8_t*)out = *read_position_;
+        *static_cast<uint8_t*>(out) = *read_position_;
         ++read_position_;
     } else {
-        *(uint8_t*)out = 0;
+        *static_cast<uint8_t*>(out) = 0;
         read_position_ = end_position_;
         is_read_successful_ = false;
     }
@@ -169,10 +169,10 @@ void ReadStream::read8(void* out) {
 void ReadStream::read16(void* out) {
     auto newPos = read_position_ + sizeof(uint16_t);
     if (newPos <= end_position_) {
-        *(uint16_t*)out = *(const uint16_t*)read_position_;
+        *static_cast<uint16_t*>(out) = *reinterpret_cast<const uint16_t*>(read_position_);
         read_position_ = newPos;
     } else {
-        *(uint16_t*)out = 0;
+        *static_cast<uint16_t*>(out) = 0;
         read_position_ = end_position_;
         is_read_successful_ = false;
     }
@@ -181,10 +181,10 @@ void ReadStream::read16(void* out) {
 void ReadStream::read32(void* out) {
     auto newPos = read_position_ + sizeof(uint32_t);
     if (newPos <= end_position_) {
-        *(uint32_t*)out = *(const uint32_t*)read_position_;
+        *static_cast<uint32_t*>(out) = *reinterpret_cast<const uint32_t*>(read_position_);
         read_position_ = newPos;
     } else {
-        *(uint32_t*)out = 0;
+        *static_cast<uint32_t*>(out) = 0;
         read_position_ = end_position_;
         is_read_successful_ = false;
     }
@@ -193,10 +193,10 @@ void ReadStream::read32(void* out) {
 void ReadStream::read64(void* out) {
     auto newPos = read_position_ + sizeof(uint64_t);
     if (newPos <= end_position_) {
-        *(uint64_t*)out = *(const uint64_t*)read_position_;
+        *static_cast<uint64_t*>(out) = *reinterpret_cast<const uint64_t*>(read_position_);
         read_position_ = newPos;
     } else {
-        *(uint64_t*)out = 0;
+        *static_cast<uint64_t*>(out) = 0;
         read_position_ = end_position_;
         is_read_successful_ = false;
     }
@@ -241,7 +241,7 @@ std::string ReadStream::readStr() {
     if (newPos <= end_position_) {
         auto str = read_position_;
         read_position_ = newPos;
-        return std::string((const char*)str, len);
+        return std::string(reinterpret_cast<const char*>(str), len);
     }
     read_position_ = end_position_;
     is_read_successful_ = false;

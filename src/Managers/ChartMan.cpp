@@ -29,7 +29,7 @@ struct ChartManImpl : public ChartMan {
     // ================================================================================================
     // ChartManImpl :: constructor and destructor.
 
-    ~ChartManImpl() {}
+    ~ChartManImpl() = default;
 
     ChartManImpl() {
         myChart = nullptr;
@@ -42,7 +42,7 @@ struct ChartManImpl : public ChartMan {
     // ================================================================================================
     // ChartManImpl :: update functions.
 
-    void update(Chart* chart) { myChart = chart; }
+    void update(Chart* chart) override { myChart = chart; }
 
     // ================================================================================================
     // ChartManImpl :: step artist editing.
@@ -125,7 +125,7 @@ struct ChartManImpl : public ChartMan {
         int before = in.read<int>();
         int after = in.read<int>();
         if (in.success()) {
-            Difficulty newDiff = (Difficulty)(undo ? before : after);
+            Difficulty newDiff = static_cast<Difficulty>(undo ? before : after);
 
             msg = bound.chart->description();
             msg = msg + " :: ";
@@ -144,19 +144,19 @@ struct ChartManImpl : public ChartMan {
     // ================================================================================================
     // ChartManImpl :: set functions.
 
-    void setDifficulty(Difficulty difficulty) {
+    void setDifficulty(Difficulty difficulty) override {
         if (myChart && myChart->difficulty != difficulty) {
             myQueueDifficulty(difficulty);
         }
     }
 
-    void setStepArtist(std::string artist) {
+    void setStepArtist(std::string artist) override {
         if (myChart && myChart->artist != artist) {
             myQueueStepArtist(artist);
         }
     }
 
-    void setMeter(int meter) {
+    void setMeter(int meter) override {
         if (myChart && myChart->meter != meter) {
             myQueueMeter(meter);
         }
@@ -165,25 +165,25 @@ struct ChartManImpl : public ChartMan {
     // ================================================================================================
     // ChartManImpl :: get functions.
 
-    bool isOpen() const { return (myChart != nullptr); }
+    bool isOpen() const override { return (myChart != nullptr); }
 
-    bool isClosed() const { return (myChart == nullptr); }
+    bool isClosed() const override { return (myChart == nullptr); }
 
-    std::string getStepArtist() const {
+    std::string getStepArtist() const override {
         return myChart ? myChart->artist : std::string();
     }
 
-    Difficulty getDifficulty() const {
+    Difficulty getDifficulty() const override {
         return myChart ? myChart->difficulty : DIFF_BEGINNER;
     }
 
-    int getMeter() const { return myChart ? myChart->meter : 1; }
+    int getMeter() const override { return myChart ? myChart->meter : 1; }
 
-    std::string getDescription() const {
+    std::string getDescription() const override {
         return myChart ? myChart->description() : std::string();
     }
 
-    const Chart* get() const { return myChart; }
+    const Chart* get() const override { return myChart; }
 
     // ================================================================================================
     // ChartManImpl :: stream breakdown.
@@ -241,7 +241,7 @@ struct ChartManImpl : public ChartMan {
         MergeItems(items);
     }
 
-    Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures) const {
+    Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures) const override {
         int dummy;
         if (!totalMeasures) totalMeasures = &dummy;
 
@@ -312,7 +312,7 @@ struct ChartManImpl : public ChartMan {
     // ================================================================================================
     // ChartManImpl :: meter estimation.
 
-    double getEstimatedMeter() const {
+    double getEstimatedMeter() const override {
         RatingEstimator hm("assets/rating estimate data.txt");
         return hm.estimateRating();
     }

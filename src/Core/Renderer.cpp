@@ -47,7 +47,7 @@ static RendererInstance* RI;
 // Creation/destruction.
 
 static void createBatchData() {
-    RI->batchPos = (uint8_t*)malloc(VB_POS_SIZE + VB_UVS_SIZE + VB_COL_SIZE);
+    RI->batchPos = static_cast<uint8_t*>(malloc(VB_POS_SIZE + VB_UVS_SIZE + VB_COL_SIZE));
     RI->batchUvs = RI->batchPos + VB_POS_SIZE;
     RI->batchCol = RI->batchUvs + VB_UVS_SIZE;
     RI->quadsLeft = BATCH_QUAD_LIMIT;
@@ -55,7 +55,7 @@ static void createBatchData() {
 
 static void createQuadIndices() {
     RI->quadIndices =
-        (uint32_t*)malloc(sizeof(uint32_t) * BATCH_QUAD_LIMIT * 6);
+        static_cast<uint32_t*>(malloc(sizeof(uint32_t) * BATCH_QUAD_LIMIT * 6));
     for (uint32_t *p = RI->quadIndices, i = 0; i < BATCH_QUAD_LIMIT * 4;
          i += 4) {
         *p = i + 0;
@@ -187,7 +187,7 @@ void Renderer::setColor(colorf color) {
 }
 
 void Renderer::setColor(uint32_t color) {
-    uint8_t* c = (uint8_t*)&color;
+    uint8_t* c = reinterpret_cast<uint8_t*>(&color);
     glColor4ub(c[0], c[1], c[2], c[3]);
 }
 
@@ -344,20 +344,20 @@ void Renderer::drawTris(int numTris, const uint32_t* indices, const int* pos,
 // Batch rendering.
 
 static void FlushIC() {
-    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, (int*)RI->batchPos,
-                        (uint32_t*)RI->batchCol);
+    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, reinterpret_cast<int*>(RI->batchPos),
+                        reinterpret_cast<uint32_t*>(RI->batchCol));
     RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
 static void FlushIT() {
-    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, (int*)RI->batchPos,
-                        (float*)RI->batchUvs);
+    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, reinterpret_cast<int*>(RI->batchPos),
+                        reinterpret_cast<float*>(RI->batchUvs));
     RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
 static void FlushITC() {
-    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, (int*)RI->batchPos,
-                        (float*)RI->batchUvs, (uint32_t*)RI->batchCol);
+    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, reinterpret_cast<int*>(RI->batchPos),
+                        reinterpret_cast<float*>(RI->batchUvs), reinterpret_cast<uint32_t*>(RI->batchCol));
     RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
@@ -366,8 +366,8 @@ void QuadBatchC::push(int numQuads) {
     int offset = BATCH_QUAD_LIMIT - RI->quadsLeft;
     RI->quadsLeft -= numQuads;
 
-    pos = (int*)(RI->batchPos + offset * VB_POS_STRIDE);
-    col = (uint32_t*)(RI->batchCol + offset * VB_COL_STRIDE);
+    pos = reinterpret_cast<int*>(RI->batchPos + offset * VB_POS_STRIDE);
+    col = reinterpret_cast<uint32_t*>(RI->batchCol + offset * VB_COL_STRIDE);
 }
 
 void QuadBatchT::push(int numQuads) {
@@ -375,8 +375,8 @@ void QuadBatchT::push(int numQuads) {
     int offset = BATCH_QUAD_LIMIT - RI->quadsLeft;
     RI->quadsLeft -= numQuads;
 
-    pos = (int*)(RI->batchPos + offset * VB_POS_STRIDE);
-    uvs = (float*)(RI->batchUvs + offset * VB_UVS_STRIDE);
+    pos = reinterpret_cast<int*>(RI->batchPos + offset * VB_POS_STRIDE);
+    uvs = reinterpret_cast<float*>(RI->batchUvs + offset * VB_UVS_STRIDE);
 }
 
 void QuadBatchTC::push(int numQuads) {
@@ -384,9 +384,9 @@ void QuadBatchTC::push(int numQuads) {
     int offset = BATCH_QUAD_LIMIT - RI->quadsLeft;
     RI->quadsLeft -= numQuads;
 
-    pos = (int*)(RI->batchPos + offset * VB_POS_STRIDE);
-    uvs = (float*)(RI->batchUvs + offset * VB_UVS_STRIDE);
-    col = (uint32_t*)(RI->batchCol + offset * VB_COL_STRIDE);
+    pos = reinterpret_cast<int*>(RI->batchPos + offset * VB_POS_STRIDE);
+    uvs = reinterpret_cast<float*>(RI->batchUvs + offset * VB_UVS_STRIDE);
+    col = reinterpret_cast<uint32_t*>(RI->batchCol + offset * VB_COL_STRIDE);
 }
 
 void QuadBatchC::flush() { FlushIC(); }
@@ -396,15 +396,15 @@ void QuadBatchT::flush() { FlushIT(); }
 void QuadBatchTC::flush() { FlushITC(); }
 
 QuadBatchC Renderer::batchC() {
-    return {(int*)RI->batchPos, (uint32_t*)RI->batchCol};
+    return {reinterpret_cast<int*>(RI->batchPos), reinterpret_cast<uint32_t*>(RI->batchCol)};
 }
 
 QuadBatchT Renderer::batchT() {
-    return {(int*)RI->batchPos, (float*)RI->batchUvs};
+    return {reinterpret_cast<int*>(RI->batchPos), reinterpret_cast<float*>(RI->batchUvs)};
 }
 
 QuadBatchTC Renderer::batchTC() {
-    return {(int*)RI->batchPos, (float*)RI->batchUvs, (uint32_t*)RI->batchCol};
+    return {reinterpret_cast<int*>(RI->batchPos), reinterpret_cast<float*>(RI->batchUvs), reinterpret_cast<uint32_t*>(RI->batchCol)};
 }
 
 const TileRect& Renderer::getRoundedBox() { return RI->roundedBox; }

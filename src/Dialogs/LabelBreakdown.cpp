@@ -95,13 +95,13 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
     TileRect2 myButtonTex;
     int myDisplayType;
 
-    ~LabelList() {
+    ~LabelList() override {
         for (auto button : myButtons) {
             delete button;
         }
     }
 
-    LabelList(GuiContext* gui) : WgScrollRegion(gui) {
+    explicit LabelList(GuiContext* gui) : WgScrollRegion(gui) {
         setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
 
         Canvas c(32, 16);
@@ -131,8 +131,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
 
         // Update the properties of each button.
         int y = rect_.y - scroll_position_y_;
-        for (int i = 0; i < myButtons.size(); ++i) {
-            auto button = myButtons[i];
+        for (auto button : myButtons) {
             button->arrange({rect_.x, y, viewW, 20});
             button->tick();
             y += 21;
@@ -193,7 +192,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
 
     std::string displayTime(int row) const {
         if (myDisplayType == BEAT) {
-            return Str::val((double)row / ROWS_PER_BEAT, 3, 3);
+            return Str::val(static_cast<double>(row) / ROWS_PER_BEAT, 3, 3);
         } else if (myDisplayType == ROW) {
             return Str::val(row);
         } else {
@@ -222,7 +221,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
 // ================================================================================================
 // DialogLabelList
 
-DialogLabelBreakdown::~DialogLabelBreakdown() {}
+DialogLabelBreakdown::~DialogLabelBreakdown() = default;
 
 DialogLabelBreakdown::DialogLabelBreakdown() {
     setTitle("LABELS");

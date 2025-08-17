@@ -32,12 +32,12 @@ struct EventHeader {
 };
 
 static void SetTextInputPointers(TextInput& event) {
-    event.text = (char*)(&event + 1);
+    event.text = reinterpret_cast<char*>(&event + 1);
 }
 
 static void SetFileDropPointers(FileDrop& event) {
-    char** files = (char**)(&event + 1);
-    char* str = (char*)(files + event.count);
+    char** files = reinterpret_cast<char**>(&event + 1);
+    char* str = reinterpret_cast<char*>(files + event.count);
     for (int i = 0; i < event.count; ++i) {
         files[i] = str;
         str += strlen(str) + 1;
@@ -46,21 +46,21 @@ static void SetFileDropPointers(FileDrop& event) {
 }
 
 static EventHeader* CopyEvent(EventHeader* event) {
-    EventHeader* out = (EventHeader*)malloc(event->size);
+    EventHeader* out = static_cast<EventHeader*>(malloc(event->size));
     memcpy(out, event, event->size);
     if (out->type == ET_TEXT_INPUT) {
-        SetTextInputPointers(*(TextInput*)(out + 1));
+        SetTextInputPointers(*reinterpret_cast<TextInput*>(out + 1));
     } else if (out->type == ET_FILE_DROP) {
-        SetFileDropPointers(*(FileDrop*)(out + 1));
+        SetFileDropPointers(*reinterpret_cast<FileDrop*>(out + 1));
     }
     return out;
 }
 
 static char* AddEvent(void*& data, int type, int eventSize) {
     int numBytes = sizeof(EventHeader) + eventSize;
-    EventHeader* header = (EventHeader*)malloc(numBytes);
+    EventHeader* header = static_cast<EventHeader*>(malloc(numBytes));
     if (data) {
-        EventHeader* last = (EventHeader*)data;
+        EventHeader* last = static_cast<EventHeader*>(data);
         while (last->next) last = last->next;
         last->next = header;
     } else {
@@ -69,7 +69,7 @@ static char* AddEvent(void*& data, int type, int eventSize) {
     header->type = type;
     header->next = nullptr;
     header->size = numBytes;
-    return (char*)(header + 1);
+    return reinterpret_cast<char*>(header + 1);
 }
 
 template <typename T>
@@ -81,7 +81,7 @@ static void AddEventT(void*& data, int type, const T& eventData) {
 static char* WriteString(void* buffer, const char* str) {
     size_t size = strlen(str) + 1;
     memcpy(buffer, str, size);
-    return (char*)buffer + size;
+    return static_cast<char*>(buffer) + size;
 }
 
 template <typename T>
@@ -104,15 +104,15 @@ static void ValidateEvents(const void* data, const void* it = nullptr) {
 static char* ReadNextEvent(void* data, int type, char* it) {
     EventHeader* cur;
     if (it) {
-        cur = (EventHeader*)it;
+        cur = reinterpret_cast<EventHeader*>(it);
         cur = (cur - 1)->next;
     } else {
-        cur = (EventHeader*)data;
+        cur = static_cast<EventHeader*>(data);
     }
     while (cur && cur->type != type) {
         cur = cur->next;
     }
-    return cur ? (char*)(cur + 1) : nullptr;
+    return cur ? reinterpret_cast<char*>(cur + 1) : nullptr;
 }
 
 template <typename T>
@@ -135,7 +135,7 @@ InputEvents::InputEvents(const InputEvents& other) : data_(nullptr) {
 }
 
 void InputEvents::clear() {
-    EventHeader* header = (EventHeader*)data_;
+    EventHeader* header = static_cast<EventHeader*>(data_);
     while (header) {
         EventHeader* next = header->next;
         free(header);
@@ -148,7 +148,7 @@ void InputEvents::operator=(const InputEvents& other) {
     if (data_ != other.data_) {
         clear();
         EventHeader* last = nullptr;
-        for (EventHeader* it = (EventHeader*)other.data_; it; it = it->next) {
+        for (EventHeader* it = static_cast<EventHeader*>(other.data_); it; it = it->next) {
             EventHeader* event = CopyEvent(it);
             if (last) {
                 last->next = event;
@@ -208,7 +208,7 @@ void InputEvents::addTextInput(const char* text) {
 
     int numBytes = sizeof(TextInput) + strlen(text) + 1;
 
-    TextInput* event = (TextInput*)AddEvent(data_, ET_TEXT_INPUT, numBytes);
+    TextInput* event = reinterpret_cast<TextInput*>(AddEvent(data_, ET_TEXT_INPUT, numBytes));
     event->handled = false;
     event->text = nullptr;
     WriteString(event + 1, text);
@@ -225,13 +225,13 @@ void InputEvents::addFileDrop(const char* const* files, int count, int x,
     for (int i = 0; i < count; ++i) {
         numBytes += strlen(files[i]) + 1;
     }
-    FileDrop* event = (FileDrop*)AddEvent(data_, ET_FILE_DROP, numBytes);
+    FileDrop* event = reinterpret_cast<FileDrop*>(AddEvent(data_, ET_FILE_DROP, numBytes));
     event->handled = false;
     event->count = count;
     event->x = x;
     event->y = y;
 
-    char* p = (char*)(event + 1);
+    char* p = reinterpret_cast<char*>(event + 1);
     p += count * sizeof(char*);
     for (int i = 0; i < count; ++i) {
         p = WriteString(p, files[i]);
@@ -298,35 +298,35 @@ typedef void (*HandleEventFunction)(void*, InputHandler*);
 static void HandleDummyFunction(void* p, InputHandler* h) {}
 
 static void HandleMouseMove(void* p, InputHandler* h) {
-    h->onMouseMove(*(MouseMove*)p);
+    h->onMouseMove(*static_cast<MouseMove*>(p));
 }
 
 static void HandleMousePress(void* p, InputHandler* h) {
-    h->onMousePress(*(MousePress*)p);
+    h->onMousePress(*static_cast<MousePress*>(p));
 }
 
 static void HandleMouseRelease(void* p, InputHandler* h) {
-    h->onMouseRelease(*(MouseRelease*)p);
+    h->onMouseRelease(*static_cast<MouseRelease*>(p));
 }
 
 static void HandleMouseScroll(void* p, InputHandler* h) {
-    h->onMouseScroll(*(MouseScroll*)p);
+    h->onMouseScroll(*static_cast<MouseScroll*>(p));
 }
 
 static void HandleKeyPress(void* p, InputHandler* h) {
-    h->onKeyPress(*(KeyPress*)p);
+    h->onKeyPress(*static_cast<KeyPress*>(p));
 }
 
 static void HandleKeyRelease(void* p, InputHandler* h) {
-    h->onKeyRelease(*(KeyRelease*)p);
+    h->onKeyRelease(*static_cast<KeyRelease*>(p));
 }
 
 static void HandleTextInput(void* p, InputHandler* h) {
-    h->onTextInput(*(TextInput*)p);
+    h->onTextInput(*static_cast<TextInput*>(p));
 }
 
 static void HandleFileDrop(void* p, InputHandler* h) {
-    h->onFileDrop(*(FileDrop*)p);
+    h->onFileDrop(*static_cast<FileDrop*>(p));
 }
 
 static void HandleWindowInactive(void* p, InputHandler* h) {
@@ -341,7 +341,7 @@ static HandleEventFunction handleFunctions[NUM_EVENT_TYPES] = {
 };
 
 void InputHandler::handleInputs(InputEvents& events) {
-    for (EventHeader* it = (EventHeader*)events.data_; it; it = it->next) {
+    for (EventHeader* it = static_cast<EventHeader*>(events.data_); it; it = it->next) {
         handleFunctions[it->type](it + 1, this);
     }
 }

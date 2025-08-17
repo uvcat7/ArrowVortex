@@ -515,7 +515,7 @@ static const SegmentMeta FakeMeta = {sizeof(Fake),
 // ================================================================================================
 // Label.
 
-Label::Label() {}
+Label::Label() = default;
 
 Label::Label(int row, std::string str) : Segment(row), str(str) {}
 

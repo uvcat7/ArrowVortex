@@ -86,8 +86,8 @@ struct IntervalTester {
 
 // Creates weights for a hamming window of length n.
 static void CreateHammingWindow(real* out, int n) {
-    const real t = 6.2831853071795864 / (real)(n - 1);
-    for (int i = 0; i < n; ++i) out[i] = 0.54 - 0.46 * cos((real)i * t);
+    const real t = 6.2831853071795864 / static_cast<real>(n - 1);
+    for (int i = 0; i < n; ++i) out[i] = 0.54 - 0.46 * cos(static_cast<real>(i) * t);
 }
 
 // Normalizes the given fitness value based the given 3rd order poly
@@ -203,9 +203,9 @@ static real GetConfidenceForBPM(const GapData& gapdata, IntervalTester& test,
 
     // Make a histogram of i strengths for every position in the interval.
     real intervalf = test.samplerate * 60.0 / bpm;
-    int interval = (int)(intervalf + 0.5);
+    int interval = static_cast<int>(intervalf + 0.5);
     for (int i = 0; i < numOnsets; ++i) {
-        int pos = (int)fmod((real)onsets[i].pos, intervalf);
+        int pos = static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
         wrappedPos[i] = pos;
         wrappedOnsets[pos] += onsets[i].strength;
     }
@@ -235,8 +235,8 @@ static real GetConfidenceForBPM(const GapData& gapdata, IntervalTester& test,
 IntervalTester::IntervalTester(int samplerate, int numOnsets,
                                const Onset* onsets)
     : samplerate(samplerate), numOnsets(numOnsets), onsets(onsets) {
-    minInterval = (int)(samplerate * 60.0 / MaximumBPM + 0.5);
-    maxInterval = (int)(samplerate * 60.0 / MinimumBPM + 0.5);
+    minInterval = static_cast<int>(samplerate * 60.0 / MaximumBPM + 0.5);
+    maxInterval = static_cast<int>(samplerate * 60.0 / MinimumBPM + 0.5);
     numIntervals = maxInterval - minInterval;
 
     fitness = AlignedMalloc<real>(numIntervals);
@@ -268,7 +268,7 @@ static vec2i FillIntervalRange(IntervalTester& test, GapData& gapdata,
          ++i, ++interval, ++fit) {
         if (*fit == 0) {
             *fit = GetConfidenceForInterval(gapdata, interval);
-            NormalizeFitness(*fit, test.coefs, (real)interval);
+            NormalizeFitness(*fit, test.coefs, static_cast<real>(interval));
             *fit = std::max(*fit, 0.1);
         }
     }
@@ -350,7 +350,7 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets) {
     real maxFitness = 0.001;
     for (int i = 0; i < test.numIntervals; i += IntervalDelta) {
         NormalizeFitness(test.fitness[i], test.coefs,
-                         (real)(test.minInterval + i));
+                         static_cast<real>(test.minInterval + i));
         maxFitness = std::max(maxFitness, test.fitness[i]);
     }
 
@@ -412,10 +412,10 @@ static void ComputeSlopes(const float* samples, real* out, int numFrames,
     }
 
     // Slide window over the samples.
-    real scalar = 1.0 / (real)wh;
+    real scalar = 1.0 / static_cast<real>(wh);
     for (int i = wh, end = numFrames - wh; i < end; ++i) {
         // Determine slope value.
-        out[i] = std::max(0.0, (real)(sumR - sumL) * scalar);
+        out[i] = std::max(0.0, (sumR - sumL) * scalar);
 
         // Move window.
         real cur = abs(samples[i]);
@@ -438,10 +438,10 @@ static real GetBaseOffsetValue(const GapData& gapdata, int samplerate,
 
     // Make a histogram of onset strengths for every position in the interval.
     real intervalf = samplerate * 60.0 / bpm;
-    int interval = (int)(intervalf + 0.5);
+    int interval = static_cast<int>(intervalf + 0.5);
     memset(wrappedOnsets, 0, sizeof(real) * interval);
     for (int i = 0; i < numOnsets; ++i) {
-        int pos = (int)fmod((real)onsets[i].pos, intervalf);
+        int pos = static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
         wrappedPos[i] = pos;
         wrappedOnsets[pos] += 1.0;
     }
@@ -461,7 +461,7 @@ static real GetBaseOffsetValue(const GapData& gapdata, int samplerate,
         }
     }
 
-    return (real)offsetPos / (real)samplerate;
+    return static_cast<real>(offsetPos) / static_cast<real>(samplerate);
 }
 
 // Compares each offset to its corresponding offbeat value, and selects the most
@@ -480,13 +480,13 @@ static real AdjustForOffbeats(SerializedTempo* data, real offset, real bpm) {
     if (offbeat > secondsPerBeat) offbeat -= secondsPerBeat;
 
     // Calculate the support for both sample positions.
-    real end = (real)numFrames;
+    real end = static_cast<real>(numFrames);
     real interval = secondsPerBeat * samplerate;
     real posA = offset * samplerate, sumA = 0.0;
     real posB = offbeat * samplerate, sumB = 0.0;
     for (; posA < end && posB < end; posA += interval, posB += interval) {
-        sumA += slopes[(int)posA];
-        sumB += slopes[(int)posB];
+        sumA += slopes[static_cast<int>(posA)];
+        sumB += slopes[static_cast<int>(posB)];
     }
     AlignedFree(slopes);
 
@@ -504,7 +504,7 @@ static void CalculateOffset(SerializedTempo* data, Onset* onsets,
     real maxInterval = 0.0;
     for (auto& t : tempo)
         maxInterval = std::max(maxInterval, samplerate * 60.0 / t.bpm);
-    GapData gapdata((int)(maxInterval + 1.0), 1, numOnsets, onsets);
+    GapData gapdata(static_cast<int>(maxInterval + 1.0), 1, numOnsets, onsets);
 
     // Fill in onset values for each BPM.
     for (auto& t : tempo)
@@ -525,14 +525,14 @@ static const char* sProgressText[]{
 class TempoDetectorImp : public TempoDetector, public BackgroundThread {
    public:
     TempoDetectorImp(int firstFrame, int numFrames);
-    ~TempoDetectorImp();
+    ~TempoDetectorImp() override;
 
-    void exec();
+    void exec() override;
 
     bool hasSamples() { return (data_.samples != nullptr); }
-    const char* getProgress() const { return sProgressText[data_.progress]; }
-    bool hasResult() const { return isDone(); }
-    const Vector<TempoResult>& getResult() const { return data_.result; }
+    const char* getProgress() const override { return sProgressText[data_.progress]; }
+    bool hasResult() const override { return isDone(); }
+    const Vector<TempoResult>& getResult() const override { return data_.result; }
 
    private:
     SerializedTempo data_;
@@ -554,7 +554,7 @@ TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames) {
     const short* l = music.samplesL() + firstFrame;
     const short* r = music.samplesR() + firstFrame;
     for (int i = 0; i < numFrames; ++i, ++l, ++r) {
-        data_.samples[i] = (float)((int)*l + (int)*r) / 65536.0f;
+        data_.samples[i] = static_cast<float>(static_cast<int>(*l) + static_cast<int>(*r)) / 65536.0f;
     }
 
     start();
@@ -581,7 +581,7 @@ void TempoDetectorImp::exec() {
         for (int j = a; j < b; ++j) {
             v += abs(data->samples[j]);
         }
-        v /= (float)std::max(1, b - a);
+        v /= static_cast<float>(std::max(1, b - a));
         onsets[i].strength = v;
     }
 
@@ -608,8 +608,8 @@ TempoDetector* TempoDetector::New(double time, double len) {
     }
 
     // Check if the number of frames is non-zero.
-    int firstFrame = std::max(0, (int)(time * music.getFrequency()));
-    int numFrames = std::max(0, (int)(len * music.getFrequency()));
+    int firstFrame = std::max(0, static_cast<int>(time * music.getFrequency()));
+    int numFrames = std::max(0, static_cast<int>(len * music.getFrequency()));
     numFrames = std::min(numFrames, music.getNumFrames() - firstFrame);
     if (numFrames <= 0) {
         HudInfo("There is no audio selected to perform BPM detection on.");

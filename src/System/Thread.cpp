@@ -9,7 +9,7 @@ namespace Vortex {
 
 BackgroundThread::BackgroundThread() { done = false; }
 
-BackgroundThread::~BackgroundThread() {}
+BackgroundThread::~BackgroundThread() = default;
 
 void BackgroundThread::start() {
     if (isDone()) {

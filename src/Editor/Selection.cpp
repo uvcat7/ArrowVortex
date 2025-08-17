@@ -34,7 +34,7 @@ struct SelectionImpl : public Selection {
     // ================================================================================================
     // SelectionImpl :: constructor and destructor.
 
-    ~SelectionImpl() {}
+    ~SelectionImpl() = default;
 
     SelectionImpl() {
         myDragSelectionX = 0;
@@ -128,7 +128,7 @@ struct SelectionImpl : public Selection {
             if (gView->isTimeBased()) {
                 gTempoBoxes->selectTime(mod, t, b, l, r);
             } else {
-                gTempoBoxes->selectRows(mod, (int)(t + 0.5), (int)(b + 0.5), l,
+                gTempoBoxes->selectRows(mod, static_cast<int>(t + 0.5), static_cast<int>(b + 0.5), l,
                                         r);
             }
         }
@@ -146,9 +146,9 @@ struct SelectionImpl : public Selection {
             mindist *= mindist;
 
             for (auto& note : *gNotes) {
-                double tor = timeBased ? note.time : (double)note.row;
+                double tor = timeBased ? note.time : static_cast<double>(note.row);
                 int dx = xl - gView->columnToX(note.col);
-                int dy = (int)(clickY - gView->offsetToY(tor));
+                int dy = static_cast<int>(clickY - gView->offsetToY(tor));
                 if (abs(dy) < mindist) {
                     int sqrdist = dx * dx + dy * dy;
                     if (sqrdist < mindist) {
@@ -180,15 +180,15 @@ struct SelectionImpl : public Selection {
                 begin.row = gTempo->timeToRow(torT);
                 end.row = gTempo->timeToRow(torB);
             } else {
-                begin.row = (int)torT;
-                end.row = (int)torB + 1;
+                begin.row = static_cast<int>(torT);
+                end.row = static_cast<int>(torB) + 1;
             }
             return selectNotes(mod, begin, end) > 0;
         }
         return false;
     }
 
-    void setType(Type type) {
+    void setType(Type type) override {
         myType = type;
 
         // Region selection.
@@ -222,9 +222,9 @@ struct SelectionImpl : public Selection {
         gEditor->reportChanges(VCM_SELECTION_CHANGED);
     }
 
-    Type getType() const { return myType; }
+    Type getType() const override { return myType; }
 
-    void drawRegionSelection() {
+    void drawRegionSelection() override {
         // Draw area selection box.
         if (myIsSelectingRegion || myRegion.beginRow != myRegion.endRow) {
             uint32_t outline = RGBAtoColor32(153, 255, 153, 153);
@@ -242,7 +242,7 @@ struct SelectionImpl : public Selection {
         }
     }
 
-    void drawSelectionBox() {
+    void drawSelectionBox() override {
         // Draw dragging selection box (for note/tempo selection).
         if (myIsDraggingSelection) {
             vec2i mpos = gSystem->getMousePos();
@@ -293,11 +293,11 @@ struct SelectionImpl : public Selection {
         }
     }
 
-    void selectAllNotes() {
+    void selectAllNotes() override {
         showSelectionResult(SELECT_SET, gNotes->selectAll());
     }
 
-    int selectNotes(NotesMan::Filter filter) {
+    int selectNotes(NotesMan::Filter filter) override {
         const char* names[NotesMan::NUM_FILTERS] = {
             "step", "jump note", "mine", "hold", "roll", "warped note"};
         int numSelected = gNotes->select(SELECT_SET, filter);
@@ -305,26 +305,26 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
-    int selectNotes(RowType rowType) {
+    int selectNotes(RowType rowType) override {
         int numSelected = gNotes->selectQuant(rowType);
         showSelectionResult(SELECT_SET, numSelected);
         return numSelected;
     }
 
-    int selectNotes(SelectModifier mod, RowCol begin, RowCol end) {
+    int selectNotes(SelectModifier mod, RowCol begin, RowCol end) override {
         int numSelected =
             gNotes->selectRows(mod, begin.col, end.col, begin.row, end.row);
         showSelectionResult(mod, numSelected);
         return numSelected;
     }
 
-    int selectNotes(SelectModifier mod, const Vector<RowCol>& indices) {
+    int selectNotes(SelectModifier mod, const Vector<RowCol>& indices) override {
         int numSelected = gNotes->select(mod, indices);
         showSelectionResult(mod, numSelected);
         return numSelected;
     }
 
-    int getSelectedNotes(NoteList& out) {
+    int getSelectedNotes(NoteList& out) override {
         if (myRegion.beginRow == myRegion.endRow) {
             for (auto& note : *gNotes) {
                 if (note.isSelected) out.append(CompressNote(note));
@@ -342,7 +342,7 @@ struct SelectionImpl : public Selection {
     // ================================================================================================
     // Region selection.
 
-    void selectRegion() {
+    void selectRegion() override {
         if (!myIsSelectingRegion) {
             gTempoBoxes->deselectAll();
             gNotes->deselectAll();
@@ -356,7 +356,7 @@ struct SelectionImpl : public Selection {
         }
     }
 
-    void selectRegion(int row, int endrow) {
+    void selectRegion(int row, int endrow) override {
         if (row != endrow) {
             if (row > endrow) swapValues(row, endrow);
             myRegion = {row, endrow};
@@ -374,7 +374,7 @@ struct SelectionImpl : public Selection {
         }
     }
 
-    SelectionRegion getSelectedRegion() { return myRegion; }
+    SelectionRegion getSelectedRegion() override { return myRegion; }
 
 };  // SelectionImpl
 

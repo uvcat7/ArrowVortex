@@ -12,7 +12,7 @@ enum Actions {
     ACT_SCALE,
 };
 
-DialogZoom::~DialogZoom() {}
+DialogZoom::~DialogZoom() = default;
 
 DialogZoom::DialogZoom() {
     setTitle("ZOOM");
@@ -24,7 +24,7 @@ void DialogZoom::myCreateWidgets() {
 
     WgSlider* slider = myLayout.add<WgSlider>("Zoom");
     slider->value.bind(&myZoomLevel);
-    slider->onChange.bind(this, &DialogZoom::onAction, (int)ACT_ZOOM);
+    slider->onChange.bind(this, &DialogZoom::onAction, static_cast<int>(ACT_ZOOM));
     slider->setRange(1.0, 19.0);
     slider->setTooltip("Zoom Level");
 
@@ -33,11 +33,11 @@ void DialogZoom::myCreateWidgets() {
     spinner->setPrecision(2, 2);
     spinner->setRange(1.0, 19.0);
     spinner->setStep(1.0);
-    spinner->onChange.bind(this, &DialogZoom::onAction, (int)ACT_ZOOM);
+    spinner->onChange.bind(this, &DialogZoom::onAction, static_cast<int>(ACT_ZOOM));
 
     slider = myLayout.add<WgSlider>("Scale");
     slider->value.bind(&myScaleLevel);
-    slider->onChange.bind(this, &DialogZoom::onAction, (int)ACT_SCALE);
+    slider->onChange.bind(this, &DialogZoom::onAction, static_cast<int>(ACT_SCALE));
     slider->setRange(1.0, 10.0);
     slider->setTooltip("Note Scale");
 
@@ -46,7 +46,7 @@ void DialogZoom::myCreateWidgets() {
     spinner->setPrecision(2, 2);
     spinner->setRange(1.0, 10.0);
     spinner->setStep(0.25);
-    spinner->onChange.bind(this, &DialogZoom::onAction, (int)ACT_SCALE);
+    spinner->onChange.bind(this, &DialogZoom::onAction, static_cast<int>(ACT_SCALE));
 }
 
 void DialogZoom::onTick() {

@@ -90,7 +90,7 @@ static long ID3TagQuery(const uint8_t *data, id3_length_t length) {
 
         case TAGTYPE_ID3V2_FOOTER:
             ID3ParseHeader(&data, &version, &flags, &size);
-            return -(int)size - 10;
+            return -static_cast<int>(size) - 10;
 
         case TAGTYPE_NONE:
             break;
@@ -152,8 +152,8 @@ static int XingParse(XingHeader *xing, struct mad_bitptr ptr,
     if (xing->flags & XING_TOC) {
         if (bitlen < 800) goto fail;
 
-        for (int i = 0; i < 100; ++i)
-            xing->toc[i] = (unsigned char)mad_bit_read(&ptr, 8);
+        for (unsigned char & i : xing->toc)
+            i = static_cast<unsigned char>(mad_bit_read(&ptr, 8));
 
         bitlen -= 800;
     }
@@ -177,7 +177,7 @@ fail:
 
 struct MP3Loader : public SoundSource {
     MP3Loader();
-    ~MP3Loader();
+    ~MP3Loader() override;
 
     int getFrequency() override { return frequency; }
     int getNumFrames() override { return 0; }
@@ -348,7 +348,7 @@ static inline short ScaleSample(mad_fixed_t sample) {
         sample = MAD_F_ONE - 1;
     else if (sample < -MAD_F_ONE)
         sample = -MAD_F_ONE;
-    return (short)(sample >> (MAD_F_FRACBITS + 1 - 16));
+    return static_cast<short>(sample >> (MAD_F_FRACBITS + 1 - 16));
 }
 
 void MP3Loader::synthDecodedFrame() {

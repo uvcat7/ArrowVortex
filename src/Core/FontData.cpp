@@ -18,7 +18,7 @@ static const Texture::Format FORMAT = Texture::ALPHA;
 // Creates a padded grayscale copy of a glyph bitmap.
 static uint8_t* CopyGlyphBitmap(int boxW, int boxH, FT_Bitmap bitmap) {
     int srcW = bitmap.width, srcH = bitmap.rows, srcP = abs(bitmap.pitch);
-    uint8_t* out = (uint8_t*)calloc(boxW * boxH, 1);
+    uint8_t* out = static_cast<uint8_t*>(calloc(boxW * boxH, 1));
     for (int y = 0; y < srcH; ++y) {
         const uint8_t* src = bitmap.buffer + y * srcP;
         uint8_t* dst = out + ((y + PADDING) * boxW + PADDING) * CHANNELS;
@@ -102,7 +102,7 @@ static void IncreaseTextureHeight(GlyphCache* cache, int h) {
     while (newHeight < h) newHeight *= 2;
 
     cache->tex->increaseHeight(newHeight);
-    float ratio = (float)((double)oldHeight / (double)newHeight);
+    float ratio = static_cast<float>(static_cast<double>(oldHeight) / static_cast<double>(newHeight));
     for (auto& g : cache->glyphs) {
         g.second->uvs.t *= ratio;
         g.second->uvs.b *= ratio;
@@ -154,11 +154,11 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot) {
     // If the glyph bitmap has pixels, we need to find a place for it on the
     // cache texture.
     const FT_Bitmap& bitmap = slot->bitmap;
-    int glyphW = (int)bitmap.width;
-    int glyphH = (int)bitmap.rows;
+    int glyphW = static_cast<int>(bitmap.width);
+    int glyphH = static_cast<int>(bitmap.rows);
     if (glyphW > 0 && glyphH > 0) {
-        int bitmapW = (int)bitmap.width + PADDING * 2;
-        int bitmapH = (int)bitmap.rows + PADDING * 2;
+        int bitmapW = static_cast<int>(bitmap.width) + PADDING * 2;
+        int bitmapH = static_cast<int>(bitmap.rows) + PADDING * 2;
 
         // First, check if we can reuse the spot of a previous glyph that is no
         // longer in use.
@@ -178,7 +178,7 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot) {
                 // the shelf.
         {
             // Allocate a new glyph.
-            glyph = (Glyph*)calloc(1, sizeof(Glyph));
+            glyph = static_cast<Glyph*>(calloc(1, sizeof(Glyph)));
             glyph->hasAlphaTex = 1;
 
             // Reserve a spot on the glyph texture.
@@ -202,19 +202,19 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot) {
         free(pixels);
 
         // Set the glyph uvs.
-        float rTexW = 1.f / (float)cache->tex->w;
-        float rTexH = 1.f / (float)cache->tex->h;
+        float rTexW = 1.f / static_cast<float>(cache->tex->w);
+        float rTexH = 1.f / static_cast<float>(cache->tex->h);
         glyph->uvs = {
-            (float)(glyph->box.x + PADDING) * rTexW,
-            (float)(glyph->box.y + PADDING) * rTexH,
-            (float)(glyph->box.x + PADDING + glyphW) * rTexW,
-            (float)(glyph->box.y + PADDING + glyphH) * rTexH,
+            static_cast<float>(glyph->box.x + PADDING) * rTexW,
+            static_cast<float>(glyph->box.y + PADDING) * rTexH,
+            static_cast<float>(glyph->box.x + PADDING + glyphW) * rTexW,
+            static_cast<float>(glyph->box.y + PADDING + glyphH) * rTexH,
         };
         glyph->hasPixels = 1;
     } else  // The bitmap does not have pixels, so we can just allocate a glyph
             // and return it.
     {
-        glyph = (Glyph*)calloc(1, sizeof(Glyph));
+        glyph = static_cast<Glyph*>(calloc(1, sizeof(Glyph)));
     }
 
     glyph->ofs.l = slot->bitmap_left;
@@ -227,7 +227,7 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot) {
 
 Glyph* RenderGlyph(FontData* font, GlyphCache* cache, int size, int charcode) {
     Glyph* glyph = nullptr;
-    FT_Face face = (FT_Face)font->ftface;
+    FT_Face face = static_cast<FT_Face>(font->ftface);
 
     // Sanity check for invalid codepoint values.
     if (charcode < 0) return nullptr;
@@ -246,7 +246,7 @@ Glyph* RenderGlyph(FontData* font, GlyphCache* cache, int size, int charcode) {
     // Some fonts do not have whitespace glyphs, but we can approximate them if
     // necessary.
     else if (charcode < 33 && (glyphTraits[charcode] & GTB_WHITESPACE)) {
-        glyph = (Glyph*)calloc(1, sizeof(Glyph));
+        glyph = static_cast<Glyph*>(calloc(1, sizeof(Glyph)));
         glyph->advance = size / 2;
     } else  // If its a non-whitespace glyph that is not supported, we are out
             // of luck.
@@ -275,7 +275,7 @@ Glyph* RenderGlyph(FontData* font, GlyphCache* cache, int size, int charcode) {
 
 FontData::FontData(void* inFtface, const char* inPath,
                    Text::Hinting inHinting) {
-    FT_Select_Charmap((FT_Face)inFtface, FT_ENCODING_UNICODE);
+    FT_Select_Charmap(static_cast<FT_Face>(inFtface), FT_ENCODING_UNICODE);
 
     currentCache = nullptr;
     currentSize = 0;
@@ -309,7 +309,7 @@ FontData::~FontData() { clear(); }
 
 void FontData::clear() {
     if (ftface) {
-        FT_Done_Face((FT_Face)ftface);
+        FT_Done_Face(static_cast<FT_Face>(ftface));
     }
 
     for (auto& cache : caches) {
@@ -348,10 +348,10 @@ void FontData::setSize(FontSize size) {
         if (it != caches.end()) {
             currentCache = it->second;
         } else {
-            GlyphCache* cache = CreateCache((FT_Face)ftface, size);
+            GlyphCache* cache = CreateCache(static_cast<FT_Face>(ftface), size);
             caches[size] = currentCache = cache;
         }
-        FT_Set_Pixel_Sizes((FT_Face)ftface, 0, size);
+        FT_Set_Pixel_Sizes(static_cast<FT_Face>(ftface), 0, size);
         currentSize = size;
     }
 }
@@ -376,7 +376,7 @@ bool FontData::hasKerning() const {
 }
 
 int FontData::getKerning(const Glyph* left, const Glyph* right) const {
-    auto face = (FT_Face)ftface;
+    auto face = static_cast<FT_Face>(ftface);
     FT_Vector delta;
     FT_Get_Kerning(face, left->index, right->index, FT_KERNING_DEFAULT, &delta);
     return delta.x >> 6;

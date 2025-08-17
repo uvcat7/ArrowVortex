@@ -62,7 +62,7 @@ struct SetPixelData {
 static void SetPixels(const SetPixelData& spd, int x, double tor,
                       uint32_t color) {
     int y =
-        clamp((int)((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
+        clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
     uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
     for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
 }
@@ -70,9 +70,9 @@ static void SetPixels(const SetPixelData& spd, int x, double tor,
 static void SetPixels(const SetPixelData& spd, int x, double tor, double end,
                       uint32_t color) {
     int yt =
-        clamp((int)((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
+        clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
     int yb =
-        clamp((int)((end - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
+        clamp(static_cast<int>((end - spd.startOfs) * spd.pixPerOfs), 0, MAP_HEIGHT - 1);
     for (int y = yt; y <= yb; ++y) {
         uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
         for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
@@ -97,7 +97,7 @@ struct MinimapImpl : public Minimap {
     // ================================================================================================
     // MinimapImpl :: constructor and destructor.
 
-    ~MinimapImpl() {}
+    ~MinimapImpl() = default;
 
     MinimapImpl() {
         myMode = NOTES;
@@ -107,7 +107,7 @@ struct MinimapImpl : public Minimap {
 
         VortexAssert(TEXTURE_SIZE * TEXTURE_SIZE == MAP_HEIGHT * MAP_WIDTH);
         // Split the texture area into vertical strips from left to right.
-        float u = 0.f, du = (float)MAP_WIDTH / (float)TEXTURE_SIZE;
+        float u = 0.f, du = static_cast<float>(MAP_WIDTH) / static_cast<float>(TEXTURE_SIZE);
         for (int i = 0; i < NUM_PIECES; ++i, u += du) {
             float v[8] = {u, 0, u + du, 0, u, 1, u + du, 1};
             memcpy(myUvs + i * 8, v, sizeof(float) * 8);
@@ -162,7 +162,7 @@ struct MinimapImpl : public Minimap {
             64, 192, 192, 128, 255, 64, 255, 64, 64, 128, 128, 255,
         };
         density = round(density * 10.0) * (512.0 * 0.1 / 16.0);
-        int coloring = clamp((int)density, 0, 511);
+        int coloring = clamp(static_cast<int>(density), 0, 511);
         int ci = coloring >> 8;
         ci *= 3;
         int bf = coloring & 255;
@@ -171,7 +171,7 @@ struct MinimapImpl : public Minimap {
         int b = BlendI32(colors[ci + 2], colors[ci + 5], bf);
         uint32_t col = Color32(r, g, b);
 
-        int w = clamp((int)(density * 0.05), 4, MAP_WIDTH) / 2;
+        int w = clamp(static_cast<int>(density * 0.05), 4, MAP_WIDTH) / 2;
         uint32_t* dst = pixels + y * MAP_WIDTH + MAP_WIDTH / 2 - w;
         for (int i = -w; i < w; ++i, ++dst) *dst = col;
     }
@@ -183,7 +183,7 @@ struct MinimapImpl : public Minimap {
         if (gView->isTimeBased()) {
             double sec = myChartBeginOfs;
             double secPerPix =
-                (double)(myChartEndOfs - myChartBeginOfs) / (double)myNotesH;
+                (myChartEndOfs - myChartBeginOfs) / static_cast<double>(myNotesH);
             for (int y = 0; y < myNotesH; ++y) {
                 double density = 0.0;
                 for (; it != end && it->time < sec; ++it);
@@ -201,7 +201,7 @@ struct MinimapImpl : public Minimap {
         } else {
             double row = myChartBeginOfs;
             double rowPerPix =
-                (double)(myChartEndOfs - myChartBeginOfs) / (double)myNotesH;
+                (myChartEndOfs - myChartBeginOfs) / static_cast<double>(myNotesH);
             for (int y = 0; y < myNotesH; ++y) {
                 double density = 0.0;
                 for (; it != end && it->row < row; ++it);
@@ -251,7 +251,7 @@ struct MinimapImpl : public Minimap {
             bottomY = chartRect.y + chartRect.h;
 
             double t =
-                clamp((double)(y - topY) / (double)(bottomY - topY), 0.0, 1.0);
+                clamp(static_cast<double>(y - topY) / static_cast<double>(bottomY - topY), 0.0, 1.0);
             if (gView->hasReverseScroll()) t = 1.0 - t;
 
             tor = myChartBeginOfs + (myChartEndOfs - myChartBeginOfs) * t;
@@ -259,7 +259,7 @@ struct MinimapImpl : public Minimap {
         return tor;
     }
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         int bits = VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED | VCM_VIEW_CHANGED |
                    VCM_END_ROW_CHANGED;
 
@@ -279,7 +279,7 @@ struct MinimapImpl : public Minimap {
             myChartEndOfs = timeEnd;
         } else {
             myChartBeginOfs = 0.0;
-            myChartEndOfs = (double)gSimfile->getEndRow();
+            myChartEndOfs = static_cast<double>(gSimfile->getEndRow());
         }
 
         if (gChart->isOpen()) {
@@ -294,7 +294,7 @@ struct MinimapImpl : public Minimap {
 
             auto rect = myGetMapRect();
             double pixPerOfs =
-                (double)rect.h / (myChartEndOfs - myChartBeginOfs);
+                static_cast<double>(rect.h) / (myChartEndOfs - myChartBeginOfs);
             SetPixelData spd = {buffer.data(), colw, pixPerOfs,
                                 myChartBeginOfs};
 
@@ -308,12 +308,12 @@ struct MinimapImpl : public Minimap {
         // Update the texture strips.
         for (int i = 0; i < NUM_PIECES; ++i) {
             uint32_t* buf = buffer.data();
-            auto src = (const uint8_t*)(buf + i * MAP_WIDTH * TEXTURE_SIZE);
+            auto src = reinterpret_cast<const uint8_t*>(buf + i * MAP_WIDTH * TEXTURE_SIZE);
             myImage.modify(i * MAP_WIDTH, 0, MAP_WIDTH, TEXTURE_SIZE, src);
         }
     }
 
-    void onMousePress(MousePress& evt) {
+    void onMousePress(MousePress& evt) override {
         if (evt.button == Mouse::LMB && !gTextOverlay->isOpen() &&
             evt.unhandled()) {
             if (IsInside(rect_, evt.x, evt.y)) {
@@ -324,14 +324,14 @@ struct MinimapImpl : public Minimap {
         }
     }
 
-    void onMouseRelease(MouseRelease& evt) {
+    void onMouseRelease(MouseRelease& evt) override {
         if (evt.button == Mouse::LMB && myIsDragging) {
             gView->setCursorOffset(myGetMapOffset(evt.y));
             myIsDragging = false;
         }
     }
 
-    void tick() {
+    void tick() override {
         vec2i size = gSystem->getWindowSize();
         rect_ = {size.x - 32, 8, 24, size.y - 16};
 
@@ -344,20 +344,20 @@ struct MinimapImpl : public Minimap {
     void drawRegion(int x, int w, double ofsA, double ofsB, uint32_t color) {
         recti chartRect = myGetMapRect();
         double pixPerOfs =
-            (double)chartRect.h / (myChartEndOfs - myChartBeginOfs);
+            static_cast<double>(chartRect.h) / (myChartEndOfs - myChartBeginOfs);
         int baseY = chartRect.y;
         if (gView->hasReverseScroll()) {
             baseY += chartRect.h;
             pixPerOfs = -pixPerOfs;
         }
-        int y1 = baseY + (int)((ofsA - myChartBeginOfs) * pixPerOfs + 0.5);
-        int y2 = baseY + (int)((ofsB - myChartBeginOfs) * pixPerOfs + 0.5);
+        int y1 = baseY + static_cast<int>((ofsA - myChartBeginOfs) * pixPerOfs + 0.5);
+        int y2 = baseY + static_cast<int>((ofsB - myChartBeginOfs) * pixPerOfs + 0.5);
         if (y1 > y2) swapValues(y1, y2);
 
         Draw::fill({x, y1, w, max(y2 - y1, 1)}, color);
     }
 
-    void draw() {
+    void draw() override {
         // If the text overlay is open, we hide the minimap to avoid clutter.
         if (gTextOverlay->isOpen()) return;
 
@@ -420,13 +420,13 @@ struct MinimapImpl : public Minimap {
         Renderer::popScissorRect();
     }
 
-    void setMode(Mode mode) {
+    void setMode(Mode mode) override {
         myMode = mode;
         gMenubar->update(Menubar::VIEW_MINIMAP);
         onChanges(VCM_ALL_CHANGES);
     }
 
-    Minimap::Mode getMode() const { return myMode; }
+    Minimap::Mode getMode() const override { return myMode; }
 
 };  // MinimapImpl
 

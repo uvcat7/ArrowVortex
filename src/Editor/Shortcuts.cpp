@@ -426,12 +426,12 @@ struct ShortcutsImpl : public Shortcuts {
         }
     }
 
-    ~ShortcutsImpl() {}
+    ~ShortcutsImpl() = default;
 
     // ================================================================================================
     // ShortcutsImpl :: API functions.
 
-    std::string getNotation(Action::Type action, bool fullList = false) {
+    std::string getNotation(Action::Type action, bool fullList = false) override {
         std::string out;
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.action->code == action) {
@@ -465,22 +465,22 @@ struct ShortcutsImpl : public Shortcuts {
         return out;
     }
 
-    Action::Type getAction(int keyflags, Code key) {
+    Action::Type getAction(int keyflags, Code key) override {
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.key && shortcut.key->code == key) {
                 if (shortcut.keyflags == keyflags) {
-                    return (Action::Type)shortcut.action->code;
+                    return shortcut.action->code;
                 }
             }
         }
         return Action::NONE;
     }
 
-    Action::Type getAction(int keyflags, bool scrollUp) {
+    Action::Type getAction(int keyflags, bool scrollUp) override {
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.key == nullptr && shortcut.scrollUp == scrollUp) {
                 if (shortcut.keyflags == keyflags) {
-                    return (Action::Type)shortcut.action->code;
+                    return shortcut.action->code;
                 }
             }
         }

@@ -24,8 +24,8 @@ static const float MAX_SPREAD_DIST = 3.1f;
 enum Foot { FOOT_L = 0, FOOT_R = 1 };
 
 static float GetPadDist(vec2i* pad, int colA, int colB) {
-    float dx = (float)(pad[colA].x - pad[colB].x);
-    float dy = (float)(pad[colA].y - pad[colB].y);
+    float dx = static_cast<float>(pad[colA].x - pad[colB].x);
+    float dy = static_cast<float>(pad[colA].y - pad[colB].y);
     return sqrt(dx * dx + dy * dy);
 }
 
@@ -49,7 +49,7 @@ struct FootPlanner {
 };
 
 struct StreamPlanner {
-    StreamPlanner(const StreamGenerator* sg);
+    explicit StreamPlanner(const StreamGenerator* sg);
 
     float random();
     int getNextCol();
@@ -249,7 +249,7 @@ void StreamGenerator::generate(int row, int endRow, SnapType spacing) {
     while (row < endRow) {
         // Generate an arrow for the current row.
         int col = stream.getNextCol();
-        edit.add.append({row, row, (uint32_t)col, 0, NOTE_STEP_OR_HOLD, 192});
+        edit.add.append({row, row, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
 
         // Store the current facing.
         int yl = stream.pad[stream.feet[FOOT_L].curCol].y;

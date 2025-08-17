@@ -629,7 +629,7 @@ static const uint8_t* ParseNumber(const uint8_t* p, double& out) {
     for (; *p >= '0' && *p <= '9'; ++p) {
         sum = sum * 10 + (*p - '0');
     }
-    out = (double)sum;
+    out = static_cast<double>(sum);
 
     // Digits after the decimal-point.
     if (*p == '.' || *p == ',') {
@@ -638,7 +638,7 @@ static const uint8_t* ParseNumber(const uint8_t* p, double& out) {
         for (++p; *p >= '0' && *p <= '9'; ++p, ++digits) {
             dec = dec * 10 + (*p - '0');
         }
-        out += (double)dec / pow(10.0, digits);
+        out += static_cast<double>(dec) / pow(10.0, digits);
     }
 
     // Optional exponent.
@@ -720,7 +720,7 @@ static const uint8_t* ParseNestedExpression(const uint8_t* p, double& out) {
 
 bool Str::parse(const char* expr, double& out) {
     double tmp = 0.0;
-    const uint8_t* begin = SkipWs((const uint8_t*)expr);
+    const uint8_t* begin = SkipWs(reinterpret_cast<const uint8_t*>(expr));
     const uint8_t* p = ParseNestedExpression(begin, tmp);
     if (p > begin) out = tmp;
     return (p > begin);
@@ -800,20 +800,20 @@ std::string Str::formatTime(double seconds, bool precise) {
         seconds = -seconds;
     }
 
-    int64_t t = (int64_t)(seconds * 1000.0);
+    int64_t t = static_cast<int64_t>(seconds * 1000.0);
     int64_t min = t / (60 * 1000);
     t -= min * (60 * 1000);
     int64_t sec = t / 1000;
 
-    auto fmt = Str::fmt("%1:%2.").arg((int)min, 2).arg((int)sec, 2);
+    auto fmt = Str::fmt("%1:%2.").arg(static_cast<int>(min), 2).arg(static_cast<int>(sec), 2);
 
     if (precise) {
         t -= sec * 1000;
-        Str::appendVal(fmt, (int)t, 3);
+        Str::appendVal(fmt, static_cast<int>(t), 3);
     } else {
         t -= sec * 1000;
         t /= 100;
-        Str::appendVal(fmt, (int)t);
+        Str::appendVal(fmt, static_cast<int>(t));
     }
 
     if (negative) {

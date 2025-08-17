@@ -29,7 +29,7 @@ enum Actions {
     ACT_LABEL_SET,
 };
 
-DialogAdjustTempoSM5::~DialogAdjustTempoSM5() {}
+DialogAdjustTempoSM5::~DialogAdjustTempoSM5() = default;
 
 DialogAdjustTempoSM5::DialogAdjustTempoSM5() {
     setTitle("ADJUST TEMPO (SM5)");
@@ -60,7 +60,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setStep(0.001);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_DELAY_SET);
+                           static_cast<int>(ACT_DELAY_SET));
     spinner->setTooltip("Stop length at the current beat, in seconds");
 
     myLayout.row().col(84).col(154);
@@ -69,7 +69,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(3, 6);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_WARP_SET);
+                           static_cast<int>(ACT_WARP_SET));
     spinner->setTooltip("Warp length at the current beat, in beats");
 
     myLayout.row().col(84).col(75).col(75);
@@ -79,7 +79,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(0, 0);
     spinner->setRange(1, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_TIME_SIG_SET);
+                           static_cast<int>(ACT_TIME_SIG_SET));
     spinner->setTooltip("Beats per measure");
 
     spinner = myLayout.add<WgSpinner>();
@@ -87,7 +87,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(0, 0);
     spinner->setRange(1, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_TIME_SIG_SET);
+                           static_cast<int>(ACT_TIME_SIG_SET));
     spinner->setTooltip("Beat note type");
 
     myLayout.row().col(84).col(154);
@@ -97,7 +97,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_TICK_COUNT_SET);
+                           static_cast<int>(ACT_TICK_COUNT_SET));
     spinner->setTooltip("Hold combo ticks per beat");
 
     myLayout.row().col(84).col(75).col(75);
@@ -107,7 +107,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_COMBO_SET);
+                           static_cast<int>(ACT_COMBO_SET));
     spinner->setTooltip("Combo hit multiplier");
 
     spinner = myLayout.add<WgSpinner>();
@@ -115,7 +115,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_COMBO_SET);
+                           static_cast<int>(ACT_COMBO_SET));
     spinner->setTooltip("Combo miss multiplier");
 
     myLayout.row().col(84).col(52).col(56).col(38);
@@ -126,7 +126,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setStep(0.1);
     spinner->setRange(-1000, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_SPEED_SET);
+                           static_cast<int>(ACT_SPEED_SET));
     spinner->setTooltip("Stretch ratio");
 
     spinner = myLayout.add<WgSpinner>();
@@ -135,13 +135,13 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setStep(0.1);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_SPEED_SET);
+                           static_cast<int>(ACT_SPEED_SET));
     spinner->setTooltip("Delay time");
 
     WgCycleButton* cycler = myLayout.add<WgCycleButton>();
     cycler->value.bind(&mySpeedUnit);
     cycler->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                          (int)ACT_SPEED_SET);
+                          static_cast<int>(ACT_SPEED_SET));
     cycler->setTooltip("Delay unit (beats/time)");
     cycler->addItem("B");
     cycler->addItem("T");
@@ -154,7 +154,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setStep(0.1);
     spinner->setRange(-100000, 100000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_SCROLL_SET);
+                           static_cast<int>(ACT_SCROLL_SET));
     spinner->setTooltip("Scroll ratio");
 
     spinner = myLayout.add<WgSpinner>("Fakes");
@@ -162,14 +162,14 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setPrecision(3, 6);
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                           (int)ACT_FAKE_SET);
+                           static_cast<int>(ACT_FAKE_SET));
     spinner->setTooltip("Fake region, in beats");
 
     WgLineEdit* text = myLayout.add<WgLineEdit>("Label");
     text->text.bind(&myLabelText);
     text->setMaxLength(1000);
     text->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
-                        (int)ACT_LABEL_SET);
+                        static_cast<int>(ACT_LABEL_SET));
     text->setTooltip("Label text");
 }
 
@@ -190,7 +190,7 @@ void DialogAdjustTempoSM5::onTick() {
         auto segs = gTempo->getSegments();
 
         myDelay = segs->getRow<Delay>(row).seconds;
-        myWarp = segs->getRow<Warp>(row).numRows / (double)ROWS_PER_BEAT;
+        myWarp = segs->getRow<Warp>(row).numRows / static_cast<double>ROWS_PER_BEAT;
 
         auto sig = segs->getRecent<TimeSignature>(row);
         myTimeSigBpm = sig.rowsPerMeasure / ROWS_PER_BEAT;
@@ -208,7 +208,7 @@ void DialogAdjustTempoSM5::onTick() {
         mySpeedUnit = speed.unit;
 
         myScrollRatio = segs->getRecent<Scroll>(row).ratio;
-        myFakeBeats = segs->getRow<Fake>(row).numRows / (double)ROWS_PER_BEAT;
+        myFakeBeats = segs->getRow<Fake>(row).numRows / static_cast<double>ROWS_PER_BEAT;
 
         myLabelText = segs->getRow<Label>(row).str;
     }
@@ -223,11 +223,11 @@ void DialogAdjustTempoSM5::onAction(int id) {
             gTempo->addSegment(Delay(row, myDelay));
         } break;
         case ACT_WARP_SET: {
-            int rows = max(0, (int)(ROWS_PER_BEAT * myWarp));
+            int rows = max(0, static_cast<int>(ROWS_PER_BEAT * myWarp));
             gTempo->addSegment(Warp(row, rows));
         } break;
         case ACT_TIME_SIG_SET: {
-            int rowsPerMeasure = ROWS_PER_BEAT * max(1, (int)myTimeSigBpm);
+            int rowsPerMeasure = ROWS_PER_BEAT * max(1, myTimeSigBpm);
             int beatNote = max(1, myTimeSigNote);
             gTempo->addSegment(TimeSignature(row, rowsPerMeasure, beatNote));
         } break;
@@ -250,7 +250,7 @@ void DialogAdjustTempoSM5::onAction(int id) {
             gTempo->addSegment(Scroll(row, myScrollRatio));
         } break;
         case ACT_FAKE_SET: {
-            int rows = max(0, (int)(ROWS_PER_BEAT * myFakeBeats));
+            int rows = max(0, static_cast<int>(ROWS_PER_BEAT * myFakeBeats));
             gTempo->addSegment(Fake(row, rows));
         } break;
         case ACT_LABEL_SET: {

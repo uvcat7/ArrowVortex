@@ -20,7 +20,7 @@ namespace Vortex {
 namespace {
 
 inline int64_t NotePos(const Note* n) {
-    return ((int64_t)n->row << 8) | n->col;
+    return (static_cast<int64_t>(n->row) << 8) | n->col;
 }
 
 template <typename T, typename R>
@@ -169,7 +169,7 @@ void NoteList::cleanup() {
         write += offset;
     }
 
-    myNum = (int)(write - myNotes);
+    myNum = static_cast<int>(write - myNotes);
 }
 
 void NoteList::sanitize(const Chart* chart) {
@@ -204,10 +204,10 @@ void NoteList::sanitize(const Chart* chart) {
 
     // Make sure all notes are valid, sorted, and do not overlap.
     for (auto& note : *this) {
-        if (note.col >= (uint32_t)numCols) {
+        if (note.col >= static_cast<uint32_t>(numCols)) {
             ++numInvalidCols;
             note.row = -1;
-        } else if (note.player >= (uint32_t)numPlayers) {
+        } else if (note.player >= static_cast<uint32_t>(numPlayers)) {
             ++numInvalidPlayers;
             note.row = -1;
         } else if (note.row <= endrows[note.col]) {
@@ -222,7 +222,7 @@ void NoteList::sanitize(const Chart* chart) {
         } else {
             col = note.col;
             row = note.row;
-            endrows[note.col] = (int)note.endrow;
+            endrows[note.col] = note.endrow;
         }
     }
 
@@ -455,11 +455,11 @@ static void ApplyQuantOffset(Note& out, int offsetRows) {
     // offset
     if (192 % out.quant > 0 && startingOffset != endingOffset) {
         out.row = out.row - endingOffset +
-                  (int)round(192.0f / out.quant *
-                             round(endingOffset / 192.0f * out.quant));
+                  static_cast<int>(round(192.0f / out.quant *
+                             round(endingOffset / 192.0f * out.quant)));
         out.endrow = out.endrow - endingRowOffset +
-                     (int)round(192.0f / out.quant *
-                                round(endingRowOffset / 192.0f * out.quant));
+                     static_cast<int>(round(192.0f / out.quant *
+                                round(endingRowOffset / 192.0f * out.quant)));
     }
 }
 
@@ -555,7 +555,7 @@ void NoteList::myReserve(int num) {
     int numBytes = num * sizeof(Note);
     if (myCap < numBytes) {
         myCap = max(numBytes, myCap << 1);
-        myNotes = (Note*)realloc(myNotes, myCap);
+        myNotes = static_cast<Note*>(realloc(myNotes, myCap));
     }
 }
 

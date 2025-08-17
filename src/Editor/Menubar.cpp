@@ -50,7 +50,7 @@ struct MenuBarImpl : public Menubar {
     // ================================================================================================
     // MenuBarImpl :: constructor and destructor.
 
-    ~MenuBarImpl() {}
+    ~MenuBarImpl() = default;
 
     MenuBarImpl() { registerUpdateFunctions(); }
 
@@ -89,7 +89,7 @@ struct MenuBarImpl : public Menubar {
         menu->addSubmenu(sub, str);
     }
 
-    void init(Item* menu) {
+    void init(Item* menu) override {
         using namespace Action;
 
         // File menu.
@@ -413,7 +413,7 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[RECENT_FILES] = [] {
             Item* recent = newMenu();
             int numFiles = min(gEditor->getNumRecentFiles(),
-                               (int)Action::MAX_RECENT_FILES);
+                               static_cast<int>(Action::MAX_RECENT_FILES));
             if (numFiles > 0) {
                 recent->addItem(FILE_CLEAR_RECENT_FILES, "Clear list");
                 recent->addSeperator();
@@ -524,7 +524,7 @@ struct MenuBarImpl : public Menubar {
             Item* hSkins = System::MenuItem::create();
             int numValid = 0;
             int numTypes =
-                min(gNoteskin->getNumTypes(), (int)Action::MAX_NOTESKINS);
+                min(gNoteskin->getNumTypes(), static_cast<int>(Action::MAX_NOTESKINS));
             int activeType = gNoteskin->getType();
             for (int type = 0; type < numTypes; ++type) {
                 if (gNoteskin->isSupported(type)) {
@@ -532,14 +532,14 @@ struct MenuBarImpl : public Menubar {
                                     gNoteskin->getName(type));
                     if (type == activeType) {
                         hSkins->setChecked(
-                            (Action::Type)(SET_NOTESKIN_BEGIN + type), true);
+                            static_cast<Action::Type>(SET_NOTESKIN_BEGIN + type), true);
                     }
                     ++numValid;
                 }
             }
             // If the active type was zero, set it to the first skin in the list
             if (!activeType) {
-                hSkins->setChecked((Action::Type)(SET_NOTESKIN_BEGIN), true);
+                hSkins->setChecked((SET_NOTESKIN_BEGIN), true);
             }
             MENU->myViewMenu->replaceSubmenu(13, hSkins, "Noteskins",
                                              (numValid == 0));
@@ -586,7 +586,7 @@ struct MenuBarImpl : public Menubar {
         };
     }
 
-    void update(Property prop) {
+    void update(Property prop) override {
         if (prop == ALL_PROPERTIES) {
             for (int i = 1; i < NUM_PROPERTIES; ++i) {
                 myUpdateFunctions[i]();

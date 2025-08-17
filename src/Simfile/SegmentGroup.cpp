@@ -14,7 +14,7 @@ SegmentGroup::SegmentGroup() {
     ForEachType(type) { myLists[type].setType(type); }
 }
 
-SegmentGroup::~SegmentGroup() {}
+SegmentGroup::~SegmentGroup() = default;
 
 void SegmentGroup::clear() {
     ForEachType(type) { myLists[type].clear(); }

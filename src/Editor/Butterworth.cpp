@@ -100,8 +100,8 @@ double *binomial_mult(int n, double *p) {
     int i, j;
     double *a;
 
-    a = (double *)calloc(2 * n, sizeof(double));
-    if (a == NULL) return (NULL);
+    a = static_cast<double *>(calloc(2 * n, sizeof(double)));
+    if (a == nullptr) return (nullptr);
 
     for (i = 0; i < n; ++i) {
         for (j = i; j > 0; --j) {
@@ -151,8 +151,8 @@ double *trinomial_mult(int n, double *b, double *c) {
     int i, j;
     double *a;
 
-    a = (double *)calloc(4 * n, sizeof(double));
-    if (a == NULL) return (NULL);
+    a = static_cast<double *>(calloc(4 * n, sizeof(double)));
+    if (a == nullptr) return (nullptr);
 
     a[2] = c[0];
     a[3] = c[1];
@@ -201,15 +201,15 @@ double *dcof_bwlp(int n, double fcf) {
     double *rcof;  // binomial coefficients
     double *dcof;  // dk coefficients
 
-    rcof = (double *)calloc(2 * n, sizeof(double));
-    if (rcof == NULL) return (NULL);
+    rcof = static_cast<double *>(calloc(2 * n, sizeof(double)));
+    if (rcof == nullptr) return (nullptr);
 
     theta = M_PI * fcf;
     st = sin(theta);
     ct = cos(theta);
 
     for (k = 0; k < n; ++k) {
-        parg = M_PI * (double)(2 * k + 1) / (double)(2 * n);
+        parg = M_PI * static_cast<double>(2 * k + 1) / static_cast<double>(2 * n);
         sparg = sin(parg);
         cparg = cos(parg);
         a = 1.0 + st * sparg;
@@ -263,11 +263,11 @@ double *dcof_bwbp(int n, double f1f, double f2f) {
     s2t = 2.0 * st * ct;        // sine of 2*theta
     c2t = 2.0 * ct * ct - 1.0;  // cosine of 2*theta
 
-    rcof = (double *)calloc(2 * n, sizeof(double));
-    tcof = (double *)calloc(2 * n, sizeof(double));
+    rcof = static_cast<double *>(calloc(2 * n, sizeof(double)));
+    tcof = static_cast<double *>(calloc(2 * n, sizeof(double)));
 
     for (k = 0; k < n; ++k) {
-        parg = M_PI * (double)(2 * k + 1) / (double)(2 * n);
+        parg = M_PI * static_cast<double>(2 * k + 1) / static_cast<double>(2 * n);
         sparg = sin(parg);
         cparg = cos(parg);
         a = 1.0 + s2t * sparg;
@@ -316,11 +316,11 @@ double *dcof_bwbs(int n, double f1f, double f2f) {
     s2t = 2.0 * st * ct;        // sine of 2*theta
     c2t = 2.0 * ct * ct - 1.0;  // cosine 0f 2*theta
 
-    rcof = (double *)calloc(2 * n, sizeof(double));
-    tcof = (double *)calloc(2 * n, sizeof(double));
+    rcof = static_cast<double *>(calloc(2 * n, sizeof(double)));
+    tcof = static_cast<double *>(calloc(2 * n, sizeof(double)));
 
     for (k = 0; k < n; ++k) {
-        parg = M_PI * (double)(2 * k + 1) / (double)(2 * n);
+        parg = M_PI * static_cast<double>(2 * k + 1) / static_cast<double>(2 * n);
         sparg = sin(parg);
         cparg = cos(parg);
         a = 1.0 + s2t * sparg;
@@ -351,8 +351,8 @@ int *ccof_bwlp(int n) {
     int m;
     int i;
 
-    ccof = (int *)calloc(n + 1, sizeof(int));
-    if (ccof == NULL) return (NULL);
+    ccof = static_cast<int *>(calloc(n + 1, sizeof(int)));
+    if (ccof == nullptr) return (nullptr);
 
     ccof[0] = 1;
     ccof[1] = n;
@@ -378,7 +378,7 @@ int *ccof_bwhp(int n) {
     int i;
 
     ccof = ccof_bwlp(n);
-    if (ccof == NULL) return (NULL);
+    if (ccof == nullptr) return (nullptr);
 
     for (i = 0; i <= n; ++i)
         if (i % 2) ccof[i] = -ccof[i];
@@ -397,11 +397,11 @@ int *ccof_bwbp(int n) {
     int *ccof;
     int i;
 
-    ccof = (int *)calloc(2 * n + 1, sizeof(int));
-    if (ccof == NULL) return (NULL);
+    ccof = static_cast<int *>(calloc(2 * n + 1, sizeof(int)));
+    if (ccof == nullptr) return (nullptr);
 
     tcof = ccof_bwhp(n);
-    if (tcof == NULL) return (NULL);
+    if (tcof == nullptr) return (nullptr);
 
     for (i = 0; i < n; ++i) {
         ccof[2 * i] = tcof[i];
@@ -427,7 +427,7 @@ double *ccof_bwbs(int n, double f1f, double f2f) {
     alpha =
         -2.0 * cos(M_PI * (f2f + f1f) / 2.0) / cos(M_PI * (f2f - f1f) / 2.0);
 
-    ccof = (double *)calloc(2 * n + 1, sizeof(double));
+    ccof = static_cast<double *>(calloc(2 * n + 1, sizeof(double)));
 
     ccof[0] = 1.0;
 
@@ -462,12 +462,12 @@ double sf_bwlp(int n, double fcf) {
 
     omega = M_PI * fcf;
     fomega = sin(omega);
-    parg0 = M_PI / (double)(2 * n);
+    parg0 = M_PI / static_cast<double>(2 * n);
 
     m = n / 2;
     sf = 1.0;
     for (k = 0; k < n / 2; ++k)
-        sf *= 1.0 + fomega * sin((double)(2 * k + 1) * parg0);
+        sf *= 1.0 + fomega * sin(static_cast<double>(2 * k + 1) * parg0);
 
     fomega = sin(omega / 2.0);
 
@@ -493,12 +493,12 @@ double sf_bwhp(int n, double fcf) {
 
     omega = M_PI * fcf;
     fomega = sin(omega);
-    parg0 = M_PI / (double)(2 * n);
+    parg0 = M_PI / static_cast<double>(2 * n);
 
     m = n / 2;
     sf = 1.0;
     for (k = 0; k < n / 2; ++k)
-        sf *= 1.0 + fomega * sin((double)(2 * k + 1) * parg0);
+        sf *= 1.0 + fomega * sin(static_cast<double>(2 * k + 1) * parg0);
 
     fomega = cos(omega / 2.0);
 
@@ -529,7 +529,7 @@ double sf_bwbp(int n, double f1f, double f2f) {
     sfi = 0.0;
 
     for (k = 0; k < n; ++k) {
-        parg = M_PI * (double)(2 * k + 1) / (double)(2 * n);
+        parg = M_PI * static_cast<double>(2 * k + 1) / static_cast<double>(2 * n);
         sparg = ctt + sin(parg);
         cparg = cos(parg);
         a = (sfr + sfi) * (sparg - cparg);
@@ -563,7 +563,7 @@ double sf_bwbs(int n, double f1f, double f2f) {
     sfi = 0.0;
 
     for (k = 0; k < n; ++k) {
-        parg = M_PI * (double)(2 * k + 1) / (double)(2 * n);
+        parg = M_PI * static_cast<double>(2 * k + 1) / static_cast<double>(2 * n);
         sparg = tt + sin(parg);
         cparg = cos(parg);
         a = (sfr + sfi) * (sparg - cparg);
@@ -585,7 +585,7 @@ void ButterLowPassCoefs(int order, double frequency, double *outB,
     double sf = sf_bwlp(order, frequency);
 
     for (int i = 0; i <= order; ++i) outA[i] = dcof[i];
-    for (int i = 0; i <= order; ++i) outB[i] = (double)ccof[i] * sf;
+    for (int i = 0; i <= order; ++i) outB[i] = static_cast<double>(ccof[i]) * sf;
 
     free(dcof);
     free(ccof);
@@ -598,7 +598,7 @@ void ButterHighPassCoefs(int order, double frequency, double *outB,
     double sf = sf_bwhp(order, frequency);
 
     for (int i = 0; i <= order; ++i) outA[i] = dcof[i];
-    for (int i = 0; i <= order; ++i) outB[i] = (double)ccof[i] * sf;
+    for (int i = 0; i <= order; ++i) outB[i] = static_cast<double>(ccof[i]) * sf;
 
     free(dcof);
     free(ccof);

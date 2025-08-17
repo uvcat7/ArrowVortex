@@ -23,7 +23,7 @@ namespace Vortex {
 enum BannerSize { BANNER_W = 418, BANNER_H = 164 };
 
 struct DialogSongProperties::BannerWidget : public GuiWidget {
-    BannerWidget(GuiContext* gui) : GuiWidget(gui) {
+    explicit BannerWidget(GuiContext* gui) : GuiWidget(gui) {
         width_ = BANNER_W;
         height_ = BANNER_H;
     }

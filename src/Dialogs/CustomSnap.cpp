@@ -7,7 +7,7 @@
 
 namespace Vortex {
 
-DialogCustomSnap::~DialogCustomSnap() {}
+DialogCustomSnap::~DialogCustomSnap() = default;
 
 DialogCustomSnap::DialogCustomSnap() {
     myCustomSnap = gView->getCustomSnap();

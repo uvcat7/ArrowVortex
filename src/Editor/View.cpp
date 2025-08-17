@@ -36,44 +36,28 @@ namespace {};  // anonymous namespace
 
 struct ViewImpl : public View, public InputHandler {
     recti rect_;
-    double myChartTopY;
-    double myCursorTime, myCursorBeat;
-    double myPixPerSec, myPixPerRow;
-    int myCursorRow;
+    double myChartTopY = 0.0;
+    double myCursorTime = 0.0, myCursorBeat = 0.0;
+    double myPixPerSec = 32, myPixPerRow;
+    int myCursorRow = 0;
 
-    int myReceptorY, myReceptorX, myPreviewOffset;
-    double myZoomLevel, myScaleLevel;
-    bool myIsDraggingReceptors, myIsDraggingReceptorsPreview;
-    bool myUseTimeBasedView;
-    bool myUseReverseScroll;
-    bool myUseChartPreview;
-    int myCustomSnap;
+    int myReceptorY = 192, myReceptorX = 0, myPreviewOffset = 640;
+    double myZoomLevel = 8, myScaleLevel = 4;
+    bool myIsDraggingReceptors = false, myIsDraggingReceptorsPreview = false;
+    bool myUseTimeBasedView = true;
+    bool myUseReverseScroll = false;
+    bool myUseChartPreview = false;
+    int myCustomSnap = 20;
     int myCustomSnapSteps[193];
-    SnapType mySnapType;
+    SnapType mySnapType = ST_NONE;
 
     // ================================================================================================
     // ViewImpl :: constructor / destructor.
 
-    ~ViewImpl() {}
+    ~ViewImpl() = default;
 
     ViewImpl()
-        : myChartTopY(0.0),
-          myCursorTime(0.0),
-          myCursorBeat(0.0),
-          myCursorRow(0),
-          myReceptorY(192),
-          myReceptorX(0),
-          myPreviewOffset(640),
-          myZoomLevel(8),
-          myScaleLevel(4),
-          mySnapType(ST_NONE),
-          myCustomSnap(20),
-          myUseTimeBasedView(true),
-          myUseReverseScroll(false),
-          myUseChartPreview(false),
-          myIsDraggingReceptors(false),
-          myIsDraggingReceptorsPreview(false),
-          myPixPerSec(32),
+        : 
           myPixPerRow(16 * BEATS_PER_ROW) {
         vec2i windowSize = gSystem->getWindowSize();
         rect_ = {0, 0, windowSize.x, windowSize.y};
@@ -104,19 +88,19 @@ struct ViewImpl : public View, public InputHandler {
         updateCustomSnapSteps();
     }
 
-    void saveSettings(XmrNode& settings) {
+    void saveSettings(XmrNode& settings) override {
         XmrNode* view = settings.child("view");
         if (!view) view = settings.addChild("view");
 
         view->addAttrib("useTimeBasedView", myUseTimeBasedView);
         view->addAttrib("useReverseScroll", myUseReverseScroll);
         view->addAttrib("useChartPreview", myUseChartPreview);
-        view->addAttrib("customSnap", (long)myCustomSnap);
-        view->addAttrib("zoomLevel", (long)myZoomLevel);
-        view->addAttrib("scaleLevel", (long)myScaleLevel);
-        view->addAttrib("receptorX", (long)myReceptorX);
-        view->addAttrib("receptorY", (long)myReceptorY);
-        view->addAttrib("previewOffset", (long)myPreviewOffset);
+        view->addAttrib("customSnap", static_cast<long>(myCustomSnap));
+        view->addAttrib("zoomLevel", static_cast<long>(myZoomLevel));
+        view->addAttrib("scaleLevel", static_cast<long>(myScaleLevel));
+        view->addAttrib("receptorX", static_cast<long>(myReceptorX));
+        view->addAttrib("receptorY", static_cast<long>(myReceptorY));
+        view->addAttrib("previewOffset", static_cast<long>(myPreviewOffset));
     }
 
     // ================================================================================================
@@ -135,7 +119,7 @@ struct ViewImpl : public View, public InputHandler {
             if (myUseTimeBasedView) {
                 setCursorTime(myCursorTime + delta / myPixPerSec);
             } else {
-                setCursorRow(myCursorRow + (int)(delta / myPixPerRow));
+                setCursorRow(myCursorRow + static_cast<int>(delta / myPixPerRow));
             }
         }
         evt.handled = true;
@@ -205,15 +189,15 @@ struct ViewImpl : public View, public InputHandler {
     // ================================================================================================
     // ViewImpl :: member functions.
 
-    double getZoomLevel() const { return myZoomLevel; }
+    double getZoomLevel() const override { return myZoomLevel; }
 
-    double getScaleLevel() const { return myScaleLevel; }
+    double getScaleLevel() const override { return myScaleLevel; }
 
-    int getCustomSnap() const { return myCustomSnap; }
+    int getCustomSnap() const override { return myCustomSnap; }
 
-    SnapType getSnapType() const { return mySnapType; }
+    SnapType getSnapType() const override { return mySnapType; }
 
-    int getSnapQuant() {
+    int getSnapQuant() override {
         if (mySnapType == ST_CUSTOM) {
             return myCustomSnap;
         } else {
@@ -221,37 +205,37 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    bool isTimeBased() const { return myUseTimeBasedView; }
+    bool isTimeBased() const override { return myUseTimeBasedView; }
 
-    bool hasReverseScroll() const { return myUseReverseScroll; }
+    bool hasReverseScroll() const override { return myUseReverseScroll; }
 
-    bool hasChartPreview() const { return myUseChartPreview; }
+    bool hasChartPreview() const override { return myUseChartPreview; }
 
-    double getPixPerSec() const { return myPixPerSec; }
+    double getPixPerSec() const override { return myPixPerSec; }
 
-    double getPixPerRow() const { return myPixPerRow; }
+    double getPixPerRow() const override { return myPixPerRow; }
 
-    double getPixPerOfs() const {
+    double getPixPerOfs() const override {
         return myUseTimeBasedView ? myPixPerSec : myPixPerRow;
     }
 
-    int getCursorRow() const { return myCursorRow; }
+    int getCursorRow() const override { return myCursorRow; }
 
-    double getCursorTime() const { return myCursorTime; }
+    double getCursorTime() const override { return myCursorTime; }
 
-    double getCursorBeat() const { return myCursorBeat; }
+    double getCursorBeat() const override { return myCursorBeat; }
 
-    double getCursorOffset() const {
+    double getCursorOffset() const override {
         return myUseTimeBasedView ? myCursorTime : myCursorRow;
     }
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         if (changes & VCM_TEMPO_CHANGED) {
             myCursorTime = gTempo->rowToTime(myCursorRow);
         }
     }
 
-    void tick() {
+    void tick() override {
         vec2i windowSize = gSystem->getWindowSize();
         rect_ = {0, 0, windowSize.x, windowSize.y};
 
@@ -265,7 +249,7 @@ struct ViewImpl : public View, public InputHandler {
         // handle preview receptor dragging.
         else if (myIsDraggingReceptorsPreview) {
             auto mx = gSystem->getMousePos().x - CenterX(rect_) - myReceptorX;
-            auto ofs = (mx << 8) / (int)(64 * myScaleLevel);
+            auto ofs = (mx << 8) / static_cast<int>(64 * myScaleLevel);
             myPreviewOffset = ofs;
         }
 
@@ -291,7 +275,7 @@ struct ViewImpl : public View, public InputHandler {
                 double time = gMusic->getPlayTime();
                 myCursorTime = clamp(time, begintime, endtime);
                 myCursorBeat = gTempo->timeToBeat(myCursorTime);
-                myCursorRow = (int)(myCursorBeat * ROWS_PER_BEAT);
+                myCursorRow = static_cast<int>(myCursorBeat * ROWS_PER_BEAT);
             }
         }
 
@@ -304,9 +288,9 @@ struct ViewImpl : public View, public InputHandler {
         // Store the y-position of time zero.
         if (myUseTimeBasedView) {
             myChartTopY =
-                floor((double)myReceptorY - myCursorTime * myPixPerSec);
+                floor(static_cast<double>(myReceptorY) - myCursorTime * myPixPerSec);
         } else {
-            myChartTopY = floor((double)myReceptorY -
+            myChartTopY = floor(static_cast<double>(myReceptorY) -
                                 myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
         }
     }
@@ -327,19 +311,19 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    void toggleReverseScroll() {
+    void toggleReverseScroll() override {
         myUseReverseScroll = !myUseReverseScroll;
         myReceptorY = rect_.h - myReceptorY;
         updateScrollValues();
         gMenubar->update(Menubar::USE_REVERSE_SCROLL);
     }
 
-    void toggleChartPreview() {
+    void toggleChartPreview() override {
         myUseChartPreview = !myUseChartPreview;
         gMenubar->update(Menubar::USE_CHART_PREVIEW);
     }
 
-    void setTimeBased(bool enabled) {
+    void setTimeBased(bool enabled) override {
         if (myUseTimeBasedView != enabled) {
             myUseTimeBasedView = enabled;
             gMenubar->update(Menubar::VIEW_MODE);
@@ -347,7 +331,7 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    void setZoomLevel(double level) {
+    void setZoomLevel(double level) override {
         level = min(max(level, -2.0), 16.0);
         if (myZoomLevel != level) {
             myZoomLevel = level;
@@ -356,7 +340,7 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    void setScaleLevel(double level) {
+    void setScaleLevel(double level) override {
         level = min(max(level, 1.0), 10.0);
         if (myScaleLevel != level) {
             myScaleLevel = level;
@@ -364,16 +348,16 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    void setSnapType(int type) {
+    void setSnapType(int type) override {
         if (type < 0) type = NUM_SNAP_TYPES - 1;
         if (type > NUM_SNAP_TYPES - 1) type = 0;
         if (mySnapType != type) {
-            mySnapType = (SnapType)type;
+            mySnapType = static_cast<SnapType>(type);
             HudNote("Snap: %s", ToString(mySnapType));
         }
     }
 
-    void setCustomSnap(int size) {
+    void setCustomSnap(int size) override {
         if (size < 4) size = 4;
         if (size > 192) size = 192;
         // If the custom snap is a non-custom value, set the snap to that value
@@ -392,31 +376,31 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    void setCursorTime(double time) {
+    void setCursorTime(double time) override {
         double begintime = gTempo->rowToTime(0);
         double endtime = gTempo->rowToTime(gSimfile->getEndRow());
         myCursorTime = min(max(begintime, time), endtime);
         myCursorBeat = gTempo->timeToBeat(myCursorTime);
-        myCursorRow = (int)(myCursorBeat * ROWS_PER_BEAT);
+        myCursorRow = static_cast<int>(myCursorBeat * ROWS_PER_BEAT);
         gMusic->seek(myCursorTime);
     }
 
-    void setCursorRow(int row) {
+    void setCursorRow(int row) override {
         myCursorRow = min(max(row, 0), gSimfile->getEndRow());
         myCursorBeat = myCursorRow * BEATS_PER_ROW;
         myCursorTime = gTempo->rowToTime(myCursorRow);
         gMusic->seek(myCursorTime);
     }
 
-    void setCursorOffset(ChartOffset ofs) {
+    void setCursorOffset(ChartOffset ofs) override {
         if (myUseTimeBasedView) {
             setCursorTime(ofs);
         } else {
-            setCursorRow((int)(ofs + 0.5));
+            setCursorRow(static_cast<int>(ofs + 0.5));
         }
     }
 
-    void setCursorToNextInterval(int rows) {
+    void setCursorToNextInterval(int rows) override {
         if (gView->hasReverseScroll()) rows = rows * -1;
 
         int rowsInInterval = abs(rows);
@@ -434,7 +418,7 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    void setCursorToStream(bool top) {
+    void setCursorToStream(bool top) override {
         if (gView->hasReverseScroll()) top = !top;
 
         auto first = gNotes->begin(), n = first;
@@ -462,7 +446,7 @@ struct ViewImpl : public View, public InputHandler {
         setCursorRow(n->row);
     }
 
-    void setCursorToSelection(bool top) {
+    void setCursorToSelection(bool top) override {
         if (gView->hasReverseScroll()) top = !top;
 
         auto region = gSelection->getSelectedRegion();
@@ -478,22 +462,22 @@ struct ViewImpl : public View, public InputHandler {
 
     int getRowY(int row) const {
         if (myUseTimeBasedView) {
-            return (int)(myChartTopY + gTempo->rowToTime(row) * myPixPerSec);
+            return static_cast<int>(myChartTopY + gTempo->rowToTime(row) * myPixPerSec);
         } else {
-            return (int)(myChartTopY + (double)row * myPixPerRow);
+            return static_cast<int>(myChartTopY + static_cast<double>(row) * myPixPerRow);
         }
     }
 
     int getTimeY(double time) const {
         if (myUseTimeBasedView) {
-            return (int)(myChartTopY + time * myPixPerSec);
+            return static_cast<int>(myChartTopY + time * myPixPerSec);
         } else {
-            return (int)(myChartTopY + gTempo->timeToBeat(time) *
+            return static_cast<int>(myChartTopY + gTempo->timeToBeat(time) *
                                            ROWS_PER_BEAT * myPixPerRow);
         }
     }
 
-    Coords getReceptorCoords() const {
+    Coords getReceptorCoords() const override {
         Coords out;
         auto noteskin = gNoteskin->get();
         out.y = rect_.y + myReceptorY;
@@ -509,7 +493,7 @@ struct ViewImpl : public View, public InputHandler {
         return out;
     }
 
-    Coords getNotefieldCoords() const {
+    Coords getNotefieldCoords() const override {
         Coords out = getReceptorCoords();
         int ofs = gView->applyZoom(32);
         out.xl -= ofs, out.xr += ofs;
@@ -521,7 +505,7 @@ struct ViewImpl : public View, public InputHandler {
         return out;
     }
 
-    int columnToX(int col) const {
+    int columnToX(int col) const override {
         auto noteskin = gNoteskin->get();
         int cx = rect_.x + rect_.w / 2 + myReceptorX;
         if (!noteskin) return cx;
@@ -529,71 +513,71 @@ struct ViewImpl : public View, public InputHandler {
         return cx + applyZoom(x);
     }
 
-    int rowToY(int row) const {
+    int rowToY(int row) const override {
         if (myUseTimeBasedView) {
-            return (int)(myChartTopY + gTempo->rowToTime(row) * myPixPerSec);
+            return static_cast<int>(myChartTopY + gTempo->rowToTime(row) * myPixPerSec);
         } else {
-            return (int)(myChartTopY + (double)row * myPixPerRow);
+            return static_cast<int>(myChartTopY + static_cast<double>(row) * myPixPerRow);
         }
     }
 
-    int timeToY(double time) const {
+    int timeToY(double time) const override {
         if (myUseTimeBasedView) {
-            return (int)(myChartTopY + time * myPixPerSec);
+            return static_cast<int>(myChartTopY + time * myPixPerSec);
         } else {
-            return (int)(myChartTopY + gTempo->timeToBeat(time) *
+            return static_cast<int>(myChartTopY + gTempo->timeToBeat(time) *
                                            ROWS_PER_BEAT * myPixPerRow);
         }
     }
 
-    int offsetToY(ChartOffset ofs) {
+    int offsetToY(ChartOffset ofs) override {
         if (myUseTimeBasedView) {
-            return (int)(myChartTopY + ofs * myPixPerSec);
+            return static_cast<int>(myChartTopY + ofs * myPixPerSec);
         } else {
-            return (int)(myChartTopY + ofs * myPixPerRow);
+            return static_cast<int>(myChartTopY + ofs * myPixPerRow);
         }
     }
 
-    ChartOffset yToOffset(int viewY) const {
-        return ((ChartOffset)viewY - myChartTopY) / getPixPerOfs();
+    ChartOffset yToOffset(int viewY) const override {
+        return (static_cast<ChartOffset>(viewY) - myChartTopY) / getPixPerOfs();
     }
 
-    ChartOffset rowToOffset(int row) const {
-        return myUseTimeBasedView ? gTempo->rowToTime(row) : (ChartOffset)row;
+    ChartOffset rowToOffset(int row) const override {
+        return myUseTimeBasedView ? gTempo->rowToTime(row) : static_cast<ChartOffset>(row);
     }
 
-    ChartOffset timeToOffset(double time) const {
+    ChartOffset timeToOffset(double time) const override {
         return myUseTimeBasedView ? time
                                   : (gTempo->timeToBeat(time) * ROWS_PER_BEAT);
     }
 
-    int offsetToRow(ChartOffset ofs) const {
-        return myUseTimeBasedView ? gTempo->timeToRow(ofs) : (int)(ofs + 0.5);
+    int offsetToRow(ChartOffset ofs) const override {
+        return myUseTimeBasedView ? gTempo->timeToRow(ofs) : static_cast<int>(ofs + 0.5);
     }
 
-    double offsetToTime(ChartOffset ofs) const {
+    double offsetToTime(ChartOffset ofs) const override {
         return myUseTimeBasedView ? ofs
                                   : gTempo->beatToTime(ofs * BEATS_PER_ROW);
     }
 
-    int getWidth() const { return rect_.w; }
+    int getWidth() const override { return rect_.w; }
 
-    int getHeight() const { return rect_.h; }
+    int getHeight() const override { return rect_.h; }
 
-    const recti& getRect() const { return rect_; }
+    const recti& getRect() const override { return rect_; }
 
-    void adjustForPreview(bool enabled) {
+    void adjustForPreview(bool enabled) override {
         myReceptorX +=
             applyZoom(enabled ? -myPreviewOffset : myPreviewOffset) / 2;
     }
 
-    int getPreviewOffset() const { return applyZoom(myPreviewOffset); }
+    int getPreviewOffset() const override { return applyZoom(myPreviewOffset); }
 
-    int applyZoom(int v) const { return (v * (int)(64 * myScaleLevel)) >> 8; }
+    int applyZoom(int v) const override { return (v * static_cast<int>(64 * myScaleLevel)) >> 8; }
 
-    int getNoteScale() const { return 64 * myScaleLevel; }
+    int getNoteScale() const override { return 64 * myScaleLevel; }
 
-    int snapRow(int row, SnapDir dir) {
+    int snapRow(int row, SnapDir dir) override {
         if (dir == SNAP_CLOSEST) {
             if (isAlignedToSnap(row)) {
                 return row;
@@ -650,7 +634,7 @@ struct ViewImpl : public View, public InputHandler {
         }
     }
 
-    bool isAlignedToSnap(int row) {
+    bool isAlignedToSnap(int row) override {
         int snap = sRowSnapTypes[mySnapType];
 
         // Special case, custom snapping.

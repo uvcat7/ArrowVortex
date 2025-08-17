@@ -23,14 +23,14 @@ using namespace Vortex;
 class xstring {
    public:
     ~xstring() { free(data); }
-    xstring(int n) : data(nullptr), size(0), cap(n) {
+    explicit xstring(int n) :  cap(n) {
         if (cap < 4) cap = 4;
-        data = (char*)malloc(cap);
+        data = static_cast<char*>(malloc(cap));
     }
     void append(char c) {
         if (size == cap) {
             cap *= 2;
-            data = (char*)realloc(data, cap);
+            data = static_cast<char*>(realloc(data, cap));
         }
         data[size++] = c;
     }
@@ -39,7 +39,7 @@ class xstring {
         if (newSize > cap) {
             cap *= 2;
             if (newSize > cap) cap = newSize;
-            data = (char*)realloc(data, cap);
+            data = static_cast<char*>(realloc(data, cap));
         }
         memcpy(data + size, str, n);
         size = newSize;
@@ -61,8 +61,8 @@ class xstring {
         }
         append(buf, n);
     }
-    char* data;
-    int size, cap;
+    char* data = nullptr;
+    int size = 0, cap;
 };
 
 // ================================================================================================
@@ -81,7 +81,7 @@ static bool IsWhiteSpace(char c) {
 static bool IsNameChar(char c) {
     static const uint32_t b[4] = {0xFFFFFBFE, 0xD7FFEFFF, 0xFFFFFFFF,
                                   0xD7FFFFFF};
-    return ((unsigned char)c < 128) ? ((b[c >> 5] & (1 << (c & 31))) != 0)
+    return (static_cast<unsigned char>(c) < 128) ? ((b[c >> 5] & (1 << (c & 31))) != 0)
                                     : true;
 }
 
@@ -120,14 +120,14 @@ static const char* SkipSpaceExceptNewline(const char* p) {
 static bool StrEq(const char* a, const char* b) { return !strcmp(a, b); }
 
 static char* CopyStr(const xstring* str) {
-    char* dst = (char*)malloc(str->size + 1);
+    char* dst = static_cast<char*>(malloc(str->size + 1));
     memcpy(dst, str->data, str->size);
     dst[str->size] = 0;
     return dst;
 }
 
 static void SetError(XmrDoc* doc, const xstring* str) {
-    if (doc->lastError != NO_ERROR) free((char*)(doc->lastError));
+    if (doc->lastError != NO_ERROR) free(const_cast<char*>(doc->lastError));
     doc->lastError = str ? CopyStr(str) : NO_ERROR;
 }
 
@@ -135,14 +135,14 @@ static XmrAttrib* NewAttrib(const char* str, int strsize, const int* vals,
                             int numVals) {
     // Allocate the attribute object and strings in a single memory block.
     int basesize = sizeof(XmrAttrib) + sizeof(char*) * numVals;
-    char* data = (char*)malloc(basesize + strsize);
+    char* data = static_cast<char*>(malloc(basesize + strsize));
 
     // Copy the attribute data.
-    XmrAttrib* out = (XmrAttrib*)data;
+    XmrAttrib* out = reinterpret_cast<XmrAttrib*>(data);
     out->name = data + basesize;
     out->nextPtr = nullptr;
     out->numValues = numVals;
-    out->values = (char**)(data + sizeof(XmrAttrib));
+    out->values = reinterpret_cast<char**>(data + sizeof(XmrAttrib));
 
     memcpy(out->name, str, strsize);
     for (int i = 0; i < numVals; ++i) {
@@ -165,13 +165,13 @@ static XmrAttrib* NewAttrib(const char* name, const char* vals, int num) {
 
     // Allocate the attribute object and strings in a single memory block.
     int basesize = sizeof(XmrAttrib) + sizeof(char*) * num;
-    char* data = (char*)malloc(basesize + nameLen + valLen);
+    char* data = static_cast<char*>(malloc(basesize + nameLen + valLen));
 
     // Copy the attribute data.
-    XmrAttrib* out = (XmrAttrib*)data;
+    XmrAttrib* out = reinterpret_cast<XmrAttrib*>(data);
     out->nextPtr = nullptr;
     out->numValues = num;
-    out->values = (char**)(data + sizeof(XmrAttrib));
+    out->values = reinterpret_cast<char**>(data + sizeof(XmrAttrib));
     out->name = data + basesize;
 
     char* ptr = out->name;
@@ -215,21 +215,19 @@ class XmrReader {
 
    private:
     xstring xmrErrorMessage_;
-    XmrResult xmrResult_;
-    const char* xmrErrorPosition_;
+    XmrResult xmrResult_ = XMR_SUCCESS;
+    const char* xmrErrorPosition_ = nullptr;
     xstring xmrTextBuffer_;
     int* xmrValueBuffer_;
-    int xmrNumValues_, xmrValueCapacity_;
+    int xmrNumValues_ = 0, xmrValueCapacity_ = 16;
 };
 
 XmrReader::XmrReader()
     : xmrErrorMessage_(16),
-      xmrResult_(XMR_SUCCESS),
-      xmrErrorPosition_(nullptr),
-      xmrTextBuffer_(256),
-      xmrNumValues_(0),
-      xmrValueCapacity_(16) {
-    xmrValueBuffer_ = (int*)malloc(sizeof(int) * xmrValueCapacity_);
+      
+      xmrTextBuffer_(256)
+      {
+    xmrValueBuffer_ = static_cast<int*>(malloc(sizeof(int) * xmrValueCapacity_));
 }
 
 XmrReader::~XmrReader() { free(xmrValueBuffer_); }
@@ -244,11 +242,11 @@ XmrResult XmrReader::load(const char* buffer, XmrDoc& doc) {
         // Find the error line and position.
         int line = 1, pos = 1;
         for (p = buffer; *p && p < xmrErrorPosition_; ++p) {
-            if ((uint8_t)(*p) == 0xA)
+            if (static_cast<uint8_t>(*p) == 0xA)
                 ++line, pos = 1;  // newline character.
-            else if ((uint8_t)(*p) < 128)
+            else if (static_cast<uint8_t>(*p) < 128)
                 ++pos;  // single-byte character.
-            else if (((uint8_t)(*p) & 192) == 192)
+            else if ((static_cast<uint8_t>(*p) & 192) == 192)
                 ++pos;  // first byte of multi-byte character.
         }
 
@@ -256,9 +254,9 @@ XmrResult XmrReader::load(const char* buffer, XmrDoc& doc) {
         xstring err(16);
         if (*p) {
             err.append("line ");
-            err.append((long)line);
+            err.append(static_cast<long>(line));
             err.append(", pos ");
-            err.append((long)pos);
+            err.append(static_cast<long>(pos));
             err.append(": ");
         }
         err.append(xmrErrorMessage_.data, xmrErrorMessage_.size);
@@ -391,7 +389,7 @@ void XmrReader::addValue(int pos) {
     if (xmrNumValues_ == xmrValueCapacity_) {
         xmrValueCapacity_ *= 2;
         xmrValueBuffer_ =
-            (int*)realloc(xmrValueBuffer_, sizeof(int) * xmrValueCapacity_);
+            static_cast<int*>(realloc(xmrValueBuffer_, sizeof(int) * xmrValueCapacity_));
     }
     xmrValueBuffer_[xmrNumValues_] = pos;
     ++xmrNumValues_;
@@ -502,9 +500,9 @@ static XmrNode* NewNode(const char* n) {
     int alen = sizeof(XmrNode);
     int nlen = strlen(n) + 1;
 
-    char* data = (char*)malloc(alen + nlen);
+    char* data = static_cast<char*>(malloc(alen + nlen));
     char* str = data + alen;
-    XmrNode* out = (XmrNode*)data;
+    XmrNode* out = reinterpret_cast<XmrNode*>(data);
 
     out->name = str;
     out->nextPtr = nullptr;
@@ -688,7 +686,7 @@ static int Read(const XmrAttrib* a, int* out, int n) {
         n = a->numValues;
     for (int i = 0; i < n; ++i) {
         char *end, *str = a->values[i];
-        int v = (int)strtol(str, &end, 0);
+        int v = static_cast<int>(strtol(str, &end, 0));
         if (end != str) out[read++] = v;
     }
     return read;
@@ -702,7 +700,7 @@ static int Read(const XmrAttrib* a, float* out, int n) {
         n = a->numValues;
     for (int i = 0; i < n; ++i) {
         char *end, *str = a->values[i];
-        float v = (float)strtod(str, &end);
+        float v = static_cast<float>(strtod(str, &end));
         if (end != str) out[read++] = v;
     }
     return read;

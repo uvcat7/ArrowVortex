@@ -6,7 +6,7 @@
 
 namespace Vortex {
 
-GuiContext::~GuiContext() {}
+GuiContext::~GuiContext() = default;
 
 GuiContextImpl::~GuiContextImpl() { Vec::release(dialogs_); }
 

@@ -6,7 +6,7 @@
 
 namespace Vortex {
 
-DialogWaveformSettings::~DialogWaveformSettings() {}
+DialogWaveformSettings::~DialogWaveformSettings() = default;
 
 DialogWaveformSettings::DialogWaveformSettings() {
     presetIndex_ = 0;
@@ -127,7 +127,7 @@ DialogWaveformSettings::DialogWaveformSettings() {
 }
 
 void DialogWaveformSettings::myApplyPreset() {
-    gWaveform->setPreset((Waveform::Preset)presetIndex_);
+    gWaveform->setPreset(static_cast<Waveform::Preset>(presetIndex_));
     settingsColorScheme_ = gWaveform->getColors();
     luminanceValue_ = gWaveform->getLuminance();
     waveShape_ = gWaveform->getWaveShape();
@@ -137,8 +137,8 @@ void DialogWaveformSettings::myApplyPreset() {
 void DialogWaveformSettings::myUpdateSettings() {
     gWaveform->setColors(settingsColorScheme_);
     gWaveform->setAntiAliasing(antiAliasingMode_);
-    gWaveform->setLuminance((Waveform::Luminance)luminanceValue_);
-    gWaveform->setWaveShape((Waveform::WaveShape)waveShape_);
+    gWaveform->setLuminance(static_cast<Waveform::Luminance>(luminanceValue_));
+    gWaveform->setWaveShape(static_cast<Waveform::WaveShape>(waveShape_));
 }
 
 void DialogWaveformSettings::myToggleOverlayFilter() {
@@ -146,7 +146,7 @@ void DialogWaveformSettings::myToggleOverlayFilter() {
 }
 
 void DialogWaveformSettings::myEnableFilter() {
-    gWaveform->enableFilter((Waveform::FilterType)filterType_, filterStrength_);
+    gWaveform->enableFilter(static_cast<Waveform::FilterType>(filterType_), filterStrength_);
 }
 
 void DialogWaveformSettings::myDisableFilter() { gWaveform->disableFilter(); }

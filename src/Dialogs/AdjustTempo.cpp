@@ -29,7 +29,7 @@ enum Actions {
     ACT_REMOVE_BEATS,
 };
 
-DialogAdjustTempo::~DialogAdjustTempo() {}
+DialogAdjustTempo::~DialogAdjustTempo() = default;
 
 DialogAdjustTempo::DialogAdjustTempo() {
     setTitle("ADJUST TEMPO");
@@ -112,7 +112,7 @@ void DialogAdjustTempo::myCreateWidgets() {
     WgButton* insert = myLayout.add<WgButton>();
     insert->text.set("Insert beats");
     insert->onPress.bind(this, &DialogAdjustTempo::onAction,
-                         (int)ACT_INSERT_BEATS);
+                         static_cast<int>(ACT_INSERT_BEATS));
     insert->setTooltip(
         "Insert the above number of beats at the cursor position\n"
         "All notes and tempo changes after the cursor will be shifted down");
@@ -120,7 +120,7 @@ void DialogAdjustTempo::myCreateWidgets() {
     WgButton* remove = myLayout.add<WgButton>();
     remove->text.set("Delete beats");
     remove->onPress.bind(this, &DialogAdjustTempo::onAction,
-                         (int)ACT_REMOVE_BEATS);
+                         static_cast<int>(ACT_REMOVE_BEATS));
     remove->setTooltip(
         "Delete the above number of beats at the cursor position\n"
         "All notes and tempo changes after the cursor will be shifted up\n"
@@ -201,7 +201,7 @@ void DialogAdjustTempo::onAction(int id) {
             break;
         case ACT_INSERT_BEATS:
         case ACT_REMOVE_BEATS:
-            int numRows = (int)(ROWS_PER_BEAT * myBeatsToInsert + 0.5);
+            int numRows = static_cast<int>(ROWS_PER_BEAT * myBeatsToInsert + 0.5);
             if (id == ACT_REMOVE_BEATS) numRows *= -1;
             gEditing->insertRows(gView->getCursorRow(), numRows,
                                  (myInsertTarget == 0));

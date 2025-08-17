@@ -117,9 +117,9 @@ static void AddItems(Vector<PathItem>& out, const std::string& path) {
                 if (out.size() && !out.back().dotdot())
                     out.pop_back();
                 else
-                    out.push_back({a, (size_t)(b - a)});
+                    out.push_back({a, static_cast<size_t>(b - a)});
             } else if (size > 1 || (size == 1 && a[0] != '.')) {
-                out.push_back({a, (size_t)(b - a)});
+                out.push_back({a, static_cast<size_t>(b - a)});
             }
             a = *b ? (b + 1) : b;
         }
@@ -188,9 +188,9 @@ static const char* GetExtension(const char* p) {
 // ================================================================================================
 // Path.
 
-Path::Path() {}
+Path::Path() = default;
 
-Path::Path(const Path& other) : str(other.str) {}
+Path::Path(const Path& other)  = default;
 
 Path::Path(const std::string& path) : str(Concatenate(std::string(), path)) {}
 

@@ -34,11 +34,11 @@ struct ScrollButtonData {
 static ScrollButtonData GetButton(int size, int end, int page, int scroll) {
     ScrollButtonData out = {0, size};
     if (end > page) {
-        out.size = (int)(0.5 + size * (double)page / (double)end);
+        out.size = static_cast<int>(0.5 + size * static_cast<double>(page) / static_cast<double>(end));
         out.size = max(16, out.size);
 
-        out.pos = (int)(0.5 + scroll * (double)(size - out.size) /
-                                  (double)(end - page));
+        out.pos = static_cast<int>(0.5 + scroll * static_cast<double>(size - out.size) /
+                                  static_cast<double>(end - page));
         out.pos = max(0, min(out.pos, size - out.size));
     }
     return out;
@@ -48,8 +48,8 @@ static int GetScroll(int size, int end, int page, int pos) {
     int out = 0;
     if (end > page) {
         ScrollButtonData button = GetButton(size, end, page, 0);
-        out = (int)(0.5 +
-                    pos * (double)(end - page) / (double)(size - button.size));
+        out = static_cast<int>(0.5 +
+                    pos * static_cast<double>(end - page) / static_cast<double>(size - button.size));
         out = max(0, min(out, end - page));
     }
     return out;
@@ -95,7 +95,7 @@ void ApplyScrollOffset(int& offset, int page, int scroll, bool up) {
 // ================================================================================================
 // WgScrollbar
 
-WgScrollbar::~WgScrollbar() {}
+WgScrollbar::~WgScrollbar() = default;
 
 WgScrollbar::WgScrollbar(GuiContext* gui)
     : GuiWidget(gui), scrollbar_action_(0), scrollbar_grab_position_(0) {
@@ -212,7 +212,7 @@ bool WgScrollbarH::isVertical() const { return false; }
 
 static const int SCROLLBAR_SIZE = 14;
 
-WgScrollRegion::~WgScrollRegion() {}
+WgScrollRegion::~WgScrollRegion() = default;
 
 WgScrollRegion::WgScrollRegion(GuiContext* gui)
     : GuiWidget(gui),

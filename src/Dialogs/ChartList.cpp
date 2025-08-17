@@ -118,13 +118,13 @@ struct DialogChartList::ChartList : public WgScrollRegion {
     Vector<ChartButton*> myButtons;
     TileRect2 myButtonTex;
 
-    ~ChartList() {
+    ~ChartList() override {
         for (auto button : myButtons) {
             delete button;
         }
     }
 
-    ChartList(GuiContext* gui) : WgScrollRegion(gui) {
+    explicit ChartList(GuiContext* gui) : WgScrollRegion(gui) {
         setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
 
         Canvas c(32, 16);

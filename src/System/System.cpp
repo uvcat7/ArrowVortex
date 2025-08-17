@@ -126,7 +126,7 @@ static std::string ShowFileDialog(std::string title, std::string path,
     // Prepare the open/save file dialog.
     OPENFILENAMEW ofns = {sizeof(OPENFILENAMEW)};
     ofns.lpstrFilter = wfilter.str();
-    ofns.hwndOwner = (HWND)gSystem->getHWND();
+    ofns.hwndOwner = static_cast<HWND>(gSystem->getHWND());
     ofns.lpstrFile = outPath;
     ofns.nMaxFile = MAX_PATH;
     ofns.lpstrTitle = wtitle.str();
@@ -152,9 +152,9 @@ static bool LogCheckpoint(bool result, const char* description) {
         char lpMsgBuf[100];
         DWORD code = GetLastError();
         FormatMessageA(
-            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
             code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), lpMsgBuf, 60,
-            NULL);
+            nullptr);
         Debug::blockBegin(Debug::ERROR, description);
         Debug::log("windows error code %i: %s", code, lpMsgBuf);
         Debug::blockEnd();
@@ -169,34 +169,34 @@ static bool LogCheckpoint(bool result, const char* description) {
 
 typedef System::MenuItem MItem;
 
-MItem* MItem::create() { return (MenuItem*)CreatePopupMenu(); }
+MItem* MItem::create() { return reinterpret_cast<MenuItem*>(CreatePopupMenu()); }
 
 void MItem::addSeperator() {
-    AppendMenuW((HMENU)this, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
 }
 void MItem::addItem(int item, const std::string& text) {
-    AppendMenuW((HMENU)this, MF_STRING, item, Widen(text).str());
+    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item, Widen(text).str());
 }
 
 void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed) {
     int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    AppendMenuW((HMENU)this, MF_STRING | MF_POPUP, (UINT_PTR)submenu,
+    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP, (UINT_PTR)submenu,
                 Widen(text).str());
 }
 
 void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
                            bool grayed) {
     int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    DeleteMenu((HMENU)this, pos, MF_BYPOSITION);
-    InsertMenuW((HMENU)this, pos, flags, (UINT_PTR)submenu, Widen(text).str());
+    DeleteMenu(reinterpret_cast<HMENU>(this), pos, MF_BYPOSITION);
+    InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags, (UINT_PTR)submenu, Widen(text).str());
 }
 
 void MItem::setChecked(int item, bool state) {
-    CheckMenuItem((HMENU)this, item, state ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(reinterpret_cast<HMENU>(this), item, state ? MF_CHECKED : MF_UNCHECKED);
 }
 
 void MItem::setEnabled(int item, bool state) {
-    EnableMenuItem((HMENU)this, item, state ? MF_ENABLED : MF_GRAYED);
+    EnableMenuItem(reinterpret_cast<HMENU>(this), item, state ? MF_ENABLED : MF_GRAYED);
 }
 
 namespace {
@@ -205,10 +205,10 @@ namespace {
 // SystemImpl :: member data.
 
 struct SystemImpl : public System {
-    LPCWSTR myClassName;
+    LPCWSTR myClassName = L"ArrowVortex";
     HINSTANCE myInstance;
     std::chrono::steady_clock::time_point myApplicationStartTime;
-    Cursor::Icon myCursor;
+    Cursor::Icon myCursor = Cursor::ARROW;
     Key::Code myKeyMap[256];
     InputEvents myEvents;
     vec2i myMousePos, mySize;
@@ -220,10 +220,10 @@ struct SystemImpl : public System {
     HWND myHWND;
     HDC myHDC;
     HGLRC myHRC;
-    bool myIsActive;
-    bool myInitSuccesful;
-    bool myIsTerminated;
-    bool myIsInsideMessageLoop;
+    bool myIsActive = false;
+    bool myInitSuccesful = false;
+    bool myIsTerminated = false;
+    bool myIsInsideMessageLoop = false;
 
     // ================================================================================================
     // SystemImpl :: constructor and destructor.
@@ -241,15 +241,11 @@ struct SystemImpl : public System {
 
     SystemImpl()
         : myInstance(GetModuleHandle(nullptr)),
-          myClassName(L"ArrowVortex"),
-          myCursor(Cursor::ARROW),
+          
           myMousePos({0, 0}),
           mySize({0, 0}),
-          myTitle("ArrowVortex"),
-          myIsActive(false),
-          myInitSuccesful(false),
-          myIsTerminated(false),
-          myIsInsideMessageLoop(false) {
+          myTitle("ArrowVortex")
+          {
         myApplicationStartTime = Debug::getElapsedTime();
 
         // Register the window class.
@@ -269,15 +265,15 @@ struct SystemImpl : public System {
         memset(myKeyMap, 0, sizeof(myKeyMap));
         int k = sizeof(VKtoKCmap) / sizeof(VKtoKCmap[0]);
         for (int i = 0; i < k; i += 2)
-            myKeyMap[VKtoKCmap[i]] = (Key::Code)VKtoKCmap[i + 1];
+            myKeyMap[VKtoKCmap[i]] = static_cast<Key::Code>(VKtoKCmap[i + 1]);
         for (int i = 0; i < 26; ++i)
-            myKeyMap['A' + i] = (Key::Code)(Key::A + i);
+            myKeyMap['A' + i] = static_cast<Key::Code>(Key::A + i);
         for (int i = 0; i < 10; ++i)
-            myKeyMap['0' + i] = (Key::Code)(Key::DIGIT_0 + i);
+            myKeyMap['0' + i] = static_cast<Key::Code>(Key::DIGIT_0 + i);
         for (int i = 0; i < 15; ++i)
-            myKeyMap[VK_F1 + i] = (Key::Code)(Key::F1 + i);
+            myKeyMap[VK_F1 + i] = static_cast<Key::Code>(Key::F1 + i);
         for (int i = 0; i < 9; ++i)
-            myKeyMap[VK_NUMPAD0 + i] = (Key::Code)(Key::NUMPAD_0 + i);
+            myKeyMap[VK_NUMPAD0 + i] = static_cast<Key::Code>(Key::NUMPAD_0 + i);
 
         // Create a window handle.
         myStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
@@ -286,11 +282,11 @@ struct SystemImpl : public System {
                                  myStyle, CW_USEDEFAULT, CW_USEDEFAULT, 640,
                                  480, nullptr, nullptr, myInstance, this);
 
-        if (LogCheckpoint(myHWND != 0, "creating window")) return;
+        if (LogCheckpoint(myHWND != nullptr, "creating window")) return;
 
         // Create a device context.
         myHDC = GetDC(myHWND);
-        if (LogCheckpoint(myHDC != 0, "creating device context")) return;
+        if (LogCheckpoint(myHDC != nullptr, "creating device context")) return;
 
         // Create the pixel format descriptor.
         PIXELFORMATDESCRIPTOR pfd;
@@ -317,7 +313,7 @@ struct SystemImpl : public System {
 
         // Create the OpenGL rendering context.
         myHRC = wglCreateContext(myHDC);
-        if (LogCheckpoint(myHRC != 0, "creating OpenGL context")) return;
+        if (LogCheckpoint(myHRC != nullptr, "creating OpenGL context")) return;
 
         BOOL mc = wglMakeCurrent(myHDC, myHRC);
         if (LogCheckpoint(mc != 0, "activating OpenGL context")) return;
@@ -336,7 +332,7 @@ struct SystemImpl : public System {
         // Enable vsync for now, we will disable it later if the settings
         // require it.
         wglSwapInterval =
-            (PFNWGLSWAPINTERVALFARPROC)wglGetProcAddress("wglSwapIntervalEXT");
+            reinterpret_cast<PFNWGLSWAPINTERVALFARPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
         Debug::log("swap interval support :: %s\n",
                    wglSwapInterval ? "OK" : "MISSING");
         if (wglSwapInterval) {
@@ -383,7 +379,7 @@ struct SystemImpl : public System {
 
     void createMenu() {
         HMENU menu = CreateMenu();
-        gMenubar->init((MenuItem*)menu);
+        gMenubar->init(reinterpret_cast<MenuItem*>(menu));
         SetMenu(myHWND, menu);
     }
 
@@ -466,7 +462,7 @@ struct SystemImpl : public System {
 
             // End of frame
             auto curTime = Debug::getElapsedTime();
-            deltaTime = duration<double>((float)min(
+            deltaTime = duration<double>(static_cast<float>min(
                 max(0, duration<double>(curTime - prevTime).count()), 0.25));
             prevTime = curTime;
 
@@ -480,8 +476,8 @@ struct SystemImpl : public System {
             inputList.push_front(
                 duration<double>(inputTime - startTime).count());
 
-            if (abs(deltaTime.count() - 1.0 / (double)frameGuess) /
-                    (1.0 / (double)frameGuess) >
+            if (abs(deltaTime.count() - 1.0 / static_cast<double>(frameGuess)) /
+                    (1.0 / static_cast<double>(frameGuess)) >
                 0.01) {
                 lowcounts++;
             }
@@ -533,14 +529,14 @@ struct SystemImpl : public System {
     // ================================================================================================
     // SystemImpl :: clipboard functions.
 
-    bool setClipboardText(const std::string& text) {
+    bool setClipboardText(const std::string& text) override {
         bool result = false;
         if (OpenClipboard(nullptr)) {
             EmptyClipboard();
             WideString wtext = Widen(text);
             size_t size = sizeof(wchar_t) * (wtext.length() + 1);
             HGLOBAL bufferHandle = GlobalAlloc(GMEM_DDESHARE, size);
-            char* buffer = (char*)GlobalLock(bufferHandle);
+            char* buffer = static_cast<char*>(GlobalLock(bufferHandle));
             if (buffer) {
                 memcpy(buffer, wtext.str(), size);
                 GlobalUnlock(bufferHandle);
@@ -555,11 +551,11 @@ struct SystemImpl : public System {
         return result;
     }
 
-    std::string getClipboardText() const {
+    std::string getClipboardText() const override {
         std::string str;
         if (OpenClipboard(nullptr)) {
             HANDLE hData = GetClipboardData(CF_UNICODETEXT);
-            wchar_t* src = (wchar_t*)GlobalLock(hData);
+            wchar_t* src = static_cast<wchar_t*>(GlobalLock(hData));
             if (src) {
                 str = Narrow(src, wcslen(src));
                 GlobalUnlock(hData);
@@ -584,7 +580,7 @@ struct SystemImpl : public System {
         return cursorMap[min(max(0, myCursor), Cursor::NUM_CURSORS - 1)];
     }
 
-    int getKeyFlags() const {
+    int getKeyFlags() const override {
         int kc[6] = {Key::SHIFT_L, Key::SHIFT_R, Key::CTRL_L,
                      Key::CTRL_R,  Key::ALT_L,   Key::ALT_R};
         int kf[6] = {Keyflag::SHIFT, Keyflag::SHIFT, Keyflag::CTRL,
@@ -833,10 +829,10 @@ struct SystemImpl : public System {
     // SystemImpl :: dialog boxes.
 
     Result showMessageDlg(const std::string& title, const std::string& text,
-                          Buttons b, Icon i) {
+                          Buttons b, Icon i) override {
         WideString wtitle = Widen(title), wtext = Widen(text);
         int flags = sDlgType[b] | sDlgIcon[i], result = R_OK;
-        switch (MessageBoxW((HWND)gSystem->getHWND(), wtext.str(), wtitle.str(),
+        switch (MessageBoxW(static_cast<HWND>(gSystem->getHWND()), wtext.str(), wtitle.str(),
                             flags)) {
             case IDOK:
                 return R_OK;
@@ -850,25 +846,25 @@ struct SystemImpl : public System {
 
     std::string openFileDlg(const std::string& title,
                             const std::string& filename,
-                            const std::string& filters) {
+                            const std::string& filters) override {
         return ShowFileDialog(title, filename, filters, nullptr, false);
     }
 
     std::string saveFileDlg(const std::string& title,
                             const std::string& filename,
-                            const std::string& filters, int* index) {
+                            const std::string& filters, int* index) override {
         return ShowFileDialog(title, filename, filters, index, true);
     }
 
     // ================================================================================================
     // SystemImpl :: misc/get/set functions.
 
-    bool runSystemCommand(const std::string& cmd) {
+    bool runSystemCommand(const std::string& cmd) override {
         return runSystemCommand(cmd, nullptr, nullptr);
     }
 
     bool runSystemCommand(const std::string& cmd, CommandPipe* pipe,
-                          void* buffer) {
+                          void* buffer) override {
         bool result = false;
 
         // Copy the command to a Vector because CreateProcessW requires a
@@ -890,7 +886,7 @@ struct SystemImpl : public System {
             SECURITY_ATTRIBUTES attr;
             attr.nLength = sizeof(SECURITY_ATTRIBUTES);
             attr.bInheritHandle = TRUE;
-            attr.lpSecurityDescriptor = NULL;
+            attr.lpSecurityDescriptor = nullptr;
 
             // Create a pipe to send data to stdin of the child process.
             CreatePipe(&readPipe, &writePipe, &attr, 0);
@@ -904,14 +900,14 @@ struct SystemImpl : public System {
         int flags = CREATE_NO_WINDOW;
         PROCESS_INFORMATION processInfo;
         ZeroMemory(&processInfo, sizeof(processInfo));
-        if (CreateProcessW(NULL, wbuffer.data(), NULL, NULL, TRUE, flags, NULL,
-                           NULL, &startupInfo, &processInfo)) {
+        if (CreateProcessW(nullptr, wbuffer.data(), nullptr, nullptr, TRUE, flags, nullptr,
+                           nullptr, &startupInfo, &processInfo)) {
             if (pipe) {
                 DWORD bytesWritten;
                 int bytesRead = pipe->read();
                 while (bytesRead > 0) {
                     WriteFile(writePipe, buffer, bytesRead, &bytesWritten,
-                              NULL);
+                              nullptr);
                     bytesRead = pipe->read();
                 }
                 CloseHandle(writePipe);
@@ -925,59 +921,59 @@ struct SystemImpl : public System {
         return result;
     }
 
-    void openWebpage(const std::string& link) {
-        ShellExecuteW(0, 0, Widen(link).str(), 0, 0, SW_SHOW);
+    void openWebpage(const std::string& link) override {
+        ShellExecuteW(nullptr, nullptr, Widen(link).str(), nullptr, nullptr, SW_SHOW);
     }
 
-    void setWorkingDir(const std::string& path) {
+    void setWorkingDir(const std::string& path) override {
         SetCurrentDirectoryW(Widen(path).str());
     }
 
-    void setCursor(Cursor::Icon c) { myCursor = c; }
+    void setCursor(Cursor::Icon c) override { myCursor = c; }
 
-    void disableVsync() {
+    void disableVsync() override {
         if (wglSwapInterval) {
             Debug::log("[NOTE] turning off v-sync\n");
             wglSwapInterval(0);
         }
     }
 
-    double getElapsedTime() const {
+    double getElapsedTime() const override {
         return Debug::getElapsedTime(myApplicationStartTime);
     }
 
-    void* getHWND() const { return myHWND; }
+    void* getHWND() const override { return myHWND; }
 
-    std::string getExeDir() const { return Narrow(sExeDir); }
+    std::string getExeDir() const override { return Narrow(sExeDir); }
 
-    std::string getRunDir() const { return Narrow(sRunDir); }
+    std::string getRunDir() const override { return Narrow(sRunDir); }
 
-    Cursor::Icon getCursor() const { return myCursor; }
+    Cursor::Icon getCursor() const override { return myCursor; }
 
-    bool isKeyDown(Key::Code key) const { return myKeyState.test(key); }
+    bool isKeyDown(Key::Code key) const override { return myKeyState.test(key); }
 
-    bool isMouseDown(Mouse::Code button) const {
+    bool isMouseDown(Mouse::Code button) const override {
         return myMouseState.test(button);
     }
 
-    vec2i getMousePos() const { return myMousePos; }
+    vec2i getMousePos() const override { return myMousePos; }
 
-    void setWindowTitle(const std::string& text) {
+    void setWindowTitle(const std::string& text) override {
         if (!(myTitle == text)) {
             SetWindowTextW(myHWND, Widen(text).str());
             myTitle = text;
         }
     }
 
-    vec2i getWindowSize() const { return mySize; }
+    vec2i getWindowSize() const override { return mySize; }
 
-    const std::string& getWindowTitle() const { return myTitle; }
+    const std::string& getWindowTitle() const override { return myTitle; }
 
-    InputEvents& getEvents() { return myEvents; }
+    InputEvents& getEvents() override { return myEvents; }
 
-    bool isActive() const { return myIsActive; }
+    bool isActive() const override { return myIsActive; }
 
-    void terminate() { myIsTerminated = true; }
+    void terminate() override { myIsTerminated = true; }
 
 };  // SystemImpl.
 };  // anonymous namespace.
@@ -988,7 +984,7 @@ System* gSystem = nullptr;
 using namespace Vortex;
 
 std::string System::getLocalTime() {
-    time_t t = time(0);
+    time_t t = time(nullptr);
     tm* now = localtime(&t);
     std::string time = asctime(localtime(&t));
     if (time.back() == '\n') Str::pop_back(time);
@@ -1004,7 +1000,7 @@ std::string System::getBuildData() {
 static void ApplicationStart() {
     // Set the executable directory as the working dir.
     GetCurrentDirectoryW(MAX_PATH, sRunDir);
-    GetModuleFileNameW(NULL, sExeDir, MAX_PATH);
+    GetModuleFileNameW(nullptr, sExeDir, MAX_PATH);
     wchar_t* finalSlash = wcsrchr(sExeDir, L'\\');
     if (finalSlash) finalSlash[1] = 0;
     SetCurrentDirectoryW(sExeDir);
@@ -1018,7 +1014,7 @@ static void ApplicationStart() {
 
 static void ApplicationEnd() {
     // Log the application termination time.
-    time_t t = time(0);
+    time_t t = time(nullptr);
     tm* now = localtime(&t);
     Debug::logBlankLine();
     Debug::log("Closing ArrowVortex :: %s", System::getLocalTime().c_str());

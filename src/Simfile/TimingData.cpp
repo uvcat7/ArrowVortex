@@ -109,7 +109,7 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end,
 
         // Check if the warp ended before the current segments.
         if (spr > 0 && time > targetTime && warpRows == 0) {
-            int warpEndRow = (int)(row - round((time - targetTime) / spr));
+            int warpEndRow = static_cast<int>(row - round((time - targetTime) / spr));
             if (warpEndRow <= entry->row) {
                 entry->endTime = time;
                 entry->spr = spr;
@@ -155,7 +155,7 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end,
     // If we reach this point, none of the segments caused the warp to end.
     spr = fabs(spr);
     int row = prevRow + warpRows;
-    if (time < targetTime) row += (int)round((targetTime - time) / spr);
+    if (time < targetTime) row += static_cast<int>(round((targetTime - time) / spr));
     out.push_back({row, targetTime, targetTime, targetTime, spr});
     return {row, targetTime, it};
 }
@@ -242,7 +242,7 @@ static void CreateScrollRows(Vector<ScrollRow>& out, const Scroll* it,
     double rowScroll = 0, ratio = 1;
     if (it != end) {
         row = it->row;
-        rowScroll = (double)it->row;
+        rowScroll = static_cast<double>(it->row);
         ratio = it->ratio;
         out.push_back({row, rowScroll, ratio});
 
@@ -382,7 +382,7 @@ static double TimeToBeat(const Event* it, double time) {
 static int TimeToRow(const Event* it, double time) {
     int row = it->row;
     if (time > it->endTime && it->spr > 0.0) {
-        row += (int)((time - it->endTime) / it->spr);
+        row += static_cast<int>((time - it->endTime) / it->spr);
     }
     return row;
 }
@@ -404,7 +404,7 @@ static double BeatToTime(const Event* it, double beat) {
 
 static double BeatToMeasure(const TimeSig* sig, double beat) {
     double row = beat * ROWS_PER_BEAT;
-    return sig->measure + (row - sig->row) / (double)sig->rowsPerMeasure;
+    return sig->measure + (row - sig->row) / static_cast<double>(sig->rowsPerMeasure);
 }
 
 static double RowToScroll(const ScrollRow* scroll, int row) {
@@ -424,9 +424,9 @@ static double PositionToSpeed(const ScrollSpeed* speed, double beat,
 
     double strength;
     if (speed->unit == 1) {
-        strength = (time - ((double)speed->rowTime)) / speed->delay;
+        strength = (time - (speed->rowTime)) / speed->delay;
     } else {
-        strength = (beat - ((double)speed->row / ROWS_PER_BEAT)) / speed->delay;
+        strength = (beat - (static_cast<double>(speed->row) / ROWS_PER_BEAT)) / speed->delay;
     }
 
     return lerp(speed->start, speed->end, clamp(strength, 0.0, 1.0));
@@ -494,12 +494,12 @@ double TimingData::rowToTime(int row) const {
 }
 
 double TimingData::beatToTime(double beat) const {
-    int row = (int)ceil(beat * ROWS_PER_BEAT);
+    int row = static_cast<int>(ceil(beat * ROWS_PER_BEAT));
     return BeatToTime(MostRecentEvent(events, row), beat);
 }
 
 double TimingData::beatToMeasure(double beat) const {
-    int row = (int)ceil(beat * ROWS_PER_BEAT);
+    int row = static_cast<int>(ceil(beat * ROWS_PER_BEAT));
     return BeatToMeasure(MostRecentTimeSig(sigs, row), beat);
 }
 
@@ -508,12 +508,12 @@ double TimingData::rowToScroll(int row) const {
 }
 
 double TimingData::beatToScroll(double beat) const {
-    int row = (int)floor(beat * ROWS_PER_BEAT);  // floor matches games better?
+    int row = static_cast<int>(floor(beat * ROWS_PER_BEAT));  // floor matches games better?
     return BeatToScroll(MostRecentScrollRow(scrolls, row), beat);
 }
 
 double TimingData::positionToSpeed(double beat, double time) const {
-    int row = (int)ceil(beat * ROWS_PER_BEAT);
+    int row = static_cast<int>(ceil(beat * ROWS_PER_BEAT));
     return PositionToSpeed(MostRecentScrollSpeed(speeds, row), beat, time);
 }
 

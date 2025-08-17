@@ -87,7 +87,7 @@ static void WriteToLogAndConsole(const char* msg) {
     if (sHasConsole) {
         WideString wmsg = Widen(msg);
         WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wmsg.str(),
-                      wmsg.length(), nullptr, 0);
+                      wmsg.length(), nullptr, nullptr);
     }
 }
 
@@ -187,7 +187,7 @@ static LRESULT CALLBACK CBTProc(INT nCode, WPARAM wParam, LPARAM lParam) {
 
 static int ShowMessageBox(HWND hWnd, LPCSTR lpcText, LPCSTR lpcCaption,
                           UINT uType) {
-    sHook = SetWindowsHookEx(WH_CBT, &CBTProc, 0, GetCurrentThreadId());
+    sHook = SetWindowsHookEx(WH_CBT, &CBTProc, nullptr, GetCurrentThreadId());
     return MessageBox(hWnd, lpcText, lpcCaption, uType);
 }
 
@@ -222,12 +222,12 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
         Debug::WriteToLogAndConsole(sDashLine);
 
         int answer =
-            ShowMessageBox(0, buffer, "ASSERT", MB_ICONERROR | MB_YESNOCANCEL);
+            ShowMessageBox(nullptr, buffer, "ASSERT", MB_ICONERROR | MB_YESNOCANCEL);
         if (answer == IDYES) {
             return true;
         } else if (answer == IDCANCEL) {
             if (!AddIgnore(id)) {
-                MessageBoxA(0, "Maximum number of ignorable asserts reached.",
+                MessageBoxA(nullptr, "Maximum number of ignorable asserts reached.",
                             "ERROR", MB_ICONERROR | MB_OK);
             }
         }

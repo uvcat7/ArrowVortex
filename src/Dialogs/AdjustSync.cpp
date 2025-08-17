@@ -92,7 +92,7 @@ void DialogAdjustSync::myCreateWidgets() {
         WgButton* button = myLayout.add<WgButton>();
         button->text.set(moveText[i]);
         button->onPress.bind(this, &DialogAdjustSync::onAction,
-                             (int)ACT_INC_OFS_ONE + i);
+                             static_cast<int>(ACT_INC_OFS_ONE) + i);
         button->setTooltip(moveTooltip[i]);
     }
 
@@ -189,7 +189,7 @@ void DialogAdjustSync::onAction(int id) {
             int rows = ROWS_PER_BEAT;
             if (id == ACT_DEC_OFS_HALF || id == ACT_INC_OFS_HALF) rows /= 2;
             if (id == ACT_DEC_OFS_HALF || id == ACT_DEC_OFS_ONE) rows *= -1;
-            double seconds = (double)rows * SecPerRow(gTempo->getBpm(0));
+            double seconds = static_cast<double>(rows) * SecPerRow(gTempo->getBpm(0));
             gTempo->setOffset(gTempo->getOffset() + seconds);
         } break;
     };

@@ -48,8 +48,8 @@ static int RoundUp(int value, int multiple) {
 }
 
 struct TweakInfoBox : public InfoBox {
-    void draw(recti r);
-    int height() { return 100; }
+    void draw(recti r) override;
+    int height() override { return 100; }
 };
 
 struct DrawPosHelper {
@@ -71,16 +71,16 @@ struct DrawPosHelper {
         return getFunc(this, row, time);
     }
     static int RowBasedAdvance(DrawPosHelper* dp, int row) {
-        return (int)(dp->baseY + dp->deltaY * (double)row);
+        return static_cast<int>(dp->baseY + dp->deltaY * static_cast<double>(row));
     }
     static int RowBasedGet(const DrawPosHelper* dp, int row, double time) {
-        return (int)(dp->baseY + dp->deltaY * row);
+        return static_cast<int>(dp->baseY + dp->deltaY * row);
     }
     static int TimeBasedAdvance(DrawPosHelper* dp, int row) {
-        return (int)(dp->baseY + dp->deltaY * dp->tracker.advance(row));
+        return static_cast<int>(dp->baseY + dp->deltaY * dp->tracker.advance(row));
     }
     static int TimeBasedGet(const DrawPosHelper* dp, int row, double time) {
-        return (int)(dp->baseY + dp->deltaY * time);
+        return static_cast<int>(dp->baseY + dp->deltaY * time);
     }
 
     typedef int (*AdvanceFunc)(DrawPosHelper*, int);
@@ -123,7 +123,7 @@ struct NotefieldImpl : public Notefield {
     // ================================================================================================
     // NotefieldImpl :: constructor and destructor.
 
-    ~NotefieldImpl() {}
+    ~NotefieldImpl() = default;
 
     NotefieldImpl() {
         mySongBgColor = RGBAtoColor32(255, 255, 255, 255);
@@ -145,7 +145,7 @@ struct NotefieldImpl : public Notefield {
     // ================================================================================================
     // NotefieldImpl :: member functions.
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         if (changes & VCM_BACKGROUND_PATH_CHANGED) {
             mySongBg = Texture();
             std::string filename;
@@ -168,9 +168,9 @@ struct NotefieldImpl : public Notefield {
                         bsum += src[2];
                         src += 4;
                     }
-                    int r = (int)(0.5f * (float)rsum / (float)numPixels);
-                    int g = (int)(0.5f * (float)gsum / (float)numPixels);
-                    int b = (int)(0.5f * (float)bsum / (float)numPixels);
+                    int r = static_cast<int>(0.5f * static_cast<float>(rsum) / static_cast<float>(numPixels));
+                    int g = static_cast<int>(0.5f * static_cast<float>(gsum) / static_cast<float>(numPixels));
+                    int b = static_cast<int>(0.5f * static_cast<float>(bsum) / static_cast<float>(numPixels));
                     mySongBgColor = RGBAtoColor32(r, g, b, 255);
                     mySongBg = Texture(img.width, img.height, img.pixels, false,
                                        Texture::RGBA);
@@ -183,7 +183,7 @@ struct NotefieldImpl : public Notefield {
         }
     }
 
-    void setBgAlpha(int percent) {
+    void setBgAlpha(int percent) override {
         percent = min(max(percent, 0), 100);
         if (myBgBrightness != percent) {
             myBgBrightness = percent;
@@ -191,12 +191,12 @@ struct NotefieldImpl : public Notefield {
         }
     }
 
-    int getBgAlpha() { return myBgBrightness; }
+    int getBgAlpha() override { return myBgBrightness; }
 
     // ================================================================================================
     // NotefieldImpl :: drawing routines.
 
-    void draw() {
+    void draw() override {
         int cx = CenterX(gView->getRect());
         int scale = gView->getNoteScale();
         bool drawWaveform = myShowWaveform && gView->isTimeBased();
@@ -265,13 +265,13 @@ struct NotefieldImpl : public Notefield {
         recti view = gView->getRect();
 
         // Background image.
-        auto style = (BackgroundStyle)gEditor->getBackgroundStyle();
+        auto style = static_cast<BackgroundStyle>(gEditor->getBackgroundStyle());
         if (mySongBg.handle() && myBgBrightness != 0) {
             recti r = view;
             vec2i size = mySongBg.size();
             if (style == BG_STYLE_LETTERBOX || style == BG_STYLE_CROP) {
-                double bgRatio = (double)size.x / (double)size.y;
-                double viewRatio = (double)r.w / (double)r.h;
+                double bgRatio = static_cast<double>(size.x) / static_cast<double>(size.y);
+                double viewRatio = static_cast<double>(r.w) / static_cast<double>(r.h);
 
                 if ((bgRatio > viewRatio) == (style == BG_STYLE_LETTERBOX)) {
                     r.h = size.y * r.w / size.x;
@@ -408,19 +408,18 @@ struct NotefieldImpl : public Notefield {
         auto& events = gTempo->getTimingData().events;
         auto batch = Renderer::batchC();
         if (gView->isTimeBased()) {
-            for (auto it = events.begin(), end = events.end(); it != end;
-                 ++it) {
-                if (it->rowTime > it->time) {
-                    int t = (int)(oy + dy * it->time);
-                    int b = (int)(oy + dy * it->rowTime);
+            for (const auto & event : events) {
+                if (event.rowTime > event.time) {
+                    int t = static_cast<int>(oy + dy * event.time);
+                    int b = static_cast<int>(oy + dy * event.rowTime);
                     if (validSegmentRegion(t, b, viewTop, viewBtm)) {
                         uint32_t col = RGBAtoColor32(26, 128, 128, 128);
                         Draw::fill(&batch, {myX, t, myW, b - t}, col);
                     }
                 }
-                if (it->endTime > it->rowTime) {
-                    int t = (int)(oy + dy * it->rowTime);
-                    int b = (int)(oy + dy * it->endTime);
+                if (event.endTime > event.rowTime) {
+                    int t = static_cast<int>(oy + dy * event.rowTime);
+                    int b = static_cast<int>(oy + dy * event.endTime);
                     if (validSegmentRegion(t, b, viewTop, viewBtm)) {
                         uint32_t col = RGBAtoColor32(128, 128, 51, 128);
                         Draw::fill(&batch, {myX, t, myW, b - t}, col);
@@ -431,8 +430,8 @@ struct NotefieldImpl : public Notefield {
             for (auto it = events.begin(), last = events.end() - 1; it < last;
                  ++it) {
                 if (it->spr == 0.0) {
-                    int t = (int)(oy + dy * it->row);
-                    int b = (int)(oy + dy * (it + 1)->row);
+                    int t = static_cast<int>(oy + dy * it->row);
+                    int b = static_cast<int>(oy + dy * (it + 1)->row);
                     if (validSegmentRegion(t, b, viewTop, viewBtm)) {
                         uint32_t col = RGBAtoColor32(128, 26, 51, 128);
                         Draw::fill(&batch, {myX, t, myW, b - t}, col);
@@ -457,15 +456,15 @@ struct NotefieldImpl : public Notefield {
 
             // Calculate the beat pulse value for the receptors.
             double beat = gTempo->timeToBeat(gView->getCursorTime());
-            float beatfrac = (float)(beat - floor(beat));
+            float beatfrac = static_cast<float>(beat - floor(beat));
             uint8_t beatpulse =
-                (uint8_t)min(max((int)((2 - beatfrac * 4) * 255), 0), 255);
+                static_cast<uint8_t>(min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
 
             // Draw the receptors.
             auto batch = Renderer::batchTC();
             for (int c = 0; c < cols; ++c) {
                 noteskin->recepOff[c].draw(&batch, myColX[c], myY,
-                                           (uint8_t)255);
+                                           static_cast<uint8_t>(255));
                 noteskin->recepOn[c].draw(&batch, myColX[c], myY, beatpulse);
             }
             batch.flush();
@@ -497,7 +496,7 @@ struct NotefieldImpl : public Notefield {
             if (!note) continue;
 
             double lum = 1.5 - (time - note->endtime) * 6.0;
-            uint8_t alpha = (uint8_t)clamp((int)(lum * 255.0), 0, 255);
+            uint8_t alpha = static_cast<uint8_t>(clamp(static_cast<int>(lum * 255.0), 0, 255));
             if (alpha > 0) {
                 noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
             }
@@ -654,14 +653,14 @@ struct NotefieldImpl : public Notefield {
             if (note.isSelected) {
                 int y = drawPos.get(note.row, note.time);
                 if (y < -32 || y > maxY) continue;
-                select.draw(&batch, myColX[note.col], (int)y);
+                select.draw(&batch, myColX[note.col], y);
             }
         }
         batch.flush();
     }
 
-    void drawGhostNote(const Note& n) {
-        if (n.col < 0 || (int)n.col >= gStyle->getNumCols()) return;
+    void drawGhostNote(const Note& n) override {
+        if (n.col < 0 || static_cast<int>(n.col) >= gStyle->getNumCols()) return;
 
         auto noteskin = gNoteskin->get();
         int numCols = gStyle->getNumCols();
@@ -682,7 +681,7 @@ struct NotefieldImpl : public Notefield {
             auto& body = noteskin->holdBody[index];
             auto& tail = noteskin->holdTail[index];
 
-            int byi = (int)gView->rowToY(n.endrow);
+            int byi = gView->rowToY(n.endrow);
             int bodyY = noteskin->holdY[index] * signedScale / 256;
             int tailH = tail.height * signedScale / 512;
 
@@ -717,32 +716,32 @@ struct NotefieldImpl : public Notefield {
     // ================================================================================================
     // NotefieldImpl :: toggle/check functions.
 
-    void NotefieldImpl::toggleShowWaveform() {
+    void NotefieldImpl::toggleShowWaveform() override {
         myShowWaveform = !myShowWaveform;
         gMenubar->update(Menubar::SHOW_WAVEFORM);
     }
 
-    void NotefieldImpl::toggleShowBeatLines() {
+    void NotefieldImpl::toggleShowBeatLines() override {
         myShowBeatLines = !myShowBeatLines;
         gMenubar->update(Menubar::SHOW_BEATLINES);
     }
 
-    void NotefieldImpl::toggleShowNotes() {
+    void NotefieldImpl::toggleShowNotes() override {
         myShowNotes = !myShowNotes;
         gMenubar->update(Menubar::SHOW_NOTES);
     }
 
-    void NotefieldImpl::toggleShowSongPreview() {
+    void NotefieldImpl::toggleShowSongPreview() override {
         myShowSongPreview = !myShowSongPreview;
     }
 
-    bool hasShowWaveform() { return myShowWaveform; }
+    bool hasShowWaveform() override { return myShowWaveform; }
 
-    bool hasShowBeatLines() { return myShowBeatLines; }
+    bool hasShowBeatLines() override { return myShowBeatLines; }
 
-    bool hasShowNotes() { return myShowNotes; }
+    bool hasShowNotes() override { return myShowNotes; }
 
-    bool hasShowSongPreview() { return myShowSongPreview; }
+    bool hasShowSongPreview() override { return myShowSongPreview; }
 
 };  // NotefieldImpl
 

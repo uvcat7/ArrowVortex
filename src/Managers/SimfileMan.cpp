@@ -37,12 +37,12 @@ namespace Vortex {
 // SimfileManImpl :: member data.
 
 struct SimfileManImpl : public SimfileMan {
-    Chart* myChart;
-    Simfile* mySimfile;
+    Chart* myChart = nullptr;
+    Simfile* mySimfile = nullptr;
 
-    int myEndRow;
-    int myChartIndex;
-    bool myBackupOnSave;
+    int myEndRow = 0;
+    int myChartIndex = -1;
+    bool myBackupOnSave = false;
 
     History::EditId myApplyAddChartId;
     History::EditId myApplyRemoveChartId;
@@ -51,11 +51,8 @@ struct SimfileManImpl : public SimfileMan {
     // SimfileManImpl :: constructor and destructor.
 
     SimfileManImpl()
-        : myChart(nullptr),
-          mySimfile(nullptr),
-          myEndRow(0),
-          myChartIndex(-1),
-          myBackupOnSave(false) {
+        
+          {
         myApplyAddChartId =
             gHistory->addCallback(ApplyAddChart, ReleaseAddChart);
         myApplyRemoveChartId =
@@ -74,9 +71,8 @@ struct SimfileManImpl : public SimfileMan {
 
         // Row of the last segment.
         auto segments = mySimfile->tempo->segments;
-        for (auto list = segments->begin(), listEnd = segments->end();
-             list != listEnd; ++list) {
-            for (auto seg = list->begin(), end = list->end(); seg != end;
+        for (auto & segment : *segments) {
+            for (auto seg = segment.begin(), end = segment.end(); seg != end;
                  ++seg) {
                 endRow = max(endRow, seg->row);
             }
@@ -133,7 +129,7 @@ struct SimfileManImpl : public SimfileMan {
                                VCM_CHART_PROPERTIES_CHANGED);
     }
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         if (changes &
             (VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED | VCM_MUSIC_IS_LOADED)) {
             myUpdateEndRow();
@@ -143,7 +139,7 @@ struct SimfileManImpl : public SimfileMan {
     // ================================================================================================
     // SimfileManImpl :: open and close functions.
 
-    bool load(const std::string& path) {
+    bool load(const std::string& path) override {
         close();
 
         bool loadedFromAudio = false;
@@ -209,7 +205,7 @@ struct SimfileManImpl : public SimfileMan {
     }
 
     bool save(const std::string& dir, const std::string& name,
-              SimFormat format) {
+              SimFormat format) override {
         if (!mySimfile) return false;
 
         // Update the song directory and filename.
@@ -225,7 +221,7 @@ struct SimfileManImpl : public SimfileMan {
         return result;
     }
 
-    void close() {
+    void close() override {
         if (!mySimfile) return;
 
         delete mySimfile;
@@ -266,7 +262,7 @@ struct SimfileManImpl : public SimfileMan {
     }
 
     void addChart(const Style* style, std::string artist, Difficulty difficulty,
-                  int meter) {
+                  int meter) override {
         Chart* chart = new Chart;
 
         chart->style = style;
@@ -301,11 +297,11 @@ struct SimfileManImpl : public SimfileMan {
         return msg;
     }
 
-    void removeChart(const Chart* chart) {
+    void removeChart(const Chart* chart) override {
         if (!chart) return;
 
         if (mySimfile) {
-            int pos = mySimfile->charts.find((Chart*)chart);
+            int pos = mySimfile->charts.find(const_cast<Chart*>(chart));
             if (pos == mySimfile->charts.size()) {
                 HudError(
                     "Trying to remove a chart that is not in the chart list.");
@@ -454,7 +450,7 @@ struct SimfileManImpl : public SimfileMan {
         return "Removed chart: " + chart->description();
     }
 
-    void sortCharts() {
+    void sortCharts() override {
         std::stable_sort(mySimfile->charts.begin(), mySimfile->charts.end(),
                          [](const Chart* a, const Chart* b) {
                              if (a->style != b->style) {
@@ -470,7 +466,7 @@ struct SimfileManImpl : public SimfileMan {
     // ================================================================================================
     // SimfileManImpl :: open chart.
 
-    void openChart(int index) {
+    void openChart(int index) override {
         if (mySimfile && myChartIndex != index && index >= -1 &&
             index < mySimfile->charts.size()) {
             myChartIndex = index;
@@ -485,7 +481,7 @@ struct SimfileManImpl : public SimfileMan {
         }
     }
 
-    void openChart(const Chart* chart) {
+    void openChart(const Chart* chart) override {
         if (mySimfile) {
             for (int i = 0; i < mySimfile->charts.size(); ++i) {
                 if (mySimfile->charts[i] == chart) {
@@ -497,38 +493,38 @@ struct SimfileManImpl : public SimfileMan {
         HudWarning("Trying to open a chart that is not in the chart list.");
     }
 
-    void nextChart() { openChart(myChartIndex + 1); }
+    void nextChart() override { openChart(myChartIndex + 1); }
 
-    void previousChart() { openChart(myChartIndex - 1); }
+    void previousChart() override { openChart(myChartIndex - 1); }
 
     // ================================================================================================
     // SimfileManImpl :: get functions.
 
-    std::string getDir() const {
+    std::string getDir() const override {
         return mySimfile ? mySimfile->dir : std::string();
     }
 
-    std::string getFile() const {
+    std::string getFile() const override {
         return mySimfile ? mySimfile->file : std::string();
     }
 
-    int getNumCharts() const {
+    int getNumCharts() const override {
         return mySimfile ? mySimfile->charts.size() : 0;
     }
 
     int getActiveChart() const { return myChartIndex; }
 
-    const Chart* getChart(int index) const {
+    const Chart* getChart(int index) const override {
         return mySimfile->charts.begin()[index];
     }
 
-    int getEndRow() const { return myEndRow; }
+    int getEndRow() const override { return myEndRow; }
 
-    bool isOpen() const { return mySimfile != nullptr; }
+    bool isOpen() const override { return mySimfile != nullptr; }
 
-    bool isClosed() const { return mySimfile == nullptr; }
+    bool isClosed() const override { return mySimfile == nullptr; }
 
-    const Simfile* get() const { return mySimfile; }
+    const Simfile* get() const override { return mySimfile; }
 
 };  // SimfileManImpl
 

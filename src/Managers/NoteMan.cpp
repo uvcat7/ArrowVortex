@@ -33,9 +33,9 @@ struct NotesManImpl : public NotesMan {
 
     Vector<ExpandedNote> myNotes;
 
-    int myNumSteps, myNumJumps;
-    int myNumHolds, myNumRolls;
-    int myNumMines, myNumWarps;
+    int myNumSteps = 0, myNumJumps = 0;
+    int myNumHolds = 0, myNumRolls = 0;
+    int myNumMines = 0, myNumWarps = 0;
 
     Simfile* mySimfile;
     Chart* myChart;
@@ -48,15 +48,11 @@ struct NotesManImpl : public NotesMan {
     // ================================================================================================
     // NotesManImpl :: constructor and destructor.
 
-    ~NotesManImpl() {}
+    ~NotesManImpl() = default;
 
     NotesManImpl()
-        : myNumSteps(0),
-          myNumJumps(0),
-          myNumHolds(0),
-          myNumRolls(0),
-          myNumMines(0),
-          myNumWarps(0) {
+        
+          {
         myChart = nullptr;
 
         myApplyAddNoteId = gHistory->addCallback(ApplyAddNote);
@@ -176,7 +172,7 @@ struct NotesManImpl : public NotesMan {
         }
     }
 
-    void update(Simfile* simfile, Chart* chart) {
+    void update(Simfile* simfile, Chart* chart) override {
         mySimfile = simfile;
         myChart = chart;
 
@@ -190,7 +186,7 @@ struct NotesManImpl : public NotesMan {
         gEditor->reportChanges(VCM_NOTES_CHANGED);
     }
 
-    void updateTempo() {
+    void updateTempo() override {
         myUpdateNoteTimes();
         myUpdateWarpedNotes();
         myUpdateFakedNotes();
@@ -510,7 +506,7 @@ struct NotesManImpl : public NotesMan {
         return numSelected;
     }
 
-    void deselectAll() {
+    void deselectAll() override {
         for (auto& note : myNotes) {
             note.isSelected = 0;
         }
@@ -519,7 +515,7 @@ struct NotesManImpl : public NotesMan {
         }
     }
 
-    int selectAll() {
+    int selectAll() override {
         for (auto& note : myNotes) {
             note.isSelected = 1;
         }
@@ -529,7 +525,7 @@ struct NotesManImpl : public NotesMan {
         return myNotes.size();
     }
 
-    int selectQuant(int rowType) {
+    int selectQuant(int rowType) override {
         int numSelected = 0;
         for (auto& note : myNotes) {
             note.isSelected = (ToRowType(note.row) == rowType);
@@ -542,7 +538,7 @@ struct NotesManImpl : public NotesMan {
     }
 
     int selectRows(SelectModifier mod, int firstCol, int lastCol, int firstRow,
-                   int lastRow) {
+                   int lastRow) override {
         return performSelection(mod, [&](const ExpandedNote* note) {
             return (note->col >= firstCol && note->col < lastCol &&
                     note->row >= firstRow && note->row < lastRow);
@@ -550,7 +546,7 @@ struct NotesManImpl : public NotesMan {
     }
 
     int selectTime(SelectModifier mod, int firstCol, int lastCol,
-                   double firstTime, double lastTime) {
+                   double firstTime, double lastTime) override {
         gSelection->setType(Selection::NOTES);
         return performSelection(mod, [&](const ExpandedNote* note) {
             return (note->col >= firstCol && note->col < lastCol &&
@@ -558,7 +554,7 @@ struct NotesManImpl : public NotesMan {
         });
     }
 
-    int select(SelectModifier mod, const Vector<RowCol>& indices) {
+    int select(SelectModifier mod, const Vector<RowCol>& indices) override {
         auto it = indices.begin(), end = indices.end();
         return performSelection(mod, [&](const ExpandedNote* note) {
             while (it != end && LessThanRowCol(*it, *note)) ++it;
@@ -567,7 +563,7 @@ struct NotesManImpl : public NotesMan {
         });
     }
 
-    int select(SelectModifier mod, const Note* notes, int numNotes) {
+    int select(SelectModifier mod, const Note* notes, int numNotes) override {
         auto it = notes, end = notes + numNotes;
         return performSelection(mod, [&](const ExpandedNote* note) {
             while (it != end && LessThanRowCol(*it, *note)) ++it;
@@ -576,7 +572,7 @@ struct NotesManImpl : public NotesMan {
         });
     }
 
-    int select(SelectModifier mod, Filter filter) {
+    int select(SelectModifier mod, Filter filter) override {
         auto first = myNotes.begin();
         auto last = myNotes.end() - 1;
         switch (filter) {
@@ -623,7 +619,7 @@ struct NotesManImpl : public NotesMan {
         return 0;
     }
 
-    bool noneSelected() const {
+    bool noneSelected() const override {
         for (auto& note : myNotes) {
             if (note.isSelected) return false;
         }
@@ -634,7 +630,7 @@ struct NotesManImpl : public NotesMan {
     // NotesManImpl :: editing functions.
 
     void modify(const NoteEdit& edit, bool clearRegion,
-                const EditDescription* desc) {
+                const EditDescription* desc) override {
         NoteEditResult result;
         myChart->notes.prepareEdit(edit, result, clearRegion);
 
@@ -650,7 +646,7 @@ struct NotesManImpl : public NotesMan {
         }
     }
 
-    void removeSelectedNotes() {
+    void removeSelectedNotes() override {
         NoteEdit edit;
         Vector<RowCol> indices;
         forAllSelectedNotes([&](const ExpandedNote& note) {
@@ -659,14 +655,14 @@ struct NotesManImpl : public NotesMan {
         modify(edit, false, nullptr);
     }
 
-    void insertRows(int startRow, int numRows, bool curChartOnly) {
+    void insertRows(int startRow, int numRows, bool curChartOnly) override {
         myQueueInsertRows(startRow, numRows, curChartOnly);
     }
 
     // ================================================================================================
     // NotesManImpl :: clipboard functions.
 
-    void copyToClipboard(bool timeBased) {
+    void copyToClipboard(bool timeBased) override {
         // Get the note selection.
         NoteList notes;
         int numNotes = gSelection->getSelectedNotes(notes);
@@ -686,7 +682,7 @@ struct NotesManImpl : public NotesMan {
         }
     }
 
-    void pasteFromClipboard(bool insert) {
+    void pasteFromClipboard(bool insert) override {
         Vector<uint8_t> buffer = GetClipboardData(clipboardTag);
         ReadStream stream(buffer.data(), buffer.size());
 
@@ -722,23 +718,23 @@ struct NotesManImpl : public NotesMan {
     // ================================================================================================
     // NotesManImpl :: get functions
 
-    int getNumSteps() const { return myNumSteps; }
+    int getNumSteps() const override { return myNumSteps; }
 
-    int getNumJumps() const { return myNumJumps; }
+    int getNumJumps() const override { return myNumJumps; }
 
-    int getNumMines() const { return myNumMines; }
+    int getNumMines() const override { return myNumMines; }
 
-    int getNumHolds() const { return myNumHolds; }
+    int getNumHolds() const override { return myNumHolds; }
 
-    int getNumRolls() const { return myNumRolls; }
+    int getNumRolls() const override { return myNumRolls; }
 
-    int getNumWarps() const { return myNumWarps; }
+    int getNumWarps() const override { return myNumWarps; }
 
-    const ExpandedNote* begin() const { return myNotes.begin(); }
+    const ExpandedNote* begin() const override { return myNotes.begin(); }
 
-    const ExpandedNote* end() const { return myNotes.end(); }
+    const ExpandedNote* end() const override { return myNotes.end(); }
 
-    const ExpandedNote* getNoteAt(int row, int col) const {
+    const ExpandedNote* getNoteAt(int row, int col) const override {
         RowCol key = {row, col};
         auto it = std::lower_bound(myNotes.begin(), myNotes.end(), key,
                                    [](const ExpandedNote& a, const RowCol& b) {
@@ -748,7 +744,7 @@ struct NotesManImpl : public NotesMan {
                                                                      : nullptr;
     }
 
-    const ExpandedNote* getNoteIntersecting(int row, int col) const {
+    const ExpandedNote* getNoteIntersecting(int row, int col) const override {
         auto it = myNotes.begin(), end = myNotes.end();
         for (; it != end && it->endrow < row; ++it);
         for (; it != end && it->row <= row; ++it) {
@@ -757,7 +753,7 @@ struct NotesManImpl : public NotesMan {
         return nullptr;
     }
 
-    Vector<const ExpandedNote*> getNotesBeforeTime(double time) const {
+    Vector<const ExpandedNote*> getNotesBeforeTime(double time) const override {
         Vector<const ExpandedNote*> out(gStyle->getNumCols(), nullptr);
         auto cols = out.begin();
         for (auto& n : myNotes) {
@@ -768,7 +764,7 @@ struct NotesManImpl : public NotesMan {
         return out;
     }
 
-    bool empty() const { return myNotes.empty(); }
+    bool empty() const override { return myNotes.empty(); }
 
 };  // NotesManImpl
 

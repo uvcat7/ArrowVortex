@@ -37,7 +37,7 @@ struct HistoryImpl : public History {
     };
 
     struct EntryList {
-        EntryList() : head(nullptr) {}
+        EntryList()  = default;
         void add(Entry* entry) {
             if (head) {
                 auto it = head;
@@ -57,7 +57,7 @@ struct HistoryImpl : public History {
             }
             head = prev;
         }
-        Entry* head;
+        Entry* head = nullptr;
     };
 
     // ================================================================================================
@@ -83,13 +83,13 @@ struct HistoryImpl : public History {
                 hasTempo ? 'y' : 'n');
 #endif
 
-        uint8_t* mem = (uint8_t*)malloc(header.size() + size);
+        uint8_t* mem = static_cast<uint8_t*>(malloc(header.size() + size));
         memcpy(mem, header.data(), header.size());
         memcpy(mem + header.size(), data, size);
 
-        Entry* entry = (Entry*)mem;
+        Entry* entry = reinterpret_cast<Entry*>(mem);
         entry->next = nullptr;
-        return (Entry*)entry;
+        return entry;
     }
 
     static EntryData DecodeEntry(const Entry* in) {
@@ -147,14 +147,14 @@ struct HistoryImpl : public History {
 
     EntryList myEntries;
 
-    int mySavedEntries;
-    int myAppliedEntries;
-    int myTotalEntries;
+    int mySavedEntries = 0;
+    int myAppliedEntries = 0;
+    int myTotalEntries = 0;
 
     Simfile* mySimfile;
 
     EntryList myChain;
-    int myOpenChains;
+    int myOpenChains = 0;
 
     Vector<Callback> myCallbacks;
 
@@ -164,17 +164,15 @@ struct HistoryImpl : public History {
     ~HistoryImpl() { clearEverything(); }
 
     HistoryImpl()
-        : mySavedEntries(0),
-          myAppliedEntries(0),
-          myTotalEntries(0),
-          myOpenChains(0) {
+        
+          {
         myCallbacks.push_back({ApplyChain, ReleaseChain});
     }
 
     // ================================================================================================
     // HistoryImpl :: adding callbacks.
 
-    EditId addCallback(ApplyFunc apply, ReleaseFunc release) {
+    EditId addCallback(ApplyFunc apply, ReleaseFunc release) override {
         EditId out = myCallbacks.size();
         myCallbacks.push_back({apply, release});
         return out;
@@ -199,7 +197,7 @@ struct HistoryImpl : public History {
 
     void addEntry(EditId id, const void* data, uint32_t size,
                   Chart* targetChart, Tempo* targetTempo) {
-        if (id == 0 || id > (size_t)myCallbacks.size()) {
+        if (id == 0 || id > static_cast<size_t>(myCallbacks.size())) {
             HudError("History edit has invalid ID!");
             return;
         }
@@ -224,17 +222,17 @@ struct HistoryImpl : public History {
         }
     }
 
-    void addEntry(EditId id, const void* data, uint32_t size) {
+    void addEntry(EditId id, const void* data, uint32_t size) override {
         addEntry(id, data, size, nullptr, nullptr);
     }
 
     void addEntry(EditId id, const void* data, uint32_t size,
-                  Tempo* targetTempo) {
+                  Tempo* targetTempo) override {
         addEntry(id, data, size, nullptr, targetTempo);
     }
 
     void addEntry(EditId id, const void* data, uint32_t size,
-                  Chart* targetChart) {
+                  Chart* targetChart) override {
         addEntry(id, data, size, targetChart, nullptr);
     }
 
@@ -277,7 +275,7 @@ struct HistoryImpl : public History {
     // ================================================================================================
     // HistoryImpl :: history interactions.
 
-    void onKeyPress(KeyPress& evt) {
+    void onKeyPress(KeyPress& evt) override {
         if (evt.handled == false && (evt.keyflags & Keyflag::CTRL)) {
             if (evt.key == Key::Z) {
                 undoEntry();
@@ -287,17 +285,17 @@ struct HistoryImpl : public History {
         }
     }
 
-    void onFileOpen(Simfile* simfile) { mySimfile = simfile; }
+    void onFileOpen(Simfile* simfile) override { mySimfile = simfile; }
 
-    void onFileSaved() { mySavedEntries = myAppliedEntries; }
+    void onFileSaved() override { mySavedEntries = myAppliedEntries; }
 
-    void onFileClosed() {
+    void onFileClosed() override {
         clearEverything();
         mySavedEntries = 0;
         mySimfile = nullptr;
     }
 
-    bool hasUnsavedChanges() const {
+    bool hasUnsavedChanges() const override {
         return (mySavedEntries != myAppliedEntries);
     }
 
@@ -343,9 +341,9 @@ struct HistoryImpl : public History {
         return msg;
     }
 
-    void startChain() { ++myOpenChains; }
+    void startChain() override { ++myOpenChains; }
 
-    void finishChain(std::string msg) {
+    void finishChain(std::string msg) override {
         myOpenChains = max(0, myOpenChains - 1);
         if (myChain.head && myOpenChains == 0) {
             clearUnappliedEntries();

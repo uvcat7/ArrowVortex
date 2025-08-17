@@ -32,8 +32,8 @@ static void Ascii85enc(std::string& out, const uint8_t* in, int size) {
         if (blocks[i] == 0 && i != blocks.size() - 1) {
             Str::append(out, 'z');
         } else
-            for (int j = 0; j != 5; ++j) {
-                Str::append(out, 33 + (blocks[i] / a85div[j]) % 85);
+            for (unsigned int j : a85div) {
+                Str::append(out, 33 + (blocks[i] / j) % 85);
             }
     }
 
@@ -141,7 +141,7 @@ RowType ToRowType(int rowIndex) {
         int mod[8] = {48, 24, 16, 12, 8, 6, 4, 3};
         for (int i = 0; i < 192; ++i) {
             for (int j = 0; j < 8 && i % mod[j] != 0; ++j) {
-                map[i] = (RowType)(map[i] + 1);
+                map[i] = static_cast<RowType>(map[i] + 1);
             }
         }
     }

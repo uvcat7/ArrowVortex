@@ -27,7 +27,7 @@ struct MetadataManImpl : public MetadataMan {
     // ================================================================================================
     // MetadataManImpl :: constructor and destructor.
 
-    ~MetadataManImpl() {}
+    ~MetadataManImpl() = default;
 
     MetadataManImpl() {
         mySimfile = nullptr;
@@ -135,7 +135,7 @@ struct MetadataManImpl : public MetadataMan {
         }
     }
 
-    void setMusicPreview(double start, double length) {
+    void setMusicPreview(double start, double length) override {
         if (length <= 0.0) start = length = 0.0;
 
         if (mySimfile && (mySimfile->previewStart != start ||
@@ -144,51 +144,51 @@ struct MetadataManImpl : public MetadataMan {
         }
     }
 
-    void setTitle(const std::string& s) {
+    void setTitle(const std::string& s) override {
         mySetString(&mySimfile->title, s, "title");
     }
 
-    void setTitleTranslit(const std::string& s) {
+    void setTitleTranslit(const std::string& s) override {
         mySetString(&mySimfile->titleTr, s, "transliterated title");
     }
 
-    void setSubtitle(const std::string& s) {
+    void setSubtitle(const std::string& s) override {
         mySetString(&mySimfile->subtitle, s, "subtitle");
     }
 
-    void setSubtitleTranslit(const std::string& s) {
+    void setSubtitleTranslit(const std::string& s) override {
         mySetString(&mySimfile->subtitleTr, s, "transliterated subtitle");
     }
 
-    void setArtist(const std::string& s) {
+    void setArtist(const std::string& s) override {
         mySetString(&mySimfile->artist, s, "artist");
     }
 
-    void setArtistTranslit(const std::string& s) {
+    void setArtistTranslit(const std::string& s) override {
         mySetString(&mySimfile->artistTr, s, "transliterated artist");
     }
 
-    void setGenre(const std::string& s) {
+    void setGenre(const std::string& s) override {
         mySetString(&mySimfile->genre, s, "genre");
     }
 
-    void setCredit(const std::string& s) {
+    void setCredit(const std::string& s) override {
         mySetString(&mySimfile->credit, s, "credit");
     }
 
-    void setMusicPath(const std::string& s) {
+    void setMusicPath(const std::string& s) override {
         mySetString(&mySimfile->music, s, "music");
     }
 
-    void setBannerPath(const std::string& s) {
+    void setBannerPath(const std::string& s) override {
         mySetString(&mySimfile->banner, s, "banner");
     }
 
-    void setBackgroundPath(const std::string& s) {
+    void setBackgroundPath(const std::string& s) override {
         mySetString(&mySimfile->background, s, "background");
     }
 
-    void setCdTitlePath(const std::string& s) {
+    void setCdTitlePath(const std::string& s) override {
         mySetString(&mySimfile->cdTitle, s, "CD title");
     }
 
@@ -235,7 +235,7 @@ struct MetadataManImpl : public MetadataMan {
         return {};
     }
 
-    std::string findMusicFile() {
+    std::string findMusicFile() override {
         std::string out;
         int priority = 0;
         auto audioFiles =
@@ -257,18 +257,18 @@ struct MetadataManImpl : public MetadataMan {
         return out;
     }
 
-    std::string findBannerFile() { return findImageFile("bn", "banner"); }
+    std::string findBannerFile() override { return findImageFile("bn", "banner"); }
 
-    std::string findBackgroundFile() {
+    std::string findBackgroundFile() override {
         return findImageFile("bg", "background");
     }
 
-    std::string findCdTitleFile() { return findImageFile("cd", "title"); }
+    std::string findCdTitleFile() override { return findImageFile("cd", "title"); }
 
     // ================================================================================================
     // MetadataManImpl :: other member functions.
 
-    void update(Simfile* simfile) { mySimfile = simfile; }
+    void update(Simfile* simfile) override { mySimfile = simfile; }
 
 };  // MetadataManImpl
 

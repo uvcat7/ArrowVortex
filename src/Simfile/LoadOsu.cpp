@@ -132,7 +132,7 @@ static int NoteVal(const char*& p) {
     if (end) p = end;
     while (*p && *p != ',') ++p;
     if (*p == ',') ++p;
-    return (int)out;
+    return static_cast<int>(out);
 }
 
 static double NoteValf(const char*& p) {
@@ -141,7 +141,7 @@ static double NoteValf(const char*& p) {
     if (end) p = end;
     while (*p && *p != ',') ++p;
     if (*p == ',') ++p;
-    return (int)out;
+    return static_cast<int>(out);
 }
 
 static void SkipNoteVal(const char*& p) {
@@ -310,22 +310,22 @@ static void AssignDifficulties(Simfile* sim,
     if (sim->charts.empty()) return;
 
     auto& charts = sim->charts;
-    Chart* bestMatches[5] = {0, 0, 0, 0, 0};
+    Chart* bestMatches[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
     int bestNumMatches = 0;
 
     // Find the set of difficulties that has the most matches with the charts.
-    for (int set = 0; set < 6; ++set) {
-        Chart* matches[5] = {0, 0, 0, 0, 0};
+    for (auto & difficultyString : difficultyStrings) {
+        Chart* matches[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
         for (int i = 0; i < charts.size(); ++i) {
             for (int j = 0; j < 5; ++j) {
-                if (versions[i] == difficultyStrings[set][j]) {
+                if (versions[i] == difficultyString[j]) {
                     matches[j] = charts[i];
                 }
             }
         }
         int numMatches = 0;
-        for (int i = 0; i < 5; ++i) {
-            if (matches[i]) ++numMatches;
+        for (auto & matche : matches) {
+            if (matche) ++numMatches;
         }
         if (numMatches > bestNumMatches) {
             bestNumMatches = numMatches;
@@ -342,7 +342,7 @@ static void AssignDifficulties(Simfile* sim,
         }
         for (int i = 0; i < 5; ++i) {
             if (bestMatches[i]) {
-                bestMatches[i]->difficulty = (Difficulty)i;
+                bestMatches[i]->difficulty = static_cast<Difficulty>(i);
             }
         }
     } else  // No matches, sort by number of notes and assign upwards.
@@ -353,7 +353,7 @@ static void AssignDifficulties(Simfile* sim,
                   });
         int offset = max(0, min(charts[0]->meter / 2, 5 - charts.size()));
         for (int i = 0; i < charts.size(); ++i) {
-            charts[i]->difficulty = (Difficulty)(offset + i);
+            charts[i]->difficulty = static_cast<Difficulty>(offset + i);
         }
     }
 }
@@ -392,7 +392,7 @@ static void ConvertTimingPoints(Simfile* sim, OsuFile& osu) {
         double curRow = prevRow + deltaRows;
 
         // Round the row.
-        int row = (int)(curRow + 0.5);
+        int row = static_cast<int>(curRow + 0.5);
         tempo->segments->append(BpmChange(row, it->second.bpm));
 
         // Advance to the next BPM change
@@ -432,10 +432,10 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart) {
         if (hitObject.endtime > hitObject.time) {
             int endrow = timing.timeToRow(hitObject.endtime);
             chart.notes.append(
-                {row, endrow, (uint32_t)col, 0, NOTE_STEP_OR_HOLD, 192});
+                {row, endrow, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
         } else {
             chart.notes.append(
-                {row, row, (uint32_t)col, 0, NOTE_STEP_OR_HOLD, 192});
+                {row, row, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
         }
     }
 }

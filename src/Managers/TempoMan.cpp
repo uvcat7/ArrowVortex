@@ -32,16 +32,16 @@ namespace Vortex {
 const char* TempoMan::clipboardTag = "tempo";
 
 struct TempoManImpl : public TempoMan {
-    Tempo* myTempo;
+    Tempo* myTempo = nullptr;
 
     Chart* myChart;
-    Simfile* mySimfile;
+    Simfile* mySimfile = nullptr;
     TimingData myTimingData;
     double myInitialBpm;
 
     int myTweakRow;
-    Tempo* myTweakTempo;
-    TweakMode myTweakMode;
+    Tempo* myTweakTempo = nullptr;
+    TweakMode myTweakMode = TWEAK_NONE;
     double myTweakValue;
 
     History::EditId myApplyOffsetId;
@@ -52,13 +52,11 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: constructor and destructor.
 
-    ~TempoManImpl() {}
+    ~TempoManImpl() = default;
 
     TempoManImpl()
-        : myTempo(nullptr),
-          mySimfile(nullptr),
-          myTweakTempo(nullptr),
-          myTweakMode(TWEAK_NONE) {
+        
+          {
         myUpdateTimingData();
 
         myApplyOffsetId = gHistory->addCallback(ApplyOffset);
@@ -84,7 +82,7 @@ struct TempoManImpl : public TempoMan {
         gEditor->reportChanges(VCM_TEMPO_CHANGED);
     }
 
-    void update(Simfile* sim, Chart* chart) {
+    void update(Simfile* sim, Chart* chart) override {
         myChart = chart;
         mySimfile = sim;
 
@@ -258,9 +256,8 @@ struct TempoManImpl : public TempoMan {
 
     void myApplyInsertRowsOffset(Tempo* tempo, int startRow, int numRows) {
         auto segs = tempo->segments;
-        for (auto list = segs->begin(), listEnd = segs->end(); list != listEnd;
-             ++list) {
-            for (auto seg = list->begin(), end = list->end(); seg != end;
+        for (auto & list : *segs) {
+            for (auto seg = list.begin(), end = list.end(); seg != end;
                  ++seg) {
                 if (seg->row >= startRow && seg->row > 0) {
                     seg->row += numRows;
@@ -412,14 +409,14 @@ struct TempoManImpl : public TempoMan {
         return round(clamp(val, min, max) * 1000000.0) / 1000000.0;
     }
 
-    void modify(const SegmentEdit& edit) { modify(edit, true); }
+    void modify(const SegmentEdit& edit) override { modify(edit, true); }
 
-    void modify(const SegmentEdit& edit, bool clearRegion) {
+    void modify(const SegmentEdit& edit, bool clearRegion) override {
         stopTweaking(false);
         myQueueSegments(edit, clearRegion);
     }
 
-    void removeSelectedSegments() {
+    void removeSelectedSegments() override {
         SegmentEdit edit;
         for (auto& box : gTempoBoxes->getBoxes()) {
             if (box.isSelected) {
@@ -431,11 +428,11 @@ struct TempoManImpl : public TempoMan {
         modify(edit);
     }
 
-    void insertRows(int startRow, int numRows, bool curChartOnly) {
+    void insertRows(int startRow, int numRows, bool curChartOnly) override {
         myQueueInsertRows(startRow, numRows, curChartOnly);
     }
 
-    void setOffset(double val) {
+    void setOffset(double val) override {
         val = ClampAndRound(val, VC_MIN_OFFSET, VC_MAX_OFFSET);
         if (myTempo && myTempo->offset != val) {
             stopTweaking(false);
@@ -443,19 +440,19 @@ struct TempoManImpl : public TempoMan {
         }
     }
 
-    void setDefaultBpm() {
+    void setDefaultBpm() override {
         if (myTempo && myTempo->displayBpmType != BPM_ACTUAL) {
             myQueueDisplayBpm({BPM_ACTUAL, myTempo->displayBpmRange});
         }
     }
 
-    void setRandomBpm() {
+    void setRandomBpm() override {
         if (myTempo && myTempo->displayBpmType != BPM_RANDOM) {
             myQueueDisplayBpm({BPM_RANDOM, myTempo->displayBpmRange});
         }
     }
 
-    void setCustomBpm(BpmRange range) {
+    void setCustomBpm(BpmRange range) override {
         if (myTempo && (myTempo->displayBpmType != BPM_CUSTOM ||
                         Differs(myTempo->displayBpmRange, range))) {
             myQueueDisplayBpm({BPM_CUSTOM, range});
@@ -465,16 +462,14 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: clipboard functions.
 
-    void copyToClipboard() {
+    void copyToClipboard() override {
         SegmentGroup clipboard;
 
         // Copy all the selected segments.
         auto boxes = gTempoBoxes->getBoxes();
-        for (auto list = myTempo->segments->begin(),
-                  listEnd = myTempo->segments->end();
-             list != listEnd; ++list) {
-            auto type = list->type();
-            auto seg = list->begin(), end = list->end();
+        for (auto & segment : *myTempo->segments) {
+            auto type = segment.type();
+            auto seg = segment.begin(), end = segment.end();
             auto box = boxes.begin(), boxEnd = boxes.end();
             while (seg != end && box != boxEnd) {
                 if (box->isSelected == 0 || box->type != type ||
@@ -491,17 +486,15 @@ struct TempoManImpl : public TempoMan {
 
         // Find out what the first row is.
         int row = INT_MAX;
-        for (auto list = clipboard.begin(), listEnd = clipboard.end();
-             list != listEnd; ++list) {
-            if (list->size()) {
-                row = min(row, list->begin()->row);
+        for (auto & list : clipboard) {
+            if (list.size()) {
+                row = min(row, list.begin()->row);
             }
         }
 
         // Offset all segments to row zero.
-        for (auto list = clipboard.begin(), listEnd = clipboard.end();
-             list != listEnd; ++list) {
-            for (auto seg = list->begin(), end = list->end(); seg != end;
+        for (auto & list : clipboard) {
+            for (auto seg = list.begin(), end = list.end(); seg != end;
                  ++seg) {
                 seg->row -= row;
             }
@@ -516,7 +509,7 @@ struct TempoManImpl : public TempoMan {
         }
     }
 
-    void pasteFromClipboard(bool insert) {
+    void pasteFromClipboard(bool insert) override {
         SegmentEdit clipboard;
 
         // Decode the clipboard data.
@@ -530,9 +523,8 @@ struct TempoManImpl : public TempoMan {
 
         // Offset all segments to the cursor row.
         int row = gView->getCursorRow();
-        for (auto list = clipboard.add.begin(), listEnd = clipboard.add.end();
-             list != listEnd; ++list) {
-            for (auto seg = list->begin(), end = list->end(); seg != end;
+        for (auto & list : clipboard.add) {
+            for (auto seg = list.begin(), end = list.end(); seg != end;
                  ++seg) {
                 seg->row += row;
             }
@@ -545,7 +537,7 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: tweak functions.
 
-    void startTweakingOffset() {
+    void startTweakingOffset() override {
         if (myTweakMode == TWEAK_OFFSET || !myTempo) return;
 
         stopTweaking(false);
@@ -556,7 +548,7 @@ struct TempoManImpl : public TempoMan {
         myTweakValue = myTempo->offset;
     }
 
-    void startTweakingBpm(int row) {
+    void startTweakingBpm(int row) override {
         row = max(0, row);
 
         if ((myTweakMode == TWEAK_BPM && myTweakRow == row) || !myTempo) return;
@@ -569,7 +561,7 @@ struct TempoManImpl : public TempoMan {
         myTweakValue = getBpm(row);
     }
 
-    void startTweakingStop(int row) {
+    void startTweakingStop(int row) override {
         if ((myTweakMode == TWEAK_STOP && myTweakRow == row) || !myTempo)
             return;
 
@@ -581,7 +573,7 @@ struct TempoManImpl : public TempoMan {
         myTweakValue = myTempo->segments->getRow<Stop>(myTweakRow).seconds;
     }
 
-    void setTweakValue(double value) {
+    void setTweakValue(double value) override {
         myTweakValue = value;
         if (myTweakMode == TWEAK_OFFSET) {
             myTweakTempo->offset = value;
@@ -595,7 +587,7 @@ struct TempoManImpl : public TempoMan {
         gEditor->reportChanges(VCM_TEMPO_CHANGED);
     }
 
-    void stopTweaking(bool apply) {
+    void stopTweaking(bool apply) override {
         if (myTweakMode == TWEAK_NONE) return;
 
         TweakMode mode = myTweakMode;
@@ -628,23 +620,23 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: timing functions.
 
-    int timeToRow(double time) const { return myTimingData.timeToRow(time); }
+    int timeToRow(double time) const override { return myTimingData.timeToRow(time); }
 
-    double timeToBeat(double time) const {
+    double timeToBeat(double time) const override {
         return myTimingData.timeToBeat(time);
     }
 
-    double rowToTime(int row) const { return myTimingData.rowToTime(row); }
+    double rowToTime(int row) const override { return myTimingData.rowToTime(row); }
 
-    double beatToTime(double beat) const {
+    double beatToTime(double beat) const override {
         return myTimingData.beatToTime(beat);
     }
 
-    double beatToMeasure(double beat) const {
+    double beatToMeasure(double beat) const override {
         return myTimingData.beatToMeasure(beat);
     }
 
-    double getBpm(int row) const {
+    double getBpm(int row) const override {
         if (myTweakTempo) {
             return myTweakTempo->segments->getRecent<BpmChange>(row).bpm;
         } else if (myTempo) {
@@ -653,26 +645,26 @@ struct TempoManImpl : public TempoMan {
         return SIM_DEFAULT_BPM;
     }
 
-    double rowToScroll(int row) const { return myTimingData.rowToScroll(row); }
+    double rowToScroll(int row) const override { return myTimingData.rowToScroll(row); }
 
-    double beatToScroll(double beat) const {
+    double beatToScroll(double beat) const override {
         return myTimingData.beatToScroll(beat);
     }
 
-    double positionToSpeed(double beat, double time) const {
+    double positionToSpeed(double beat, double time) const override {
         return myTimingData.positionToSpeed(beat, time);
     }
 
     // ================================================================================================
     // TempoManImpl :: get functions.
 
-    TweakMode getTweakMode() const { return myTweakMode; }
+    TweakMode getTweakMode() const override { return myTweakMode; }
 
-    double getTweakValue() const { return myTweakValue; }
+    double getTweakValue() const override { return myTweakValue; }
 
-    int getTweakRow() const { return myTweakRow; }
+    int getTweakRow() const override { return myTweakRow; }
 
-    double getOffset() const {
+    double getOffset() const override {
         if (myTweakTempo) {
             return myTweakTempo->offset;
         } else if (myTempo) {
@@ -681,7 +673,7 @@ struct TempoManImpl : public TempoMan {
         return 0.0;
     }
 
-    TimingMode getTimingMode() const {
+    TimingMode getTimingMode() const override {
         bool splitTiming = false;
         for (auto chart : mySimfile->charts) {
             if (chart->hasTempo()) {
@@ -696,15 +688,15 @@ struct TempoManImpl : public TempoMan {
         return TIMING_UNIFIED;
     }
 
-    DisplayBpm getDisplayBpmType() const {
+    DisplayBpm getDisplayBpmType() const override {
         return myTempo ? myTempo->displayBpmType : BPM_ACTUAL;
     }
 
-    BpmRange getDisplayBpmRange() const {
+    BpmRange getDisplayBpmRange() const override {
         return myTempo ? myTempo->displayBpmRange : BpmRange{0.0, 0.0};
     }
 
-    BpmRange getBpmRange() const {
+    BpmRange getBpmRange() const override {
         double low = DBL_MAX, high = 0;
         if (myTempo) {
             auto it = myTempo->segments->begin<BpmChange>();
@@ -719,9 +711,9 @@ struct TempoManImpl : public TempoMan {
         return (high >= low) ? BpmRange{low, high} : BpmRange{0, 0};
     }
 
-    const TimingData& getTimingData() const { return myTimingData; }
+    const TimingData& getTimingData() const override { return myTimingData; }
 
-    const SegmentGroup* getSegments() const {
+    const SegmentGroup* getSegments() const override {
         if (myTweakTempo) {
             return myTweakTempo->segments;
         } else if (myTempo) {
@@ -733,7 +725,7 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: visual sync
 
-    void injectBoundingBpmChange(const int target_row) {
+    void injectBoundingBpmChange(const int target_row) override {
         if (target_row <= 0) {
             return;
         }
@@ -752,7 +744,7 @@ struct TempoManImpl : public TempoMan {
     }
 
     void destructiveShiftRowToTime(const int target_row,
-                                   const double target_time) {
+                                   const double target_time) override {
         if (target_row <= 0) {
             this->setOffset(-target_time);
             return;
@@ -772,7 +764,7 @@ struct TempoManImpl : public TempoMan {
     }
 
     void nonDestructiveShiftRowToTime(const int target_row,
-                                      const double target_time) {
+                                      const double target_time) override {
         if (target_row <= 0) {
             this->setOffset(-target_time);
             return;

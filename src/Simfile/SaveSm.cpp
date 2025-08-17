@@ -30,7 +30,7 @@ static const int NUM_MEASURE_SUBDIV = 10;
 static const int ROWS_PER_NOTE_SECTION = 192;
 static const int MIN_SECTIONS_PER_MEASURE = 4;
 
-static double ToBeat(int row) { return (double)row / ROWS_PER_BEAT; }
+static double ToBeat(int row) { return static_cast<double>(row) / ROWS_PER_BEAT; }
 
 struct ExportData {
     Vector<int> diffs;
@@ -385,9 +385,9 @@ static std::string RadarToString(const Vector<double>& list) {
     if (list.empty()) {
         out = "0,0,0,0,0";
     } else {
-        for (auto it = list.begin(); it != list.end(); ++it) {
+        for (double it : list) {
             if (out.length()) Str::append(out, ',');
-            Str::appendVal(out, *it, 0, 6);
+            Str::appendVal(out, it, 0, 6);
         }
     }
     return out;
@@ -412,7 +412,7 @@ static const char* GetDifficultyString(Difficulty difficulty) {
 static inline bool TestSectionCompression(const char* section, int width,
                                           int quant) {
     std::string zeroline(width, '0');
-    float mod = (float)ROWS_PER_NOTE_SECTION / quant;
+    float mod = static_cast<float>(ROWS_PER_NOTE_SECTION) / quant;
     for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j) {
         float rem = round(fmod(j, mod));
         // Check all the compressed rows and make sure they are empty
@@ -473,11 +473,11 @@ static void WriteSections(ExportData& data) {
             int endRow = startRow + ROWS_PER_NOTE_SECTION;
 
             // Advance to the first note in the current section.
-            for (; it != end && (int)it->row < startRow; ++it);
+            for (; it != end && it->row < startRow; ++it);
 
             // Write the notes of the current player to the section data.
-            for (; it != end && (int)it->row < endRow; ++it) {
-                if ((int)it->player == pn) {
+            for (; it != end && it->row < endRow; ++it) {
+                if (static_cast<int>(it->player) == pn) {
                     int pos = (it->row - startRow) * numCols + it->col;
                     if (it->row == it->endrow) {
                         section[pos] = GetNoteChar(it->type);
@@ -485,11 +485,11 @@ static void WriteSections(ExportData& data) {
                         section[pos] = GetHoldChar(it->type);
                         auto hold = holds[it->col];
                         if (hold) {
-                            if ((int)hold->endrow >= startRow &&
-                                (int)hold->endrow < endRow) {
+                            if (hold->endrow >= startRow &&
+                                hold->endrow < endRow) {
                                 int pos =
-                                    ((int)hold->endrow - startRow) * numCols +
-                                    (int)hold->col;
+                                    (hold->endrow - startRow) * numCols +
+                                    static_cast<int>(hold->col);
                                 section[pos] = '3';
                                 --remainingHolds;
                             }
@@ -505,8 +505,8 @@ static void WriteSections(ExportData& data) {
                 for (int col = 0; col < numCols; ++col) {
                     auto hold = holds[col];
                     if (hold) {
-                        if ((int)hold->endrow >= startRow &&
-                            (int)hold->endrow < endRow) {
+                        if (hold->endrow >= startRow &&
+                            hold->endrow < endRow) {
                             int pos =
                                 (hold->endrow - startRow) * numCols + hold->col;
                             section[pos] = '3';

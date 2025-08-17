@@ -13,15 +13,15 @@ namespace Vortex {
 namespace {
 
 inline Segment* ofs(void* pos, int offset) {
-    return (Segment*)(((uint8_t*)pos) + offset);
+    return reinterpret_cast<Segment*>((static_cast<uint8_t*>(pos)) + offset);
 }
 
 inline const Segment* ofs(const void* pos, int offset) {
-    return (const Segment*)(((const uint8_t*)pos) + offset);
+    return reinterpret_cast<const Segment*>((static_cast<const uint8_t*>(pos)) + offset);
 }
 
 inline int diff(const Segment* begin, const Segment* end) {
-    return ((const uint8_t*)end) - ((const uint8_t*)begin);
+    return (reinterpret_cast<const uint8_t*>(end)) - (reinterpret_cast<const uint8_t*>(begin));
 }
 
 };  // anonymous namespace.
@@ -96,7 +96,7 @@ void SegmentList::clear() {
         auto meta = Segment::meta[myType];
         for (int i = 0; i < myNum; ++i) {
             uint8_t* seg = mySegs + i * myStride;
-            meta->destruct((Segment*)seg);
+            meta->destruct(reinterpret_cast<Segment*>(seg));
         }
     }
     myNum = 0;
@@ -442,36 +442,36 @@ void SegmentList::prepareEdit(const List& inAdd, const List& inRem,
 // SegmentList :: iterators.
 
 SegmentIter SegmentList::begin() {
-    return {(Segment*)mySegs, (uint32_t)myStride};
+    return {reinterpret_cast<Segment*>(mySegs), static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::begin() const {
-    return {(const Segment*)mySegs, (uint32_t)myStride};
+    return {reinterpret_cast<const Segment*>(mySegs), static_cast<uint32_t>(myStride)};
 }
 
 SegmentIter SegmentList::end() {
-    return {(Segment*)(mySegs + myNum * myStride), (uint32_t)myStride};
+    return {reinterpret_cast<Segment*>(mySegs + myNum * myStride), static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::end() const {
-    return {(const Segment*)(mySegs + myNum * myStride), (uint32_t)myStride};
+    return {reinterpret_cast<const Segment*>(mySegs + myNum * myStride), static_cast<uint32_t>(myStride)};
 }
 
 SegmentIter SegmentList::rbegin() {
-    return {(Segment*)(mySegs + (myNum - 1) * myStride), (uint32_t)myStride};
+    return {reinterpret_cast<Segment*>(mySegs + (myNum - 1) * myStride), static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::rbegin() const {
-    return {(const Segment*)(mySegs + (myNum - 1) * myStride),
-            (uint32_t)myStride};
+    return {reinterpret_cast<const Segment*>(mySegs + (myNum - 1) * myStride),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentIter SegmentList::rend() {
-    return {(Segment*)(mySegs - myStride), (uint32_t)myStride};
+    return {reinterpret_cast<Segment*>(mySegs - myStride), static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::rend() const {
-    return {(const Segment*)(mySegs - myStride), (uint32_t)myStride};
+    return {reinterpret_cast<const Segment*>(mySegs - myStride), static_cast<uint32_t>(myStride)};
 }
 
 // ================================================================================================
@@ -485,14 +485,14 @@ const Segment* SegmentList::find(int row) const {
     while (count > 1) {
         step = count >> 1;
         mid = it + step * myStride;
-        if (((const Segment*)mid)->row <= row) {
+        if ((reinterpret_cast<const Segment*>(mid))->row <= row) {
             it = mid;
             count -= step;
         } else {
             count = step;
         }
     }
-    auto out = (const Segment*)it;
+    auto out = reinterpret_cast<const Segment*>(it);
 
     return (out->row <= row) ? out : nullptr;
 }
@@ -504,7 +504,7 @@ void SegmentList::myReserve(int num) {
     int numBytes = num * myStride;
     if (myCap < numBytes) {
         myCap = max(numBytes, myCap << 1);
-        mySegs = (uint8_t*)realloc(mySegs, myCap);
+        mySegs = static_cast<uint8_t*>(realloc(mySegs, myCap));
     }
 }
 

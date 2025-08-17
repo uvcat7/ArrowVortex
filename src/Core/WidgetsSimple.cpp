@@ -9,7 +9,7 @@ namespace Vortex {
 // ================================================================================================
 // WgSeperator
 
-WgSeperator::~WgSeperator() {}
+WgSeperator::~WgSeperator() = default;
 
 WgSeperator::WgSeperator(GuiContext* gui) : GuiWidget(gui) { height_ = 2; }
 
@@ -22,7 +22,7 @@ void WgSeperator::onDraw() {
 // ================================================================================================
 // WgLabel
 
-WgLabel::~WgLabel() {}
+WgLabel::~WgLabel() = default;
 
 WgLabel::WgLabel(GuiContext* gui) : GuiWidget(gui) {}
 
@@ -40,7 +40,7 @@ void WgLabel::onDraw() {
 // ================================================================================================
 // WgButton
 
-WgButton::~WgButton() {}
+WgButton::~WgButton() = default;
 
 WgButton::WgButton(GuiContext* gui) : GuiWidget(gui) {}
 
@@ -89,7 +89,7 @@ void WgButton::onDraw() {
 // ================================================================================================
 // WgCheckbox
 
-WgCheckbox::~WgCheckbox() {}
+WgCheckbox::~WgCheckbox() = default;
 
 WgCheckbox::WgCheckbox(GuiContext* gui) : GuiWidget(gui) {}
 
@@ -141,7 +141,7 @@ recti WgCheckbox::GetCheckboxRect() const {
 // ================================================================================================
 // WgSlider
 
-WgSlider::~WgSlider() {}
+WgSlider::~WgSlider() = default;
 
 WgSlider::WgSlider(GuiContext* gui) : GuiWidget(gui) {
     slider_begin_ = 0.0;
@@ -191,7 +191,7 @@ void WgSlider::onDraw() {
 
     // Draw the draggable button graphic.
     if (slider_begin_ != slider_end_) {
-        int boxX = (int)((double)bar.w * (value.get() - slider_begin_) /
+        int boxX = static_cast<int>(static_cast<double>(bar.w) * (value.get() - slider_begin_) /
                          (slider_end_ - slider_begin_));
         recti box = {bar.x + min(max(boxX, 0), bar.w) - 4, bar.y - 8, 8, 16};
 
@@ -216,7 +216,7 @@ void WgSlider::SliderDrag(int x, int y) {
     recti r = rect_;
     r.w = max(r.w, 1);
     double val = slider_begin_ + (slider_end_ - slider_begin_) *
-                                     ((double)(x - r.x) / (double)r.w);
+                                     (static_cast<double>(x - r.x) / static_cast<double>(r.w));
     SliderUpdateValue(val);
 }
 

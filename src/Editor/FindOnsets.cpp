@@ -416,14 +416,14 @@ static void aubio_pvoc_do(aubio_pvoc_t *pv, fvec_t *datanew, cvec_t *fftgrain) {
 // ================================================================================================
 // Peak picker.
 
-static aubio_peakpicker_t *new_aubio_peakpicker(void) {
+static aubio_peakpicker_t *new_aubio_peakpicker() {
     aubio_peakpicker_t *t = AUBIO_NEW(aubio_peakpicker_t);
     t->threshold = 0.1; /* 0.0668; 0.33; 0.082; 0.033; */
     t->win_post = 5;
     t->win_pre = 1;
 
-    t->thresholdfn = (aubio_thresholdfn_t)(fvec_median); /* (fvec_mean); */
-    t->pickerfn = (aubio_pickerfn_t)(fvec_peakpick);
+    t->thresholdfn = static_cast<aubio_thresholdfn_t>(fvec_median); /* (fvec_mean); */
+    t->pickerfn = static_cast<aubio_pickerfn_t>(fvec_peakpick);
 
     t->scratch = new_fvec(t->win_post + t->win_pre + 1);
     t->onset_keep = new_fvec(t->win_post + t->win_pre + 1);
@@ -543,7 +543,7 @@ static void aubio_scale_do(aubio_scale_t *s, fvec_t *input) {
 
 static aubio_hist_t *new_aubio_hist(smpl_t flow, smpl_t fhig, uint_t nelems) {
     aubio_hist_t *s = AUBIO_NEW(aubio_hist_t);
-    smpl_t step = (fhig - flow) / (smpl_t)(nelems);
+    smpl_t step = (fhig - flow) / static_cast<smpl_t>(nelems);
     smpl_t accum = step;
     uint_t i;
     s->nelems = nelems;
@@ -572,7 +572,7 @@ static void aubio_hist_dyn_notnull(aubio_hist_t *s, fvec_t *input) {
     sint_t tmp = 0;
     smpl_t ilow = fvec_min(input);
     smpl_t ihig = fvec_max(input);
-    smpl_t step = (ihig - ilow) / (smpl_t)(s->nelems);
+    smpl_t step = (ihig - ilow) / static_cast<smpl_t>(s->nelems);
 
     /* readapt */
     aubio_scale_set_limits(s->scaler, ilow, ihig, 0, s->nelems);
@@ -590,8 +590,8 @@ static void aubio_hist_dyn_notnull(aubio_hist_t *s, fvec_t *input) {
     /* run accum */
     for (i = 0; i < input->length; i++) {
         if (input->data[i] != 0) {
-            tmp = (sint_t)FLOOR(input->data[i]);
-            if ((tmp >= 0) && (tmp < (sint_t)s->nelems))
+            tmp = static_cast<sint_t>(FLOOR(input->data[i]));
+            if ((tmp >= 0) && (tmp < static_cast<sint_t>(s->nelems)))
                 s->hist->data[tmp] += 1;
         }
     }
@@ -608,7 +608,7 @@ static smpl_t aubio_hist_mean(aubio_hist_t *s) {
     uint_t j;
     smpl_t tmp = 0.0;
     for (j = 0; j < s->nelems; j++) tmp += s->hist->data[j];
-    return tmp / (smpl_t)(s->nelems);
+    return tmp / static_cast<smpl_t>(s->nelems);
 }
 
 // ================================================================================================
@@ -908,7 +908,7 @@ static uint_t aubio_onset_set_minioi(aubio_onset_t *o, uint_t minioi) {
 }
 
 static uint_t aubio_onset_set_minioi_s(aubio_onset_t *o, smpl_t minioi) {
-    return aubio_onset_set_minioi(o, (uint_t)(minioi * o->samplerate));
+    return aubio_onset_set_minioi(o, static_cast<uint_t>(minioi * o->samplerate));
 }
 
 static uint_t aubio_onset_set_minioi_ms(aubio_onset_t *o, smpl_t minioi) {
@@ -969,7 +969,7 @@ static void aubio_onset_do(aubio_onset_t *o, fvec_t *input, fvec_t *onset) {
             isonset = 0;
         } else {
             uint_t new_onset =
-                o->total_frames + (uint_t)ROUND(isonset * o->hop_size);
+                o->total_frames + static_cast<uint_t>(ROUND(isonset * o->hop_size));
             if (o->last_onset + o->minioi < new_onset) {
                 // AUBIO_DBG ("accepted detection, marking as onset\n");
                 o->last_onset = new_onset;

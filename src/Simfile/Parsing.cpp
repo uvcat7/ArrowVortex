@@ -159,7 +159,7 @@ bool ParseVal(const char* str, int& outInt) {
 bool ParseBeat(const char* str, int& outRow) {
     double beat;
     if (!ParseVal(str, beat)) return false;
-    outRow = (int)(beat * 48 + 0.5);
+    outRow = static_cast<int>(beat * 48 + 0.5);
     return true;
 }
 

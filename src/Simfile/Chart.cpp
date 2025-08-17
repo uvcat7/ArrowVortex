@@ -12,7 +12,7 @@ Chart::Chart()
     : style(nullptr), difficulty(DIFF_BEGINNER), meter(1), tempo(nullptr) {}
 
 Chart::~Chart() {
-    style = 0;
+    style = nullptr;
     difficulty = DIFF_BEGINNER;
     meter = 1;
     delete tempo;

@@ -60,8 +60,8 @@ static void CreatePlaceholderGlyphs(Glyph* out) {
         Glyph& glyph = out[i];
         memset(&glyph, 0, sizeof(Glyph));
 
-        float rw = 1.0f / (float)boxW;
-        float rh = 1.0f / (float)boxH;
+        float rw = 1.0f / static_cast<float>(boxW);
+        float rh = 1.0f / static_cast<float>(boxH);
 
         glyph.hasPixels = 1;
         glyph.hasAlphaTex = 1;
@@ -104,7 +104,7 @@ void FontManager::destroy() {
         }
     }
 
-    FT_Done_FreeType((FT_Library)FM->ftLib);
+    FT_Done_FreeType(static_cast<FT_Library>(FM->ftLib));
 
     delete FM;
     FM = nullptr;
@@ -140,7 +140,7 @@ FontData* FontManager::load(const std::string& path, Text::Hinting hinting) {
 
     // If not, try to load the font.
     FT_Face face;
-    int result = FT_New_Face((FT_Library)(FM->ftLib), path.c_str(), 0, &face);
+    int result = FT_New_Face(static_cast<FT_Library>(FM->ftLib), path.c_str(), 0, &face);
     if (result == FT_Err_Ok) {
         FontData* font = new FontData(face, path.c_str(), hinting);
         FM->fonts[path] = font;
@@ -178,7 +178,7 @@ void FontManager::cache(FontData* font) {
 
 bool FontManager::loadGlyph(const std::string& name, const Texture& texture,
                             int dx, int dy, int advance) {
-    auto tex = (Texture::Data*)texture.data();
+    auto tex = static_cast<Texture::Data*>(texture.data());
     if (tex) {
         texture.cache();
 
@@ -233,7 +233,7 @@ FontData* FontManager::fallback() { return FM->fallback; }
 // ================================================================================================
 // API functions from "draw.h"
 
-void Font::cache() const { FontManager::cache((FontData*)data_); }
+void Font::cache() const { FontManager::cache(static_cast<FontData*>(data_)); }
 
 void Font::LogInfo() { FontManager::log(); }
 

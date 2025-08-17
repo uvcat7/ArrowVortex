@@ -23,7 +23,7 @@ GuiDrawGraphics* GD = nullptr;
 
 struct CanvasHelper {
     CanvasHelper(int w, int h, float r, float l)
-        : canvas(w * 2, h, l), myX(0), myY(0), myW(w), myH(h), myR(r) {
+        : canvas(w * 2, h, l),  myW(w), myH(h), myR(r) {
         canvas.setBlendMode(Canvas::BM_NONE);
     }
     void clear(int x, int y, float r, float l) {
@@ -42,7 +42,7 @@ struct CanvasHelper {
         tile.border = border;
     }
     Canvas canvas;
-    int myX, myY, myW, myH;
+    int myX = 0, myY = 0, myW, myH;
     float myR;
 };
 
@@ -62,7 +62,7 @@ static void CreateDialogTextures() {
     Canvas c2(16, 16, 0.05f);
     float lum[] = {0.05f, 0.35f, 0.2f};
     for (int i = 0; i < 3; ++i) {
-        float s = (float)i + 0.25f;
+        float s = static_cast<float>(i) + 0.25f;
         float x[] = {8 + s, 18, 18, 8 + s, 8 + s, s, 8 + s};
         float y[] = {-2, -2, 18, 18, 16, 8, 0};
         c2.setColor(lum[i]);
@@ -315,8 +315,8 @@ void GuiDraw::checkerboard(recti r, uint32_t color) {
     // Texture coordinates.
     float uv[8];
     uv[0] = uv[1] = uv[3] = uv[4] = 0;
-    uv[2] = uv[6] = (float)r.w / 16.0f;
-    uv[5] = uv[7] = (float)r.h / 16.0f;
+    uv[2] = uv[6] = static_cast<float>(r.w) / 16.0f;
+    uv[5] = uv[7] = static_cast<float>(r.h) / 16.0f;
 
     // Render quad.
     Renderer::setColor(color);

@@ -138,7 +138,7 @@ struct EditorImpl : public Editor, public InputHandler {
     // ================================================================================================
     // EditorImpl :: constructor and destructor.
 
-    ~EditorImpl() {}
+    ~EditorImpl() = default;
 
     EditorImpl() {
         gSystem->setWindowTitle("ArrowVortex");
@@ -334,7 +334,7 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrNode* interface = settings.addChild("interface");
 
         interface->addAttrib("fontPath", myFontPath.c_str());
-        interface->addAttrib("fontSize", (long)myFontSize);
+        interface->addAttrib("fontSize", static_cast<long>(myFontSize));
     }
 
     void saveDialogSettings(XmrNode& settings) {
@@ -345,7 +345,7 @@ struct EditorImpl : public Editor, public InputHandler {
             if (dialog && dialog->isPinned()) {
                 auto r = dialog->getInnerRect();
                 if (r.w > 0 && r.h > 0) {
-                    auto name = EditorDialog::getName((DialogId)id);
+                    auto name = EditorDialog::getName(static_cast<DialogId>(id));
                     XmrNode* node = dialogs->addChild(name);
                     long vals[] = {r.x, r.y, r.w, r.h};
                     node->addAttrib("rect", vals, 4);
@@ -409,7 +409,7 @@ struct EditorImpl : public Editor, public InputHandler {
         return out;
     }
 
-    bool closeSimfile() {
+    bool closeSimfile() override {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return true;
 
@@ -440,14 +440,14 @@ struct EditorImpl : public Editor, public InputHandler {
         return true;
     }
 
-    bool openSimfile() {
+    bool openSimfile() override {
         std::string filters(loadFilters, sizeof(loadFilters));
         std::string path =
             gSystem->openFileDlg("Open file", std::string(), filters);
         return openSimfile(path);
     }
 
-    bool openSimfile(const std::string& path) {
+    bool openSimfile(const std::string& path) override {
         bool result = false;
         if (path.length() && closeSimfile()) {
             if (gSimfile->load(path)) {
@@ -460,14 +460,14 @@ struct EditorImpl : public Editor, public InputHandler {
         return result;
     }
 
-    bool openSimfile(int recentFileIndex) {
+    bool openSimfile(int recentFileIndex) override {
         if (recentFileIndex >= 0 || recentFileIndex < myRecentFiles.size()) {
             return openSimfile(myRecentFiles[recentFileIndex]);
         }
         return false;
     }
 
-    bool openNextSimfile(bool iterateForward) {
+    bool openNextSimfile(bool iterateForward) override {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return false;
 
@@ -515,7 +515,7 @@ struct EditorImpl : public Editor, public InputHandler {
         return openSimfile(path);
     }
 
-    bool saveSimfile(bool showSaveAsDialog) {
+    bool saveSimfile(bool showSaveAsDialog) override {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return true;
 
@@ -606,14 +606,14 @@ struct EditorImpl : public Editor, public InputHandler {
         gMenubar->update(Menubar::RECENT_FILES);
     }
 
-    void clearRecentFiles() {
+    void clearRecentFiles() override {
         myRecentFiles.clear();
         gMenubar->update(Menubar::RECENT_FILES);
     }
 
-    int getNumRecentFiles() { return myRecentFiles.size(); }
+    int getNumRecentFiles() override { return myRecentFiles.size(); }
 
-    const std::string& getRecentFile(int index) { return myRecentFiles[index]; }
+    const std::string& getRecentFile(int index) override { return myRecentFiles[index]; }
 
     // ================================================================================================
     // EditorImpl :: dialog management.
@@ -622,23 +622,23 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrNode* dialogs = settings.child("dialogs");
         if (dialogs) {
             for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
-                auto name = EditorDialog::getName((DialogId)id);
+                auto name = EditorDialog::getName(static_cast<DialogId>(id));
                 XmrNode* node = dialogs->child(name);
                 int r[4] = {0, 0, 0, 0};
                 if (node && node->get("rect", r, 4)) {
                     recti rect = {r[0], r[1], r[2], r[3]};
-                    handleDialogOpening((DialogId)id, rect);
+                    handleDialogOpening(static_cast<DialogId>(id), rect);
                 }
             }
         }
     }
 
-    void openDialog(int dialogId) { myDialogs[dialogId].requestOpen = true; }
+    void openDialog(int dialogId) override { myDialogs[dialogId].requestOpen = true; }
 
     void handleDialogs() {
         for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
             if (myDialogs[id].requestOpen) {
-                handleDialogOpening((DialogId)id, {0, 0, 0, 0});
+                handleDialogOpening(static_cast<DialogId>(id), {0, 0, 0, 0});
             }
         }
     }
@@ -711,12 +711,12 @@ struct EditorImpl : public Editor, public InputHandler {
         entry.requestOpen = false;
     }
 
-    void onDialogClosed(int id) { myDialogs[id].ptr = nullptr; }
+    void onDialogClosed(int id) override { myDialogs[id].ptr = nullptr; }
 
     // ================================================================================================
     // EditorImpl :: event handling.
 
-    void onCommandLineArgs(const std::string* args, int numArgs) {
+    void onCommandLineArgs(const std::string* args, int numArgs) override {
         if (numArgs >= 2 && args[1].length()) {
             Path argPath(gSystem->getRunDir(), args[1]);
             std::string simfilePath = findSimfile(argPath, false);
@@ -724,7 +724,7 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
-    void onFileDrop(FileDrop& evt) {
+    void onFileDrop(FileDrop& evt) override {
         if (evt.count >= 1) {
             Path dropPath(evt.files[0]);
             std::string simfilePath = findSimfile(dropPath, false);
@@ -732,9 +732,9 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
-    void onMenuAction(int id) { Action::perform((Action::Type)id); }
+    void onMenuAction(int id) override { Action::perform(static_cast<Action::Type>(id)); }
 
-    void onExitProgram() {
+    void onExitProgram() override {
         if (closeSimfile()) {
             gSystem->terminate();
         }
@@ -759,7 +759,7 @@ struct EditorImpl : public Editor, public InputHandler {
         myChanges = 0;
     }
 
-    void onKeyPress(KeyPress& press) {
+    void onKeyPress(KeyPress& press) override {
         // if(press.key == Key::V)
         //{
         //	VerifySaveLoadIdentity(*gSimfile->getSimfile());
@@ -769,7 +769,7 @@ struct EditorImpl : public Editor, public InputHandler {
     // ================================================================================================
     // EditorImpl :: misc functions.
 
-    void reportChanges(int changes) { myChanges |= changes; }
+    void reportChanges(int changes) override { myChanges |= changes; }
 
     void updateTitle() {
         std::string title, subtitle;
@@ -798,7 +798,7 @@ struct EditorImpl : public Editor, public InputHandler {
                      RGBAtoColor32(255, 255, 255, 26));
     }
 
-    void tick() {
+    void tick() override {
         InputEvents& events = gSystem->getEvents();
         handleInputs(events);
         notifyChanges();
@@ -879,18 +879,18 @@ struct EditorImpl : public Editor, public InputHandler {
         GuiMain::frameEnd();
     }
 
-    bool hasMultithreading() const { return myUseMultithreading; }
+    bool hasMultithreading() const override { return myUseMultithreading; }
 
-    void setBackgroundStyle(int style) {
-        myBackgroundStyle = (BackgroundStyle)style;
+    void setBackgroundStyle(int style) override {
+        myBackgroundStyle = static_cast<BackgroundStyle>(style);
         gMenubar->update(Menubar::VIEW_BACKGROUND);
     }
 
-    int getBackgroundStyle() const { return myBackgroundStyle; }
+    int getBackgroundStyle() const override { return myBackgroundStyle; }
 
-    int getDefaultSaveFormat() const { return myDefaultSaveFormat; }
+    int getDefaultSaveFormat() const override { return myDefaultSaveFormat; }
 
-    GuiContext* getGui() const { return gui_; }
+    GuiContext* getGui() const override { return gui_; }
 
 };  // EditorImpl
 };  // anonymous namespace

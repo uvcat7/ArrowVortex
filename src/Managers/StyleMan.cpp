@@ -278,21 +278,20 @@ struct StyleManImpl : public StyleMan {
         return style;
     }
 
-    const Style* findStyle(const std::string& styleId) {
-        for (int i = 0; i < myStyles.size(); ++i) {
-            if (myStyles[i]->id == styleId) {
-                return myStyles[i];
+    const Style* findStyle(const std::string& styleId) override {
+        for (auto & myStyle : myStyles) {
+            if (myStyle->id == styleId) {
+                return myStyle;
             }
         }
         return nullptr;
     }
 
     const Style* findStyle(const std::string& chartName, int numCols,
-                           int numPlayers) {
+                           int numPlayers) override {
         // First, check if an existing style matches the requested column and
         // player count.
-        for (int i = 0; i < myStyles.size(); ++i) {
-            auto style = myStyles[i];
+        for (auto style : myStyles) {
             if (style->numCols == numCols && style->numPlayers == numPlayers) {
                 return style;
             }
@@ -306,13 +305,12 @@ struct StyleManImpl : public StyleMan {
     }
 
     const Style* findStyle(const std::string& chartName, int numCols,
-                           int numPlayers, const std::string& id) {
+                           int numPlayers, const std::string& id) override {
         /// Use lookup by column and player count if the id string is empty.
         if (id.empty()) {
             // First, check if an existing style matches the requested column
             // and player count.
-            for (int i = 0; i < myStyles.size(); ++i) {
-                auto style = myStyles[i];
+            for (auto style : myStyles) {
                 if (style->numCols == numCols &&
                     style->numPlayers == numPlayers) {
                     HudWarning("%s is missing a style, using %s.",
@@ -330,8 +328,7 @@ struct StyleManImpl : public StyleMan {
         }
 
         /// Try to find a match in the list of loaded styles.
-        for (int i = 0; i < myStyles.size(); ++i) {
-            auto style = myStyles[i];
+        for (auto style : myStyles) {
             if (style->id == id) {
                 return style;
             }
@@ -344,23 +341,23 @@ struct StyleManImpl : public StyleMan {
         return createFallbackStyle(id, numCols, numPlayers);
     }
 
-    void update(Chart* chart) {
-        myActiveStyle = (Style*)(chart ? chart->style : nullptr);
+    void update(Chart* chart) override {
+        myActiveStyle = const_cast<Style*>(chart ? chart->style : nullptr);
     }
 
-    int getNumStyles() const { return myNumDefaultStyles; }
+    int getNumStyles() const override { return myNumDefaultStyles; }
 
-    int getNumCols() const {
+    int getNumCols() const override {
         return myActiveStyle ? myActiveStyle->numCols : 0;
     }
 
-    int getNumPlayers() const {
+    int getNumPlayers() const override {
         return myActiveStyle ? myActiveStyle->numPlayers : 0;
     }
 
-    Style* get(int index) const { return myStyles[index]; }
+    Style* get(int index) const override { return myStyles[index]; }
 
-    Style* get() const { return myActiveStyle; }
+    Style* get() const override { return myActiveStyle; }
 
 };  // StyleManImpl.
 

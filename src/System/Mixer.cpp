@@ -21,7 +21,7 @@ static DWORD WINAPI MixerThread(LPVOID param);
 struct ThreadEvent {
     ThreadEvent() { handle = CreateEvent(nullptr, FALSE, FALSE, nullptr); }
     ~ThreadEvent() { CloseHandle(handle); }
-    operator HANDLE() { return handle; }
+    explicit operator HANDLE() { return handle; }
     HANDLE handle;
 };
 
@@ -36,13 +36,13 @@ struct MixerImpl : public Mixer {
         WO_WRITE_BLOCK = WAIT_OBJECT_0 + 3,
     };
 
-    int myFrequency;
-    int myFreeBlockIndex;
+    int myFrequency = 0;
+    int myFreeBlockIndex = 0;
 
-    BYTE* myBlockMemory;
+    BYTE* myBlockMemory = nullptr;
     WAVEHDR myHeaders[WAVEOUT_BLOCKS];
-    HWAVEOUT myWaveout;
-    HANDLE myThread;
+    HWAVEOUT myWaveout = nullptr;
+    HANDLE myThread = nullptr;
 
     ThreadEvent myKillThread;
     ThreadEvent myPauseThread;
@@ -50,45 +50,39 @@ struct MixerImpl : public Mixer {
     ThreadEvent myThreadPaused;
     ThreadEvent myWriteBlock;
 
-    volatile LONG myFreeBlocks;
+    volatile LONG myFreeBlocks = 0;
 
-    bool myIsOpened;
-    bool myIsPaused;
+    bool myIsOpened = false;
+    bool myIsPaused = true;
 
     MixSource* mySource;
 
     // ================================================================================================
     // MixerImpl :: constructor and destructor.
 
-    ~MixerImpl() {
+    ~MixerImpl() override {
         close();
 
         _aligned_free(myBlockMemory);
     }
 
     MixerImpl()
-        : myFrequency(0),
-          myFreeBlockIndex(0),
-          myBlockMemory(nullptr),
-          myWaveout(0),
-          myThread(0),
-          myFreeBlocks(0),
-          myIsOpened(false),
-          myIsPaused(true) {
+        
+          {
         myBlockMemory =
-            (BYTE*)_aligned_malloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16);
+            static_cast<BYTE*>(_aligned_malloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16));
         for (WAVEHDR& header : myHeaders) {
             memset(&header, 0, sizeof(WAVEHDR));
         }
     }
 
-    void close() {
+    void close() override {
         if (myThread) {
-            SetEvent(myKillThread);
+            SetEvent(static_cast<HANDLE>(myKillThread));
             LONG err = WaitForSingleObject(myThread, INFINITE);
             if (err) HudError("failed to close audio thread: %i", err);
             CloseHandle(myThread);
-            myThread = 0;
+            myThread = nullptr;
         }
         if (myWaveout) {
             LONG err = waveOutReset(myWaveout);
@@ -108,7 +102,7 @@ struct MixerImpl : public Mixer {
 
             err = waveOutClose(myWaveout);
             if (err) HudError("failed to close wave out: %i\n", err);
-            myWaveout = 0;
+            myWaveout = nullptr;
         }
 
         myFreeBlockIndex = 0;
@@ -117,7 +111,7 @@ struct MixerImpl : public Mixer {
         myIsPaused = true;
     }
 
-    bool open(MixSource* source, int samplerate) {
+    bool open(MixSource* source, int samplerate) override {
         if (myIsOpened) close();
 
         // Try to open the waveout device.
@@ -165,7 +159,7 @@ struct MixerImpl : public Mixer {
         myIsOpened = true;
 
         // Start the MixerDevice update thread.
-        myThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MixerThread,
+        myThread = CreateThread(nullptr, 0, static_cast<LPTHREAD_START_ROUTINE>(MixerThread),
                                 this, 0, nullptr);
 
         return true;
@@ -173,39 +167,39 @@ struct MixerImpl : public Mixer {
 
     void pause() override {
         if (myIsOpened && !myIsPaused) {
-            SetEvent(myPauseThread);
-            WaitForSingleObject(myThreadPaused, INFINITE);
+            SetEvent(static_cast<HANDLE>(myPauseThread));
+            WaitForSingleObject(static_cast<HANDLE>(myThreadPaused), INFINITE);
             waveOutReset(myWaveout);
             myIsPaused = true;
         }
     }
 
-    void resume() {
+    void resume() override {
         if (myIsOpened && myIsPaused) {
             myFreeBlockIndex = 0;
             myFreeBlocks = WAVEOUT_BLOCKS;
-            SetEvent(myResumeThread);
+            SetEvent(static_cast<HANDLE>(myResumeThread));
             waveOutRestart(myWaveout);
-            SetEvent(myWriteBlock);
+            SetEvent(static_cast<HANDLE>(myWriteBlock));
             myIsPaused = false;
         }
     }
 
     void blockDone() {
         InterlockedIncrement(&myFreeBlocks);
-        SetEvent(myWriteBlock);
+        SetEvent(static_cast<HANDLE>(myWriteBlock));
     }
 
     void mixThread() {
-        const HANDLE events[] = {myKillThread, myResumeThread, myPauseThread,
-                                 myWriteBlock};
+        const HANDLE events[] = {static_cast<HANDLE>(myKillThread), static_cast<HANDLE>(myResumeThread),
+            static_cast<HANDLE>(myPauseThread), static_cast<HANDLE>(myWriteBlock)};
         while (true) {
             // Wait for a thread event.
             DWORD id = WaitForMultipleObjects(4, events, FALSE, INFINITE);
             if (id == WO_KILL_THREAD) {
                 return;
             } else if (id == WO_PAUSE_THREAD) {
-                SetEvent(myThreadPaused);
+                SetEvent(static_cast<HANDLE>(myThreadPaused));
                 id = WaitForMultipleObjects(2, events, FALSE, INFINITE);
                 if (id == WO_KILL_THREAD) return;
             } else if (id == WO_WRITE_BLOCK) {
@@ -220,7 +214,7 @@ struct MixerImpl : public Mixer {
                     myFreeBlockIndex = (myFreeBlockIndex + 1) % WAVEOUT_BLOCKS;
 
                     // Send the filled block to wave out.
-                    mySource->writeFrames((short*)samples,
+                    mySource->writeFrames(reinterpret_cast<short*>(samples),
                                           WAVEOUT_BLOCK_FRAMES);
                     waveOutWrite(myWaveout, header, sizeof(WAVEHDR));
                 }
@@ -241,7 +235,7 @@ static void CALLBACK MixerCallback(HWAVEOUT hwo, UINT msg, DWORD_PTR mixer,
 }
 
 static DWORD WINAPI MixerThread(LPVOID mixer) {
-    ((MixerImpl*)mixer)->mixThread();
+    (static_cast<MixerImpl*>(mixer))->mixThread();
     return 0;
 }
 
@@ -250,6 +244,6 @@ static DWORD WINAPI MixerThread(LPVOID mixer) {
 
 Mixer* Mixer::create() { return new MixerImpl; }
 
-Mixer::~Mixer() {}
+Mixer::~Mixer() = default;
 
 };  // namespace Vortex

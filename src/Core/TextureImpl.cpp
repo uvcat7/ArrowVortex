@@ -190,8 +190,8 @@ static void GenerateMipmapLevel(const uint8_t* src, uint8_t* dst, int w, int h,
 static void GenerateMipmaps(int w, int h, const uint8_t* pixeldata,
                             Texture::Format fmt) {
     int ch = sNumChannels[fmt];
-    uint8_t* tmpA = (uint8_t*)malloc((w / 2) * (h / 2) * ch);
-    uint8_t* tmpB = (uint8_t*)malloc((w / 4) * (h / 4) * ch);
+    uint8_t* tmpA = static_cast<uint8_t*>(malloc((w / 2) * (h / 2) * ch));
+    uint8_t* tmpB = static_cast<uint8_t*>(malloc((w / 4) * (h / 4) * ch));
 
     // The first mipmap level is generated from the source buffer.
     GenerateMipmapLevel(pixeldata, tmpA, w, h, fmt);
@@ -219,16 +219,16 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h,
     int nh = NextPowerOfTwo(h);
     if (nw == w && nh == h) return false;
 
-    uint8_t *buffer = (uint8_t*)malloc(nw * nh * channels), *dst = buffer;
+    uint8_t *buffer = static_cast<uint8_t*>(malloc(nw * nh * channels)), *dst = buffer;
     int maxIndex = w * h - w - 1;
     int x, y;
     float sx, sy;
-    float dx = w / (float)nw;
-    float dy = h / (float)nh;
+    float dx = w / static_cast<float>(nw);
+    float dy = h / static_cast<float>(nh);
     for (y = 0, sy = 0; y < nh; ++y, sy += dy) {
-        int py = (int)sy;
+        int py = static_cast<int>(sy);
         for (x = 0, sx = 0; x < nw; ++x, sx += dx, dst += channels) {
-            int px = (int)sx;
+            int px = static_cast<int>(sx);
 
             const uint8_t* p1 =
                 pixels + clamp(py * w + px, 0, maxIndex) * channels;
@@ -245,7 +245,7 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h,
                 float w3 = fx0 * fy1;
                 float w4 = fx1 * fy1;
 
-                dst[ch] = (uint8_t)(p1[ch] * w1 + p2[ch] * w2 + p3[ch] * w3 +
+                dst[ch] = static_cast<uint8_t>(p1[ch] * w1 + p2[ch] * w2 + p3[ch] * w3 +
                                     p4[ch] * w4);
             }
         }
@@ -311,8 +311,8 @@ Texture::Data::Data(int inW, int inH, Texture::Format inFmt,
         if (unaligned) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     }
 
-    rw = (float)(1.0 / w);
-    rh = (float)(1.0 / h);
+    rw = static_cast<float>(1.0 / w);
+    rh = static_cast<float>(1.0 / h);
     refs = 1;
     mipmapped = mipmap;
     cached = false;
@@ -355,7 +355,7 @@ void Texture::Data::increaseHeight(int newHeight) {
         }
 
         int channels = sNumChannels[usedFmt];
-        uint8_t* pixels = (uint8_t*)malloc(w * newHeight * channels);
+        uint8_t* pixels = static_cast<uint8_t*>(malloc(w * newHeight * channels));
         memset(pixels + w * h * channels, 0, w * (newHeight - h) * channels);
 
         glBindTexture(GL_TEXTURE_2D, handle);
@@ -368,7 +368,7 @@ void Texture::Data::increaseHeight(int newHeight) {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         h = newHeight;
-        rh = 1.0f / (float)max(h, 1);
+        rh = 1.0f / static_cast<float>max(h, 1);
         free(pixels);
     }
 }

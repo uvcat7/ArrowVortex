@@ -409,7 +409,7 @@ void DialogData::FinishActions() {
 
 GuiDialog::GuiDialog(GuiContext* gui) : data_(new DialogData(gui, this)) {}
 
-GuiDialog::~GuiDialog() {}
+GuiDialog::~GuiDialog() = default;
 
 void GuiDialog::onUpdateSize() {}
 

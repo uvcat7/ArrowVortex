@@ -25,7 +25,7 @@ static SnapType SpacingTypes[] = {ST_4TH,  ST_8TH,  ST_12TH,
 static const int IFP_SIZE = 24;
 static const int IFP_SPACING = 4;
 
-DialogGenerateNotes::~DialogGenerateNotes() {}
+DialogGenerateNotes::~DialogGenerateNotes() = default;
 
 DialogGenerateNotes::DialogGenerateNotes()
     : footSelectionIndex_(0), spacingValue_(0) {
@@ -40,8 +40,8 @@ void DialogGenerateNotes::myCreateWidgets() {
     myLayout.row().col(60).col(116);
     spacingDroplist_ = myLayout.add<WgDroplist>("Spacing");
     spacingDroplist_->value.bind(&spacingValue_);
-    for (int i = 0; i < 6; ++i) {
-        spacingDroplist_->addItem(SpacingStrings[i]);
+    for (auto & SpacingString : SpacingStrings) {
+        spacingDroplist_->addItem(SpacingString);
     }
 
     myLayout.row().col(180);

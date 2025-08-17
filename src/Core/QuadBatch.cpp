@@ -19,9 +19,9 @@ BatchSprite::BatchSprite(int w, int h) : width(w), height(h) {
 
 void BatchSprite::init(BatchSprite* spr, int count, int cols, int rows,
                        int sprW, int sprH) {
-    float du = 1.f / (float)cols, dv = 1.f / (float)rows;
+    float du = 1.f / static_cast<float>(cols), dv = 1.f / static_cast<float>(rows);
     for (int i = 0; i != count; ++i) {
-        float u = (float)(i % cols) * du, v = (float)(i / cols) * dv;
+        float u = static_cast<float>(i % cols) * du, v = static_cast<float>(i / cols) * dv;
         float uvs[8] = {u, v, u + du, v, u, v + dv, u + du, v + dv};
         memcpy(spr[i].uvs, uvs, sizeof(float) * 8);
         spr[i].width = sprW, spr[i].height = sprH;
@@ -74,11 +74,11 @@ void BatchSprite::draw(QuadBatchT* out, int x, int y, int y2) {
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y) {
-    draw(out, x, y, (uint32_t)RGBAtoColor32(255, 255, 255, 255));
+    draw(out, x, y, RGBAtoColor32(255, 255, 255, 255));
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, uint8_t alpha) {
-    draw(out, x, y, (uint32_t)RGBAtoColor32(255, 255, 255, alpha));
+    draw(out, x, y, RGBAtoColor32(255, 255, 255, alpha));
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, uint32_t col) {
@@ -95,11 +95,11 @@ void BatchSprite::draw(QuadBatchTC* out, int x, int y, uint32_t col) {
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2) {
-    draw(out, x, y, y2, (uint32_t)RGBAtoColor32(255, 255, 255, 255));
+    draw(out, x, y, y2, RGBAtoColor32(255, 255, 255, 255));
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2, uint8_t alpha) {
-    draw(out, x, y, y2, (uint32_t)RGBAtoColor32(255, 255, 255, alpha));
+    draw(out, x, y, y2, RGBAtoColor32(255, 255, 255, alpha));
 }
 
 void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2, uint32_t col) {
@@ -115,18 +115,18 @@ void BatchSprite::draw(QuadBatchTC* out, int x, int y, int y2, uint32_t col) {
 
 void BatchSprite::draw(QuadBatchTC* out, float x, float y, float rotation,
                        float scale, uint32_t color) {
-    float rsin = (float)sin(rotation);
-    float rcos = (float)cos(rotation);
+    float rsin = sin(rotation);
+    float rcos = cos(rotation);
 
-    float w = (float)(width * DrawScale / 512) * scale;
-    float h = (float)(height * DrawScale / 512) * scale;
+    float w = static_cast<float>(width * DrawScale / 512) * scale;
+    float h = static_cast<float>(height * DrawScale / 512) * scale;
     const float xy[8] = {-w, -h, +w, -h, -w, +h, +w, +h};
 
     out->push();
     int* vp = out->pos;
     for (int i = 0, j = 1; i < 8; i += 2, j += 2) {
-        vp[i] = (int)(x + xy[i] * rcos - xy[j] * rsin);
-        vp[j] = (int)(y + xy[i] * rsin + xy[j] * rcos);
+        vp[i] = static_cast<int>(x + xy[i] * rcos - xy[j] * rsin);
+        vp[j] = static_cast<int>(y + xy[i] * rsin + xy[j] * rcos);
     }
 
     uint32_t vc[4] = {color, color, color, color};

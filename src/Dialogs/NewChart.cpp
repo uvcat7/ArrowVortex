@@ -14,7 +14,7 @@
 
 namespace Vortex {
 
-DialogNewChart::~DialogNewChart() {}
+DialogNewChart::~DialogNewChart() = default;
 
 DialogNewChart::DialogNewChart() : myDifficulty(0), myRating(1), myStyle(0) {
     setTitle("NEW CHART");
@@ -38,7 +38,7 @@ void DialogNewChart::myCreateWidgets() {
     diffs->value.bind(&myDifficulty);
     diffs->setTooltip("Difficulty type of the chart");
     for (int i = 0; i < NUM_DIFFICULTIES; ++i) {
-        diffs->addItem(GetDifficultyName((Difficulty)i));
+        diffs->addItem(GetDifficultyName(static_cast<Difficulty>(i)));
     }
 
     WgSpinner* rating = myLayout.add<WgSpinner>();
@@ -66,7 +66,7 @@ void DialogNewChart::myCreateWidgets() {
 
 void DialogNewChart::myCreateChart() {
     if (gSimfile->isOpen()) {
-        auto difficulty = (Difficulty)myDifficulty;
+        auto difficulty = static_cast<Difficulty>(myDifficulty);
         gSimfile->addChart(gStyle->get(myStyle), myStepArtist, difficulty,
                            myRating);
         requestClose();

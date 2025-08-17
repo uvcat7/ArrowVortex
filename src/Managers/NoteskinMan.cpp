@@ -30,8 +30,8 @@ struct NoteskinImpl : public Noteskin {
 };
 
 struct SpriteTransform {
-    SpriteTransform() : x(0), y(0), w(0), h(0), rot(0), mir(0) {}
-    int x, y, w, h, rot, mir;
+    SpriteTransform()  = default;
+    int x = 0, y = 0, w = 0, h = 0, rot = 0, mir = 0;
 };
 
 static bool LoadTexture(const std::string& path, const std::string& dir,
@@ -151,12 +151,12 @@ static void SetUVS(const Texture& tex, SpriteTransform& t, BatchSprite& spr) {
         float tmp[8] = {0, 0, 1, 0, 0, 1, 1, 1};
         memcpy(spr.uvs, tmp, sizeof(float) * 8);
     } else {
-        double du = 1.0f / (double)tex.size().x;
-        double dv = 1.0f / (double)tex.size().y;
-        double ul = du * (double)t.x, ur = ul + du * (double)spr.width;
-        double vt = dv * (double)t.y, vb = vt + dv * (double)spr.height;
+        double du = 1.0f / static_cast<double>(tex.size().x);
+        double dv = 1.0f / static_cast<double>(tex.size().y);
+        double ul = du * static_cast<double>(t.x), ur = ul + du * static_cast<double>(spr.width);
+        double vt = dv * static_cast<double>(t.y), vb = vt + dv * static_cast<double>(spr.height);
         double uvs[8] = {ul, vt, ur, vt, ul, vb, ur, vb};
-        for (int i = 0; i < 8; ++i) spr.uvs[i] = (float)uvs[i];
+        for (int i = 0; i < 8; ++i) spr.uvs[i] = static_cast<float>(uvs[i]);
 
         // handle rotation.
         float* p = spr.uvs;
@@ -442,7 +442,7 @@ struct NoteskinManImpl : public NoteskinMan {
         }
     }
 
-    void saveSettings(XmrNode& settings) {
+    void saveSettings(XmrNode& settings) override {
         XmrNode* view = settings.child("view");
         if (!view) view = settings.addChild("view");
 
@@ -461,7 +461,7 @@ struct NoteskinManImpl : public NoteskinMan {
         return type.supportedStyles.find(style) != type.supportedStyles.size();
     }
 
-    void update(Chart* chart) {
+    void update(Chart* chart) override {
         const Style* style = chart ? chart->style : nullptr;
         if (myActiveStyle == style) return;
         myActiveStyle = style;
@@ -505,11 +505,11 @@ struct NoteskinManImpl : public NoteskinMan {
         }
     }
 
-    int getNumTypes() const { return myTypes.size(); }
+    int getNumTypes() const override { return myTypes.size(); }
 
-    const std::string& getName(int type) const { return myTypes[type].name; }
+    const std::string& getName(int type) const override { return myTypes[type].name; }
 
-    bool isSupported(int type) const {
+    bool isSupported(int type) const override {
         return Supports(myTypes[type], gStyle->get());
     }
 
@@ -518,7 +518,7 @@ struct NoteskinManImpl : public NoteskinMan {
         myPriorities.insert(0, type, 1);
     }
 
-    void setType(int type) {
+    void setType(int type) override {
         type = clamp(type, 0, myTypes.size());
         if (myActiveSkin && myActiveSkin->type != type) {
             LoadNoteskin(myActiveSkin, myTypes[type]);
@@ -528,9 +528,9 @@ struct NoteskinManImpl : public NoteskinMan {
         }
     }
 
-    int getType() const { return myActiveSkin ? myActiveSkin->type : 0; }
+    int getType() const override { return myActiveSkin ? myActiveSkin->type : 0; }
 
-    const Noteskin* get() const { return myActiveSkin; }
+    const Noteskin* get() const override { return myActiveSkin; }
 
 };  // NoteskinImpl.
 

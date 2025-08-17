@@ -15,22 +15,22 @@ namespace {
 
 static const int metaSize = sizeof(int) * 2;
 static char metaData[metaSize + sizeof(wchar_t)] = {};
-static wchar_t* nullstr = (wchar_t*)(metaData + metaSize);
+static wchar_t* nullstr = reinterpret_cast<wchar_t*>(metaData + metaSize);
 
 static void StrAlloc(wchar_t*& s, int n) {
-    int* cap = (int*)malloc(metaSize + sizeof(wchar_t) * (n + 1));
+    int* cap = static_cast<int*>(malloc(metaSize + sizeof(wchar_t) * (n + 1)));
     cap[0] = cap[1] = n;
-    s = (wchar_t*)(cap + 2);
+    s = reinterpret_cast<wchar_t*>(cap + 2);
 }
 
 static void StrRealloc(wchar_t*& s, int n) {
     if (s != nullstr) {
-        int* cap = (int*)s - 2;
+        int* cap = reinterpret_cast<int*>(s) - 2;
         if (*cap < n) {
             *cap = *cap << 1;
             if (*cap < n) *cap = n;
-            cap = (int*)realloc(cap, metaSize + sizeof(wchar_t) * (*cap + 1));
-            s = (wchar_t*)(cap + 2);
+            cap = static_cast<int*>(realloc(cap, metaSize + sizeof(wchar_t) * (*cap + 1)));
+            s = reinterpret_cast<wchar_t*>(cap + 2);
         }
         cap[1] = n;
     } else {
@@ -40,7 +40,7 @@ static void StrRealloc(wchar_t*& s, int n) {
 
 inline void StrFree(wchar_t* s) {
     if (s != nullstr) {
-        free((int*)s - 2);
+        free(reinterpret_cast<int*>(s) - 2);
     }
 }
 
@@ -226,9 +226,9 @@ static uint32_t ReadU16(const uint16_t*& p, const uint16_t* end) {
 
 static void WriteU8(std::string& str, uint32_t c) {
     if (c < 0x80) {
-        Str::append(str, (char)c);
+        Str::append(str, static_cast<char>(c));
     } else if (c > 0x10FFFF) {
-        Str::append(str, (char)c);
+        Str::append(str, static_cast<char>(c));
     } else {
         int numBytes = (c < 0x800) ? 2 : ((c < 0x10000) ? 3 : 4);
         uint8_t buffer[4];
@@ -244,19 +244,19 @@ static void WriteU8(std::string& str, uint32_t c) {
                 c >>= 6;
         };
         buffer[0] = c | utf8LeadingByte[numBytes];
-        Str::append(str, (const char*)buffer, numBytes);
+        Str::append(str, reinterpret_cast<const char*>(buffer), numBytes);
     }
 }
 
 static void WriteU16(WideString& str, uint32_t c) {
     if (c < 0xFFFF)
-        str.push_back((uint16_t)c);
+        str.push_back(static_cast<uint16_t>(c));
     else if (c > 0x10FFFF)
         str.push_back(L'~');
     else {
         c -= 0x10000;
-        str.push_back((uint16_t)(c >> 10) + 0xD800);
-        str.push_back((uint16_t)(c & 0x3FFUL) + 0xDC00);
+        str.push_back(static_cast<uint16_t>(c >> 10) + 0xD800);
+        str.push_back(static_cast<uint16_t>(c & 0x3FFUL) + 0xDC00);
     }
 }
 
@@ -265,10 +265,10 @@ static void WriteU16(WideString& str, uint32_t c) {
 std::string Narrow(const wchar_t* s, int len) {
     std::string out;
     if (sizeof(wchar_t) == sizeof(uint16_t)) {
-        for (auto p = (const uint16_t*)s, end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint16_t*>(s), end = p + len; p != end;)
             WriteU8(out, ReadU16(p, end));
     } else if (sizeof(wchar_t) == sizeof(uint32_t)) {
-        for (auto p = (const uint32_t*)s, end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint32_t*>(s), end = p + len; p != end;)
             WriteU8(out, *p);
     }
     return out;
@@ -277,10 +277,10 @@ std::string Narrow(const wchar_t* s, int len) {
 WideString Widen(const char* s, int len) {
     WideString out;
     if (sizeof(wchar_t) == sizeof(uint16_t)) {
-        for (auto p = (const uint8_t*)s, end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint8_t*>(s), end = p + len; p != end;)
             WriteU16(out, ReadU8(p, end));
     } else if (sizeof(wchar_t) == sizeof(uint32_t)) {
-        for (auto p = (const uint8_t*)s, end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint8_t*>(s), end = p + len; p != end;)
             out.push_back(ReadU8(p, end));
     }
     return out;

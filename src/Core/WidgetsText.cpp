@@ -24,7 +24,7 @@ enum LineEditDragType {
     DT_REGULAR_DRAG,
 };
 
-WgLineEdit::~WgLineEdit() {}
+WgLineEdit::~WgLineEdit() = default;
 
 WgLineEdit::WgLineEdit(GuiContext* gui)
     : GuiWidget(gui), lineedit_show_background_(1) {
@@ -169,7 +169,7 @@ void WgLineEdit::onMouseRelease(MouseRelease& evt) {
 void WgLineEdit::onTextInput(TextInput& evt) {
     if (isCapturingText() && is_editable_ && !evt.handled) {
         DeleteSection();
-        if ((int)lineedit_text_.length() < lineedit_max_length_) {
+        if (static_cast<int>(lineedit_text_.length()) < lineedit_max_length_) {
             std::string input(evt.text);
 
             // replace newlines with spaces
@@ -235,22 +235,22 @@ void WgLineEdit::onTick() {
         lineedit_blink_time_ = 0.f;
     }
     lineedit_cursor_.x =
-        min(max(lineedit_cursor_.x, 0), (int)lineedit_text_.length());
+        min(max(lineedit_cursor_.x, 0), static_cast<int>(lineedit_text_.length()));
     lineedit_cursor_.y =
-        min(max(lineedit_cursor_.y, 0), (int)lineedit_text_.length());
+        min(max(lineedit_cursor_.y, 0), static_cast<int>(lineedit_text_.length()));
 
     // Update text offset
 
     float dt = gui_->getDeltaTime();
-    float barW = (float)(rect_.w - 12);
-    float textW = (float)Text::getSize().x;
+    float barW = static_cast<float>(rect_.w - 12);
+    float textW = static_cast<float>(Text::getSize().x);
     float cursorX =
-        (float)Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x;
+        static_cast<float>(Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x);
     float target =
         min(max(lineedit_scroll_offset_, cursorX - barW + 12), cursorX - 12);
     target = max(0.f, min(target, textW - barW));
 
-    float delta = max((float)fabs(lineedit_scroll_offset_ - target) * 10.f * dt,
+    float delta = max(fabs(lineedit_scroll_offset_ - target) * 10.f * dt,
                       dt * 256.f);
     float smooth = (lineedit_scroll_offset_ < target)
                        ? min(lineedit_scroll_offset_ + delta, target)
@@ -338,7 +338,7 @@ void WgLineEdit::DeleteSection() {
 
 vec2i WgLineEdit::TextPosition() const {
     recti r = rect_;
-    return {r.x - (int)lineedit_scroll_offset_ + 6, r.y + r.h / 2};
+    return {r.x - static_cast<int>(lineedit_scroll_offset_) + 6, r.y + r.h / 2};
 }
 
 // ================================================================================================

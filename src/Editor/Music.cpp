@@ -117,17 +117,17 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
-    void saveSettings(XmrNode& settings) {
+    void saveSettings(XmrNode& settings) override {
         XmrNode* audio = settings.addChild("audio");
 
-        audio->addAttrib("musicVolume", (long)myMusicVolume);
-        audio->addAttrib("tickOffsetMs", (long)myTickOffsetMs);
+        audio->addAttrib("musicVolume", static_cast<long>(myMusicVolume));
+        audio->addAttrib("tickOffsetMs", static_cast<long>(myTickOffsetMs));
     }
 
     // ================================================================================================
     // MusicImpl :: loading and unloading music.
 
-    void unload() {
+    void unload() override {
         terminateOggConversion();
 
         myMixer->close();
@@ -138,7 +138,7 @@ struct MusicImpl : public Music, public MixSource {
         myLoadState = LOADING_DONE;
     }
 
-    void load() {
+    void load() override {
         unload();
 
         if (gSimfile->isClosed()) return;
@@ -174,7 +174,7 @@ struct MusicImpl : public Music, public MixSource {
     void WriteTickSamples(short* dst, int startFrame, int numFrames,
                           const TickData& tick, int rate) {
         if (rate != 100) {
-            startFrame = (int)((int64_t)startFrame * 100 / rate);
+            startFrame = static_cast<int>(static_cast<int64_t>(startFrame) * 100 / rate);
         }
 
         const short* srcL = tick.sound.samplesL() + startFrame;
@@ -190,26 +190,26 @@ struct MusicImpl : public Music, public MixSource {
             int idx = 0;
             double srcPos = 0.0;
             const int tickEndPos = tick.sound.getNumFrames() - startFrame;
-            const double srcDelta = 100.0 / (double)rate;
+            const double srcDelta = 100.0 / static_cast<double>(rate);
             for (; numFrames > 0 && idx < tickEndPos; --numFrames) {
-                const float frac = (float)(srcPos - floor(srcPos));
+                const float frac = static_cast<float>(srcPos - floor(srcPos));
 
                 float sampleL =
-                    lerp((float)srcL[idx], (float)srcL[idx + 1], frac);
+                    lerp(static_cast<float>(srcL[idx]), static_cast<float>(srcL[idx + 1]), frac);
                 float sampleR =
-                    lerp((float)srcR[idx], (float)srcR[idx + 1], frac);
+                    lerp(static_cast<float>(srcR[idx]), static_cast<float>(srcR[idx + 1]), frac);
 
-                *dst++ = min(max(*dst + (short)sampleL, SHRT_MIN), SHRT_MAX);
-                *dst++ = min(max(*dst + (short)sampleR, SHRT_MIN), SHRT_MAX);
+                *dst++ = min(max(*dst + static_cast<short>(sampleL), SHRT_MIN), SHRT_MAX);
+                *dst++ = min(max(*dst + static_cast<short>(sampleR), SHRT_MIN), SHRT_MAX);
 
                 srcPos += srcDelta;
-                idx = (int)srcPos;
+                idx = static_cast<int>(srcPos);
             }
         }
     }
 
     void WriteTicks(short* buf, int frames, const TickData& tick, int rate) {
-        int playPos = (int)myPlayPosition;
+        int playPos = static_cast<int>(myPlayPosition);
         int count = tick.frames.size();
         const int* ticks = tick.frames.data();
 
@@ -245,7 +245,7 @@ struct MusicImpl : public Music, public MixSource {
         // silence.
         int framesLeft = frames;
         if (srcPos < 0) {
-            int n = min(framesLeft, (int)max(-srcPos, (int64_t)INT_MIN));
+            int n = min(framesLeft, static_cast<int>(max(-srcPos, static_cast<int64_t>INT_MIN)));
             memset(dst, 0, sizeof(short) * MIX_CHANNELS * n);
             dst += n * MIX_CHANNELS;
             framesLeft -= n;
@@ -255,8 +255,8 @@ struct MusicImpl : public Music, public MixSource {
         // Fill the remaining buffer with music samples.
         if (framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 &&
             !myIsMuted) {
-            int n = (int)min(max(mySamples.getNumFrames() - srcPos, (int64_t)0),
-                             (int64_t)framesLeft);
+            int n = static_cast<int>(min(max(mySamples.getNumFrames() - srcPos, static_cast<int64_t>(0)),
+                             static_cast<int64_t>(framesLeft)));
             const short* srcL = mySamples.samplesL() + srcPos;
             const short* srcR = mySamples.samplesR() + srcPos;
             if (musicVolume == 100) {
@@ -267,8 +267,8 @@ struct MusicImpl : public Music, public MixSource {
             } else {
                 int vol = ((musicVolume * musicVolume) << 15) / (100 * 100);
                 for (int i = 0; i < n; ++i) {
-                    *dst++ = (short)(((*srcL++) * vol) >> 15);
-                    *dst++ = (short)(((*srcR++) * vol) >> 15);
+                    *dst++ = static_cast<short>(((*srcL++) * vol) >> 15);
+                    *dst++ = static_cast<short>(((*srcR++) * vol) >> 15);
                 }
             }
             framesLeft -= n;
@@ -286,18 +286,18 @@ struct MusicImpl : public Music, public MixSource {
     }
 
     void writeFrames(short* buffer, int frames) override {
-        double srcAdvance = (double)frames;
+        double srcAdvance = static_cast<double>(frames);
         if (myMusicSpeed == 100) {
             // Source and target samplerate are equal.
             int64_t srcPos = llround(myPlayPosition);
             WriteSourceFrames(buffer, frames, srcPos);
         } else {
-            double rate = (double)myMusicSpeed / 100.0;
+            double rate = static_cast<double>(myMusicSpeed) / 100.0;
             srcAdvance *= rate;
 
             // Source and target samplerate are different, mix to temporary
             // buffer.
-            int64_t srcPos = (int64_t)(myPlayPosition);
+            int64_t srcPos = static_cast<int64_t>(myPlayPosition);
             int tmpFrames = frames * myMusicSpeed / 100;
             myMixBuffer.grow(tmpFrames * 2);
             WriteSourceFrames(myMixBuffer.data(), tmpFrames, srcPos);
@@ -310,19 +310,19 @@ struct MusicImpl : public Music, public MixSource {
 
             short* dst = buffer;
             for (int i = 0; i < frames; ++i) {
-                int index0 = min((int)tmpPos, tmpEnd);
+                int index0 = min(static_cast<int>(tmpPos), tmpEnd);
                 int index1 = min(index0 + 1, tmpEnd);
                 index0 *= MIX_CHANNELS;
                 index1 *= MIX_CHANNELS;
 
-                float w1 = (float)(tmpPos - floor(tmpPos));
+                float w1 = static_cast<float>(tmpPos - floor(tmpPos));
                 float w0 = 1.0f - w1;
 
-                float l = (float)tmpL[index0] * w0 + (float)tmpL[index1] * w1;
-                float r = (float)tmpR[index0] * w0 + (float)tmpR[index1] * w1;
+                float l = static_cast<float>(tmpL[index0]) * w0 + static_cast<float>(tmpL[index1]) * w1;
+                float r = static_cast<float>(tmpR[index0]) * w0 + static_cast<float>(tmpR[index1]) * w1;
 
-                *dst++ = (short)min(max((int)l, SHRT_MIN), SHRT_MAX);
-                *dst++ = (short)min(max((int)r, SHRT_MIN), SHRT_MAX);
+                *dst++ = static_cast<short>(min(max(static_cast<int>(l), SHRT_MIN), SHRT_MAX));
+                *dst++ = static_cast<short>(min(max(static_cast<int>(r), SHRT_MIN), SHRT_MAX));
 
                 tmpPos += rate;
             }
@@ -334,7 +334,7 @@ struct MusicImpl : public Music, public MixSource {
     // ================================================================================================
     // MusicImpl :: OggVorbis conversion.
 
-    void startOggConversion() {
+    void startOggConversion() override {
         if (gSimfile->isClosed()) return;
 
         std::string dir = gSimfile->getDir();
@@ -400,13 +400,13 @@ struct MusicImpl : public Music, public MixSource {
 
     void resumeStream() {
         if (!myIsPaused) {
-            myPlayPosition = myPlayStartTime * (double)mySamples.getFrequency();
+            myPlayPosition = myPlayStartTime * static_cast<double>(mySamples.getFrequency());
             myPlayTimer = Debug::getElapsedTime();
             myMixer->resume();
         }
     }
 
-    void tick() {
+    void tick() override {
         if (myLoadState != LOADING_DONE && myInfoBox) {
             if (mySamples.getLoadingProgress() > 0) {
                 myInfoBox->setProgress(mySamples.getLoadingProgress() * 0.01f);
@@ -439,49 +439,49 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
-    void pause() {
+    void pause() override {
         if (!myIsPaused) {
             interruptStream();
             myIsPaused = true;
         }
     }
 
-    void play() {
+    void play() override {
         if (myIsPaused) {
             myIsPaused = false;
             resumeStream();
         }
     }
 
-    void seek(double seconds) {
+    void seek(double seconds) override {
         interruptStream();
         myPlayStartTime = seconds;
         resumeStream();
     }
 
-    double getPlayTime() {
+    double getPlayTime() override {
         double time = myPlayStartTime;
         if (!myIsPaused) {
-            double rate = (double)myMusicSpeed * 0.01;
+            double rate = static_cast<double>(myMusicSpeed) * 0.01;
             time += Debug::getElapsedTime(myPlayTimer) * rate;
         }
         return time;
     }
 
-    double getSongLength() {
-        return (double)mySamples.getNumFrames() /
-               (double)mySamples.getFrequency();
+    double getSongLength() override {
+        return static_cast<double>(mySamples.getNumFrames()) /
+               static_cast<double>(mySamples.getFrequency());
     }
 
-    const std::string& getTitle() { return myTitle; }
+    const std::string& getTitle() override { return myTitle; }
 
-    const std::string& getArtist() { return myArtist; }
+    const std::string& getArtist() override { return myArtist; }
 
-    bool isPaused() { return myIsPaused; }
+    bool isPaused() override { return myIsPaused; }
 
-    const Sound& getSamples() { return mySamples; }
+    const Sound& getSamples() override { return mySamples; }
 
-    void setSpeed(int speed) {
+    void setSpeed(int speed) override {
         speed = min(max(speed, 10), 400);
         if (myMusicSpeed != speed) {
             interruptStream();
@@ -491,9 +491,9 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
-    int getSpeed() { return myMusicSpeed; }
+    int getSpeed() override { return myMusicSpeed; }
 
-    void setVolume(int vol) {
+    void setVolume(int vol) override {
         vol = min(max(vol, 0), 100);
         if (myMusicVolume != vol) {
             interruptStream();
@@ -504,9 +504,9 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
-    int getVolume() { return myMusicVolume; }
+    int getVolume() override { return myMusicVolume; }
 
-    void setMuted(bool mute) {
+    void setMuted(bool mute) override {
         if (myIsMuted != mute) {
             interruptStream();
             myIsMuted = mute;
@@ -515,9 +515,9 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
-    bool isMuted() { return myIsMuted; }
+    bool isMuted() override { return myIsMuted; }
 
-    void toggleBeatTick() {
+    void toggleBeatTick() override {
         interruptStream();
         myBeatTick.enabled = !myBeatTick.enabled;
         resumeStream();
@@ -526,7 +526,7 @@ struct MusicImpl : public Music, public MixSource {
 
     bool hasBeatTick() { return myBeatTick.enabled; }
 
-    void toggleNoteTick() {
+    void toggleNoteTick() override {
         interruptStream();
         myNoteTick.enabled = !myNoteTick.enabled;
         resumeStream();
@@ -541,14 +541,14 @@ struct MusicImpl : public Music, public MixSource {
     void updateBeatTicks() {
         myBeatTick.frames.clear();
 
-        double freq = (double)mySamples.getFrequency();
+        double freq = static_cast<double>(mySamples.getFrequency());
         double ofs = myTickOffsetMs / 1000.0;
 
         TempoTimeTracker tracker(gTempo->getTimingData());
         for (int row = 0, end = gSimfile->getEndRow(); row < end;
              row += ROWS_PER_BEAT) {
             double time = tracker.advance(row);
-            int frame = (int)((time + ofs) * freq);
+            int frame = static_cast<int>((time + ofs) * freq);
             myBeatTick.frames.push_back(frame);
         }
     }
@@ -556,18 +556,18 @@ struct MusicImpl : public Music, public MixSource {
     void updateNoteTicks() {
         myNoteTick.frames.clear();
 
-        double freq = (double)mySamples.getFrequency();
+        double freq = static_cast<double>(mySamples.getFrequency());
         double ofs = myTickOffsetMs / 1000.0;
 
         for (auto& note : *gNotes) {
             if (!(note.isMine | note.isWarped | note.isFake)) {
-                int frame = (int)((note.time + ofs) * freq);
+                int frame = static_cast<int>((note.time + ofs) * freq);
                 myNoteTick.frames.push_back(frame);
             }
         }
     }
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         const int bits = VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED |
                          VCM_END_ROW_CHANGED | VCM_CHART_CHANGED;
 

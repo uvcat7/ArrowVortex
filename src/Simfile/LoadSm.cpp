@@ -301,11 +301,11 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p,
         if (*p == '0') {
             // Do nothing.
         } else if (*p == '1') {
-            data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player,
-                                NOTE_STEP_OR_HOLD, (uint32_t)quantization});
+            data.notes->append({row, row, static_cast<uint32_t>(col), static_cast<uint32_t>(data.player),
+                                NOTE_STEP_OR_HOLD, static_cast<uint32_t>(quantization)});
         } else if (*p == '2' || *p == '4') {
-            data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player,
-                                NOTE_STEP_OR_HOLD, (uint32_t)quantization});
+            data.notes->append({row, row, static_cast<uint32_t>(col), static_cast<uint32_t>(data.player),
+                                NOTE_STEP_OR_HOLD, static_cast<uint32_t>(quantization)});
             data.holdType[col] = (*p == '2') ? NOTE_STEP_OR_HOLD : NOTE_ROLL;
             data.holdPos[col] = data.notes->size();
             data.quants[col] = quantization;
@@ -332,14 +332,14 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p,
                 data.quants[col] = 0;
             }
         } else if (*p == 'M') {
-            data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player,
-                                NOTE_MINE, (uint32_t)quantization});
+            data.notes->append({row, row, static_cast<uint32_t>(col), static_cast<uint32_t>(data.player),
+                                NOTE_MINE, static_cast<uint32_t>(quantization)});
         } else if (*p == 'L') {
-            data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player,
-                                NOTE_LIFT, (uint32_t)quantization});
+            data.notes->append({row, row, static_cast<uint32_t>(col), static_cast<uint32_t>(data.player),
+                                NOTE_LIFT, static_cast<uint32_t>(quantization)});
         } else if (*p == 'F') {
-            data.notes->append({row, row, (uint32_t)col, (uint32_t)data.player,
-                                NOTE_FAKE, (uint32_t)quantization});
+            data.notes->append({row, row, static_cast<uint32_t>(col), static_cast<uint32_t>(data.player),
+                                NOTE_FAKE, static_cast<uint32_t>(quantization)});
         }
     }
 }
@@ -418,7 +418,7 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
                 for (int i = 4; i < ROWS_PER_NOTE_SECTION; i++) {
                     bool valid = true;
                     line = measureText;
-                    float mod = (float)ROWS_PER_NOTE_SECTION / i;
+                    float mod = static_cast<float>(ROWS_PER_NOTE_SECTION) / i;
                     for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION;
                          ++j, line += numCols) {
                         float rem = round(fmod(j, mod));
@@ -447,8 +447,8 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
 
                 // Handle abnormal numbers of lines loading
                 if (ROWS_PER_NOTE_SECTION % numLines != 0) {
-                    ofs = ((int)round(192.0f / numLines * (i + 1)) -
-                           (int)round(192.0f / numLines * i));
+                    ofs = (static_cast<int>(round(192.0f / numLines * (i + 1))) -
+                           static_cast<int>(round(192.0f / numLines * i)));
                 }
                 line += numCols;
                 row += ofs;

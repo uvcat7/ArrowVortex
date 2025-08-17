@@ -43,7 +43,7 @@ struct TempoBoxesImpl : public TempoBoxes {
     // ================================================================================================
     // TempoBoxesImpl :: constructor and destructor.
 
-    ~TempoBoxesImpl() {}
+    ~TempoBoxesImpl() = default;
 
     TempoBoxesImpl() {
         myBoxBar.texture = myBoxHl.texture =
@@ -66,7 +66,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         }
     }
 
-    void saveSettings(XmrNode& settings) {
+    void saveSettings(XmrNode& settings) override {
         XmrNode* view = settings.child("view");
         if (!view) view = settings.addChild("view");
 
@@ -83,11 +83,10 @@ struct TempoBoxesImpl : public TempoBoxes {
 
         // Create a box for every segment.
         auto segments = gTempo->getSegments();
-        for (auto it = segments->begin(), end = segments->end(); it != end;
-             ++it) {
-            auto type = it->type();
+        for (const auto & segment : *segments) {
+            auto type = segment.type();
             auto meta = Segment::meta[type];
-            for (auto seg = it->begin(), segEnd = it->end(); seg != segEnd;
+            for (auto seg = segment.begin(), segEnd = segment.end(); seg != segEnd;
                  ++seg) {
                 std::string desc = meta->getDescription(seg.ptr);
                 myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
@@ -124,7 +123,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         }
     }
 
-    void onChanges(int changes) {
+    void onChanges(int changes) override {
         if (changes & VCM_TEMPO_CHANGED) {
             update();
         }
@@ -133,24 +132,24 @@ struct TempoBoxesImpl : public TempoBoxes {
     // ================================================================================================
     // TempoBoxesImpl :: toggle visuals.
 
-    void toggleShowBoxes() {
+    void toggleShowBoxes() override {
         myShowBoxes = !myShowBoxes;
         gMenubar->update(Menubar::SHOW_TEMPO_BOXES);
     }
 
-    void toggleShowHelp() {
+    void toggleShowHelp() override {
         myShowHelp = !myShowHelp;
         gMenubar->update(Menubar::SHOW_TEMPO_HELP);
     }
 
-    bool hasShowBoxes() { return myShowBoxes; }
+    bool hasShowBoxes() override { return myShowBoxes; }
 
-    bool hasShowHelp() { return myShowHelp; }
+    bool hasShowHelp() override { return myShowHelp; }
 
     // ================================================================================================
     // TempoBoxesImpl :: selection.
 
-    void deselectAll() {
+    void deselectAll() override {
         for (auto& box : myBoxes) {
             box.isSelected = 0;
         }
@@ -159,7 +158,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         }
     }
 
-    int selectAll() {
+    int selectAll() override {
         for (auto& box : myBoxes) {
             box.isSelected = 1;
         }
@@ -169,7 +168,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         return myBoxes.size();
     }
 
-    int selectType(Segment::Type type) {
+    int selectType(Segment::Type type) override {
         for (auto& box : myBoxes) {
             box.isSelected = (box.type == type ? 1 : 0);
         }
@@ -179,15 +178,14 @@ struct TempoBoxesImpl : public TempoBoxes {
         return myBoxes.size();
     }
 
-    int selectSegments(const Tempo* tempo) {
+    int selectSegments(const Tempo* tempo) override {
         int numSelected = 0;
         auto boxEnd = myBoxes.end();
         auto segments = gTempo->getSegments();
-        for (auto list = segments->begin(), listEnd = segments->end();
-             list != listEnd; ++list) {
-            auto type = list->type();
+        for (const auto & segment : *segments) {
+            auto type = segment.type();
             auto box = myBoxes.begin();
-            for (auto seg = list->begin(), segEnd = list->end(); seg != segEnd;
+            for (auto seg = segment.begin(), segEnd = segment.end(); seg != segEnd;
                  ++seg) {
                 while (box != boxEnd &&
                        (box->type != type || box->row < seg->row)) {
@@ -229,7 +227,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         return numSelected;
     }
 
-    int selectRows(SelectModifier mod, int begin, int end, int xl, int xr) {
+    int selectRows(SelectModifier mod, int begin, int end, int xl, int xr) override {
         auto coords = gView->getNotefieldCoords();
         const int baseX[2] = {coords.xl, coords.xr};
         return performSelection(mod, [&](const TempoBox* box) {
@@ -241,7 +239,7 @@ struct TempoBoxesImpl : public TempoBoxes {
     }
 
     int selectTime(SelectModifier mod, double begin, double end, int xl,
-                   int xr) {
+                   int xr) override {
         auto coords = gView->getNotefieldCoords();
         const int baseX[2] = {coords.xl, coords.xr};
         TempoTimeTracker tracker;
@@ -254,7 +252,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         });
     }
 
-    bool noneSelected() const {
+    bool noneSelected() const override {
         for (auto& box : myBoxes) {
             if (box.isSelected) return false;
         }
@@ -264,7 +262,7 @@ struct TempoBoxesImpl : public TempoBoxes {
     // ================================================================================================
     // TempoBoxesImpl :: tick.
 
-    void tick() {
+    void tick() override {
         myMouseOverBox = -1;
         if (!GuiMain::isCapturingMouse()) {
             bool timeBased = gView->isTimeBased();
@@ -277,11 +275,11 @@ struct TempoBoxesImpl : public TempoBoxes {
             vec2i mpos = gSystem->getMousePos();
             for (int i = 0; i < myBoxes.size(); ++i) {
                 auto& box = myBoxes[i];
-                int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row)
-                                                   : (double)box.row));
+                int y = static_cast<int>(oy + dy * (timeBased ? tracker.advance(box.row)
+                                                   : static_cast<double>(box.row)));
                 int side = Segment::meta[box.type]->side;
                 int x = baseX[side] + box.x;
-                if (IsInside(recti{x, y - 16, (int)box.width, 32}, mpos.x,
+                if (IsInside(recti{x, y - 16, static_cast<int>(box.width), 32}, mpos.x,
                              mpos.y)) {
                     myMouseOverBox = i;
                     break;
@@ -293,7 +291,7 @@ struct TempoBoxesImpl : public TempoBoxes {
     // ================================================================================================
     // TempoBoxesImpl :: draw.
 
-    void draw() {
+    void draw() override {
         if (myShowBoxes == false || myBoxes.empty() ||
             gView->getScaleLevel() < 2)
             return;
@@ -316,15 +314,15 @@ struct TempoBoxesImpl : public TempoBoxes {
         TempoTimeTracker tracker;
         auto batch = Renderer::batchTC();
         for (const TempoBox& box : myBoxes) {
-            int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row)
-                                               : (double)box.row));
+            int y = static_cast<int>(oy + dy * (timeBased ? tracker.advance(box.row)
+                                               : static_cast<double>(box.row)));
             if (y < viewTop - 16 || y > viewBtm + 16) continue;
 
             int side = Segment::meta[box.type]->side;
             int x = baseX[side] + box.x;
 
             int flags = side * TileBar::FLIP_H;
-            recti r = {x, y - 16, (int)box.width, 32};
+            recti r = {x, y - 16, static_cast<int>(box.width), 32};
 
             uint32_t color = Segment::meta[box.type]->color;
             myBoxBar.draw(&batch, r, color, flags);
@@ -338,15 +336,15 @@ struct TempoBoxesImpl : public TempoBoxes {
         tracker = TempoTimeTracker();
         TextStyle textStyle;
         for (const TempoBox& box : myBoxes) {
-            int y = (int)(oy + dy * (timeBased ? tracker.advance(box.row)
-                                               : (double)box.row));
+            int y = static_cast<int>(oy + dy * (timeBased ? tracker.advance(box.row)
+                                               : static_cast<double>(box.row)));
             if (y < viewTop - 16 || y > viewBtm + 16) continue;
 
             int side = Segment::meta[box.type]->side;
             int x = baseX[side] + box.x + side * 4 - 2;
 
             Text::arrange(Text::MC, textStyle, box.str.c_str());
-            Text::draw(recti{x, y - 17, (int)box.width, 32});
+            Text::draw(recti{x, y - 17, static_cast<int>(box.width), 32});
         }
 
         // Display detailed info of the mouse over box.
@@ -390,7 +388,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         Text::draw(vec2i{x, y + 10});
     }
 
-    const Vector<TempoBox>& getBoxes() { return myBoxes; }
+    const Vector<TempoBox>& getBoxes() override { return myBoxes; }
 
 };  // TempoBoxesImpl
 

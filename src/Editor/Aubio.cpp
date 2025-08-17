@@ -13,7 +13,7 @@ namespace Vortex {
 
 fvec_t *new_fvec(uint_t length) {
     fvec_t *s;
-    if ((sint_t)length <= 0) {
+    if (static_cast<sint_t>(length) <= 0) {
         return nullptr;
     }
     s = AUBIO_NEW(fvec_t);
@@ -33,7 +33,7 @@ void fvec_zeros(fvec_t *s) { memset(s->data, 0, s->length * sizeof(smpl_t)); }
 
 cvec_t *new_cvec(uint_t length) {
     cvec_t *s;
-    if ((sint_t)length <= 0) {
+    if (static_cast<sint_t>(length) <= 0) {
         return nullptr;
     }
     s = AUBIO_NEW(cvec_t);
@@ -53,7 +53,7 @@ void del_cvec(cvec_t *s) {
 
 lvec_t *new_lvec(uint_t length) {
     lvec_t *s;
-    if ((sint_t)length <= 0) {
+    if (static_cast<sint_t>(length) <= 0) {
         return nullptr;
     }
     s = AUBIO_NEW(lvec_t);
@@ -141,7 +141,7 @@ fvec_t *new_aubio_window(aubio_window_type window_type, uint_t length) {
 
 smpl_t fvec_median(fvec_t *input) {
     uint_t n = input->length;
-    smpl_t *arr = (smpl_t *)input->data;
+    smpl_t *arr = input->data;
     uint_t low, high;
     uint_t median;
     uint_t middle, ll, hh;
@@ -239,7 +239,7 @@ smpl_t fvec_mean(fvec_t *s) {
     for (j = 0; j < s->length; j++) {
         tmp += s->data[j];
     }
-    return tmp / (smpl_t)(s->length);
+    return tmp / static_cast<smpl_t>(s->length);
 }
 
 smpl_t fvec_quadratic_peak_pos(fvec_t *x, uint_t pos) {

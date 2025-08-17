@@ -68,10 +68,10 @@ static const int BUFFER_SIZE = 1024;
 
 class Sound::Thread : public BackgroundThread {
    public:
-    ~Thread();
+    ~Thread() override;
     Thread(Sound* sound, SoundSource* source);
 
-    void exec();
+    void exec() override;
     bool readBlock();
     void cleanup();
     uint8_t progress() { return myProgress; }
@@ -99,7 +99,7 @@ Sound::Thread::Thread(Sound* sound, SoundSource* source) {
     mySource = source;
 
     int bytesPerFrame = source->getNumChannels() * source->getBytesPerSample();
-    myBuffer = (short*)malloc(BUFFER_SIZE * bytesPerFrame);
+    myBuffer = static_cast<short*>(malloc(BUFFER_SIZE * bytesPerFrame));
 
     myCurrentFrame = 0;
     myReservedFrames = 0;
@@ -158,7 +158,7 @@ bool Sound::Thread::readBlock() {
         myCurrentFrame += framesRead;
 
         if (mySound->myIsAllocated) {
-            myProgress = (uint8_t)((uint64_t)100 * myCurrentFrame /
+            myProgress = static_cast<uint8_t>(static_cast<uint64_t>(100) * myCurrentFrame /
                                    mySound->myNumFrames);
         }
     }

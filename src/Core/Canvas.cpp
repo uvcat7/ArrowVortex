@@ -61,16 +61,16 @@ struct GetLineDist : public DistanceFunc {
     GetLineDist(float ax, float ay, float bx, float by, float size)
         : ax(ax), ay(ay), bx(bx), by(by), size(size) {}
 
-    float Get(float px, float py) const {
+    float Get(float px, float py) const override {
         float num = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
         float den = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
         float rdn = 1 / den, r = num * rdn;
         float s = ((ay - py) * (bx - ax) - (ax - px) * (by - ay)) * rdn;
-        if (r >= 0 && r <= 1) return (float)fabs(s * sqrt(den)) - size;
+        if (r >= 0 && r <= 1) return fabs(s * sqrt(den)) - size;
 
         float d1sq = (px - ax) * (px - ax) + (py - ay) * (py - ay);
         float d2sq = (px - bx) * (px - bx) + (py - by) * (py - by);
-        return (float)sqrt(d1sq < d2sq ? d1sq : d2sq) - size;
+        return sqrt(d1sq < d2sq ? d1sq : d2sq) - size;
     }
 };
 
@@ -80,9 +80,9 @@ struct GetCircleDist : public DistanceFunc {
 
     GetCircleDist(float x, float y, float r) : x(x), y(y), r(r) {}
 
-    float Get(float px, float py) const {
+    float Get(float px, float py) const override {
         float dx = px - x, dy = py - y;
-        return (float)sqrt(dx * dx + dy * dy) - r;
+        return sqrt(dx * dx + dy * dy) - r;
     }
 };
 
@@ -93,7 +93,7 @@ struct GetRoundRectDist : public DistanceFunc {
     GetRoundRectDist(float x1, float y1, float x2, float y2, float r)
         : x1(x1), y1(y1), x2(x2), y2(y2), r(r) {}
 
-    float Get(float px, float py) const {
+    float Get(float px, float py) const override {
         float x = min(max(px, x1 + r), x2 - r);
         float y = min(max(py, y1 + r), y2 - r);
         if (x == px && y == py) {
@@ -102,7 +102,7 @@ struct GetRoundRectDist : public DistanceFunc {
             return -min(dx, dy);
         } else {
             float dx = px - x, dy = py - y;
-            return (float)sqrt(dx * dx + dy * dy) - r;
+            return sqrt(dx * dx + dy * dy) - r;
         }
     }
 };
@@ -124,7 +124,7 @@ struct GetPolyDist : public DistanceFunc {
         return (numIntersects & 1);
     }
 
-    float Get(float px, float py) const {
+    float Get(float px, float py) const override {
         float d = 1e10;
         for (int i = 0, j = count - 1; i < count; j = i, ++i) {
             GetLineDist ld(x[i], y[i], x[j], y[j], 0);
@@ -163,28 +163,28 @@ void Canvas::Data::draw(float* buf, int w, int h, const areaf& area,
     if (blendMode == Canvas::BM_ALPHA) blendfunc = BlendAlpha;
     if (blendMode == Canvas::BM_ADD) blendfunc = BlendAdd;
 
-    int x1 = max(mask.l, (int)(area.l - outerGlow - 1 + 0.5f));
-    int y1 = max(mask.t, (int)(area.t - outerGlow - 1 + 0.5f));
-    int x2 = min(mask.r, (int)(area.r + outerGlow + 1 + 0.5f));
-    int y2 = min(mask.b, (int)(area.b + outerGlow + 1 + 0.5f));
+    int x1 = max(mask.l, static_cast<int>(area.l - outerGlow - 1 + 0.5f));
+    int y1 = max(mask.t, static_cast<int>(area.t - outerGlow - 1 + 0.5f));
+    int x2 = min(mask.r, static_cast<int>(area.r + outerGlow + 1 + 0.5f));
+    int y2 = min(mask.b, static_cast<int>(area.b + outerGlow + 1 + 0.5f));
 
     float rh = 1.f / max(1, y2 - y1);
     float rw = 1.f / max(1, x2 - x1);
     float ig = 1.f / (innerGlow + 1);
     float og = 1.f / (outerGlow + 1);
 
-    float yf = (float)y1 + 0.5f;
+    float yf = static_cast<float>(y1) + 0.5f;
     for (int y = y1; y < y2; ++y, yf += 1) {
         RGBA l = tl;
         BlendLinear(l, bl, yf * rh);
         RGBA r = tr;
         BlendLinear(r, br, yf * rh);
 
-        float xf = (float)x1 + 0.5f;
+        float xf = static_cast<float>(x1) + 0.5f;
         for (int x = x1; x < x2; ++x, xf += 1) {
             float dist = func->Get(xf, yf);
             if (dist >= outerGlow + 1) continue;
-            RGBA* dst = (RGBA*)(buf + ((y * w + x) * 4));
+            RGBA* dst = reinterpret_cast<RGBA*>(buf + ((y * w + x) * 4));
             RGBA src = l;
             BlendLinear(src, r, xf * rw);
             if (outline && dist < -0.5f) {
@@ -219,7 +219,7 @@ Canvas::Canvas(int w, int h, float lum)
       canvas_width_(w),
       canvas_height_(h),
       data_(new Canvas::Data) {
-    canvas_data_ = (float*)malloc(w * h * 4 * sizeof(float));
+    canvas_data_ = static_cast<float*>(malloc(w * h * 4 * sizeof(float)));
     data_->mask = {0, 0, canvas_width_, canvas_height_};
     clear(lum);
 }
@@ -303,21 +303,21 @@ void Canvas::box(float x1, float y1, float x2, float y2, float radius) {
 }
 
 void Canvas::box(int x1, int y1, int x2, int y2, float radius) {
-    box((float)x1, (float)y1, (float)x2, (float)y2, radius);
+    box(static_cast<float>(x1), static_cast<float>(y1), static_cast<float>(x2), static_cast<float>(y2), radius);
 }
 
 void Canvas::polygon(const float* x, const float* y, int vertexCount) {
     if (vertexCount < 3) return;
     GetPolyDist func(x, y, vertexCount);
     data_->draw(canvas_data_, canvas_width_, canvas_height_,
-                {0, 0, (float)canvas_width_, (float)canvas_height_}, &func);
+                {0, 0, static_cast<float>(canvas_width_), static_cast<float>(canvas_height_)}, &func);
 }
 
 Texture Canvas::createTexture(bool mipmap) const {
     uint8_t* dst =
-        (uint8_t*)malloc(canvas_width_ * canvas_height_ * 4 * sizeof(uint8_t));
+        static_cast<uint8_t*>(malloc(canvas_width_ * canvas_height_ * 4 * sizeof(uint8_t)));
     for (int i = 0; i < canvas_width_ * canvas_height_ * 4; ++i) {
-        int v = (int)(canvas_data_[i] * 255.f + 0.5f);
+        int v = static_cast<int>(canvas_data_[i] * 255.f + 0.5f);
         dst[i] = min(max(v, 0), 255);
     }
     Texture result(canvas_width_, canvas_height_, dst, mipmap);
@@ -332,7 +332,7 @@ Canvas& Canvas::operator=(const Canvas& other) {
     canvas_data_ = nullptr;
     if (other.canvas_data_)
         canvas_data_ =
-            (float*)malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float));
+            static_cast<float*>(malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float)));
     memcpy(canvas_data_, other.canvas_data_,
            canvas_width_ * canvas_height_ * 4 * sizeof(float));
     return *this;

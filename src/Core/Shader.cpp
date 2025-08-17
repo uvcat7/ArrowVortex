@@ -171,7 +171,7 @@ static GLuint Link(GLuint vert, GLuint frag, std::string& log) {
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &size);
             log.clear();
             log.resize(size);
-            glGetProgramInfoLog(program, size, 0, &log[0]);
+            glGetProgramInfoLog(program, size, nullptr, &log[0]);
         }
         glDeleteProgram(program);
         program = 0;

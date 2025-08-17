@@ -35,7 +35,7 @@ enum NoteItemType {
 static const char* noteItemLabels[] = {"steps", "jumps", "mines",
                                        "holds", "rolls", "warps"};
 
-DialogChartProperties::~DialogChartProperties() {}
+DialogChartProperties::~DialogChartProperties() = default;
 
 DialogChartProperties::DialogChartProperties()
     : myDifficulty(0), myRating(1), myStyle(0) {
@@ -94,7 +94,7 @@ void DialogChartProperties::myCreateChartProperties() {
     diff->value.bind(&myDifficulty);
     diff->onChange.bind(this, &DCP::mySetDifficulty);
     for (int i = 0; i < NUM_DIFFICULTIES; ++i) {
-        diff->addItem(GetDifficultyName((Difficulty)i));
+        diff->addItem(GetDifficultyName(static_cast<Difficulty>(i)));
     }
     diff->setTooltip("Difficulty type of the chart");
 
@@ -122,13 +122,13 @@ void DialogChartProperties::mySetStepArtist() {
 }
 
 void DialogChartProperties::mySetDifficulty() {
-    gChart->setDifficulty((Difficulty)myDifficulty);
+    gChart->setDifficulty(static_cast<Difficulty>(myDifficulty));
 }
 
 void DialogChartProperties::mySetRating() { gChart->setMeter(myRating); }
 
 void DialogChartProperties::myCalcRating() {
-    int rating = (int)(gChart->getEstimatedMeter() * 10 + 0.5);
+    int rating = static_cast<int>(gChart->getEstimatedMeter() * 10 + 0.5);
     if (rating == 190) {
         HudInfo("{g:calculate} Estimated rating: 19 or higher");
     } else {
@@ -200,7 +200,7 @@ void DialogChartProperties::myUpdateNoteInfo() {
 
     double density = 0.0;
     if (gNotes->begin() < gNotes->end()) {
-        density = (double)count[0] /
+        density = static_cast<double>(count[0]) /
                   max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
     }
 
@@ -256,8 +256,8 @@ void DialogChartProperties::mySelectNotes(int type) {
 
 class DialogChartProperties::BreakdownWidget : public GuiWidget {
    public:
-    ~BreakdownWidget();
-    BreakdownWidget(GuiContext* gui);
+    ~BreakdownWidget() override;
+    explicit BreakdownWidget(GuiContext* gui);
 
     void updateBreakdown(WgLabel* measureCount);
     void selectStream(vec2i rows);

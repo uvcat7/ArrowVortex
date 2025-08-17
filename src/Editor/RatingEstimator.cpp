@@ -54,7 +54,7 @@ static Vector<double> CalcDensities() {
             if (s > *curStamp + timeWindow) {
                 int numArrows = &s - curStamp;
                 double dt = s - *curStamp;
-                densities.push_back((double)numArrows / dt);
+                densities.push_back(static_cast<double>(numArrows) / dt);
                 curStamp = &s;
             }
         }
@@ -63,14 +63,14 @@ static Vector<double> CalcDensities() {
 
     // Estimation parameters.
     int sliceSize[HM_NUM_SLICES] = {2, 4, 7, 13, 22, 38, 65, 90, 150, 240};
-    int totalSize = (int)densities.size();
-    for (int i = 0; i < HM_NUM_SLICES; ++i) {
-        if (totalSize >= sliceSize[i]) {
+    int totalSize = densities.size();
+    for (int i : sliceSize) {
+        if (totalSize >= i) {
             double n = 0;
-            for (int j = totalSize - sliceSize[i]; j != totalSize; ++j) {
+            for (int j = totalSize - i; j != totalSize; ++j) {
                 n += densities[j];
             }
-            out.push_back(n / sliceSize[i]);
+            out.push_back(n / i);
         } else {
             out.push_back(0.0);
         }
@@ -80,7 +80,7 @@ static Vector<double> CalcDensities() {
 }
 
 inline int getDensityBin(double density) {
-    int bin = (int)density;
+    int bin = static_cast<int>(density);
     return std::min(std::max(0, bin), HM_VALS_PER_SLICE - 2);
 }
 
@@ -92,7 +92,7 @@ double RatingEstimator::estimateRating() {
         double density = densities[i], rating;
         if (density > 0.0) {
             int bin = getDensityBin(density);
-            double frac = std::min(std::max(0.0, density - (double)bin), 1.0);
+            double frac = std::min(std::max(0.0, density - static_cast<double>(bin)), 1.0);
             const double* sliceWeights = myWeights + i * HM_VALS_PER_SLICE;
             double diffA = sliceWeights[bin];
             double diffB = sliceWeights[bin + 1];

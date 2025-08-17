@@ -18,10 +18,9 @@ static int GetTempoListH() {
     auto segments = gTempo->getSegments();
     int h = 0;
     if (segments) {
-        for (auto list = segments->begin(), listEnd = segments->end();
-             list != listEnd; ++list) {
-            if (list->size()) {
-                h += 26 + list->size() * 16;
+        for (const auto & segment : *segments) {
+            if (segment.size()) {
+                h += 26 + segment.size() * 16;
             }
         }
     }
@@ -29,9 +28,9 @@ static int GetTempoListH() {
 }
 
 struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
-    ~TempoList() {}
+    ~TempoList() override = default;
 
-    TempoList(GuiContext* gui) : WgScrollRegion(gui) {
+    explicit TempoList(GuiContext* gui) : WgScrollRegion(gui) {
         setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
     }
 
@@ -55,11 +54,10 @@ struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
         Draw::fill({view.x + view.w / 2, view.y, 1, view.h}, Color32(26));
 
         auto segments = gTempo->getSegments();
-        for (auto list = segments->begin(), listEnd = segments->end();
-             list != listEnd; ++list) {
-            if (list->size()) {
-                auto meta = Segment::meta[list->type()];
-                auto seg = list->begin(), segEnd = list->end();
+        for (const auto & segment : *segments) {
+            if (segment.size()) {
+                auto meta = Segment::meta[segment.type()];
+                auto seg = segment.begin(), segEnd = segment.end();
 
                 Draw::fill({x, y, view.w, 20}, Color32(26));
                 Text::arrange(Text::MC, style, meta->plural);

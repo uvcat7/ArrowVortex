@@ -68,7 +68,7 @@ struct TextOverlayImpl : public TextOverlay {
     // ================================================================================================
     // TextOverlayImpl :: constructor and destructor.
 
-    ~TextOverlayImpl() {}
+    ~TextOverlayImpl() = default;
 
     TextOverlayImpl() {
         textOverlayMode_ = HUD;
@@ -208,7 +208,7 @@ struct TextOverlayImpl : public TextOverlay {
             min(max(0, textOverlayScrollPos_), textOverlayScrollEnd_);
     }
 
-    void tick() {
+    void tick() override {
         UpdateScrollValues();
         switch (textOverlayMode_) {
             case HUD:
@@ -251,7 +251,7 @@ struct TextOverlayImpl : public TextOverlay {
         }
     }
 
-    void show(Mode mode) {
+    void show(Mode mode) override {
         if (textOverlayMode_ == mode) {
             textOverlayMode_ = HUD;
         } else {
@@ -275,7 +275,7 @@ struct TextOverlayImpl : public TextOverlay {
         UpdateScrollValues();
     }
 
-    bool isOpen() { return textOverlayMode_ != HUD; }
+    bool isOpen() override { return textOverlayMode_ != HUD; }
 
     void DrawTitleText(const char* left, const char* mid, const char* right) {
         vec2i size = gSystem->getWindowSize();
@@ -315,7 +315,7 @@ struct TextOverlayImpl : public TextOverlay {
         }
     }
 
-    void draw() {
+    void draw() override {
         if (textOverlayMode_ != HUD) {
             vec2i size = gSystem->getWindowSize();
             Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(0, 0, 0, 191));
@@ -339,7 +339,7 @@ struct TextOverlayImpl : public TextOverlay {
         };
     }
 
-    void addMessage(const char* str, MessageType type) {
+    void addMessage(const char* str, MessageType type) override {
         std::string msg = str;
         if (type == NOTE) {
             hudEntries_.push_back({msg, type, 0.5f});
@@ -400,7 +400,7 @@ struct TextOverlayImpl : public TextOverlay {
 
         x = 4, y = 4;
         for (auto& m : hudEntries_) {
-            int a = clamp((int)(m.timeLeft * 512.0f + 256.0f), 0, 255);
+            int a = clamp(static_cast<int>(m.timeLeft * 512.0f + 256.0f), 0, 255);
 
             textStyle.textColor = Color32a(textStyle.textColor, a);
             textStyle.shadowColor = Color32a(textStyle.shadowColor, a);
@@ -496,7 +496,7 @@ struct TextOverlayImpl : public TextOverlay {
             if (gSystem->getEvents().next(mp)) {
                 if (mp->unhandled()) {
                     mp->setHandled();
-                    gSystem->openWebpage((const char*)supportLink);
+                    gSystem->openWebpage(reinterpret_cast<const char*>(supportLink));
                 }
             }
         }
@@ -507,7 +507,7 @@ struct TextOverlayImpl : public TextOverlay {
             if (gSystem->getEvents().next(mp)) {
                 if (mp->unhandled()) {
                     mp->setHandled();
-                    gSystem->openWebpage((const char*)githubLink);
+                    gSystem->openWebpage(reinterpret_cast<const char*>(githubLink));
                 }
             }
         }
@@ -596,7 +596,7 @@ void InfoBoxWithProgress::draw(recti r) {
 }
 
 void InfoBoxWithProgress::setProgress(double rate) {
-    int progress = clamp((int)(rate * 100.0f + 0.5f), 0, 100);
+    int progress = clamp(static_cast<int>(rate * 100.0f + 0.5f), 0, 100);
     right = Str::val(progress) + '%';
 }
 
