@@ -334,7 +334,8 @@ struct EditingImpl : public Editing {
 
             if (note.quant > 0 && note.quant <= 192) {
                 note.quant =
-                    min(192u, static_cast<uint32_t>(note.quant * gView->getSnapQuant() /
+                    min(192u, static_cast<uint32_t>(
+                                  note.quant * gView->getSnapQuant() /
                                   gcd(note.quant, gView->getSnapQuant())));
             } else {
                 note.quant = 192;

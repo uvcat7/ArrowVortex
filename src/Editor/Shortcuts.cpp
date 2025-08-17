@@ -431,8 +431,7 @@ struct ShortcutsImpl : public Shortcuts {
     // ================================================================================================
     // ShortcutsImpl :: API functions.
 
-    std::string getNotation(Action::Type action,
-                                       bool fullList = false) {
+    std::string getNotation(Action::Type action, bool fullList = false) {
         std::string out;
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.action->code == action) {
