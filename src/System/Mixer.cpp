@@ -171,7 +171,7 @@ struct MixerImpl : public Mixer {
         return true;
     }
 
-    void pause() {
+    void pause() override {
         if (myIsOpened && !myIsPaused) {
             SetEvent(myPauseThread);
             WaitForSingleObject(myThreadPaused, INFINITE);
