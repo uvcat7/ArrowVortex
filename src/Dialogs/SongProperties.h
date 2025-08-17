@@ -10,53 +10,52 @@
 
 namespace Vortex {
 
-class DialogSongProperties : public EditorDialog
-{
-public:
-	~DialogSongProperties();
-	DialogSongProperties();
+class DialogSongProperties : public EditorDialog {
+   public:
+    ~DialogSongProperties();
+    DialogSongProperties();
 
-	void onChanges(int changes) override;
+    void onChanges(int changes) override;
 
-	void onSetPreview();
-	void onPlayPreview();
+    void onSetPreview();
+    void onPlayPreview();
 
-	void onFindMusic();
-	void onFindBanner();
-	void onFindBG();
-	void onFindCdTitle();
+    void onFindMusic();
+    void onFindBanner();
+    void onFindBG();
+    void onFindCdTitle();
 
-private:
-	struct BannerWidget;
-	struct CdTitleWidget;
+   private:
+    struct BannerWidget;
+    struct CdTitleWidget;
 
-	void myCreateWidgets();
-	void myUpdateWidgets();
+    void myCreateWidgets();
+    void myUpdateWidgets();
 
-	void myUpdateProperties();
-	void myUpdateBanner();
-	void myUpdateCdTitle();
+    void myUpdateProperties();
+    void myUpdateBanner();
+    void myUpdateCdTitle();
 
-	void mySetProperty(int p);
-	void mySetDisplayBpm();
+    void mySetProperty(int p);
+    void mySetDisplayBpm();
 
-	std::string myTitle;
-	std::string mySubtitle;
-	std::string myArtist;
-	std::string myCredit;
-	std::string myMusic;
-	std::string myBackground;
-	std::string myBanner;
-	std::string myCdTitle;
-	
-	int myDisplayBpmType;
-	BpmRange myDisplayBpmRange;
+    std::string myTitle;
+    std::string mySubtitle;
+    std::string myArtist;
+    std::string myCredit;
+    std::string myMusic;
+    std::string myBackground;
+    std::string myBanner;
+    std::string myCdTitle;
 
-	BannerWidget* myBannerWidget;
-	CdTitleWidget* myCdTitleWidget;
-	WgCycleButton* myBpmTypeList;
-	WgSpinner* mySpinMinBPM, *mySpinMaxBPM;
-	std::string myPreviewStart, myPreviewEnd;
+    int myDisplayBpmType;
+    BpmRange myDisplayBpmRange;
+
+    BannerWidget* myBannerWidget;
+    CdTitleWidget* myCdTitleWidget;
+    WgCycleButton* myBpmTypeList;
+    WgSpinner *mySpinMinBPM, *mySpinMaxBPM;
+    std::string myPreviewStart, myPreviewEnd;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

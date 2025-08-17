@@ -4,31 +4,30 @@
 
 namespace Vortex {
 
-class DialogLabelBreakdown : public EditorDialog
-{
-public:
-	void onChanges(int changes) override;
-	void onUpdateSize() override;
-	void onTick() override;
+class DialogLabelBreakdown : public EditorDialog {
+   public:
+    void onChanges(int changes) override;
+    void onUpdateSize() override;
+    void onTick() override;
 
-	void clear();
+    void clear();
 
-	void onChange();
+    void onChange();
 
-	~DialogLabelBreakdown();
-	DialogLabelBreakdown();
+    ~DialogLabelBreakdown();
+    DialogLabelBreakdown();
 
-private:
-	void myCreateWidgets();
-	void mySetDisplayType();
-	void myCopyLabels();
+   private:
+    void myCreateWidgets();
+    void mySetDisplayType();
+    void myCopyLabels();
 
-	struct LabelButton;
-	struct LabelList;
-	LabelList* myList;
-	std::string myLabelText;
-	int myDisplayType;
-	WgCycleButton* myDisplayTypeList;
+    struct LabelButton;
+    struct LabelList;
+    LabelList* myList;
+    std::string myLabelText;
+    int myDisplayType;
+    WgCycleButton* myDisplayTypeList;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex
