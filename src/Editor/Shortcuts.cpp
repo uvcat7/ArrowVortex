@@ -431,8 +431,7 @@ struct ShortcutsImpl : public Shortcuts {
     // ================================================================================================
     // ShortcutsImpl :: API functions.
 
-    std::string Shortcuts::getNotation(Action::Type action,
-                                       bool fullList = false) {
+    std::string getNotation(Action::Type action, bool fullList = false) {
         std::string out;
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.action->code == action) {
@@ -466,7 +465,7 @@ struct ShortcutsImpl : public Shortcuts {
         return out;
     }
 
-    Action::Type Shortcuts::getAction(int keyflags, Code key) {
+    Action::Type getAction(int keyflags, Code key) {
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.key && shortcut.key->code == key) {
                 if (shortcut.keyflags == keyflags) {
