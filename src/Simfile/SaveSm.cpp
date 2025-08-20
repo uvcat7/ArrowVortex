@@ -58,7 +58,7 @@ static String Escape(const char* name, const char* str)
 	Str::replace(s, "\\", "\\\\");
 	Str::replace(s, ":", "\\:");
 	Str::replace(s, ";", "\\;");
-	Str::replace(s, ";", "\\#");
+	Str::replace(s, "#", "\\#");
 	return s;
 }
 
