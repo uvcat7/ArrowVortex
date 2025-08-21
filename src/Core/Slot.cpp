@@ -10,7 +10,7 @@ namespace Vortex {
 namespace {
 
 struct BaseValue {
-    BaseValue()  = default;
+    BaseValue() = default;
     virtual ~BaseValue() = default;
 
     virtual void set(int v) {}
@@ -27,7 +27,7 @@ struct BaseValue {
 // Self-contained values.
 
 struct IntValue : public BaseValue {
-    IntValue()  = default;
+    IntValue() = default;
 
     void set(int v) override { val = v; }
     void set(double v) override { val = static_cast<int>(lround(v)); }
@@ -41,7 +41,7 @@ struct IntValue : public BaseValue {
 };
 
 struct DoubleValue : public BaseValue {
-    DoubleValue()  = default;
+    DoubleValue() = default;
 
     void set(int v) override { val = v; }
     void set(double v) override { val = v; }
@@ -55,7 +55,7 @@ struct DoubleValue : public BaseValue {
 };
 
 struct BoolValue : public BaseValue {
-    BoolValue()  = default;
+    BoolValue() = default;
 
     void set(int v) override { val = (v != 0); }
     void set(double v) override { val = (v != 0); }
@@ -74,12 +74,12 @@ template <typename T>
 struct IntPtr : public BaseValue {
     explicit IntPtr(T* v) : val(v) {}
 
-    void set(int v) override { *val = (T)v; }
-    void set(double v) override { *val = (T)lround(v); }
+    void set(int v) override { *val = static_cast<T>(v); }
+    void set(double v) override { *val = static_cast<T>(lround(v)); }
     void set(bool v) override { *val = v; }
 
-    int geti() const override { return (int)*val; }
-    double getf() const override { return (double)*val; }
+    int geti() const override { return static_cast<int>(*val); }
+    double getf() const override { return static_cast<double>(*val); }
     bool getb() const override { return *val != 0; }
 
     T* val;
@@ -89,8 +89,8 @@ template <typename T>
 struct ConstIntPtr : public BaseValue {
     explicit ConstIntPtr(const T* v) : val(v) {}
 
-    int geti() const override { return (int)*val; }
-    double getf() const override { return (double)*val; }
+    int geti() const override { return static_cast<int>(*val); }
+    double getf() const override { return static_cast<double>(*val); }
     bool getb() const override { return *val != 0; }
 
     const T* val;
@@ -100,12 +100,12 @@ template <typename T>
 struct FloatPtr : public BaseValue {
     explicit FloatPtr(T* v) : val(v) {}
 
-    void set(int v) override { *val = (T)v; }
-    void set(double v) override { *val = (T)v; }
+    void set(int v) override { *val = static_cast<T>(v); }
+    void set(double v) override { *val = static_cast<T>(v); }
     void set(bool v) override { *val = v; }
 
-    int geti() const override { return (int)lround(*val); }
-    double getf() const override { return (double)*val; }
+    int geti() const override { return static_cast<int>(lround(*val)); }
+    double getf() const override { return static_cast<double>(*val); }
     bool getb() const override { return *val != 0; }
 
     T* val;
@@ -115,8 +115,8 @@ template <typename T>
 struct ConstFloatPtr : public BaseValue {
     explicit ConstFloatPtr(const T* v) : val(v) {}
 
-    int geti() const override { return (int)lround(*val); }
-    double getf() const override { return (double)*val; }
+    int geti() const override { return static_cast<int>(lround(*val)); }
+    double getf() const override { return static_cast<double>(*val); }
     bool getb() const override { return *val != 0; }
 
     const T* val;
@@ -271,7 +271,9 @@ void FloatSlot::unbind() {
 
 void FloatSlot::set(double v) { (static_cast<BaseValue*>(data_))->set(v); }
 
-double FloatSlot::get() const { return (static_cast<BaseValue*>(data_))->getf(); }
+double FloatSlot::get() const {
+    return (static_cast<BaseValue*>(data_))->getf();
+}
 
 // ================================================================================================
 // BoolSlot :: implementation.
@@ -295,7 +297,7 @@ bool BoolSlot::get() const { return (static_cast<BaseValue*>(data_))->getb(); }
 namespace {
 
 struct BaseStr {
-    BaseStr()  = default;
+    BaseStr() = default;
     virtual ~BaseStr() = default;
 
     virtual void set(const char* s) {}
@@ -374,13 +376,17 @@ void TextSlot::bind(std::string* str) {
     data_ = new StringPtr(str);
 }
 
-void TextSlot::set(const char* str) { (static_cast<BaseStr*>(data_))->set(str); }
+void TextSlot::set(const char* str) {
+    (static_cast<BaseStr*>(data_))->set(str);
+}
 
 void TextSlot::set(const std::string& str) {
     (static_cast<BaseStr*>(data_))->set(str.c_str());
 }
 
-const char* TextSlot::get() const { return (static_cast<BaseStr*>(data_))->get(); }
+const char* TextSlot::get() const {
+    return (static_cast<BaseStr*>(data_))->get();
+}
 
 // ================================================================================================
 // CallSlot :: implementation.

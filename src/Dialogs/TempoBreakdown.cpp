@@ -18,7 +18,7 @@ static int GetTempoListH() {
     auto segments = gTempo->getSegments();
     int h = 0;
     if (segments) {
-        for (const auto & segment : *segments) {
+        for (const auto& segment : *segments) {
             if (segment.size()) {
                 h += 26 + segment.size() * 16;
             }
@@ -54,7 +54,7 @@ struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
         Draw::fill({view.x + view.w / 2, view.y, 1, view.h}, Color32(26));
 
         auto segments = gTempo->getSegments();
-        for (const auto & segment : *segments) {
+        for (const auto& segment : *segments) {
             if (segment.size()) {
                 auto meta = Segment::meta[segment.type()];
                 auto seg = segment.begin(), segEnd = segment.end();

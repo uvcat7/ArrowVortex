@@ -345,7 +345,8 @@ struct EditorImpl : public Editor, public InputHandler {
             if (dialog && dialog->isPinned()) {
                 auto r = dialog->getInnerRect();
                 if (r.w > 0 && r.h > 0) {
-                    auto name = EditorDialog::getName(static_cast<DialogId>(id));
+                    auto name =
+                        EditorDialog::getName(static_cast<DialogId>(id));
                     XmrNode* node = dialogs->addChild(name);
                     long vals[] = {r.x, r.y, r.w, r.h};
                     node->addAttrib("rect", vals, 4);
@@ -613,7 +614,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
     int getNumRecentFiles() override { return myRecentFiles.size(); }
 
-    const std::string& getRecentFile(int index) override { return myRecentFiles[index]; }
+    const std::string& getRecentFile(int index) override {
+        return myRecentFiles[index];
+    }
 
     // ================================================================================================
     // EditorImpl :: dialog management.
@@ -633,7 +636,9 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
-    void openDialog(int dialogId) override { myDialogs[dialogId].requestOpen = true; }
+    void openDialog(int dialogId) override {
+        myDialogs[dialogId].requestOpen = true;
+    }
 
     void handleDialogs() {
         for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
@@ -732,7 +737,9 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
-    void onMenuAction(int id) override { Action::perform(static_cast<Action::Type>(id)); }
+    void onMenuAction(int id) override {
+        Action::perform(static_cast<Action::Type>(id));
+    }
 
     void onExitProgram() override {
         if (closeSimfile()) {
@@ -902,12 +909,12 @@ Editor* gEditor = nullptr;
 
 void Editor::create() {
     gEditor = new EditorImpl;
-    ((EditorImpl*)gEditor)->init();
+    static_cast<EditorImpl*>(gEditor)->init();
 }
 
 void Editor::destroy() {
-    ((EditorImpl*)gEditor)->shutdown();
-    delete (EditorImpl*)gEditor;
+    static_cast<EditorImpl*>(gEditor)->shutdown();
+    delete static_cast<EditorImpl*>(gEditor);
     gEditor = nullptr;
 }
 

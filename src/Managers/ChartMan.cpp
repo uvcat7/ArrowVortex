@@ -241,7 +241,8 @@ struct ChartManImpl : public ChartMan {
         MergeItems(items);
     }
 
-    Vector<BreakdownItem> getStreamBreakdown(int* totalMeasures) const override {
+    Vector<BreakdownItem> getStreamBreakdown(
+        int* totalMeasures) const override {
         int dummy;
         if (!totalMeasures) totalMeasures = &dummy;
 

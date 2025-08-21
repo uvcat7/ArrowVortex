@@ -152,7 +152,7 @@ static int XingParse(XingHeader *xing, struct mad_bitptr ptr,
     if (xing->flags & XING_TOC) {
         if (bitlen < 800) goto fail;
 
-        for (unsigned char & i : xing->toc)
+        for (unsigned char &i : xing->toc)
             i = static_cast<unsigned char>(mad_bit_read(&ptr, 8));
 
         bitlen -= 800;

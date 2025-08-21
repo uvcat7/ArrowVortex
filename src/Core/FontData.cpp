@@ -102,7 +102,8 @@ static void IncreaseTextureHeight(GlyphCache* cache, int h) {
     while (newHeight < h) newHeight *= 2;
 
     cache->tex->increaseHeight(newHeight);
-    float ratio = static_cast<float>(static_cast<double>(oldHeight) / static_cast<double>(newHeight));
+    float ratio = static_cast<float>(static_cast<double>(oldHeight) /
+                                     static_cast<double>(newHeight));
     for (auto& g : cache->glyphs) {
         g.second->uvs.t *= ratio;
         g.second->uvs.b *= ratio;

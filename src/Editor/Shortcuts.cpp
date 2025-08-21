@@ -431,7 +431,7 @@ struct ShortcutsImpl : public Shortcuts {
     // ================================================================================================
     // ShortcutsImpl :: API functions.
 
-    std::string getNotation(Action::Type action, bool fullList = false) override {
+    std::string getNotation(Action::Type action, bool fullList) override {
         std::string out;
         for (auto& shortcut : shortcutMappings_) {
             if (shortcut.action->code == action) {
@@ -498,7 +498,7 @@ Shortcuts* gShortcuts = nullptr;
 void Shortcuts::create() { gShortcuts = new ShortcutsImpl; }
 
 void Shortcuts::destroy() {
-    delete (ShortcutsImpl*)gShortcuts;
+    delete static_cast<ShortcutsImpl*>(gShortcuts);
     gShortcuts = nullptr;
 }
 

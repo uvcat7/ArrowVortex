@@ -17,11 +17,13 @@ inline Segment* ofs(void* pos, int offset) {
 }
 
 inline const Segment* ofs(const void* pos, int offset) {
-    return reinterpret_cast<const Segment*>((static_cast<const uint8_t*>(pos)) + offset);
+    return reinterpret_cast<const Segment*>((static_cast<const uint8_t*>(pos)) +
+                                            offset);
 }
 
 inline int diff(const Segment* begin, const Segment* end) {
-    return (reinterpret_cast<const uint8_t*>(end)) - (reinterpret_cast<const uint8_t*>(begin));
+    return (reinterpret_cast<const uint8_t*>(end)) -
+           (reinterpret_cast<const uint8_t*>(begin));
 }
 
 };  // anonymous namespace.
@@ -442,23 +444,28 @@ void SegmentList::prepareEdit(const List& inAdd, const List& inRem,
 // SegmentList :: iterators.
 
 SegmentIter SegmentList::begin() {
-    return {reinterpret_cast<Segment*>(mySegs), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<Segment*>(mySegs),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::begin() const {
-    return {reinterpret_cast<const Segment*>(mySegs), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<const Segment*>(mySegs),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentIter SegmentList::end() {
-    return {reinterpret_cast<Segment*>(mySegs + myNum * myStride), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<Segment*>(mySegs + myNum * myStride),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::end() const {
-    return {reinterpret_cast<const Segment*>(mySegs + myNum * myStride), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<const Segment*>(mySegs + myNum * myStride),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentIter SegmentList::rbegin() {
-    return {reinterpret_cast<Segment*>(mySegs + (myNum - 1) * myStride), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<Segment*>(mySegs + (myNum - 1) * myStride),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::rbegin() const {
@@ -467,11 +474,13 @@ SegmentConstIter SegmentList::rbegin() const {
 }
 
 SegmentIter SegmentList::rend() {
-    return {reinterpret_cast<Segment*>(mySegs - myStride), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<Segment*>(mySegs - myStride),
+            static_cast<uint32_t>(myStride)};
 }
 
 SegmentConstIter SegmentList::rend() const {
-    return {reinterpret_cast<const Segment*>(mySegs - myStride), static_cast<uint32_t>(myStride)};
+    return {reinterpret_cast<const Segment*>(mySegs - myStride),
+            static_cast<uint32_t>(myStride)};
 }
 
 // ================================================================================================

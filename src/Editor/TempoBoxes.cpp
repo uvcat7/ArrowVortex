@@ -83,11 +83,11 @@ struct TempoBoxesImpl : public TempoBoxes {
 
         // Create a box for every segment.
         auto segments = gTempo->getSegments();
-        for (const auto & segment : *segments) {
+        for (const auto& segment : *segments) {
             auto type = segment.type();
             auto meta = Segment::meta[type];
-            for (auto seg = segment.begin(), segEnd = segment.end(); seg != segEnd;
-                 ++seg) {
+            for (auto seg = segment.begin(), segEnd = segment.end();
+                 seg != segEnd; ++seg) {
                 std::string desc = meta->getDescription(seg.ptr);
                 myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
             }
@@ -182,11 +182,11 @@ struct TempoBoxesImpl : public TempoBoxes {
         int numSelected = 0;
         auto boxEnd = myBoxes.end();
         auto segments = gTempo->getSegments();
-        for (const auto & segment : *segments) {
+        for (const auto& segment : *segments) {
             auto type = segment.type();
             auto box = myBoxes.begin();
-            for (auto seg = segment.begin(), segEnd = segment.end(); seg != segEnd;
-                 ++seg) {
+            for (auto seg = segment.begin(), segEnd = segment.end();
+                 seg != segEnd; ++seg) {
                 while (box != boxEnd &&
                        (box->type != type || box->row < seg->row)) {
                     ++box;
@@ -227,7 +227,8 @@ struct TempoBoxesImpl : public TempoBoxes {
         return numSelected;
     }
 
-    int selectRows(SelectModifier mod, int begin, int end, int xl, int xr) override {
+    int selectRows(SelectModifier mod, int begin, int end, int xl,
+                   int xr) override {
         auto coords = gView->getNotefieldCoords();
         const int baseX[2] = {coords.xl, coords.xr};
         return performSelection(mod, [&](const TempoBox* box) {
@@ -275,12 +276,13 @@ struct TempoBoxesImpl : public TempoBoxes {
             vec2i mpos = gSystem->getMousePos();
             for (int i = 0; i < myBoxes.size(); ++i) {
                 auto& box = myBoxes[i];
-                int y = static_cast<int>(oy + dy * (timeBased ? tracker.advance(box.row)
-                                                   : static_cast<double>(box.row)));
+                int y = static_cast<int>(
+                    oy + dy * (timeBased ? tracker.advance(box.row)
+                                         : static_cast<double>(box.row)));
                 int side = Segment::meta[box.type]->side;
                 int x = baseX[side] + box.x;
-                if (IsInside(recti{x, y - 16, static_cast<int>(box.width), 32}, mpos.x,
-                             mpos.y)) {
+                if (IsInside(recti{x, y - 16, static_cast<int>(box.width), 32},
+                             mpos.x, mpos.y)) {
                     myMouseOverBox = i;
                     break;
                 }
@@ -314,8 +316,9 @@ struct TempoBoxesImpl : public TempoBoxes {
         TempoTimeTracker tracker;
         auto batch = Renderer::batchTC();
         for (const TempoBox& box : myBoxes) {
-            int y = static_cast<int>(oy + dy * (timeBased ? tracker.advance(box.row)
-                                               : static_cast<double>(box.row)));
+            int y = static_cast<int>(
+                oy + dy * (timeBased ? tracker.advance(box.row)
+                                     : static_cast<double>(box.row)));
             if (y < viewTop - 16 || y > viewBtm + 16) continue;
 
             int side = Segment::meta[box.type]->side;
@@ -336,8 +339,9 @@ struct TempoBoxesImpl : public TempoBoxes {
         tracker = TempoTimeTracker();
         TextStyle textStyle;
         for (const TempoBox& box : myBoxes) {
-            int y = static_cast<int>(oy + dy * (timeBased ? tracker.advance(box.row)
-                                               : static_cast<double>(box.row)));
+            int y = static_cast<int>(
+                oy + dy * (timeBased ? tracker.advance(box.row)
+                                     : static_cast<double>(box.row)));
             if (y < viewTop - 16 || y > viewBtm + 16) continue;
 
             int side = Segment::meta[box.type]->side;
@@ -399,11 +403,11 @@ TempoBoxes* gTempoBoxes = nullptr;
 
 void TempoBoxes::create(XmrNode& settings) {
     gTempoBoxes = new TempoBoxesImpl;
-    ((TempoBoxesImpl*)gTempoBoxes)->loadSettings(settings);
+    static_cast<TempoBoxesImpl*>(gTempoBoxes)->loadSettings(settings);
 }
 
 void TempoBoxes::destroy() {
-    delete (TempoBoxesImpl*)gTempoBoxes;
+    delete static_cast<TempoBoxesImpl*>(gTempoBoxes);
     gTempoBoxes = nullptr;
 }
 

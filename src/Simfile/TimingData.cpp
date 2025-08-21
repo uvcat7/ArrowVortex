@@ -109,7 +109,8 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end,
 
         // Check if the warp ended before the current segments.
         if (spr > 0 && time > targetTime && warpRows == 0) {
-            int warpEndRow = static_cast<int>(row - round((time - targetTime) / spr));
+            int warpEndRow =
+                static_cast<int>(row - round((time - targetTime) / spr));
             if (warpEndRow <= entry->row) {
                 entry->endTime = time;
                 entry->spr = spr;
@@ -124,16 +125,17 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end,
         do {
             switch (it->type) {
                 case Segment::BPM:
-                    spr = SecPerRow(((const BpmChange*)it->seg)->bpm);
+                    spr = SecPerRow(
+                        reinterpret_cast<const BpmChange*>(it->seg)->bpm);
                     break;
                 case Segment::DELAY:
-                    time += ((const Delay*)it->seg)->seconds;
+                    time += reinterpret_cast<const Delay*>(it->seg)->seconds;
                     break;
                 case Segment::STOP:
-                    time += ((const Stop*)it->seg)->seconds;
+                    time += reinterpret_cast<const Stop*>(it->seg)->seconds;
                     break;
                 case Segment::WARP:
-                    warpRows += ((const Warp*)it->seg)->numRows;
+                    warpRows += reinterpret_cast<const Warp*>(it->seg)->numRows;
                     break;
             }
         } while (++it != end && it->seg->row < row);
@@ -155,7 +157,8 @@ static WarpResult HandleWarp(Vector<Event>& out, MergedTS* it, MergedTS* end,
     // If we reach this point, none of the segments caused the warp to end.
     spr = fabs(spr);
     int row = prevRow + warpRows;
-    if (time < targetTime) row += static_cast<int>(round((targetTime - time) / spr));
+    if (time < targetTime)
+        row += static_cast<int>(round((targetTime - time) / spr));
     out.push_back({row, targetTime, targetTime, targetTime, spr});
     return {row, targetTime, it};
 }
@@ -171,16 +174,17 @@ static void CreateEvents(Vector<Event>& out, double time, MergedTS* it,
         do {
             switch (it->type) {
                 case Segment::BPM:
-                    spr = SecPerRow(((const BpmChange*)it->seg)->bpm);
+                    spr = SecPerRow(
+                        reinterpret_cast<const BpmChange*>(it->seg)->bpm);
                     break;
                 case Segment::DELAY:
-                    delay += ((const Delay*)it->seg)->seconds;
+                    delay += reinterpret_cast<const Delay*>(it->seg)->seconds;
                     break;
                 case Segment::STOP:
-                    stop += ((const Stop*)it->seg)->seconds;
+                    stop += reinterpret_cast<const Stop*>(it->seg)->seconds;
                     break;
                 case Segment::WARP:
-                    warp += ((const Warp*)it->seg)->numRows;
+                    warp +=  reinterpret_cast<const Warp*>(it->seg)->numRows;
                     break;
             }
         } while (++it != end && it->seg->row < row);
@@ -404,7 +408,8 @@ static double BeatToTime(const Event* it, double beat) {
 
 static double BeatToMeasure(const TimeSig* sig, double beat) {
     double row = beat * ROWS_PER_BEAT;
-    return sig->measure + (row - sig->row) / static_cast<double>(sig->rowsPerMeasure);
+    return sig->measure +
+           (row - sig->row) / static_cast<double>(sig->rowsPerMeasure);
 }
 
 static double RowToScroll(const ScrollRow* scroll, int row) {
@@ -426,7 +431,8 @@ static double PositionToSpeed(const ScrollSpeed* speed, double beat,
     if (speed->unit == 1) {
         strength = (time - (speed->rowTime)) / speed->delay;
     } else {
-        strength = (beat - (static_cast<double>(speed->row) / ROWS_PER_BEAT)) / speed->delay;
+        strength = (beat - (static_cast<double>(speed->row) / ROWS_PER_BEAT)) /
+                   speed->delay;
     }
 
     return lerp(speed->start, speed->end, clamp(strength, 0.0, 1.0));
@@ -508,7 +514,8 @@ double TimingData::rowToScroll(int row) const {
 }
 
 double TimingData::beatToScroll(double beat) const {
-    int row = static_cast<int>(floor(beat * ROWS_PER_BEAT));  // floor matches games better?
+    int row = static_cast<int>(
+        floor(beat * ROWS_PER_BEAT));  // floor matches games better?
     return BeatToScroll(MostRecentScrollRow(scrolls, row), beat);
 }
 

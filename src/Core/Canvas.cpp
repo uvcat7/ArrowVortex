@@ -303,19 +303,22 @@ void Canvas::box(float x1, float y1, float x2, float y2, float radius) {
 }
 
 void Canvas::box(int x1, int y1, int x2, int y2, float radius) {
-    box(static_cast<float>(x1), static_cast<float>(y1), static_cast<float>(x2), static_cast<float>(y2), radius);
+    box(static_cast<float>(x1), static_cast<float>(y1), static_cast<float>(x2),
+        static_cast<float>(y2), radius);
 }
 
 void Canvas::polygon(const float* x, const float* y, int vertexCount) {
     if (vertexCount < 3) return;
     GetPolyDist func(x, y, vertexCount);
     data_->draw(canvas_data_, canvas_width_, canvas_height_,
-                {0, 0, static_cast<float>(canvas_width_), static_cast<float>(canvas_height_)}, &func);
+                {0, 0, static_cast<float>(canvas_width_),
+                 static_cast<float>(canvas_height_)},
+                &func);
 }
 
 Texture Canvas::createTexture(bool mipmap) const {
-    uint8_t* dst =
-        static_cast<uint8_t*>(malloc(canvas_width_ * canvas_height_ * 4 * sizeof(uint8_t)));
+    uint8_t* dst = static_cast<uint8_t*>(
+        malloc(canvas_width_ * canvas_height_ * 4 * sizeof(uint8_t)));
     for (int i = 0; i < canvas_width_ * canvas_height_ * 4; ++i) {
         int v = static_cast<int>(canvas_data_[i] * 255.f + 0.5f);
         dst[i] = min(max(v, 0), 255);
@@ -331,8 +334,8 @@ Canvas& Canvas::operator=(const Canvas& other) {
     canvas_width_ = other.canvas_width_, canvas_height_ = other.canvas_height_,
     canvas_data_ = nullptr;
     if (other.canvas_data_)
-        canvas_data_ =
-            static_cast<float*>(malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float)));
+        canvas_data_ = static_cast<float*>(
+            malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float)));
     memcpy(canvas_data_, other.canvas_data_,
            canvas_width_ * canvas_height_ * 4 * sizeof(float));
     return *this;

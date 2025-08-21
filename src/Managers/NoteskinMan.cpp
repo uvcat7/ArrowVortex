@@ -30,7 +30,7 @@ struct NoteskinImpl : public Noteskin {
 };
 
 struct SpriteTransform {
-    SpriteTransform()  = default;
+    SpriteTransform() = default;
     int x = 0, y = 0, w = 0, h = 0, rot = 0, mir = 0;
 };
 
@@ -153,8 +153,10 @@ static void SetUVS(const Texture& tex, SpriteTransform& t, BatchSprite& spr) {
     } else {
         double du = 1.0f / static_cast<double>(tex.size().x);
         double dv = 1.0f / static_cast<double>(tex.size().y);
-        double ul = du * static_cast<double>(t.x), ur = ul + du * static_cast<double>(spr.width);
-        double vt = dv * static_cast<double>(t.y), vb = vt + dv * static_cast<double>(spr.height);
+        double ul = du * static_cast<double>(t.x),
+               ur = ul + du * static_cast<double>(spr.width);
+        double vt = dv * static_cast<double>(t.y),
+               vb = vt + dv * static_cast<double>(spr.height);
         double uvs[8] = {ul, vt, ur, vt, ul, vb, ur, vb};
         for (int i = 0; i < 8; ++i) spr.uvs[i] = static_cast<float>(uvs[i]);
 
@@ -507,7 +509,9 @@ struct NoteskinManImpl : public NoteskinMan {
 
     int getNumTypes() const override { return myTypes.size(); }
 
-    const std::string& getName(int type) const override { return myTypes[type].name; }
+    const std::string& getName(int type) const override {
+        return myTypes[type].name;
+    }
 
     bool isSupported(int type) const override {
         return Supports(myTypes[type], gStyle->get());
@@ -528,7 +532,9 @@ struct NoteskinManImpl : public NoteskinMan {
         }
     }
 
-    int getType() const override { return myActiveSkin ? myActiveSkin->type : 0; }
+    int getType() const override {
+        return myActiveSkin ? myActiveSkin->type : 0;
+    }
 
     const Noteskin* get() const override { return myActiveSkin; }
 

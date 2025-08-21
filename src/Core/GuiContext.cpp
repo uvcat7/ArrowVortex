@@ -11,6 +11,8 @@ GuiContext::~GuiContext() = default;
 GuiContextImpl::~GuiContextImpl() { Vec::release(dialogs_); }
 
 GuiContextImpl::GuiContextImpl() {
+    delta_time_ = 0;
+    mouse_position_ = {0, 0};
     view_rect_ = {0, 0, INT_MAX, INT_MAX};
     input_events_ = nullptr;
 }
@@ -46,7 +48,7 @@ void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events) {
         } else if (dialog->request_move_to_top_) {
             dialogs_.erase(i);
             dialogs_.push_back(dialog);
-            dialog->request_move_to_top_ = 0;
+            dialog->request_move_to_top_ = false;
         }
     }
 
@@ -68,10 +70,10 @@ void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events) {
 
 void GuiContextImpl::draw() {
     // Draw the dialogs.
-    FOR_VECTOR_FORWARD(dialogs_, i) { dialogs_[i]->draw(); }
+    for (DialogData* dialog : dialogs_) { dialog->draw(); }
 
     // Draw widgets with focus at the top.
-    FOR_VECTOR_FORWARD(focus_widgets_, i) { focus_widgets_[i]->onDraw(); }
+    for (GuiWidget* focus_widget : focus_widgets_) { focus_widget->onDraw(); }
 }
 
 void GuiContextImpl::removeWidget(GuiWidget* w) {
@@ -83,8 +85,8 @@ void GuiContextImpl::addDialog(DialogData* f) { dialogs_.push_back(f); }
 void GuiContextImpl::removeDialog(DialogData* f) { dialogs_.erase_values(f); }
 
 void GuiContextImpl::grabFocus(GuiWidget* w) {
-    FOR_VECTOR_FORWARD(focus_widgets_, i) {
-        if (focus_widgets_[i] == w) return;
+    for (GuiWidget* focus_widget : focus_widgets_) {
+        if (focus_widget == w) return;
     }
     focus_widgets_.push_back(w);
 }

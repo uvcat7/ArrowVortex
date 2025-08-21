@@ -190,7 +190,8 @@ void DialogAdjustTempoSM5::onTick() {
         auto segs = gTempo->getSegments();
 
         myDelay = segs->getRow<Delay>(row).seconds;
-        myWarp = segs->getRow<Warp>(row).numRows / static_cast<double>ROWS_PER_BEAT;
+        myWarp =
+            segs->getRow<Warp>(row).numRows / static_cast<double> ROWS_PER_BEAT;
 
         auto sig = segs->getRecent<TimeSignature>(row);
         myTimeSigBpm = sig.rowsPerMeasure / ROWS_PER_BEAT;
@@ -208,7 +209,8 @@ void DialogAdjustTempoSM5::onTick() {
         mySpeedUnit = speed.unit;
 
         myScrollRatio = segs->getRecent<Scroll>(row).ratio;
-        myFakeBeats = segs->getRow<Fake>(row).numRows / static_cast<double>ROWS_PER_BEAT;
+        myFakeBeats =
+            segs->getRow<Fake>(row).numRows / static_cast<double> ROWS_PER_BEAT;
 
         myLabelText = segs->getRow<Label>(row).str;
     }

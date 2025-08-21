@@ -23,7 +23,7 @@ using namespace Vortex;
 class xstring {
    public:
     ~xstring() { free(data); }
-    explicit xstring(int n) :  cap(n) {
+    explicit xstring(int n) : cap(n) {
         if (cap < 4) cap = 4;
         data = static_cast<char*>(malloc(cap));
     }
@@ -81,8 +81,9 @@ static bool IsWhiteSpace(char c) {
 static bool IsNameChar(char c) {
     static const uint32_t b[4] = {0xFFFFFBFE, 0xD7FFEFFF, 0xFFFFFFFF,
                                   0xD7FFFFFF};
-    return (static_cast<unsigned char>(c) < 128) ? ((b[c >> 5] & (1 << (c & 31))) != 0)
-                                    : true;
+    return (static_cast<unsigned char>(c) < 128)
+               ? ((b[c >> 5] & (1 << (c & 31))) != 0)
+               : true;
 }
 
 static bool IsNumber(const char* str) {
@@ -224,10 +225,10 @@ class XmrReader {
 
 XmrReader::XmrReader()
     : xmrErrorMessage_(16),
-      
-      xmrTextBuffer_(256)
-      {
-    xmrValueBuffer_ = static_cast<int*>(malloc(sizeof(int) * xmrValueCapacity_));
+
+      xmrTextBuffer_(256) {
+    xmrValueBuffer_ =
+        static_cast<int*>(malloc(sizeof(int) * xmrValueCapacity_));
 }
 
 XmrReader::~XmrReader() { free(xmrValueBuffer_); }
@@ -388,8 +389,8 @@ const char* XmrReader::parseString(const char* p) {
 void XmrReader::addValue(int pos) {
     if (xmrNumValues_ == xmrValueCapacity_) {
         xmrValueCapacity_ *= 2;
-        xmrValueBuffer_ =
-            static_cast<int*>(realloc(xmrValueBuffer_, sizeof(int) * xmrValueCapacity_));
+        xmrValueBuffer_ = static_cast<int*>(
+            realloc(xmrValueBuffer_, sizeof(int) * xmrValueCapacity_));
     }
     xmrValueBuffer_[xmrNumValues_] = pos;
     ++xmrNumValues_;

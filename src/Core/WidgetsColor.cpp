@@ -144,14 +144,22 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
 
     if (myDrag == 1) {
         recti r = getSr();
-        myCol.s = clamp(static_cast<float>(mpos.x - r.x) / static_cast<float>(r.w), 0.0f, 1.0f);
-        myCol.v = clamp(1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h), 0.0f, 1.0f);
+        myCol.s =
+            clamp(static_cast<float>(mpos.x - r.x) / static_cast<float>(r.w),
+                  0.0f, 1.0f);
+        myCol.v = clamp(
+            1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
+            0.0f, 1.0f);
     } else if (myDrag == 2) {
         recti r = getHr();
-        myCol.h = clamp(static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h), 0.0f, 1.0f);
+        myCol.h =
+            clamp(static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
+                  0.0f, 1.0f);
     } else if (myDrag == 3) {
         recti r = getAr();
-        myCol.a = clamp(1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h), 0.0f, 1.0f);
+        myCol.a = clamp(
+            1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
+            0.0f, 1.0f);
     }
 }
 
@@ -246,8 +254,9 @@ void WgColorPicker::onTick() {
             captureMouseOver();
         }
 
-        colorf rgb = {static_cast<float>(red.get()), static_cast<float>(green.get()), static_cast<float>(blue.get()),
-                      static_cast<float>(alpha.get())};
+        colorf rgb = {
+            static_cast<float>(red.get()), static_cast<float>(green.get()),
+            static_cast<float>(blue.get()), static_cast<float>(alpha.get())};
         colorpicker_expanded_->myCol = RGBtoHSV(rgb, rgb.a);
 
         if (colorpicker_expanded_->myDrag) {
@@ -266,8 +275,9 @@ void WgColorPicker::onTick() {
 }
 
 void WgColorPicker::onDraw() {
-    colorf rgb = {static_cast<float>(red.get()), static_cast<float>(green.get()), static_cast<float>(blue.get()),
-                  static_cast<float>(alpha.get())};
+    colorf rgb = {
+        static_cast<float>(red.get()), static_cast<float>(green.get()),
+        static_cast<float>(blue.get()), static_cast<float>(alpha.get())};
 
     Draw::fill(rect_, Colors::black);
     recti r = Shrink(rect_, 1);
@@ -279,8 +289,10 @@ void WgColorPicker::onDraw() {
     Draw::fill(r, ToColor32(HSVtoRGB(hsv, rgb.a)));
 
     r = Shrink(r, 1);
-    Draw::fill(r, ToColor32(static_cast<float>(red.get()), static_cast<float>(green.get()),
-                            static_cast<float>(blue.get()), static_cast<float>(alpha.get())));
+    Draw::fill(r, ToColor32(static_cast<float>(red.get()),
+                            static_cast<float>(green.get()),
+                            static_cast<float>(blue.get()),
+                            static_cast<float>(alpha.get())));
 
     if (colorpicker_expanded_) colorpicker_expanded_->draw();
 }

@@ -40,7 +40,7 @@ void DialogGenerateNotes::myCreateWidgets() {
     myLayout.row().col(60).col(116);
     spacingDroplist_ = myLayout.add<WgDroplist>("Spacing");
     spacingDroplist_->value.bind(&spacingValue_);
-    for (auto & SpacingString : SpacingStrings) {
+    for (auto& SpacingString : SpacingStrings) {
         spacingDroplist_->addItem(SpacingString);
     }
 

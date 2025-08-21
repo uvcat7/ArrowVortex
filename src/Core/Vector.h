@@ -256,8 +256,10 @@ void Vector<T>::squeeze() {
         if (capacity_ > size_) {
             T* src = data_;
             capacity_ = size_;
-            data_ = (T*)malloc(sizeof(T) * capacity_);
-            memcpy(data_, src, size_ * sizeof(T));
+            data_ = static_cast<T*>(malloc(sizeof(T) * capacity_));
+            if (data_) {
+                memcpy(data_, src, size_ * sizeof(T));
+            }
             free(src);
         }
     } else
@@ -267,7 +269,7 @@ void Vector<T>::squeeze() {
 template <typename T>
 void Vector<T>::reserve(int n) {
     if (n > capacity_) {
-        data_ = (T*)realloc(data_, sizeof(T) * n);
+        data_ = static_cast<T*>(realloc(data_, sizeof(T) * n));
         capacity_ = n;
     }
 }

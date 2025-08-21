@@ -19,8 +19,10 @@ static wchar_t* nullstr = reinterpret_cast<wchar_t*>(metaData + metaSize);
 
 static void StrAlloc(wchar_t*& s, int n) {
     int* cap = static_cast<int*>(malloc(metaSize + sizeof(wchar_t) * (n + 1)));
-    cap[0] = cap[1] = n;
-    s = reinterpret_cast<wchar_t*>(cap + 2);
+    if (cap) {
+        cap[0] = cap[1] = n;
+        s = reinterpret_cast<wchar_t*>(cap + 2);
+    }
 }
 
 static void StrRealloc(wchar_t*& s, int n) {
@@ -29,7 +31,10 @@ static void StrRealloc(wchar_t*& s, int n) {
         if (*cap < n) {
             *cap = *cap << 1;
             if (*cap < n) *cap = n;
-            cap = static_cast<int*>(realloc(cap, metaSize + sizeof(wchar_t) * (*cap + 1)));
+            auto tmp = realloc(cap, metaSize + sizeof(wchar_t) * (*cap + 1));
+            if (tmp) {
+                cap = static_cast<int*>(tmp);
+            }
             s = reinterpret_cast<wchar_t*>(cap + 2);
         }
         cap[1] = n;
@@ -61,7 +66,7 @@ WideString::~WideString() { StrFree(widestring_); }
 
 WideString::WideString() : widestring_(nullstr) {}
 
-WideString::WideString(WideString&& s) : widestring_(s.widestring_) {
+WideString::WideString(WideString&& s) noexcept : widestring_(s.widestring_) {
     s.widestring_ = nullstr;
 }
 
@@ -89,7 +94,7 @@ WideString::WideString(const wchar_t* s, int n) {
     widestring_[n] = 0;
 }
 
-WideString& WideString::operator=(WideString&& s) {
+WideString& WideString::operator=(WideString&& s) noexcept {
     swap(s);
     return *this;
 }
@@ -190,22 +195,27 @@ static uint32_t ReadU8(const uint8_t*& p, const uint8_t* end) {
                     c <<= 6;
                     c += *p;
                     ++p;
+                    break;
                 case 4:
                     c <<= 6;
                     c += *p;
                     ++p;
+                    break;
                 case 3:
                     c <<= 6;
                     c += *p;
                     ++p;
+                    break;
                 case 2:
                     c <<= 6;
                     c += *p;
                     ++p;
+                    break;
                 case 1:
                     c <<= 6;
                     c += *p;
                     ++p;
+                    break;
             };
             c -= utf8Offsets[numBytes];
         } else
@@ -236,12 +246,15 @@ static void WriteU8(std::string& str, uint32_t c) {
             case 4:
                 buffer[3] = (c | 0x80) & 0xBF;
                 c >>= 6;
+                break;
             case 3:
                 buffer[2] = (c | 0x80) & 0xBF;
                 c >>= 6;
+                break;
             case 2:
                 buffer[1] = (c | 0x80) & 0xBF;
                 c >>= 6;
+                break;
         };
         buffer[0] = c | utf8LeadingByte[numBytes];
         Str::append(str, reinterpret_cast<const char*>(buffer), numBytes);
@@ -265,10 +278,12 @@ static void WriteU16(WideString& str, uint32_t c) {
 std::string Narrow(const wchar_t* s, int len) {
     std::string out;
     if (sizeof(wchar_t) == sizeof(uint16_t)) {
-        for (auto p = reinterpret_cast<const uint16_t*>(s), end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint16_t*>(s), end = p + len;
+             p != end;)
             WriteU8(out, ReadU16(p, end));
     } else if (sizeof(wchar_t) == sizeof(uint32_t)) {
-        for (auto p = reinterpret_cast<const uint32_t*>(s), end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint32_t*>(s), end = p + len;
+             p != end;)
             WriteU8(out, *p);
     }
     return out;
@@ -277,10 +292,12 @@ std::string Narrow(const wchar_t* s, int len) {
 WideString Widen(const char* s, int len) {
     WideString out;
     if (sizeof(wchar_t) == sizeof(uint16_t)) {
-        for (auto p = reinterpret_cast<const uint8_t*>(s), end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint8_t*>(s), end = p + len;
+             p != end;)
             WriteU16(out, ReadU8(p, end));
     } else if (sizeof(wchar_t) == sizeof(uint32_t)) {
-        for (auto p = reinterpret_cast<const uint8_t*>(s), end = p + len; p != end;)
+        for (auto p = reinterpret_cast<const uint8_t*>(s), end = p + len;
+             p != end;)
             out.push_back(ReadU8(p, end));
     }
     return out;

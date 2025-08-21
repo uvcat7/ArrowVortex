@@ -197,7 +197,8 @@ static char* ReadNoteRow(char* p, NoteList& out, int row, const int* map,
                 hold->type = NOTE_STEP_OR_HOLD;
                 holds[col] = 0;
             } else {
-                out.append({row, row, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD,
+                out.append({row, row, static_cast<uint32_t>(col), 0,
+                            NOTE_STEP_OR_HOLD,
                             static_cast<uint32_t>(quantization)});
                 if (cols[col] & HOLD_BIT) {
                     holds[col] = out.size();

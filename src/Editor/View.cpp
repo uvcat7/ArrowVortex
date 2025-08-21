@@ -56,9 +56,7 @@ struct ViewImpl : public View, public InputHandler {
 
     ~ViewImpl() = default;
 
-    ViewImpl()
-        : 
-          myPixPerRow(16 * BEATS_PER_ROW) {
+    ViewImpl() : myPixPerRow(16 * BEATS_PER_ROW) {
         vec2i windowSize = gSystem->getWindowSize();
         rect_ = {0, 0, windowSize.x, windowSize.y};
     }
@@ -119,7 +117,8 @@ struct ViewImpl : public View, public InputHandler {
             if (myUseTimeBasedView) {
                 setCursorTime(myCursorTime + delta / myPixPerSec);
             } else {
-                setCursorRow(myCursorRow + static_cast<int>(delta / myPixPerRow));
+                setCursorRow(myCursorRow +
+                             static_cast<int>(delta / myPixPerRow));
             }
         }
         evt.handled = true;
@@ -287,8 +286,8 @@ struct ViewImpl : public View, public InputHandler {
 
         // Store the y-position of time zero.
         if (myUseTimeBasedView) {
-            myChartTopY =
-                floor(static_cast<double>(myReceptorY) - myCursorTime * myPixPerSec);
+            myChartTopY = floor(static_cast<double>(myReceptorY) -
+                                myCursorTime * myPixPerSec);
         } else {
             myChartTopY = floor(static_cast<double>(myReceptorY) -
                                 myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
@@ -462,9 +461,11 @@ struct ViewImpl : public View, public InputHandler {
 
     int getRowY(int row) const {
         if (myUseTimeBasedView) {
-            return static_cast<int>(myChartTopY + gTempo->rowToTime(row) * myPixPerSec);
+            return static_cast<int>(myChartTopY +
+                                    gTempo->rowToTime(row) * myPixPerSec);
         } else {
-            return static_cast<int>(myChartTopY + static_cast<double>(row) * myPixPerRow);
+            return static_cast<int>(myChartTopY +
+                                    static_cast<double>(row) * myPixPerRow);
         }
     }
 
@@ -473,7 +474,8 @@ struct ViewImpl : public View, public InputHandler {
             return static_cast<int>(myChartTopY + time * myPixPerSec);
         } else {
             return static_cast<int>(myChartTopY + gTempo->timeToBeat(time) *
-                                           ROWS_PER_BEAT * myPixPerRow);
+                                                      ROWS_PER_BEAT *
+                                                      myPixPerRow);
         }
     }
 
@@ -515,9 +517,11 @@ struct ViewImpl : public View, public InputHandler {
 
     int rowToY(int row) const override {
         if (myUseTimeBasedView) {
-            return static_cast<int>(myChartTopY + gTempo->rowToTime(row) * myPixPerSec);
+            return static_cast<int>(myChartTopY +
+                                    gTempo->rowToTime(row) * myPixPerSec);
         } else {
-            return static_cast<int>(myChartTopY + static_cast<double>(row) * myPixPerRow);
+            return static_cast<int>(myChartTopY +
+                                    static_cast<double>(row) * myPixPerRow);
         }
     }
 
@@ -526,7 +530,8 @@ struct ViewImpl : public View, public InputHandler {
             return static_cast<int>(myChartTopY + time * myPixPerSec);
         } else {
             return static_cast<int>(myChartTopY + gTempo->timeToBeat(time) *
-                                           ROWS_PER_BEAT * myPixPerRow);
+                                                      ROWS_PER_BEAT *
+                                                      myPixPerRow);
         }
     }
 
@@ -543,7 +548,8 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     ChartOffset rowToOffset(int row) const override {
-        return myUseTimeBasedView ? gTempo->rowToTime(row) : static_cast<ChartOffset>(row);
+        return myUseTimeBasedView ? gTempo->rowToTime(row)
+                                  : static_cast<ChartOffset>(row);
     }
 
     ChartOffset timeToOffset(double time) const override {
@@ -552,7 +558,8 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     int offsetToRow(ChartOffset ofs) const override {
-        return myUseTimeBasedView ? gTempo->timeToRow(ofs) : static_cast<int>(ofs + 0.5);
+        return myUseTimeBasedView ? gTempo->timeToRow(ofs)
+                                  : static_cast<int>(ofs + 0.5);
     }
 
     double offsetToTime(ChartOffset ofs) const override {
@@ -573,7 +580,9 @@ struct ViewImpl : public View, public InputHandler {
 
     int getPreviewOffset() const override { return applyZoom(myPreviewOffset); }
 
-    int applyZoom(int v) const override { return (v * static_cast<int>(64 * myScaleLevel)) >> 8; }
+    int applyZoom(int v) const override {
+        return (v * static_cast<int>(64 * myScaleLevel)) >> 8;
+    }
 
     int getNoteScale() const override { return 64 * myScaleLevel; }
 
@@ -676,11 +685,11 @@ View* gView = nullptr;
 
 void View::create(XmrNode& settings) {
     gView = new ViewImpl;
-    ((ViewImpl*)gView)->loadSettings(settings);
+    static_cast<ViewImpl*>(gView)->loadSettings(settings);
 }
 
 void View::destroy() {
-    delete (ViewImpl*)gView;
+    delete static_cast<ViewImpl*>(gView);
     gView = nullptr;
 }
 

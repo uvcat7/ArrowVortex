@@ -67,10 +67,10 @@ struct MixerImpl : public Mixer {
     }
 
     MixerImpl()
-        
-          {
-        myBlockMemory =
-            static_cast<BYTE*>(_aligned_malloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16));
+
+    {
+        myBlockMemory = static_cast<BYTE*>(
+            _aligned_malloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16));
         for (WAVEHDR& header : myHeaders) {
             memset(&header, 0, sizeof(WAVEHDR));
         }
@@ -125,7 +125,8 @@ struct MixerImpl : public Mixer {
         wfex.cbSize = 0;
 
         MMRESULT res = waveOutOpen(&myWaveout, WAVE_MAPPER, &wfex,
-                                   (DWORD_PTR)(&MixerCallback), (DWORD_PTR)this,
+                                   reinterpret_cast<DWORD_PTR>(&MixerCallback), 
+                                   reinterpret_cast<DWORD_PTR>(this),
                                    CALLBACK_FUNCTION);
 
         if (res != MMSYSERR_NOERROR) {
@@ -159,8 +160,9 @@ struct MixerImpl : public Mixer {
         myIsOpened = true;
 
         // Start the MixerDevice update thread.
-        myThread = CreateThread(nullptr, 0, static_cast<LPTHREAD_START_ROUTINE>(MixerThread),
-                                this, 0, nullptr);
+        myThread = CreateThread(
+            nullptr, 0, static_cast<LPTHREAD_START_ROUTINE>(MixerThread), this,
+            0, nullptr);
 
         return true;
     }
@@ -191,8 +193,10 @@ struct MixerImpl : public Mixer {
     }
 
     void mixThread() {
-        const HANDLE events[] = {static_cast<HANDLE>(myKillThread), static_cast<HANDLE>(myResumeThread),
-            static_cast<HANDLE>(myPauseThread), static_cast<HANDLE>(myWriteBlock)};
+        const HANDLE events[] = {static_cast<HANDLE>(myKillThread),
+                                 static_cast<HANDLE>(myResumeThread),
+                                 static_cast<HANDLE>(myPauseThread),
+                                 static_cast<HANDLE>(myWriteBlock)};
         while (true) {
             // Wait for a thread event.
             DWORD id = WaitForMultipleObjects(4, events, FALSE, INFINITE);
@@ -230,7 +234,7 @@ struct MixerImpl : public Mixer {
 static void CALLBACK MixerCallback(HWAVEOUT hwo, UINT msg, DWORD_PTR mixer,
                                    DWORD_PTR, DWORD_PTR) {
     if (msg == WOM_DONE) {
-        ((MixerImpl*)mixer)->blockDone();
+        reinterpret_cast<MixerImpl*>(mixer)->blockDone();
     }
 }
 

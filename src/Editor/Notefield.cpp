@@ -71,13 +71,15 @@ struct DrawPosHelper {
         return getFunc(this, row, time);
     }
     static int RowBasedAdvance(DrawPosHelper* dp, int row) {
-        return static_cast<int>(dp->baseY + dp->deltaY * static_cast<double>(row));
+        return static_cast<int>(dp->baseY +
+                                dp->deltaY * static_cast<double>(row));
     }
     static int RowBasedGet(const DrawPosHelper* dp, int row, double time) {
         return static_cast<int>(dp->baseY + dp->deltaY * row);
     }
     static int TimeBasedAdvance(DrawPosHelper* dp, int row) {
-        return static_cast<int>(dp->baseY + dp->deltaY * dp->tracker.advance(row));
+        return static_cast<int>(dp->baseY +
+                                dp->deltaY * dp->tracker.advance(row));
     }
     static int TimeBasedGet(const DrawPosHelper* dp, int row, double time) {
         return static_cast<int>(dp->baseY + dp->deltaY * time);
@@ -168,9 +170,12 @@ struct NotefieldImpl : public Notefield {
                         bsum += src[2];
                         src += 4;
                     }
-                    int r = static_cast<int>(0.5f * static_cast<float>(rsum) / static_cast<float>(numPixels));
-                    int g = static_cast<int>(0.5f * static_cast<float>(gsum) / static_cast<float>(numPixels));
-                    int b = static_cast<int>(0.5f * static_cast<float>(bsum) / static_cast<float>(numPixels));
+                    int r = static_cast<int>(0.5f * static_cast<float>(rsum) /
+                                             static_cast<float>(numPixels));
+                    int g = static_cast<int>(0.5f * static_cast<float>(gsum) /
+                                             static_cast<float>(numPixels));
+                    int b = static_cast<int>(0.5f * static_cast<float>(bsum) /
+                                             static_cast<float>(numPixels));
                     mySongBgColor = RGBAtoColor32(r, g, b, 255);
                     mySongBg = Texture(img.width, img.height, img.pixels, false,
                                        Texture::RGBA);
@@ -265,13 +270,16 @@ struct NotefieldImpl : public Notefield {
         recti view = gView->getRect();
 
         // Background image.
-        auto style = static_cast<BackgroundStyle>(gEditor->getBackgroundStyle());
+        auto style =
+            static_cast<BackgroundStyle>(gEditor->getBackgroundStyle());
         if (mySongBg.handle() && myBgBrightness != 0) {
             recti r = view;
             vec2i size = mySongBg.size();
             if (style == BG_STYLE_LETTERBOX || style == BG_STYLE_CROP) {
-                double bgRatio = static_cast<double>(size.x) / static_cast<double>(size.y);
-                double viewRatio = static_cast<double>(r.w) / static_cast<double>(r.h);
+                double bgRatio =
+                    static_cast<double>(size.x) / static_cast<double>(size.y);
+                double viewRatio =
+                    static_cast<double>(r.w) / static_cast<double>(r.h);
 
                 if ((bgRatio > viewRatio) == (style == BG_STYLE_LETTERBOX)) {
                     r.h = size.y * r.w / size.x;
@@ -408,7 +416,7 @@ struct NotefieldImpl : public Notefield {
         auto& events = gTempo->getTimingData().events;
         auto batch = Renderer::batchC();
         if (gView->isTimeBased()) {
-            for (const auto & event : events) {
+            for (const auto& event : events) {
                 if (event.rowTime > event.time) {
                     int t = static_cast<int>(oy + dy * event.time);
                     int b = static_cast<int>(oy + dy * event.rowTime);
@@ -457,8 +465,8 @@ struct NotefieldImpl : public Notefield {
             // Calculate the beat pulse value for the receptors.
             double beat = gTempo->timeToBeat(gView->getCursorTime());
             float beatfrac = static_cast<float>(beat - floor(beat));
-            uint8_t beatpulse =
-                static_cast<uint8_t>(min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
+            uint8_t beatpulse = static_cast<uint8_t>(
+                min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
 
             // Draw the receptors.
             auto batch = Renderer::batchTC();
@@ -496,7 +504,8 @@ struct NotefieldImpl : public Notefield {
             if (!note) continue;
 
             double lum = 1.5 - (time - note->endtime) * 6.0;
-            uint8_t alpha = static_cast<uint8_t>(clamp(static_cast<int>(lum * 255.0), 0, 255));
+            uint8_t alpha = static_cast<uint8_t>(
+                clamp(static_cast<int>(lum * 255.0), 0, 255));
             if (alpha > 0) {
                 noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
             }
@@ -660,7 +669,8 @@ struct NotefieldImpl : public Notefield {
     }
 
     void drawGhostNote(const Note& n) override {
-        if (n.col < 0 || static_cast<int>(n.col) >= gStyle->getNumCols()) return;
+        if (n.col < 0 || static_cast<int>(n.col) >= gStyle->getNumCols())
+            return;
 
         auto noteskin = gNoteskin->get();
         int numCols = gStyle->getNumCols();
@@ -716,22 +726,22 @@ struct NotefieldImpl : public Notefield {
     // ================================================================================================
     // NotefieldImpl :: toggle/check functions.
 
-    void NotefieldImpl::toggleShowWaveform() override {
+    void toggleShowWaveform() override {
         myShowWaveform = !myShowWaveform;
         gMenubar->update(Menubar::SHOW_WAVEFORM);
     }
 
-    void NotefieldImpl::toggleShowBeatLines() override {
+    void toggleShowBeatLines() override {
         myShowBeatLines = !myShowBeatLines;
         gMenubar->update(Menubar::SHOW_BEATLINES);
     }
 
-    void NotefieldImpl::toggleShowNotes() override {
+    void toggleShowNotes() override {
         myShowNotes = !myShowNotes;
         gMenubar->update(Menubar::SHOW_NOTES);
     }
 
-    void NotefieldImpl::toggleShowSongPreview() override {
+    void toggleShowSongPreview() override {
         myShowSongPreview = !myShowSongPreview;
     }
 
@@ -792,7 +802,7 @@ Notefield* gNotefield = nullptr;
 void Notefield::create() { gNotefield = new NotefieldImpl; }
 
 void Notefield::destroy() {
-    delete (NotefieldImpl*)gNotefield;
+    delete static_cast<NotefieldImpl*>(gNotefield);
     gNotefield = nullptr;
 }
 

@@ -67,14 +67,17 @@ struct DrawPosHelper {
         return static_cast<int>(dp->baseY + dp->deltaY * row);
     }
     static int RowBasedAlteredAdvance(DrawPosHelper* dp, int row) {
-        return static_cast<int>(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
+        return static_cast<int>(dp->baseY +
+                                dp->deltaY * gTempo->rowToScroll(row));
     }
     static int RowBasedAlteredGet(const DrawPosHelper* dp, int row,
                                   double time) {
-        return static_cast<int>(dp->baseY + dp->deltaY * gTempo->rowToScroll(row));
+        return static_cast<int>(dp->baseY +
+                                dp->deltaY * gTempo->rowToScroll(row));
     }
     static int TimeBasedAdvance(DrawPosHelper* dp, int row) {
-        return static_cast<int>(dp->baseY + dp->deltaY * dp->tracker.advance(row));
+        return static_cast<int>(dp->baseY +
+                                dp->deltaY * dp->tracker.advance(row));
     }
     static int TimeBasedGet(const DrawPosHelper* dp, int row, double time) {
         return static_cast<int>(dp->baseY + dp->deltaY * time);
@@ -219,10 +222,11 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         bool zoomedIn = (gView->getZoomLevel() >= 4);
 
         // Determine the first row and last row that should show beat lines.
-        int drawBeginRow = max(0, static_cast<int>(currentRow) - ROWS_PER_BEAT * 4);
-        int drawEndRow =
-            min(static_cast<int>(currentRow) + ROWS_PER_BEAT * 20, gSimfile->getEndRow()) +
-            1;
+        int drawBeginRow =
+            max(0, static_cast<int>(currentRow) - ROWS_PER_BEAT * 4);
+        int drawEndRow = min(static_cast<int>(currentRow) + ROWS_PER_BEAT * 20,
+                             gSimfile->getEndRow()) +
+                         1;
 
         auto& sigs = gTempo->getTimingData().sigs;
         auto it = sigs.begin(), end = sigs.end();
@@ -300,13 +304,14 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         // Calculate the beat pulse value for the receptors.
         double beat = gTempo->timeToBeat(gView->getCursorTime());
         float beatfrac = static_cast<float>(beat - floor(beat));
-        uint8_t beatpulse =
-            static_cast<uint8_t>(min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
+        uint8_t beatpulse = static_cast<uint8_t>(
+            min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
 
         // Draw the receptors.
         auto batch = Renderer::batchTC();
         for (int c = 0; c < cols; ++c) {
-            noteskin->recepOff[c].draw(&batch, myColX[c], myY, static_cast<uint8_t>(255));
+            noteskin->recepOff[c].draw(&batch, myColX[c], myY,
+                                       static_cast<uint8_t>(255));
             noteskin->recepOn[c].draw(&batch, myColX[c], myY, beatpulse);
         }
         batch.flush();
@@ -328,7 +333,8 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
             auto note = prevNotes[c];
             if (!note) continue;
             double lum = 1.5 - (time - note->endtime) * 6.0;
-            uint8_t alpha = static_cast<uint8_t>(clamp(static_cast<int>(lum * 255.0), 0, 255));
+            uint8_t alpha = static_cast<uint8_t>(
+                clamp(static_cast<int>(lum * 255.0), 0, 255));
             if (alpha > 0) {
                 noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
             }
@@ -437,7 +443,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
     // ================================================================================================
     // NotefieldPreviewImpl :: toggle/check functions.
 
-    int NotefieldPreviewImpl::getY() override { return myY; }
+    int getY() override { return myY; }
 
     void setMode(DrawMode mode) override {
         myDrawMode = mode;
@@ -446,18 +452,18 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
     DrawMode getMode() override { return myDrawMode; }
 
-    void NotefieldPreviewImpl::toggleEnabled() override {
+    void toggleEnabled() override {
         myEnabled = !myEnabled;
         gView->adjustForPreview(myEnabled);
         gMenubar->update(Menubar::PREVIEW_ENABLED);
     }
 
-    void NotefieldPreviewImpl::toggleShowBeatLines() override {
+    void toggleShowBeatLines() override {
         myShowBeatLines = !myShowBeatLines;
         gMenubar->update(Menubar::PREVIEW_SHOW_BEATLINES);
     }
 
-    void NotefieldPreviewImpl::toggleReverseScroll() override {
+    void toggleReverseScroll() override {
         myUseReverseScroll = !myUseReverseScroll;
         gMenubar->update(Menubar::PREVIEW_SHOW_REVERSE_SCROLL);
     }
@@ -476,11 +482,11 @@ NotefieldPreview* gNotefieldPreview = nullptr;
 
 void NotefieldPreview::create(XmrNode& settings) {
     gNotefieldPreview = new NotefieldPreviewImpl;
-    ((NotefieldPreviewImpl*)gNotefieldPreview)->loadSettings(settings);
+    static_cast<NotefieldPreviewImpl*>(gNotefieldPreview)->loadSettings(settings);
 }
 
 void NotefieldPreview::destroy() {
-    delete (NotefieldPreviewImpl*)gNotefieldPreview;
+    delete static_cast<NotefieldPreviewImpl*>(gNotefieldPreview);
     gNotefieldPreview = nullptr;
 }
 

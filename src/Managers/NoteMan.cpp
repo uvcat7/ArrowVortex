@@ -50,11 +50,9 @@ struct NotesManImpl : public NotesMan {
 
     ~NotesManImpl() = default;
 
-    NotesManImpl()
-        
-          {
+    NotesManImpl() {
         myChart = nullptr;
-
+        mySimfile = nullptr;
         myApplyAddNoteId = gHistory->addCallback(ApplyAddNote);
         myApplyRemNoteId = gHistory->addCallback(ApplyRemoveNote);
         myApplyChangeNotesId = gHistory->addCallback(ApplyChangeNotes);
@@ -398,7 +396,7 @@ struct NotesManImpl : public NotesMan {
                     myItemizeInsertRows(stream, chart, startRow, numRows);
                 }
             }
-            stream.write((Chart*)nullptr);
+            stream.write(static_cast<Chart*>(nullptr));
 
             gHistory->addEntry(myApplyInsertRowsId, stream.data(),
                                stream.size());

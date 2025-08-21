@@ -128,8 +128,8 @@ struct SelectionImpl : public Selection {
             if (gView->isTimeBased()) {
                 gTempoBoxes->selectTime(mod, t, b, l, r);
             } else {
-                gTempoBoxes->selectRows(mod, static_cast<int>(t + 0.5), static_cast<int>(b + 0.5), l,
-                                        r);
+                gTempoBoxes->selectRows(mod, static_cast<int>(t + 0.5),
+                                        static_cast<int>(b + 0.5), l, r);
             }
         }
     }
@@ -146,7 +146,8 @@ struct SelectionImpl : public Selection {
             mindist *= mindist;
 
             for (auto& note : *gNotes) {
-                double tor = timeBased ? note.time : static_cast<double>(note.row);
+                double tor =
+                    timeBased ? note.time : static_cast<double>(note.row);
                 int dx = xl - gView->columnToX(note.col);
                 int dy = static_cast<int>(clickY - gView->offsetToY(tor));
                 if (abs(dy) < mindist) {
@@ -318,7 +319,8 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
-    int selectNotes(SelectModifier mod, const Vector<RowCol>& indices) override {
+    int selectNotes(SelectModifier mod,
+                    const Vector<RowCol>& indices) override {
         int numSelected = gNotes->select(mod, indices);
         showSelectionResult(mod, numSelected);
         return numSelected;
@@ -386,7 +388,7 @@ Selection* gSelection = nullptr;
 void Selection::create() { gSelection = new SelectionImpl; }
 
 void Selection::destroy() {
-    delete (SelectionImpl*)gSelection;
+    delete static_cast<SelectionImpl*>(gSelection);
     gSelection = nullptr;
 }
 

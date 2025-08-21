@@ -160,8 +160,9 @@ static void ReadFontSize(const uint8_t* param, int len) {
         fontSize = LD->baseFontSize;
     } else if (param[len - 1] == '%') {
         fontSize =
-            static_cast<int>(ReadNumber(param, len) * static_cast<double>(LD->baseFontSize) / 100.0 +
-                  0.5);
+            static_cast<int>(ReadNumber(param, len) *
+                                 static_cast<double>(LD->baseFontSize) / 100.0 +
+                             0.5);
     } else {
         fontSize = static_cast<int>(ReadNumber(param, len) + 0.5);
     }
@@ -261,8 +262,8 @@ static const Glyph* ReadMarkup(const uint8_t* str) {
                 ReadFontChange(param, paramLen);
                 break;
             case ID1('G'):
-                return FontManager::getGlyph(
-                    std::string(reinterpret_cast<const char*>(param), paramLen));
+                return FontManager::getGlyph(std::string(
+                    reinterpret_cast<const char*>(param), paramLen));
             case ID2('L', 'B'):
                 return GetGlyph('{');
             case ID2('R', 'B'):

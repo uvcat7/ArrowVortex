@@ -146,7 +146,8 @@ void DialogWaveformSettings::myToggleOverlayFilter() {
 }
 
 void DialogWaveformSettings::myEnableFilter() {
-    gWaveform->enableFilter(static_cast<Waveform::FilterType>(filterType_), filterStrength_);
+    gWaveform->enableFilter(static_cast<Waveform::FilterType>(filterType_),
+                            filterStrength_);
 }
 
 void DialogWaveformSettings::myDisableFilter() { gWaveform->disableFilter(); }

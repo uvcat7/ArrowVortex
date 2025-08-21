@@ -190,7 +190,7 @@ static const char* GetExtension(const char* p) {
 
 Path::Path() = default;
 
-Path::Path(const Path& other)  = default;
+Path::Path(const Path& other) = default;
 
 Path::Path(const std::string& path) : str(Concatenate(std::string(), path)) {}
 

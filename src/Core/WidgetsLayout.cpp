@@ -16,7 +16,7 @@ struct RowLayout::Col {
 };
 
 struct RowLayout::Row {
-    Row()  = default;
+    Row() = default;
 
     uint32_t expand : 1 = 0;
 
@@ -69,7 +69,8 @@ void RowLayout::onUpdateSize() {
                 vec2i size = (*widget)->getSize();
                 h = max(h, size.y);
                 if (cols[c].adjust) {
-                    cols[c].width = max(cols[c].width, static_cast<uint32_t>(size.x));
+                    cols[c].width =
+                        max(cols[c].width, static_cast<uint32_t>(size.x));
                 }
             }
 
@@ -129,7 +130,7 @@ void RowLayout::onTick() {
 }
 
 void RowLayout::onDraw() {
-    FOR_VECTOR_FORWARD(widget_list_, i) { widget_list_[i]->draw(); }
+    for (GuiWidget* widget : widget_list_) { widget->draw(); }
 }
 
 void RowLayout::add(GuiWidget* widget) {

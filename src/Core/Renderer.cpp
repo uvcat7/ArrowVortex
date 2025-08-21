@@ -47,7 +47,8 @@ static RendererInstance* RI;
 // Creation/destruction.
 
 static void createBatchData() {
-    RI->batchPos = static_cast<uint8_t*>(malloc(VB_POS_SIZE + VB_UVS_SIZE + VB_COL_SIZE));
+    RI->batchPos =
+        static_cast<uint8_t*>(malloc(VB_POS_SIZE + VB_UVS_SIZE + VB_COL_SIZE));
     RI->batchUvs = RI->batchPos + VB_POS_SIZE;
     RI->batchCol = RI->batchUvs + VB_UVS_SIZE;
     RI->quadsLeft = BATCH_QUAD_LIMIT;
@@ -240,7 +241,7 @@ static int FlushQuads(GLint vertexType, const void* pos,
                       const uint32_t* col = nullptr) {
     glDrawElements(GL_TRIANGLES, BATCH_QUAD_LIMIT * 6, GL_UNSIGNED_INT,
                    RI->quadIndices);
-    pos = (int*)pos + BATCH_QUAD_LIMIT * 8;
+    pos = reinterpret_cast<const int*>(pos) + BATCH_QUAD_LIMIT * 8;
     glVertexPointer(2, vertexType, 0, pos);
     if (uvs) {
         uvs += BATCH_QUAD_LIMIT * 8;
@@ -344,20 +345,24 @@ void Renderer::drawTris(int numTris, const uint32_t* indices, const int* pos,
 // Batch rendering.
 
 static void FlushIC() {
-    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, reinterpret_cast<int*>(RI->batchPos),
+    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft,
+                        reinterpret_cast<int*>(RI->batchPos),
                         reinterpret_cast<uint32_t*>(RI->batchCol));
     RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
 static void FlushIT() {
-    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, reinterpret_cast<int*>(RI->batchPos),
+    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft,
+                        reinterpret_cast<int*>(RI->batchPos),
                         reinterpret_cast<float*>(RI->batchUvs));
     RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
 static void FlushITC() {
-    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft, reinterpret_cast<int*>(RI->batchPos),
-                        reinterpret_cast<float*>(RI->batchUvs), reinterpret_cast<uint32_t*>(RI->batchCol));
+    Renderer::drawQuads(BATCH_QUAD_LIMIT - RI->quadsLeft,
+                        reinterpret_cast<int*>(RI->batchPos),
+                        reinterpret_cast<float*>(RI->batchUvs),
+                        reinterpret_cast<uint32_t*>(RI->batchCol));
     RI->quadsLeft = BATCH_QUAD_LIMIT;
 }
 
@@ -396,15 +401,19 @@ void QuadBatchT::flush() { FlushIT(); }
 void QuadBatchTC::flush() { FlushITC(); }
 
 QuadBatchC Renderer::batchC() {
-    return {reinterpret_cast<int*>(RI->batchPos), reinterpret_cast<uint32_t*>(RI->batchCol)};
+    return {reinterpret_cast<int*>(RI->batchPos),
+            reinterpret_cast<uint32_t*>(RI->batchCol)};
 }
 
 QuadBatchT Renderer::batchT() {
-    return {reinterpret_cast<int*>(RI->batchPos), reinterpret_cast<float*>(RI->batchUvs)};
+    return {reinterpret_cast<int*>(RI->batchPos),
+            reinterpret_cast<float*>(RI->batchUvs)};
 }
 
 QuadBatchTC Renderer::batchTC() {
-    return {reinterpret_cast<int*>(RI->batchPos), reinterpret_cast<float*>(RI->batchUvs), reinterpret_cast<uint32_t*>(RI->batchCol)};
+    return {reinterpret_cast<int*>(RI->batchPos),
+            reinterpret_cast<float*>(RI->batchUvs),
+            reinterpret_cast<uint32_t*>(RI->batchCol)};
 }
 
 const TileRect& Renderer::getRoundedBox() { return RI->roundedBox; }

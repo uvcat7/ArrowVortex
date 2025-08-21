@@ -191,8 +191,9 @@ void WgSlider::onDraw() {
 
     // Draw the draggable button graphic.
     if (slider_begin_ != slider_end_) {
-        int boxX = static_cast<int>(static_cast<double>(bar.w) * (value.get() - slider_begin_) /
-                         (slider_end_ - slider_begin_));
+        int boxX = static_cast<int>(static_cast<double>(bar.w) *
+                                    (value.get() - slider_begin_) /
+                                    (slider_end_ - slider_begin_));
         recti box = {bar.x + min(max(boxX, 0), bar.w) - 4, bar.y - 8, 8, 16};
 
         button.base.draw(box, 0);
@@ -215,8 +216,9 @@ void WgSlider::SliderUpdateValue(double v) {
 void WgSlider::SliderDrag(int x, int y) {
     recti r = rect_;
     r.w = max(r.w, 1);
-    double val = slider_begin_ + (slider_end_ - slider_begin_) *
-                                     (static_cast<double>(x - r.x) / static_cast<double>(r.w));
+    double val = slider_begin_ +
+                 (slider_end_ - slider_begin_) *
+                     (static_cast<double>(x - r.x) / static_cast<double>(r.w));
     SliderUpdateValue(val);
 }
 

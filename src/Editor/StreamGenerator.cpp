@@ -249,7 +249,8 @@ void StreamGenerator::generate(int row, int endRow, SnapType spacing) {
     while (row < endRow) {
         // Generate an arrow for the current row.
         int col = stream.getNextCol();
-        edit.add.append({row, row, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
+        edit.add.append(
+            {row, row, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
 
         // Store the current facing.
         int yl = stream.pad[stream.feet[FOOT_L].curCol].y;

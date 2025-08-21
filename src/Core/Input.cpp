@@ -92,7 +92,9 @@ static char* WriteData(char* buffer, T& data) {
 
 static void ValidateEvents(const void* data, const void* it = nullptr) {
     bool itFound = false;
-    for (EventHeader* event = (EventHeader*)data; event; event = event->next) {
+    for (EventHeader* event =
+             static_cast<EventHeader*>(const_cast<void*>(data));
+         event; event = event->next) {
         VortexAssert(event->type >= 1 && event->type < NUM_EVENT_TYPES);
         if (it && (event + 1) == it) itFound = true;
     }
@@ -117,7 +119,8 @@ static char* ReadNextEvent(void* data, int type, char* it) {
 
 template <typename T>
 bool ReadNext(void* data, int type, T*& it) {
-    it = (T*)ReadNextEvent(data, type, (char*)it);
+    it = reinterpret_cast<T*>(
+        ReadNextEvent(data, type, reinterpret_cast<char*>(it)));
     return it != nullptr;
 }
 
@@ -148,7 +151,8 @@ void InputEvents::operator=(const InputEvents& other) {
     if (data_ != other.data_) {
         clear();
         EventHeader* last = nullptr;
-        for (EventHeader* it = static_cast<EventHeader*>(other.data_); it; it = it->next) {
+        for (EventHeader* it = static_cast<EventHeader*>(other.data_); it;
+             it = it->next) {
             EventHeader* event = CopyEvent(it);
             if (last) {
                 last->next = event;
@@ -208,7 +212,8 @@ void InputEvents::addTextInput(const char* text) {
 
     int numBytes = sizeof(TextInput) + strlen(text) + 1;
 
-    TextInput* event = reinterpret_cast<TextInput*>(AddEvent(data_, ET_TEXT_INPUT, numBytes));
+    TextInput* event =
+        reinterpret_cast<TextInput*>(AddEvent(data_, ET_TEXT_INPUT, numBytes));
     event->handled = false;
     event->text = nullptr;
     WriteString(event + 1, text);
@@ -225,7 +230,8 @@ void InputEvents::addFileDrop(const char* const* files, int count, int x,
     for (int i = 0; i < count; ++i) {
         numBytes += strlen(files[i]) + 1;
     }
-    FileDrop* event = reinterpret_cast<FileDrop*>(AddEvent(data_, ET_FILE_DROP, numBytes));
+    FileDrop* event =
+        reinterpret_cast<FileDrop*>(AddEvent(data_, ET_FILE_DROP, numBytes));
     event->handled = false;
     event->count = count;
     event->x = x;
@@ -341,7 +347,8 @@ static HandleEventFunction handleFunctions[NUM_EVENT_TYPES] = {
 };
 
 void InputHandler::handleInputs(InputEvents& events) {
-    for (EventHeader* it = static_cast<EventHeader*>(events.data_); it; it = it->next) {
+    for (EventHeader* it = static_cast<EventHeader*>(events.data_); it;
+         it = it->next) {
         handleFunctions[it->type](it + 1, this);
     }
 }

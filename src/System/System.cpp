@@ -169,34 +169,40 @@ static bool LogCheckpoint(bool result, const char* description) {
 
 typedef System::MenuItem MItem;
 
-MItem* MItem::create() { return reinterpret_cast<MenuItem*>(CreatePopupMenu()); }
+MItem* MItem::create() {
+    return reinterpret_cast<MenuItem*>(CreatePopupMenu());
+}
 
 void MItem::addSeperator() {
     AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
 }
 void MItem::addItem(int item, const std::string& text) {
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item, Widen(text).str());
+    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
+                Widen(text).str());
 }
 
 void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed) {
     int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP, (UINT_PTR)submenu,
-                Widen(text).str());
+    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP,
+                reinterpret_cast<UINT_PTR>(submenu), Widen(text).str());
 }
 
 void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
                            bool grayed) {
     int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
     DeleteMenu(reinterpret_cast<HMENU>(this), pos, MF_BYPOSITION);
-    InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags, (UINT_PTR)submenu, Widen(text).str());
+    InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags,
+                reinterpret_cast<UINT_PTR>(submenu), Widen(text).str());
 }
 
 void MItem::setChecked(int item, bool state) {
-    CheckMenuItem(reinterpret_cast<HMENU>(this), item, state ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(reinterpret_cast<HMENU>(this), item,
+                  state ? MF_CHECKED : MF_UNCHECKED);
 }
 
 void MItem::setEnabled(int item, bool state) {
-    EnableMenuItem(reinterpret_cast<HMENU>(this), item, state ? MF_ENABLED : MF_GRAYED);
+    EnableMenuItem(reinterpret_cast<HMENU>(this), item,
+                   state ? MF_ENABLED : MF_GRAYED);
 }
 
 namespace {
@@ -241,11 +247,10 @@ struct SystemImpl : public System {
 
     SystemImpl()
         : myInstance(GetModuleHandle(nullptr)),
-          
+
           myMousePos({0, 0}),
           mySize({0, 0}),
-          myTitle("ArrowVortex")
-          {
+          myTitle("ArrowVortex") {
         myApplicationStartTime = Debug::getElapsedTime();
 
         // Register the window class.
@@ -273,7 +278,8 @@ struct SystemImpl : public System {
         for (int i = 0; i < 15; ++i)
             myKeyMap[VK_F1 + i] = static_cast<Key::Code>(Key::F1 + i);
         for (int i = 0; i < 9; ++i)
-            myKeyMap[VK_NUMPAD0 + i] = static_cast<Key::Code>(Key::NUMPAD_0 + i);
+            myKeyMap[VK_NUMPAD0 + i] =
+                static_cast<Key::Code>(Key::NUMPAD_0 + i);
 
         // Create a window handle.
         myStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
@@ -304,10 +310,12 @@ struct SystemImpl : public System {
         pfd.cDepthBits = 24;
         pfd.cStencilBits = 8;
 
-        // Set the pixel format.
+        // Set the pixel format
+#pragma warning(suppress : 6387)
         int cpf = ChoosePixelFormat(myHDC, &pfd);
         if (LogCheckpoint(cpf != 0, "choosing pixel format")) return;
 
+#pragma warning(suppress : 6387)
         BOOL spf = SetPixelFormat(myHDC, cpf, &pfd);
         if (LogCheckpoint(spf != 0, "setting pixel format")) return;
 
@@ -331,8 +339,8 @@ struct SystemImpl : public System {
 
         // Enable vsync for now, we will disable it later if the settings
         // require it.
-        wglSwapInterval =
-            reinterpret_cast<PFNWGLSWAPINTERVALFARPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
+        wglSwapInterval = reinterpret_cast<PFNWGLSWAPINTERVALFARPROC>(
+            wglGetProcAddress("wglSwapIntervalEXT"));
         Debug::log("swap interval support :: %s\n",
                    wglSwapInterval ? "OK" : "MISSING");
         if (wglSwapInterval) {
@@ -462,7 +470,7 @@ struct SystemImpl : public System {
 
             // End of frame
             auto curTime = Debug::getElapsedTime();
-            deltaTime = duration<double>(static_cast<float>min(
+            deltaTime = duration<double>(static_cast<float> min(
                 max(0, duration<double>(curTime - prevTime).count()), 0.25));
             prevTime = curTime;
 
@@ -638,7 +646,7 @@ struct SystemImpl : public System {
             }
             case WM_GETMINMAXINFO: {
                 vec2i minSize = {256, 256}, maxSize = {0, 0};
-                MINMAXINFO* mm = (MINMAXINFO*)lp;
+                MINMAXINFO* mm = reinterpret_cast<MINMAXINFO*>(lp);
                 if (minSize.x > 0 && minSize.y > 0) {
                     RECT r = {0, 0, minSize.x, minSize.y};
                     AdjustWindowRectEx(&r, myStyle, FALSE, myExStyle);
@@ -699,8 +707,10 @@ struct SystemImpl : public System {
             }
             case WM_RBUTTONDOWN:
                 ++mc;
+                break;
             case WM_MBUTTONDOWN:
                 ++mc;
+                break;
             case WM_LBUTTONDOWN:
                 ++mc;
                 {
@@ -715,8 +725,10 @@ struct SystemImpl : public System {
                 }
             case WM_RBUTTONDBLCLK:
                 ++mc;
+                break;
             case WM_MBUTTONDBLCLK:
                 ++mc;
+                break;
             case WM_LBUTTONDBLCLK:
                 ++mc;
                 {
@@ -731,8 +743,10 @@ struct SystemImpl : public System {
                 }
             case WM_RBUTTONUP:
                 ++mc;
+                break;
             case WM_MBUTTONUP:
                 ++mc;
+                break;
             case WM_LBUTTONUP:
                 ++mc;
                 {
@@ -760,24 +774,26 @@ struct SystemImpl : public System {
             case WM_DROPFILES: {
                 if (myIsInsideMessageLoop) {
                     POINT pos;
-                    DragQueryPoint((HDROP)wp, &pos);
+                    DragQueryPoint(reinterpret_cast<HDROP>(wp), &pos);
 
                     // Get the number of files dropped.
-                    UINT numFiles =
-                        DragQueryFileW((HDROP)wp, 0xFFFFFFFF, nullptr, 0);
+                    UINT numFiles = DragQueryFileW(reinterpret_cast<HDROP>(wp),
+                                                   0xFFFFFFFF, nullptr, 0);
                     std::vector<std::string> files(numFiles);
 
                     for (UINT i = 0; i < numFiles; ++i) {
                         // Get the length of the file path and retrieve it.
                         // Giving 0 for the stringbuffer returns path size
                         // without nullbyte.
-                        UINT pathLen = DragQueryFileW((HDROP)wp, i, nullptr, 0);
+                        UINT pathLen = DragQueryFileW(
+                            reinterpret_cast<HDROP>(wp), i, nullptr, 0);
                         WideString wstr(pathLen, 0);
-                        DragQueryFileW((HDROP)wp, i, wstr.begin(), pathLen + 1);
+                        DragQueryFileW(reinterpret_cast<HDROP>(wp), i,
+                                       wstr.begin(), pathLen + 1);
                         files[i] = Narrow(wstr);
                     }
 
-                    DragFinish((HDROP)wp);
+                    DragFinish(reinterpret_cast<HDROP>(wp));
 
                     // Pass the file drop event to the input handler.
                     std::vector<const char*> filePtrs;
@@ -815,11 +831,11 @@ struct SystemImpl : public System {
         LRESULT res = 0;
         bool handled = false;
         if (msg == WM_CREATE) {
-            void* app = ((LPCREATESTRUCT)lp)->lpCreateParams;
-            SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)app);
+            void* app = reinterpret_cast<LPCREATESTRUCT>(lp)->lpCreateParams;
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(app));
         } else {
             SystemImpl* app =
-                (SystemImpl*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+                reinterpret_cast<SystemImpl*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
             if (app) handled = app->handleMsg(msg, wp, lp, res);
         }
         return handled ? res : DefWindowProcW(hwnd, msg, wp, lp);
@@ -832,8 +848,8 @@ struct SystemImpl : public System {
                           Buttons b, Icon i) override {
         WideString wtitle = Widen(title), wtext = Widen(text);
         int flags = sDlgType[b] | sDlgIcon[i], result = R_OK;
-        switch (MessageBoxW(static_cast<HWND>(gSystem->getHWND()), wtext.str(), wtitle.str(),
-                            flags)) {
+        switch (MessageBoxW(static_cast<HWND>(gSystem->getHWND()), wtext.str(),
+                            wtitle.str(), flags)) {
             case IDOK:
                 return R_OK;
             case IDYES:
@@ -900,8 +916,9 @@ struct SystemImpl : public System {
         int flags = CREATE_NO_WINDOW;
         PROCESS_INFORMATION processInfo;
         ZeroMemory(&processInfo, sizeof(processInfo));
-        if (CreateProcessW(nullptr, wbuffer.data(), nullptr, nullptr, TRUE, flags, nullptr,
-                           nullptr, &startupInfo, &processInfo)) {
+        if (CreateProcessW(nullptr, wbuffer.data(), nullptr, nullptr, TRUE,
+                           flags, nullptr, nullptr, &startupInfo,
+                           &processInfo)) {
             if (pipe) {
                 DWORD bytesWritten;
                 int bytesRead = pipe->read();
@@ -922,7 +939,8 @@ struct SystemImpl : public System {
     }
 
     void openWebpage(const std::string& link) override {
-        ShellExecuteW(nullptr, nullptr, Widen(link).str(), nullptr, nullptr, SW_SHOW);
+        ShellExecuteW(nullptr, nullptr, Widen(link).str(), nullptr, nullptr,
+                      SW_SHOW);
     }
 
     void setWorkingDir(const std::string& path) override {
@@ -950,7 +968,9 @@ struct SystemImpl : public System {
 
     Cursor::Icon getCursor() const override { return myCursor; }
 
-    bool isKeyDown(Key::Code key) const override { return myKeyState.test(key); }
+    bool isKeyDown(Key::Code key) const override {
+        return myKeyState.test(key);
+    }
 
     bool isMouseDown(Mouse::Code button) const override {
         return myMouseState.test(button);
@@ -1029,8 +1049,8 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, char*, int) {
     Debug::openConsole();
 #endif
     gSystem = new SystemImpl;
-    ((SystemImpl*)gSystem)->messageLoop();
-    delete (SystemImpl*)gSystem;
+    static_cast<SystemImpl*>(gSystem)->messageLoop();
+    delete static_cast<SystemImpl*>(gSystem);
     ApplicationEnd();
 
 #ifdef CRTDBG_MAP_ALLOC

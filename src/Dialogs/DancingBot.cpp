@@ -335,7 +335,8 @@ void DialogDancingBot::onDraw() {
             for (int y = 0; y < style->padHeight; ++y) {
                 int tile = myPadLayout[y * style->padWidth + x];
                 vec2i pos = myGetDrawPos({x, y});
-                myPadSpr[tile].draw(&batch, pos.x, pos.y, static_cast<uint8_t>(255));
+                myPadSpr[tile].draw(&batch, pos.x, pos.y,
+                                    static_cast<uint8_t>(255));
                 if (tile == TT_BUTTON) myPushArrow(&batch, x, y);
             }
         }
@@ -344,10 +345,12 @@ void DialogDancingBot::onDraw() {
         for (int col = 0; col < prevNotes.size(); ++col) {
             auto n = prevNotes[col];
             double dist = n ? (time - n->endtime) : 1000.0;
-            int alpha = min(max(static_cast<int>((1.5 - dist * 6.0) * 255.0), 0), 255);
+            int alpha =
+                min(max(static_cast<int>((1.5 - dist * 6.0) * 255.0), 0), 255);
             if (alpha > 0) {
                 vec2i pos = myGetDrawPos(style->padColPositions[col]);
-                myPadSpr[2].draw(&batch, pos.x, pos.y, static_cast<uint8_t>(alpha));
+                myPadSpr[2].draw(&batch, pos.x, pos.y,
+                                 static_cast<uint8_t>(alpha));
             }
         }
         batch.flush();
@@ -416,8 +419,8 @@ void DialogDancingBot::myPushArrow(QuadBatchTC* batch, int x, int y) {
     static float rot[9] = {2, 2, 3, 1, 0, 3, 1, 0, 0};
     int i = (y % 3) * 3 + (x % 3);
     vec2f pos = ToVec2f(myGetDrawPos({x, y}));
-    myPadSpr[spr[i] + 3].draw(batch, pos.x, pos.y, rot[i] * static_cast<float>(M_PI / 2.0),
-                              1.f);
+    myPadSpr[spr[i] + 3].draw(batch, pos.x, pos.y,
+                              rot[i] * static_cast<float>(M_PI / 2.0), 1.f);
 }
 
 vec2i DialogDancingBot::myGetDrawPos(vec2i colRow) {
@@ -498,8 +501,8 @@ void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn) {
         if (endtime > curTime) {
             double startTime = max(curTime, endtime - 0.5);
             double delta = LerpDelta(startTime, endtime, time);
-            curPos =
-                SmoothStep(curPos, endPos, static_cast<float>(min(max(delta, 0.0), 1.0)));
+            curPos = SmoothStep(curPos, endPos,
+                                static_cast<float>(min(max(delta, 0.0), 1.0)));
         }
 
         // Determine feet scale.

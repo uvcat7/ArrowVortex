@@ -19,9 +19,11 @@ BatchSprite::BatchSprite(int w, int h) : width(w), height(h) {
 
 void BatchSprite::init(BatchSprite* spr, int count, int cols, int rows,
                        int sprW, int sprH) {
-    float du = 1.f / static_cast<float>(cols), dv = 1.f / static_cast<float>(rows);
+    float du = 1.f / static_cast<float>(cols),
+          dv = 1.f / static_cast<float>(rows);
     for (int i = 0; i != count; ++i) {
-        float u = static_cast<float>(i % cols) * du, v = static_cast<float>(i / cols) * dv;
+        float u = static_cast<float>(i % cols) * du,
+              v = static_cast<float>(i / cols) * dv;
         float uvs[8] = {u, v, u + du, v, u, v + dv, u + du, v + dv};
         memcpy(spr[i].uvs, uvs, sizeof(float) * 8);
         spr[i].width = sprW, spr[i].height = sprH;

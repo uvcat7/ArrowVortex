@@ -219,7 +219,8 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h,
     int nh = NextPowerOfTwo(h);
     if (nw == w && nh == h) return false;
 
-    uint8_t *buffer = static_cast<uint8_t*>(malloc(nw * nh * channels)), *dst = buffer;
+    uint8_t *buffer = static_cast<uint8_t*>(malloc(nw * nh * channels)),
+            *dst = buffer;
     int maxIndex = w * h - w - 1;
     int x, y;
     float sx, sy;
@@ -245,8 +246,8 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h,
                 float w3 = fx0 * fy1;
                 float w4 = fx1 * fy1;
 
-                dst[ch] = static_cast<uint8_t>(p1[ch] * w1 + p2[ch] * w2 + p3[ch] * w3 +
-                                    p4[ch] * w4);
+                dst[ch] = static_cast<uint8_t>(p1[ch] * w1 + p2[ch] * w2 +
+                                               p3[ch] * w3 + p4[ch] * w4);
             }
         }
     }
@@ -355,7 +356,8 @@ void Texture::Data::increaseHeight(int newHeight) {
         }
 
         int channels = sNumChannels[usedFmt];
-        uint8_t* pixels = static_cast<uint8_t*>(malloc(w * newHeight * channels));
+        uint8_t* pixels =
+            static_cast<uint8_t*>(malloc(w * newHeight * channels));
         memset(pixels + w * h * channels, 0, w * (newHeight - h) * channels);
 
         glBindTexture(GL_TEXTURE_2D, handle);
@@ -368,7 +370,7 @@ void Texture::Data::increaseHeight(int newHeight) {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         h = newHeight;
-        rh = 1.0f / static_cast<float>max(h, 1);
+        rh = 1.0f / static_cast<float> max(h, 1);
         free(pixels);
     }
 }

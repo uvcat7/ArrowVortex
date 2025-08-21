@@ -415,7 +415,7 @@ History* gHistory = nullptr;
 void History::create() { gHistory = new HistoryImpl; }
 
 void History::destroy() {
-    delete (HistoryImpl*)gHistory;
+    delete static_cast<HistoryImpl*>(gHistory);
     gHistory = nullptr;
 }
 

@@ -64,7 +64,8 @@ struct OggConversionPipe : public System::CommandPipe {
             samples[p++] = *srcR++;
         }
         framesLeft -= numFrames;
-        *progress = static_cast<uint8_t>(100 - static_cast<uint64_t>(100 * framesLeft / totalFrames));
+        *progress = static_cast<uint8_t>(
+            100 - static_cast<uint64_t>(100 * framesLeft / totalFrames));
         return numFrames * 4;
     }
     uint8_t* progress;
@@ -90,8 +91,8 @@ void OggConversionThread::exec() {
     pipe->firstChunk = true;
     pipe->progress = &progress;
     pipe->terminateFlag = getStopToken();
-    WriteWaveHeader(reinterpret_cast<WaveHeader*>(pipe->samples), music.getNumFrames(),
-                    music.getFrequency());
+    WriteWaveHeader(reinterpret_cast<WaveHeader*>(pipe->samples),
+                    music.getNumFrames(), music.getFrequency());
 
     // Encode the PCM file with the oggenc2 command line utility.
     std::string cmd = Str::fmt("oggenc2.exe -q6 -o \"%1\" -").arg(outPath);

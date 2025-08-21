@@ -454,12 +454,14 @@ static void ApplyQuantOffset(Note& out, int offsetRows) {
     // (int) round(192.0f / out.quant * (above) then make this the new measure
     // offset
     if (192 % out.quant > 0 && startingOffset != endingOffset) {
-        out.row = out.row - endingOffset +
-                  static_cast<int>(round(192.0f / out.quant *
-                             round(endingOffset / 192.0f * out.quant)));
+        out.row =
+            out.row - endingOffset +
+            static_cast<int>(round(192.0f / out.quant *
+                                   round(endingOffset / 192.0f * out.quant)));
         out.endrow = out.endrow - endingRowOffset +
-                     static_cast<int>(round(192.0f / out.quant *
-                                round(endingRowOffset / 192.0f * out.quant)));
+                     static_cast<int>(
+                         round(192.0f / out.quant *
+                               round(endingRowOffset / 192.0f * out.quant)));
     }
 }
 

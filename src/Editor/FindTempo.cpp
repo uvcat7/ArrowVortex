@@ -87,7 +87,8 @@ struct IntervalTester {
 // Creates weights for a hamming window of length n.
 static void CreateHammingWindow(real* out, int n) {
     const real t = 6.2831853071795864 / static_cast<real>(n - 1);
-    for (int i = 0; i < n; ++i) out[i] = 0.54 - 0.46 * cos(static_cast<real>(i) * t);
+    for (int i = 0; i < n; ++i)
+        out[i] = 0.54 - 0.46 * cos(static_cast<real>(i) * t);
 }
 
 // Normalizes the given fitness value based the given 3rd order poly
@@ -205,7 +206,8 @@ static real GetConfidenceForBPM(const GapData& gapdata, IntervalTester& test,
     real intervalf = test.samplerate * 60.0 / bpm;
     int interval = static_cast<int>(intervalf + 0.5);
     for (int i = 0; i < numOnsets; ++i) {
-        int pos = static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
+        int pos =
+            static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
         wrappedPos[i] = pos;
         wrappedOnsets[pos] += onsets[i].strength;
     }
@@ -441,7 +443,8 @@ static real GetBaseOffsetValue(const GapData& gapdata, int samplerate,
     int interval = static_cast<int>(intervalf + 0.5);
     memset(wrappedOnsets, 0, sizeof(real) * interval);
     for (int i = 0; i < numOnsets; ++i) {
-        int pos = static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
+        int pos =
+            static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
         wrappedPos[i] = pos;
         wrappedOnsets[pos] += 1.0;
     }
@@ -530,9 +533,13 @@ class TempoDetectorImp : public TempoDetector, public BackgroundThread {
     void exec() override;
 
     bool hasSamples() { return (data_.samples != nullptr); }
-    const char* getProgress() const override { return sProgressText[data_.progress]; }
+    const char* getProgress() const override {
+        return sProgressText[data_.progress];
+    }
     bool hasResult() const override { return isDone(); }
-    const Vector<TempoResult>& getResult() const override { return data_.result; }
+    const Vector<TempoResult>& getResult() const override {
+        return data_.result;
+    }
 
    private:
     SerializedTempo data_;
@@ -554,7 +561,9 @@ TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames) {
     const short* l = music.samplesL() + firstFrame;
     const short* r = music.samplesR() + firstFrame;
     for (int i = 0; i < numFrames; ++i, ++l, ++r) {
-        data_.samples[i] = static_cast<float>(static_cast<int>(*l) + static_cast<int>(*r)) / 65536.0f;
+        data_.samples[i] =
+            static_cast<float>(static_cast<int>(*l) + static_cast<int>(*r)) /
+            65536.0f;
     }
 
     start();

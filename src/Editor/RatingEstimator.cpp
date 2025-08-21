@@ -92,7 +92,8 @@ double RatingEstimator::estimateRating() {
         double density = densities[i], rating;
         if (density > 0.0) {
             int bin = getDensityBin(density);
-            double frac = std::min(std::max(0.0, density - static_cast<double>(bin)), 1.0);
+            double frac = std::min(
+                std::max(0.0, density - static_cast<double>(bin)), 1.0);
             const double* sliceWeights = myWeights + i * HM_VALS_PER_SLICE;
             double diffA = sliceWeights[bin];
             double diffB = sliceWeights[bin + 1];

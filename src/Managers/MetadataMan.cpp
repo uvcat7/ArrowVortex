@@ -257,13 +257,17 @@ struct MetadataManImpl : public MetadataMan {
         return out;
     }
 
-    std::string findBannerFile() override { return findImageFile("bn", "banner"); }
+    std::string findBannerFile() override {
+        return findImageFile("bn", "banner");
+    }
 
     std::string findBackgroundFile() override {
         return findImageFile("bg", "background");
     }
 
-    std::string findCdTitleFile() override { return findImageFile("cd", "title"); }
+    std::string findCdTitleFile() override {
+        return findImageFile("cd", "title");
+    }
 
     // ================================================================================================
     // MetadataManImpl :: other member functions.

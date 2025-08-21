@@ -314,7 +314,7 @@ static void AssignDifficulties(Simfile* sim,
     int bestNumMatches = 0;
 
     // Find the set of difficulties that has the most matches with the charts.
-    for (auto & difficultyString : difficultyStrings) {
+    for (auto& difficultyString : difficultyStrings) {
         Chart* matches[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
         for (int i = 0; i < charts.size(); ++i) {
             for (int j = 0; j < 5; ++j) {
@@ -324,7 +324,7 @@ static void AssignDifficulties(Simfile* sim,
             }
         }
         int numMatches = 0;
-        for (auto & matche : matches) {
+        for (auto& matche : matches) {
             if (matche) ++numMatches;
         }
         if (numMatches > bestNumMatches) {
@@ -431,11 +431,11 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart) {
         int row = tracker.advance(hitObject.time);
         if (hitObject.endtime > hitObject.time) {
             int endrow = timing.timeToRow(hitObject.endtime);
-            chart.notes.append(
-                {row, endrow, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
+            chart.notes.append({row, endrow, static_cast<uint32_t>(col), 0,
+                                NOTE_STEP_OR_HOLD, 192});
         } else {
-            chart.notes.append(
-                {row, row, static_cast<uint32_t>(col), 0, NOTE_STEP_OR_HOLD, 192});
+            chart.notes.append({row, row, static_cast<uint32_t>(col), 0,
+                                NOTE_STEP_OR_HOLD, 192});
         }
     }
 }

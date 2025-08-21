@@ -422,7 +422,8 @@ static aubio_peakpicker_t *new_aubio_peakpicker() {
     t->win_post = 5;
     t->win_pre = 1;
 
-    t->thresholdfn = static_cast<aubio_thresholdfn_t>(fvec_median); /* (fvec_mean); */
+    t->thresholdfn =
+        static_cast<aubio_thresholdfn_t>(fvec_median); /* (fvec_mean); */
     t->pickerfn = static_cast<aubio_pickerfn_t>(fvec_peakpick);
 
     t->scratch = new_fvec(t->win_post + t->win_pre + 1);
@@ -908,7 +909,8 @@ static uint_t aubio_onset_set_minioi(aubio_onset_t *o, uint_t minioi) {
 }
 
 static uint_t aubio_onset_set_minioi_s(aubio_onset_t *o, smpl_t minioi) {
-    return aubio_onset_set_minioi(o, static_cast<uint_t>(minioi * o->samplerate));
+    return aubio_onset_set_minioi(o,
+                                  static_cast<uint_t>(minioi * o->samplerate));
 }
 
 static uint_t aubio_onset_set_minioi_ms(aubio_onset_t *o, smpl_t minioi) {
@@ -969,7 +971,8 @@ static void aubio_onset_do(aubio_onset_t *o, fvec_t *input, fvec_t *onset) {
             isonset = 0;
         } else {
             uint_t new_onset =
-                o->total_frames + static_cast<uint_t>(ROUND(isonset * o->hop_size));
+                o->total_frames +
+                static_cast<uint_t>(ROUND(isonset * o->hop_size));
             if (o->last_onset + o->minioi < new_onset) {
                 // AUBIO_DBG ("accepted detection, marking as onset\n");
                 o->last_onset = new_onset;

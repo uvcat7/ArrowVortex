@@ -26,8 +26,8 @@ struct GuiMainData {
     vec2i viewSize;
     vec2i mousePos;
 
-    GuiMain::ClipboardSetFunction clipboardSet;
-    GuiMain::ClipboardGetFunction clipboardGet;
+    GuiMain::ClipboardSetFunction clipboardSet = nullptr;
+    GuiMain::ClipboardGetFunction clipboardGet = nullptr;
     std::string clipboardText;
 
     std::string tooltipPreviousText;
@@ -85,7 +85,8 @@ static void handleTooltip() {
         if (GUI->tooltipText.length() && GUI->tooltipTimer > 1.0f) {
             TextStyle style;
 
-            int alpha = clamp(static_cast<int>(GUI->tooltipTimer * 1000 - 1000), 0, 255);
+            int alpha = clamp(static_cast<int>(GUI->tooltipTimer * 1000 - 1000),
+                              0, 255);
 
             style.textColor = Color32(0, alpha);
             style.shadowColor = Colors::blank;

@@ -16,42 +16,42 @@ namespace Vortex {
 // Low level segment functions.
 
 template <typename T>
-void Encode(WriteStream& out, const T& seg);
+void Encode(WriteStream& out, const T& seg) {};
 
 template <typename T>
-void Decode(ReadStream& in, T& seg);
+void Decode(ReadStream& in, T& seg) {};
 
 template <typename T>
-bool IsRedundant(const T& seg, const T* prev);
+bool IsRedundant(const T& seg, const T* prev) {};
 
 template <typename T>
-bool IsEquivalent(const T& seg, const T& other);
+bool IsEquivalent(const T& seg, const T& other) {};
 
 template <typename T>
-std::string GetDescription(const T& seg);
+std::string GetDescription(const T& seg) {};
 
 // ================================================================================================
 // Segment wrapper functions.
 
 template <typename T>
 static void WrapNew(Segment* seg) {
-    new ((T*)seg) T();
+    new (static_cast<T*>(seg)) T();
 }
 
 template <typename T>
 static void WrapDel(Segment* seg) {
-    (*(T*)seg).~T();
+    (*static_cast<T*>(seg)).~T();
 }
 
 template <typename T>
 static void WrapCpy(Segment* seg, const Segment* src) {
-    *((T*)seg) = *((const T*)src);
+    *(static_cast<T*>(seg)) = *(static_cast<T*>(const_cast<Segment*>(src)));
 }
 
 template <typename T>
 static void WrapEnc(WriteStream& out, const Segment* seg) {
     out.write(seg->row);
-    Encode<T>(out, *(const T*)seg);
+    Encode<T>(out, *static_cast<const T*>(seg));
 }
 
 template <typename T>
@@ -64,17 +64,19 @@ static void WrapDec(ReadStream& in, SegmentGroup* out) {
 
 template <typename T>
 static bool WrapRed(const Segment* seg, const Segment* prev) {
-    return IsRedundant<T>(*(const T*)seg, (const T*)prev);
+    return IsRedundant<T>(*static_cast<const T*>(seg),
+                          static_cast<const T*>(prev));
 }
 
 template <typename T>
 static bool WrapEqu(const Segment* seg, const Segment* other) {
-    return IsEquivalent<T>(*(const T*)seg, *(const T*)other);
+    return IsEquivalent<T>(*static_cast<const T*>(seg),
+                           *static_cast<const T*>(other));
 }
 
 template <typename T>
 static std::string WrapDsc(const Segment* seg) {
-    return GetDescription<T>(*(const T*)seg);
+    return GetDescription<T>(*static_cast<const T*>(seg));
 }
 
 #define WRAP(x)                                                             \

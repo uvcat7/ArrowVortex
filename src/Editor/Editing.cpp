@@ -162,8 +162,8 @@ struct EditingImpl : public Editing {
                     gNotes->modify(edit, false);
                 } else {
                     edit.add.append({row, row, static_cast<uint32_t>(col),
-                                     static_cast<uint32_t>(myCurPlayer), NOTE_STEP_OR_HOLD,
-                                     quant});
+                                     static_cast<uint32_t>(myCurPlayer),
+                                     NOTE_STEP_OR_HOLD, quant});
                     if (evt.keyflags & Keyflag::SHIFT) {
                         edit.add.begin()->type = NOTE_MINE;
                         gNotes->modify(edit, false);
@@ -324,8 +324,7 @@ struct EditingImpl : public Editing {
             if (pnote.endRow < pnote.startRow) {
                 auto hold = gNotes->getNoteIntersecting(note.row, col);
                 if (hold && hold->endrow > hold->row) {
-                    if (note.row > hold->row &&
-                        note.row <= hold->endrow &&
+                    if (note.row > hold->row && note.row <= hold->endrow &&
                         note.endrow > hold->endrow) {
                         note.row = static_cast<uint32_t>(hold->row);
                     }
@@ -545,9 +544,9 @@ struct EditingImpl : public Editing {
 
     template <typename T>
     static T readFromBuffer(Vector<uint8_t>& buffer, int& pos) {
-        if (pos + (int)sizeof(T) <= buffer.size()) {
+        if (pos + sizeof(T) <= buffer.size()) {
             pos += sizeof(T);
-            return *(T*)(buffer.data() + pos - sizeof(T));
+            return *static_cast<T*>(buffer.data() + pos - sizeof(T));
         }
         pos = buffer.size();
         return 0;
@@ -671,7 +670,7 @@ struct EditingImpl : public Editing {
         // outside the selection range.
         if (gSelection->getType() == Selection::REGION) {
             auto region = gSelection->getSelectedRegion();
-            for (auto & it : edit.add) {
+            for (auto& it : edit.add) {
                 if (it.row > region.endRow) it.row = -1;
             }
             edit.add.cleanup();
@@ -1032,11 +1031,11 @@ Editing* gEditing = nullptr;
 
 void Editing::create(XmrNode& settings) {
     gEditing = new EditingImpl();
-    ((EditingImpl*)gEditing)->loadSettings(settings);
+    static_cast<EditingImpl*>(gEditing)->loadSettings(settings);
 }
 
 void Editing::destroy() {
-    delete (EditingImpl*)gEditing;
+    delete static_cast<EditingImpl*>(gEditing);
     gEditing = nullptr;
 }
 

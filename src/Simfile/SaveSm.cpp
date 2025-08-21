@@ -30,7 +30,9 @@ static const int NUM_MEASURE_SUBDIV = 10;
 static const int ROWS_PER_NOTE_SECTION = 192;
 static const int MIN_SECTIONS_PER_MEASURE = 4;
 
-static double ToBeat(int row) { return static_cast<double>(row) / ROWS_PER_BEAT; }
+static double ToBeat(int row) {
+    return static_cast<double>(row) / ROWS_PER_BEAT;
+}
 
 struct ExportData {
     Vector<int> diffs;
@@ -487,9 +489,8 @@ static void WriteSections(ExportData& data) {
                         if (hold) {
                             if (hold->endrow >= startRow &&
                                 hold->endrow < endRow) {
-                                int pos =
-                                    (hold->endrow - startRow) * numCols +
-                                    static_cast<int>(hold->col);
+                                int pos = (hold->endrow - startRow) * numCols +
+                                          static_cast<int>(hold->col);
                                 section[pos] = '3';
                                 --remainingHolds;
                             }
@@ -505,8 +506,7 @@ static void WriteSections(ExportData& data) {
                 for (int col = 0; col < numCols; ++col) {
                     auto hold = holds[col];
                     if (hold) {
-                        if (hold->endrow >= startRow &&
-                            hold->endrow < endRow) {
+                        if (hold->endrow >= startRow && hold->endrow < endRow) {
                             int pos =
                                 (hold->endrow - startRow) * numCols + hold->col;
                             section[pos] = '3';

@@ -158,8 +158,9 @@ bool Sound::Thread::readBlock() {
         myCurrentFrame += framesRead;
 
         if (mySound->myIsAllocated) {
-            myProgress = static_cast<uint8_t>(static_cast<uint64_t>(100) * myCurrentFrame /
-                                   mySound->myNumFrames);
+            myProgress =
+                static_cast<uint8_t>(static_cast<uint64_t>(100) *
+                                     myCurrentFrame / mySound->myNumFrames);
         }
     }
 

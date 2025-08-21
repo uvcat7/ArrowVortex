@@ -174,7 +174,8 @@ struct MusicImpl : public Music, public MixSource {
     void WriteTickSamples(short* dst, int startFrame, int numFrames,
                           const TickData& tick, int rate) {
         if (rate != 100) {
-            startFrame = static_cast<int>(static_cast<int64_t>(startFrame) * 100 / rate);
+            startFrame =
+                static_cast<int>(static_cast<int64_t>(startFrame) * 100 / rate);
         }
 
         const short* srcL = tick.sound.samplesL() + startFrame;
@@ -194,13 +195,15 @@ struct MusicImpl : public Music, public MixSource {
             for (; numFrames > 0 && idx < tickEndPos; --numFrames) {
                 const float frac = static_cast<float>(srcPos - floor(srcPos));
 
-                float sampleL =
-                    lerp(static_cast<float>(srcL[idx]), static_cast<float>(srcL[idx + 1]), frac);
-                float sampleR =
-                    lerp(static_cast<float>(srcR[idx]), static_cast<float>(srcR[idx + 1]), frac);
+                float sampleL = lerp(static_cast<float>(srcL[idx]),
+                                     static_cast<float>(srcL[idx + 1]), frac);
+                float sampleR = lerp(static_cast<float>(srcR[idx]),
+                                     static_cast<float>(srcR[idx + 1]), frac);
 
-                *dst++ = min(max(*dst + static_cast<short>(sampleL), SHRT_MIN), SHRT_MAX);
-                *dst++ = min(max(*dst + static_cast<short>(sampleR), SHRT_MIN), SHRT_MAX);
+                *dst++ = min(max(*dst + static_cast<short>(sampleL), SHRT_MIN),
+                             SHRT_MAX);
+                *dst++ = min(max(*dst + static_cast<short>(sampleR), SHRT_MIN),
+                             SHRT_MAX);
 
                 srcPos += srcDelta;
                 idx = static_cast<int>(srcPos);
@@ -245,7 +248,9 @@ struct MusicImpl : public Music, public MixSource {
         // silence.
         int framesLeft = frames;
         if (srcPos < 0) {
-            int n = min(framesLeft, static_cast<int>(max(-srcPos, static_cast<int64_t>INT_MIN)));
+            int n = min(
+                framesLeft,
+                static_cast<int>(max(-srcPos, static_cast<int64_t> INT_MIN)));
             memset(dst, 0, sizeof(short) * MIX_CHANNELS * n);
             dst += n * MIX_CHANNELS;
             framesLeft -= n;
@@ -255,8 +260,9 @@ struct MusicImpl : public Music, public MixSource {
         // Fill the remaining buffer with music samples.
         if (framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 &&
             !myIsMuted) {
-            int n = static_cast<int>(min(max(mySamples.getNumFrames() - srcPos, static_cast<int64_t>(0)),
-                             static_cast<int64_t>(framesLeft)));
+            int n = static_cast<int>(min(
+                max(mySamples.getNumFrames() - srcPos, static_cast<int64_t>(0)),
+                static_cast<int64_t>(framesLeft)));
             const short* srcL = mySamples.samplesL() + srcPos;
             const short* srcR = mySamples.samplesR() + srcPos;
             if (musicVolume == 100) {
@@ -318,11 +324,15 @@ struct MusicImpl : public Music, public MixSource {
                 float w1 = static_cast<float>(tmpPos - floor(tmpPos));
                 float w0 = 1.0f - w1;
 
-                float l = static_cast<float>(tmpL[index0]) * w0 + static_cast<float>(tmpL[index1]) * w1;
-                float r = static_cast<float>(tmpR[index0]) * w0 + static_cast<float>(tmpR[index1]) * w1;
+                float l = static_cast<float>(tmpL[index0]) * w0 +
+                          static_cast<float>(tmpL[index1]) * w1;
+                float r = static_cast<float>(tmpR[index0]) * w0 +
+                          static_cast<float>(tmpR[index1]) * w1;
 
-                *dst++ = static_cast<short>(min(max(static_cast<int>(l), SHRT_MIN), SHRT_MAX));
-                *dst++ = static_cast<short>(min(max(static_cast<int>(r), SHRT_MIN), SHRT_MAX));
+                *dst++ = static_cast<short>(
+                    min(max(static_cast<int>(l), SHRT_MIN), SHRT_MAX));
+                *dst++ = static_cast<short>(
+                    min(max(static_cast<int>(r), SHRT_MIN), SHRT_MAX));
 
                 tmpPos += rate;
             }
@@ -400,7 +410,8 @@ struct MusicImpl : public Music, public MixSource {
 
     void resumeStream() {
         if (!myIsPaused) {
-            myPlayPosition = myPlayStartTime * static_cast<double>(mySamples.getFrequency());
+            myPlayPosition =
+                myPlayStartTime * static_cast<double>(mySamples.getFrequency());
             myPlayTimer = Debug::getElapsedTime();
             myMixer->resume();
         }
@@ -595,11 +606,11 @@ Music* gMusic = nullptr;
 
 void Music::create(XmrNode& settings) {
     gMusic = new MusicImpl;
-    ((MusicImpl*)gMusic)->loadSettings(settings);
+    static_cast<MusicImpl*>(gMusic)->loadSettings(settings);
 }
 
 void Music::destroy() {
-    delete (MusicImpl*)gMusic;
+    delete static_cast<MusicImpl*>(gMusic);
     gMusic = nullptr;
 }
 

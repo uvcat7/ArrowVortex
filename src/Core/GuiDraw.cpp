@@ -23,7 +23,7 @@ GuiDrawGraphics* GD = nullptr;
 
 struct CanvasHelper {
     CanvasHelper(int w, int h, float r, float l)
-        : canvas(w * 2, h, l),  myW(w), myH(h), myR(r) {
+        : canvas(w * 2, h, l), myW(w), myH(h), myR(r) {
         canvas.setBlendMode(Canvas::BM_NONE);
     }
     void clear(int x, int y, float r, float l) {

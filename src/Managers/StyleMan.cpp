@@ -279,7 +279,7 @@ struct StyleManImpl : public StyleMan {
     }
 
     const Style* findStyle(const std::string& styleId) override {
-        for (auto & myStyle : myStyles) {
+        for (auto& myStyle : myStyles) {
             if (myStyle->id == styleId) {
                 return myStyle;
             }

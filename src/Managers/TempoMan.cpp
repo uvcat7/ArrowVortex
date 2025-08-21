@@ -55,8 +55,8 @@ struct TempoManImpl : public TempoMan {
     ~TempoManImpl() = default;
 
     TempoManImpl()
-        
-          {
+
+    {
         myUpdateTimingData();
 
         myApplyOffsetId = gHistory->addCallback(ApplyOffset);
@@ -247,7 +247,7 @@ struct TempoManImpl : public TempoMan {
                 }
                 myWriteInsertRows(stream, mySimfile->tempo, startRow, numRows);
             }
-            stream.write((Tempo*)nullptr);
+            stream.write(static_cast<Tempo*>(nullptr));
 
             gHistory->addEntry(myApplyInsertRowsId, stream.data(),
                                stream.size());
@@ -256,9 +256,8 @@ struct TempoManImpl : public TempoMan {
 
     void myApplyInsertRowsOffset(Tempo* tempo, int startRow, int numRows) {
         auto segs = tempo->segments;
-        for (auto & list : *segs) {
-            for (auto seg = list.begin(), end = list.end(); seg != end;
-                 ++seg) {
+        for (auto& list : *segs) {
+            for (auto seg = list.begin(), end = list.end(); seg != end; ++seg) {
                 if (seg->row >= startRow && seg->row > 0) {
                     seg->row += numRows;
                 }
@@ -467,7 +466,7 @@ struct TempoManImpl : public TempoMan {
 
         // Copy all the selected segments.
         auto boxes = gTempoBoxes->getBoxes();
-        for (auto & segment : *myTempo->segments) {
+        for (auto& segment : *myTempo->segments) {
             auto type = segment.type();
             auto seg = segment.begin(), end = segment.end();
             auto box = boxes.begin(), boxEnd = boxes.end();
@@ -486,16 +485,15 @@ struct TempoManImpl : public TempoMan {
 
         // Find out what the first row is.
         int row = INT_MAX;
-        for (auto & list : clipboard) {
+        for (auto& list : clipboard) {
             if (list.size()) {
                 row = min(row, list.begin()->row);
             }
         }
 
         // Offset all segments to row zero.
-        for (auto & list : clipboard) {
-            for (auto seg = list.begin(), end = list.end(); seg != end;
-                 ++seg) {
+        for (auto& list : clipboard) {
+            for (auto seg = list.begin(), end = list.end(); seg != end; ++seg) {
                 seg->row -= row;
             }
         }
@@ -523,9 +521,8 @@ struct TempoManImpl : public TempoMan {
 
         // Offset all segments to the cursor row.
         int row = gView->getCursorRow();
-        for (auto & list : clipboard.add) {
-            for (auto seg = list.begin(), end = list.end(); seg != end;
-                 ++seg) {
+        for (auto& list : clipboard.add) {
+            for (auto seg = list.begin(), end = list.end(); seg != end; ++seg) {
                 seg->row += row;
             }
         }
@@ -620,13 +617,17 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: timing functions.
 
-    int timeToRow(double time) const override { return myTimingData.timeToRow(time); }
+    int timeToRow(double time) const override {
+        return myTimingData.timeToRow(time);
+    }
 
     double timeToBeat(double time) const override {
         return myTimingData.timeToBeat(time);
     }
 
-    double rowToTime(int row) const override { return myTimingData.rowToTime(row); }
+    double rowToTime(int row) const override {
+        return myTimingData.rowToTime(row);
+    }
 
     double beatToTime(double beat) const override {
         return myTimingData.beatToTime(beat);
@@ -645,7 +646,9 @@ struct TempoManImpl : public TempoMan {
         return SIM_DEFAULT_BPM;
     }
 
-    double rowToScroll(int row) const override { return myTimingData.rowToScroll(row); }
+    double rowToScroll(int row) const override {
+        return myTimingData.rowToScroll(row);
+    }
 
     double beatToScroll(double beat) const override {
         return myTimingData.beatToScroll(beat);

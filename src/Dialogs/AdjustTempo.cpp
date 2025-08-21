@@ -201,7 +201,8 @@ void DialogAdjustTempo::onAction(int id) {
             break;
         case ACT_INSERT_BEATS:
         case ACT_REMOVE_BEATS:
-            int numRows = static_cast<int>(ROWS_PER_BEAT * myBeatsToInsert + 0.5);
+            int numRows =
+                static_cast<int>(ROWS_PER_BEAT * myBeatsToInsert + 0.5);
             if (id == ACT_REMOVE_BEATS) numRows *= -1;
             gEditing->insertRows(gView->getCursorRow(), numRows,
                                  (myInsertTarget == 0));

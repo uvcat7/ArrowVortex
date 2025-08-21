@@ -26,17 +26,17 @@ DialogData::DialogData(GuiContext* gui, GuiDialog* dialog)
     : GuiWidget(gui),
       dialog_ptr_(dialog),
       gui_(gui),
-      is_pinnable_(1),
-      is_closeable_(1),
-      is_minimizable_(1),
-      is_horizontally_resizable_(0),
-      is_vertically_resizable_(0),
-      request_close_(0),
-      request_pin_(0),
-      request_minimize_(0),
-      request_move_to_top_(0),
-      pinned_state_(0),
-      minimized_state_(0),
+      is_pinnable_(true),
+      is_closeable_(true),
+      is_minimizable_(true),
+      is_horizontally_resizable_(false),
+      is_vertically_resizable_(false),
+      request_close_(false),
+      request_pin_(false),
+      request_minimize_(false),
+      request_move_to_top_(false),
+      pinned_state_(false),
+      minimized_state_(false),
       min_size_({0, 0}),
       max_size_({INT_MAX, INT_MAX}),
       pinned_position_({0, 0}),
@@ -60,7 +60,7 @@ static DialogData::DragAction* StartDrag(recti r, int mx, int my) {
 
 void DialogData::HandleDrag() {
     if (current_action_ && current_action_->type == ACT_DRAG) {
-        auto action = (DragAction*)current_action_;
+        auto action = static_cast<DragAction*>(current_action_);
         vec2i mpos = gui_->getMousePos();
 
         rect_.x = mpos.x + action->offset.x;
@@ -103,7 +103,7 @@ static DialogData::ResizeAction* StartResize(DialogData::ActionType type,
 
 void DialogData::HandleResize() {
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
-        auto action = (ResizeAction*)current_action_;
+        auto action = static_cast<ResizeAction*>(current_action_);
         vec2i mpos = gui_->getMousePos();
         vec2i anchor = action->anchor;
 
@@ -138,7 +138,7 @@ void DialogData::onMousePress(MousePress& evt) {
             auto actionType = GetAction(evt.x, evt.y);
 
             if (actionType != ACT_NONE || IsInside(rect_, evt.x, evt.y)) {
-                request_move_to_top_ = 1;
+                request_move_to_top_ = true;
             }
             if (actionType == ACT_DRAG) {
                 startCapturingMouse();
@@ -147,11 +147,11 @@ void DialogData::onMousePress(MousePress& evt) {
                 startCapturingMouse();
                 current_action_ = StartResize(actionType, rect_, evt.x, evt.y);
             } else if (actionType == ACT_CLOSE) {
-                request_close_ = 1;
+                request_close_ = true;
             } else if (actionType == ACT_MINIMIZE) {
-                request_minimize_ = 1;
+                request_minimize_ = true;
             } else if (actionType == ACT_PIN) {
-                request_pin_ = 1;
+                request_pin_ = true;
             }
         }
         evt.setHandled();
@@ -177,7 +177,7 @@ void DialogData::ClampRect() {
     }
 
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
-        auto a = (ResizeAction*)current_action_;
+        auto a = static_cast<ResizeAction*>(current_action_);
         if (a->dirH < 0) rect_.w = min(rect_.w, a->anchor.x - bounds.x);
         if (a->dirH > 0)
             rect_.w = min(rect_.w, bounds.x + bounds.w - a->anchor.x);
@@ -190,7 +190,7 @@ void DialogData::ClampRect() {
     rect_.h = max(min_size_.y, min(max_size_.y, min(bounds.h, rect_.h)));
 
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
-        auto a = (ResizeAction*)current_action_;
+        auto a = static_cast<ResizeAction*>(current_action_);
         if (a->dirH < 0) rect_.x = a->anchor.x - rect_.w;
         if (a->dirV < 0) rect_.y = a->anchor.y - rect_.h;
     }
@@ -202,15 +202,15 @@ void DialogData::ClampRect() {
 
 void DialogData::arrange() {
     if (request_minimize_) {
-        request_minimize_ = 0;
+        request_minimize_ = false;
         minimized_state_ = !minimized_state_;
-        if (minimized_state_) pinned_state_ = 0;
+        if (minimized_state_) pinned_state_ = false;
     }
     if (request_pin_) {
-        request_pin_ = 0;
+        request_pin_ = false;
         pinned_state_ = !pinned_state_;
         if (pinned_state_) {
-            minimized_state_ = 0;
+            minimized_state_ = false;
             pinned_position_ = Pos(rect_);
         }
     }
@@ -419,9 +419,9 @@ void GuiDialog::onTick() {}
 
 void GuiDialog::onDraw() {}
 
-void GuiDialog::requestClose() { DATA->request_close_ = 1; }
+void GuiDialog::requestClose() { DATA->request_close_ = true; }
 
-void GuiDialog::requestPin() { DATA->request_pin_ = 1; }
+void GuiDialog::requestPin() { DATA->request_pin_ = true; }
 
 void GuiDialog::setPosition(int x, int y) {
     DATA->rect_.x = x;
@@ -442,9 +442,9 @@ void GuiDialog::setMaximumWidth(int w) { DATA->max_size_.x = max(0, w); }
 
 void GuiDialog::setMaximumHeight(int h) { DATA->max_size_.y = max(0, h); }
 
-void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = 1; }
+void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = true; }
 
-void GuiDialog::setMinimizable(bool enable) { DATA->is_minimizable_ = 1; }
+void GuiDialog::setMinimizable(bool enable) { DATA->is_minimizable_ = true; }
 
 void GuiDialog::setResizeable(bool horizontal, bool vertical) {
     DATA->is_horizontally_resizable_ = horizontal;

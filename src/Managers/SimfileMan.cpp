@@ -51,8 +51,8 @@ struct SimfileManImpl : public SimfileMan {
     // SimfileManImpl :: constructor and destructor.
 
     SimfileManImpl()
-        
-          {
+
+    {
         myApplyAddChartId =
             gHistory->addCallback(ApplyAddChart, ReleaseAddChart);
         myApplyRemoveChartId =
@@ -71,7 +71,7 @@ struct SimfileManImpl : public SimfileMan {
 
         // Row of the last segment.
         auto segments = mySimfile->tempo->segments;
-        for (auto & segment : *segments) {
+        for (auto& segment : *segments) {
             for (auto seg = segment.begin(), end = segment.end(); seg != end;
                  ++seg) {
                 endRow = max(endRow, seg->row);

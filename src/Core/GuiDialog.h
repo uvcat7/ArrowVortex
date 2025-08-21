@@ -46,19 +46,19 @@ class DialogData : public GuiWidget {
     GuiDialog* dialog_ptr_;
     GuiContext* gui_;
 
-    uint32_t is_pinnable_ : 1;
-    uint32_t is_closeable_ : 1;
-    uint32_t is_minimizable_ : 1;
-    uint32_t is_horizontally_resizable_ : 1;
-    uint32_t is_vertically_resizable_ : 1;
+    bool is_pinnable_ : 1;
+    bool is_closeable_ : 1;
+    bool is_minimizable_ : 1;
+    bool is_horizontally_resizable_ : 1;
+    bool is_vertically_resizable_ : 1;
 
-    uint32_t request_close_ : 1;
-    uint32_t request_pin_ : 1;
-    uint32_t request_minimize_ : 1;
-    uint32_t request_move_to_top_ : 1;
+    bool request_close_ : 1;
+    bool request_pin_ : 1;
+    bool request_minimize_ : 1;
+    bool request_move_to_top_ : 1;
 
-    uint32_t pinned_state_ : 1;
-    uint32_t minimized_state_ : 1;
+    bool pinned_state_ : 1;
+    bool minimized_state_ : 1;
 
    private:
     friend class GuiDialog;

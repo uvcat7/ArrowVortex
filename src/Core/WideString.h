@@ -9,9 +9,9 @@ class WideString {
    public:
     ~WideString();
     WideString();
-    WideString(WideString&& s);
+    WideString(WideString&& s) noexcept;
     WideString(const WideString& s);
-    WideString& operator=(WideString&& s);
+    WideString& operator=(WideString&& s) noexcept;
     WideString& operator=(const WideString& s);
 
     /// Constructs a string with character c repeated n times.

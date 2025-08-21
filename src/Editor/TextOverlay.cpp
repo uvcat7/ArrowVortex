@@ -400,7 +400,8 @@ struct TextOverlayImpl : public TextOverlay {
 
         x = 4, y = 4;
         for (auto& m : hudEntries_) {
-            int a = clamp(static_cast<int>(m.timeLeft * 512.0f + 256.0f), 0, 255);
+            int a =
+                clamp(static_cast<int>(m.timeLeft * 512.0f + 256.0f), 0, 255);
 
             textStyle.textColor = Color32a(textStyle.textColor, a);
             textStyle.shadowColor = Color32a(textStyle.shadowColor, a);
@@ -496,7 +497,8 @@ struct TextOverlayImpl : public TextOverlay {
             if (gSystem->getEvents().next(mp)) {
                 if (mp->unhandled()) {
                     mp->setHandled();
-                    gSystem->openWebpage(reinterpret_cast<const char*>(supportLink));
+                    gSystem->openWebpage(
+                        reinterpret_cast<const char*>(supportLink));
                 }
             }
         }
@@ -507,7 +509,8 @@ struct TextOverlayImpl : public TextOverlay {
             if (gSystem->getEvents().next(mp)) {
                 if (mp->unhandled()) {
                     mp->setHandled();
-                    gSystem->openWebpage(reinterpret_cast<const char*>(githubLink));
+                    gSystem->openWebpage(
+                        reinterpret_cast<const char*>(githubLink));
                 }
             }
         }

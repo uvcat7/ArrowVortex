@@ -28,7 +28,9 @@ namespace {
 // ===================================================================================
 // Exporting utilities.
 
-static int ToMilliseconds(double time) { return static_cast<int>(time * 1000.0 + 0.5); }
+static int ToMilliseconds(double time) {
+    return static_cast<int>(time * 1000.0 + 0.5);
+}
 
 static void WriteBlock(std::ofstream& out, const char* name) {
     out << "\n[" << name << "]\n";
@@ -66,9 +68,9 @@ static int FindNextRow(const Vector<T>& list, int row) {
 }
 
 static int FindNextNoteRow(const NoteList& list, int row) {
-    const Note* it = std::lower_bound(
-        list.begin(), list.end(), row,
-        [](const Note& a, int row) { return a.row < row; });
+    const Note* it =
+        std::lower_bound(list.begin(), list.end(), row,
+                         [](const Note& a, int row) { return a.row < row; });
     while (it != list.end() && it->type != NOTE_STEP_OR_HOLD) ++it;
     return (it != list.end()) ? it->row : INT_MAX;
 }

@@ -62,7 +62,7 @@ struct MenuBarImpl : public Menubar {
     static void sep(Item* menu) { menu->addSeperator(); }
 
     static void add(Item* menu, Action::Type action, const char* str) {
-        std::string notation = gShortcuts->getNotation(action);
+        std::string notation = gShortcuts->getNotation(action, false);
         if (notation.length()) {
             std::string combined(str);
             Str::append(combined, '\t');
@@ -523,16 +523,17 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[VIEW_NOTESKIN] = [] {
             Item* hSkins = System::MenuItem::create();
             int numValid = 0;
-            int numTypes =
-                min(gNoteskin->getNumTypes(), static_cast<int>(Action::MAX_NOTESKINS));
+            int numTypes = min(gNoteskin->getNumTypes(),
+                               static_cast<int>(Action::MAX_NOTESKINS));
             int activeType = gNoteskin->getType();
             for (int type = 0; type < numTypes; ++type) {
                 if (gNoteskin->isSupported(type)) {
                     hSkins->addItem(SET_NOTESKIN_BEGIN + type,
                                     gNoteskin->getName(type));
                     if (type == activeType) {
-                        hSkins->setChecked(
-                            static_cast<Action::Type>(SET_NOTESKIN_BEGIN + type), true);
+                        hSkins->setChecked(static_cast<Action::Type>(
+                                               SET_NOTESKIN_BEGIN + type),
+                                           true);
                     }
                     ++numValid;
                 }
@@ -607,7 +608,7 @@ Menubar* gMenubar = nullptr;
 void Menubar::create() { gMenubar = new MenuBarImpl; }
 
 void Menubar::destroy() {
-    delete (MenuBarImpl*)gMenubar;
+    delete static_cast<MenuBarImpl*>(gMenubar);
     gMenubar = nullptr;
 }
 

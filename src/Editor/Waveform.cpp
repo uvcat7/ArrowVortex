@@ -155,10 +155,15 @@ struct WaveformImpl : public Waveform {
     void loadSettings(XmrNode& settings) {
         XmrNode* waveform = settings.child("waveform");
         if (waveform) {
-            waveform->get("bgColor", reinterpret_cast<float*>(&waveformColorScheme_.bg), 4);
-            waveform->get("waveColor", reinterpret_cast<float*>(&waveformColorScheme_.wave), 4);
-            waveform->get("filterColor", reinterpret_cast<float*>(&waveformColorScheme_.filter),
+            waveform->get("bgColor",
+                          reinterpret_cast<float*>(&waveformColorScheme_.bg),
                           4);
+            waveform->get("waveColor",
+                          reinterpret_cast<float*>(&waveformColorScheme_.wave),
+                          4);
+            waveform->get(
+                "filterColor",
+                reinterpret_cast<float*>(&waveformColorScheme_.filter), 4);
 
             const char* ll = waveform->get("luminance");
             if (ll) setLuminance(ToLuminance(ll));
@@ -181,7 +186,8 @@ struct WaveformImpl : public Waveform {
 
         waveform->addAttrib("luminance", ToString(waveformLuminance_));
         waveform->addAttrib("waveStyle", ToString(waveformShape_));
-        waveform->addAttrib("antiAliasing", static_cast<long>(waveformAntiAliasingMode_));
+        waveform->addAttrib("antiAliasing",
+                            static_cast<long>(waveformAntiAliasingMode_));
     }
 
     // ================================================================================================
@@ -249,7 +255,9 @@ struct WaveformImpl : public Waveform {
         clearBlocks();
     }
 
-    void setColors(ColorScheme colors) override { waveformColorScheme_ = colors; }
+    void setColors(ColorScheme colors) override {
+        waveformColorScheme_ = colors;
+    }
 
     ColorScheme getColors() override { return waveformColorScheme_; }
 
@@ -382,7 +390,9 @@ struct WaveformImpl : public Waveform {
         int64_t srcFrames =
             filtered ? waveformFilter_->samplesL.size() : music.getNumFrames();
         int64_t samplePos =
-            max(static_cast<int64_t>(0), static_cast<int64_t>(samplesPerBlock * static_cast<double>(blockId)));
+            max(static_cast<int64_t>(0),
+                static_cast<int64_t>(samplesPerBlock *
+                                     static_cast<double>(blockId)));
         double sampleCount =
             min(static_cast<double>(srcFrames) - samplePos, samplesPerBlock);
 
@@ -423,8 +433,12 @@ struct WaveformImpl : public Waveform {
             int minAmp = SHRT_MAX;
             int maxAmp = SHRT_MIN;
             while (ofs < end) {
-                maxAmp = max(maxAmp, static_cast<int>(*(in + static_cast<int>(round(ofs)))));
-                minAmp = min(minAmp, static_cast<int>(*(in + static_cast<int>(round(ofs)))));
+                maxAmp =
+                    max(maxAmp,
+                        static_cast<int>(*(in + static_cast<int>(round(ofs)))));
+                minAmp =
+                    min(minAmp,
+                        static_cast<int>(*(in + static_cast<int>(round(ofs)))));
                 ofs += sampleSkip;
             }
 
@@ -621,11 +635,11 @@ Waveform* gWaveform = nullptr;
 
 void Waveform::create(XmrNode& settings) {
     gWaveform = new WaveformImpl;
-    ((WaveformImpl*)gWaveform)->loadSettings(settings);
+    static_cast<WaveformImpl*>(gWaveform)->loadSettings(settings);
 }
 
 void Waveform::destroy() {
-    delete (WaveformImpl*)gWaveform;
+    delete static_cast<WaveformImpl*>(gWaveform);
     gWaveform = nullptr;
 }
 
