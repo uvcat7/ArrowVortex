@@ -124,10 +124,10 @@ struct MixerImpl : public Mixer {
         wfex.wBitsPerSample = sizeof(short) * 8;
         wfex.cbSize = 0;
 
-        MMRESULT res = waveOutOpen(&myWaveout, WAVE_MAPPER, &wfex,
-                                   reinterpret_cast<DWORD_PTR>(&MixerCallback), 
-                                   reinterpret_cast<DWORD_PTR>(this),
-                                   CALLBACK_FUNCTION);
+        MMRESULT res =
+            waveOutOpen(&myWaveout, WAVE_MAPPER, &wfex,
+                        reinterpret_cast<DWORD_PTR>(&MixerCallback),
+                        reinterpret_cast<DWORD_PTR>(this), CALLBACK_FUNCTION);
 
         if (res != MMSYSERR_NOERROR) {
             HudError("failed to open wave out: %i", res);

@@ -21,8 +21,9 @@ GuiManagerData* GM = nullptr;
 
 template <typename T>
 void Register(const char* id) {
-    GuiManager::registerWidgetClass(
-        id, [](GuiContext* gui) { return static_cast<GuiWidget*>(new T(gui)); });
+    GuiManager::registerWidgetClass(id, [](GuiContext* gui) {
+        return static_cast<GuiWidget*>(new T(gui));
+    });
 }
 
 static void RegisterCommonWidgetClasses() {

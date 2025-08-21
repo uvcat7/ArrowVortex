@@ -184,7 +184,7 @@ static void CreateEvents(Vector<Event>& out, double time, MergedTS* it,
                     stop += reinterpret_cast<const Stop*>(it->seg)->seconds;
                     break;
                 case Segment::WARP:
-                    warp +=  reinterpret_cast<const Warp*>(it->seg)->numRows;
+                    warp += reinterpret_cast<const Warp*>(it->seg)->numRows;
                     break;
             }
         } while (++it != end && it->seg->row < row);

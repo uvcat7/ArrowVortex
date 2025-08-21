@@ -1237,8 +1237,7 @@ static stbi_uc *load_jpeg_image(stbi__jpeg *z, int *out_x, int *out_y,
                     for (i = 0; i < z->s->img_x; ++i) out[i] = y[i];
                 else
                     for (i = 0; i < z->s->img_x; ++i)
-                        if (*out && *(out + 1))
-                            *out++ = y[i], *out++ = 255;
+                        if (*out && *(out + 1)) *out++ = y[i], *out++ = 255;
             }
         }
         stbi__cleanup_jpeg(z);

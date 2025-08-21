@@ -37,7 +37,7 @@ struct HistoryImpl : public History {
     };
 
     struct EntryList {
-        EntryList()  = default;
+        EntryList() = default;
         void add(Entry* entry) {
             if (head) {
                 auto it = head;
@@ -164,8 +164,8 @@ struct HistoryImpl : public History {
     ~HistoryImpl() { clearEverything(); }
 
     HistoryImpl()
-        
-          {
+
+    {
         myCallbacks.push_back({ApplyChain, ReleaseChain});
     }
 

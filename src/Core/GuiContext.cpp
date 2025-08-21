@@ -70,10 +70,14 @@ void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events) {
 
 void GuiContextImpl::draw() {
     // Draw the dialogs.
-    for (DialogData* dialog : dialogs_) { dialog->draw(); }
+    for (DialogData* dialog : dialogs_) {
+        dialog->draw();
+    }
 
     // Draw widgets with focus at the top.
-    for (GuiWidget* focus_widget : focus_widgets_) { focus_widget->onDraw(); }
+    for (GuiWidget* focus_widget : focus_widgets_) {
+        focus_widget->onDraw();
+    }
 }
 
 void GuiContextImpl::removeWidget(GuiWidget* w) {

@@ -832,10 +832,11 @@ struct SystemImpl : public System {
         bool handled = false;
         if (msg == WM_CREATE) {
             void* app = reinterpret_cast<LPCREATESTRUCT>(lp)->lpCreateParams;
-            SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(app));
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA,
+                              reinterpret_cast<LONG_PTR>(app));
         } else {
-            SystemImpl* app =
-                reinterpret_cast<SystemImpl*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+            SystemImpl* app = reinterpret_cast<SystemImpl*>(
+                GetWindowLongPtrW(hwnd, GWLP_USERDATA));
             if (app) handled = app->handleMsg(msg, wp, lp, res);
         }
         return handled ? res : DefWindowProcW(hwnd, msg, wp, lp);

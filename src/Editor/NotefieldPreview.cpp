@@ -482,7 +482,8 @@ NotefieldPreview* gNotefieldPreview = nullptr;
 
 void NotefieldPreview::create(XmrNode& settings) {
     gNotefieldPreview = new NotefieldPreviewImpl;
-    static_cast<NotefieldPreviewImpl*>(gNotefieldPreview)->loadSettings(settings);
+    static_cast<NotefieldPreviewImpl*>(gNotefieldPreview)
+        ->loadSettings(settings);
 }
 
 void NotefieldPreview::destroy() {

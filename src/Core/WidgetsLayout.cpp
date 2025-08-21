@@ -130,7 +130,9 @@ void RowLayout::onTick() {
 }
 
 void RowLayout::onDraw() {
-    for (GuiWidget* widget : widget_list_) { widget->draw(); }
+    for (GuiWidget* widget : widget_list_) {
+        widget->draw();
+    }
 }
 
 void RowLayout::add(GuiWidget* widget) {
