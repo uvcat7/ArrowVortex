@@ -140,7 +140,8 @@ FontData* FontManager::load(const std::string& path, Text::Hinting hinting) {
 
     // If not, try to load the font.
     FT_Face face;
-    int result = FT_New_Face(static_cast<FT_Library>(FM->ftLib), path.c_str(), 0, &face);
+    int result =
+        FT_New_Face(static_cast<FT_Library>(FM->ftLib), path.c_str(), 0, &face);
     if (result == FT_Err_Ok) {
         FontData* font = new FontData(face, path.c_str(), hinting);
         FM->fonts[path] = font;
