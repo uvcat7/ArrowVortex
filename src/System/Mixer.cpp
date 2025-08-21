@@ -66,7 +66,7 @@ struct MixerImpl : public Mixer {
         _aligned_free(myBlockMemory);
     }
 
-    MixerImpl(){
+    MixerImpl() {
         memset(myHeaders, 0, sizeof(myHeaders));
         mySource = nullptr;
         myBlockMemory = static_cast<BYTE*>(
