@@ -324,8 +324,8 @@ static void AssignDifficulties(Simfile* sim,
             }
         }
         int numMatches = 0;
-        for (auto& matche : matches) {
-            if (matche) ++numMatches;
+        for (auto& match : matches) {
+            if (match) ++numMatches;
         }
         if (numMatches > bestNumMatches) {
             bestNumMatches = numMatches;
