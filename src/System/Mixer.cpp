@@ -66,9 +66,9 @@ struct MixerImpl : public Mixer {
         _aligned_free(myBlockMemory);
     }
 
-    MixerImpl()
-
-    {
+    MixerImpl(){
+        memset(myHeaders, 0, sizeof(myHeaders));
+        mySource = nullptr;
         myBlockMemory = static_cast<BYTE*>(
             _aligned_malloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16));
         for (WAVEHDR& header : myHeaders) {
