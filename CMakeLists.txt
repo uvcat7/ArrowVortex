@@ -37,7 +37,7 @@ install(DIRECTORY bin/assets DESTINATION bin)
 install(DIRECTORY bin/noteskins DESTINATION bin)
 install(DIRECTORY bin/settings DESTINATION bin)
 
-file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.h")
+file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
 add_custom_target(format ALL)
 add_custom_command(
     TARGET format
