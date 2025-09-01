@@ -33,8 +33,7 @@ struct DialogSongProperties::BannerWidget : public GuiWidget {
         auto index = 0;
         if (tex.size() > 1) {
             timer += clamp(deltaTime.count(), 0.0, 1.0);
-            index =
-                static_cast<int>(floor(timer / 0.1)) % tex.size();  // 10 FPS
+            index = static_cast<int>(timer / 0.1) % tex.size();  // 10 FPS
         }
 
         Texture frame = tex[index];
@@ -56,8 +55,7 @@ struct DialogSongProperties::CdTitleWidget : public GuiWidget {
         auto index = 0;
         if (tex.size() > 1) {
             timer += clamp(deltaTime.count(), 0.0, 1.0);
-            index =
-                static_cast<int>(floor(timer / 0.1)) % tex.size();  // 10 FPS
+            index = static_cast<int>(timer / 0.1) % tex.size();  // 10 FPS
         }
 
         Texture frame = tex[index];
