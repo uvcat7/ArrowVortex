@@ -77,6 +77,8 @@ void Action::perform(Type action) {
         gEditor->openDialog(DIALOG_ZOOM);
         CASE(OPEN_DIALOG_CUSTOM_SNAP)
         gEditor->openDialog(DIALOG_CUSTOM_SNAP);
+        CASE(OPEN_DIALOG_PREVIEW_SETTINGS)
+        gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
 
         CASE(EDIT_UNDO)
         gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
@@ -289,8 +291,8 @@ void Action::perform(Type action) {
         gNotefieldPreview->setMode(NotefieldPreview::CMOD);
         CASE(PREVIEW_VIEW_XMOD)
         gNotefieldPreview->setMode(NotefieldPreview::XMOD);
-        CASE(PREVIEW_VIEW_XMOD_ALL)
-        gNotefieldPreview->setMode(NotefieldPreview::XMOD_ALL);
+        CASE(PREVIEW_VIEW_VARIABLE)
+        gNotefieldPreview->setMode(NotefieldPreview::VARIABLE);
 
         CASE(MINIMAP_SET_NOTES)
         gMinimap->setMode(Minimap::NOTES);

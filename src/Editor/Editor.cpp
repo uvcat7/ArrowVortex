@@ -53,6 +53,7 @@
 #include <Dialogs/WaveformSettings.h>
 #include <Dialogs/Zoom.h>
 #include <Dialogs/CustomSnap.h>
+#include <Dialogs/PreviewSettings.h>
 
 #include <algorithm>
 #include <fstream>
@@ -695,6 +696,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
             case DIALOG_CUSTOM_SNAP:
                 dlg = new DialogCustomSnap;
+                break;
+            case DIALOG_PREVIEW_SETTINGS:
+                dlg = new DialogPreviewSettings;
                 break;
         };
 
