@@ -38,7 +38,7 @@ struct Shortcut {
     bool isHeader;
 };
 
-static const int NUM_ICONS = 16;
+static const int NUM_ICONS = 17;
 
 static uint8_t supportLink[] = "https://discord.gg/GCNAyDmjqy";
 static uint8_t githubLink[] = "https://github.com/uvcat7/ArrowVortex";
@@ -48,6 +48,7 @@ static const char* iconNames[NUM_ICONS] = {
     "halve",  "double",  "full selection", "half selection",
     "undo",   "redo",    "calculate",      "tweak",
     "search", "copy",    "play",           "arrow right",
+    "folder",
 };
 
 };  // anonymous namespace
