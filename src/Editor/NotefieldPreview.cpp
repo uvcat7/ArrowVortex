@@ -402,9 +402,8 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         if (doCrop) {
             int sy = guideHeight_ < 0 ? myY + guideHeight_ : myY - 32;
-            Renderer::pushScissorRect({myX - 32, sy, myW + 64,
-                                       abs(guideHeight_) + 32});
-        
+            Renderer::pushScissorRect(
+                {myX - 32, sy, myW + 64, abs(guideHeight_) + 32});
         }
 
         Renderer::resetColor();
