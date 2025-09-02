@@ -44,11 +44,10 @@ static uint8_t supportLink[] = "https://discord.gg/GCNAyDmjqy";
 static uint8_t githubLink[] = "https://github.com/uvcat7/ArrowVortex";
 
 static const char* iconNames[NUM_ICONS] = {
-    "up one", "up half", "down one",       "down half",
-    "halve",  "double",  "full selection", "half selection",
-    "undo",   "redo",    "calculate",      "tweak",
-    "search", "copy",    "play",           "arrow right",
-    "folder",
+    "up one",      "up half",        "down one",       "down half", "halve",
+    "double",      "full selection", "half selection", "undo",      "redo",
+    "calculate",   "tweak",          "search",         "copy",      "play",
+    "arrow right", "folder",
 };
 
 };  // anonymous namespace
