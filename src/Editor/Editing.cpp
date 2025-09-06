@@ -542,6 +542,35 @@ struct EditingImpl : public Editing {
         gNotes->modify(edit, false, desc);
     }
 
+    void changeNoteSide() override {
+        Style* style = gStyle->get();
+
+        if (!style) {
+            HudNote("No style is currently active.");
+            return;
+        }
+
+        if (style->numCols != 8) {
+            HudNote("Switch side is only available in a double style.");
+            return;
+        }
+
+        NoteEdit edit;
+        gSelection->getSelectedNotes(edit.add);
+        edit.rem = edit.add;
+        for (auto& n : edit.add) {
+            if (n.col <= 3) {
+                n.col += 4;
+            } else {
+                n.col -= 4;
+            }
+        }
+
+        static const NotesMan::EditDescription desc = {
+            "Switched side for %1 note.", "Switched side for %1 notes."};
+        gNotes->modify(edit, true, &desc);
+    }
+
     template <typename T>
     static T readFromBuffer(Vector<uint8_t>& buffer, int& pos) {
         if (pos + sizeof(T) <= buffer.size()) {
