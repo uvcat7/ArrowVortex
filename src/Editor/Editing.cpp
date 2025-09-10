@@ -550,7 +550,7 @@ struct EditingImpl : public Editing {
             return;
         }
 
-        if (style->numCols != 8) {
+        if (!style.id.endsWith("double")) {
             HudNote("Switch side is only available in a double style.");
             return;
         }
@@ -558,11 +558,14 @@ struct EditingImpl : public Editing {
         NoteEdit edit;
         gSelection->getSelectedNotes(edit.add);
         edit.rem = edit.add;
+        
+        int halfpoint = style.numCols / 2;
+        
         for (auto& n : edit.add) {
-            if (n.col <= 3) {
-                n.col += 4;
+            if (n.col <= (halfpoint - 1))
+                n.col += halfpoint;
             } else {
-                n.col -= 4;
+                n.col -= halfpoint;
             }
         }
 
