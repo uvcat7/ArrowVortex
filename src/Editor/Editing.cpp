@@ -562,7 +562,7 @@ struct EditingImpl : public Editing {
         int halfpoint = style.numCols / 2;
         
         for (auto& n : edit.add) {
-            if (n.col <= (halfpoint - 1))
+            if (n.col <= (halfpoint - 1)) {
                 n.col += halfpoint;
             } else {
                 n.col -= halfpoint;
