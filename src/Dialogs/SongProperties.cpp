@@ -39,7 +39,7 @@ struct DialogSongProperties::BannerWidget : public GuiWidget {
 };
 
 struct DialogSongProperties::CdTitleWidget : public GuiWidget {
-    explicit CdTitleWidget(GuiContext* gui) : GuiWidget(gui) {
+    CdTitleWidget(GuiContext* gui) : GuiWidget(gui) {
         width_ = BANNER_W;
         height_ = 75;
     }
@@ -48,14 +48,14 @@ struct DialogSongProperties::CdTitleWidget : public GuiWidget {
         auto h = tex.height();
         auto w = tex.width();
         // Scale the CD Title to fit if it is too big
-        auto aspect = static_cast<float>(w) / static_cast<float>(h);
+        auto aspect = (float)w / (float)h;
         if (h > height_) {
             h = height_;
-            w = static_cast<int>(round(h * aspect));
+            w = (int)round((h * aspect));
         }
         if (w > width_) {
             w = width_;
-            h = static_cast<int>(round(w / aspect));
+            h = (int)round((w / aspect));
         }
         // Place the CD Title in the middle of the box
         r = {rect_.x + (width_ - w) / 2, rect_.y + (height_ - h) / 2, w, h};
