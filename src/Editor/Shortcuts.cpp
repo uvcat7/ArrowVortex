@@ -182,135 +182,187 @@ struct ActionEntry {
 
 static ActionEntry actionMap[] = {
 
-#define E(x) {#x, x},
+#define E(x) {#x, x}
 
-    E(FILE_OPEN) E(FILE_SAVE) E(FILE_SAVE_AS) E(FILE_CLOSE)
+    E(FILE_OPEN),
+    E(FILE_SAVE),
+    E(FILE_SAVE_AS),
+    E(FILE_CLOSE),
 
-        E(OPEN_DIALOG_SONG_PROPERTIES) E(OPEN_DIALOG_CHART_PROPERTIES) E(
-            OPEN_DIALOG_CHART_LIST) E(OPEN_DIALOG_NEW_CHART) E(OPEN_DIALOG_ADJUST_SYNC)
-            E(OPEN_DIALOG_ADJUST_TEMPO) E(OPEN_DIALOG_ADJUST_TEMPO_SM5) E(
-                OPEN_DIALOG_DANCING_BOT) E(OPEN_DIALOG_GENERATE_NOTES)
-                E(OPEN_DIALOG_TEMPO_BREAKDOWN) E(OPEN_DIALOG_LABEL_BREAKDOWN) E(
-                    OPEN_DIALOG_WAVEFORM_SETTINGS) E(OPEN_DIALOG_CUSTOM_SNAP) E(OPEN_DIALOG_ZOOM)
+    E(OPEN_DIALOG_SONG_PROPERTIES),
+    E(OPEN_DIALOG_CHART_PROPERTIES),
+    E(OPEN_DIALOG_CHART_LIST),
+    E(OPEN_DIALOG_NEW_CHART),
+    E(OPEN_DIALOG_ADJUST_SYNC),
+    E(OPEN_DIALOG_ADJUST_TEMPO),
+    E(OPEN_DIALOG_ADJUST_TEMPO_SM5),
+    E(OPEN_DIALOG_DANCING_BOT),
+    E(OPEN_DIALOG_GENERATE_NOTES),
+    E(OPEN_DIALOG_TEMPO_BREAKDOWN),
+    E(OPEN_DIALOG_LABEL_BREAKDOWN),
+    E(OPEN_DIALOG_WAVEFORM_SETTINGS),
+    E(OPEN_DIALOG_CUSTOM_SNAP),
+    E(OPEN_DIALOG_ZOOM),
 
-                    E(TOGGLE_JUMP_TO_NEXT_NOTE) E(TOGGLE_UNDO_REDO_JUMP) E(
-                        TOGGLE_TIME_BASED_COPY)
+    E(TOGGLE_JUMP_TO_NEXT_NOTE),
+    E(TOGGLE_UNDO_REDO_JUMP),
+    E(TOGGLE_TIME_BASED_COPY),
 
-                        E(SET_VISUAL_SYNC_CURSOR_ANCHOR) E(
-                            SET_VISUAL_SYNC_RECEPTOR_ANCHOR)
-                            E(INJECT_BOUNDING_BPM_CHANGE) E(
-                                SHIFT_ROW_NONDESTRUCTIVE) E(SHIFT_ROW_DESTRUCTIVE)
+    E(SET_VISUAL_SYNC_CURSOR_ANCHOR),
+    E(SET_VISUAL_SYNC_RECEPTOR_ANCHOR),
+    E(INJECT_BOUNDING_BPM_CHANGE),
+    E(SHIFT_ROW_NONDESTRUCTIVE),
+    E(SHIFT_ROW_DESTRUCTIVE),
 
-                                E(SELECT_REGION) E(SELECT_ALL_STEPS) E(
-                                    SELECT_ALL_MINES) E(SELECT_ALL_HOLDS) E(SELECT_ALL_ROLLS)
-                                    E(SELECT_ALL_FAKES) E(SELECT_ALL_LIFTS) E(
-                                        SELECT_REGION_BEFORE_CURSOR) E(SELECT_REGION_AFTER_CURSOR)
+    E(SELECT_REGION),
+    E(SELECT_ALL_STEPS),
+    E(SELECT_ALL_MINES),
+    E(SELECT_ALL_HOLDS),
+    E(SELECT_ALL_ROLLS),
+    E(SELECT_ALL_FAKES),
+    E(SELECT_ALL_LIFTS),
+    E(SELECT_REGION_BEFORE_CURSOR),
+    E(SELECT_REGION_AFTER_CURSOR),
 
-                                        E(SELECT_QUANT_4) E(SELECT_QUANT_8) E(
-                                            SELECT_QUANT_12) E(SELECT_QUANT_16) E(SELECT_QUANT_24)
-                                            E(SELECT_QUANT_32) E(SELECT_QUANT_48) E(
-                                                SELECT_QUANT_64) E(SELECT_QUANT_192)
+    E(SELECT_QUANT_4),
+    E(SELECT_QUANT_8),
+    E(SELECT_QUANT_12),
+    E(SELECT_QUANT_16),
+    E(SELECT_QUANT_24),
+    E(SELECT_QUANT_32),
+    E(SELECT_QUANT_48),
+    E(SELECT_QUANT_64),
+    E(SELECT_QUANT_192),
 
-                                                E(SELECT_TEMPO_BPM) E(
-                                                    SELECT_TEMPO_STOP) E(SELECT_TEMPO_DELAY)
-                                                    E(SELECT_TEMPO_WARP) E(
-                                                        SELECT_TEMPO_TIME_SIG) E(SELECT_TEMPO_TICK_COUNT)
-                                                        E(SELECT_TEMPO_COMBO) E(
-                                                            SELECT_TEMPO_SPEED) E(SELECT_TEMPO_SCROLL)
-                                                            E(SELECT_TEMPO_FAKE) E(
-                                                                SELECT_TEMPO_LABEL)
+    E(SELECT_TEMPO_BPM),
+    E(SELECT_TEMPO_STOP),
+    E(SELECT_TEMPO_DELAY),
+    E(SELECT_TEMPO_WARP),
+    E(SELECT_TEMPO_TIME_SIG),
+    E(SELECT_TEMPO_TICK_COUNT),
+    E(SELECT_TEMPO_COMBO),
+    E(SELECT_TEMPO_SPEED),
+    E(SELECT_TEMPO_SCROLL),
+    E(SELECT_TEMPO_FAKE),
+    E(SELECT_TEMPO_LABEL),
 
-                                                                E(CHART_PREVIOUS) E(
-                                                                    CHART_NEXT) E(CHART_DELETE)
+    E(CHART_PREVIOUS),
+    E(CHART_NEXT),
+    E(CHART_DELETE),
 
-                                                                    E(SIMFILE_PREVIOUS) E(
-                                                                        SIMFILE_NEXT)
+    E(SIMFILE_PREVIOUS),
+    E(SIMFILE_NEXT),
 
-                                                                        E(CHART_CONVERT_COUPLES_TO_ROUTINE) E(
-                                                                            CHART_CONVERT_ROUTINE_TO_COUPLES)
+    E(CHART_CONVERT_COUPLES_TO_ROUTINE),
+    E(CHART_CONVERT_ROUTINE_TO_COUPLES),
 
-                                                                            E(CHANGE_NOTES_TO_MINES)
-                                                                                E(CHANGE_NOTES_TO_FAKES)
-                                                                                    E(CHANGE_NOTES_TO_LIFTS)
-                                                                                        E(CHANGE_MINES_TO_NOTES)
-                                                                                            E(CHANGE_MINES_TO_FAKES)
-                                                                                                E(CHANGE_MINES_TO_LIFTS)
-                                                                                                    E(CHANGE_FAKES_TO_NOTES)
-                                                                                                        E(CHANGE_LIFTS_TO_NOTES)
-                                                                                                            E(CHANGE_HOLDS_TO_STEPS)
-                                                                                                                E(CHANGE_HOLDS_TO_MINES)
-                                                                                                                    E(CHANGE_BETWEEN_HOLDS_AND_ROLLS)
-                                                                                                                        E(CHANGE_BETWEEN_PLAYER_NUMBERS)
+    E(CHANGE_NOTES_TO_MINES),
+    E(CHANGE_NOTES_TO_FAKES),
+    E(CHANGE_NOTES_TO_LIFTS),
+    E(CHANGE_MINES_TO_NOTES),
+    E(CHANGE_MINES_TO_FAKES),
+    E(CHANGE_MINES_TO_LIFTS),
+    E(CHANGE_FAKES_TO_NOTES),
+    E(CHANGE_LIFTS_TO_NOTES),
+    E(CHANGE_HOLDS_TO_STEPS),
+    E(CHANGE_HOLDS_TO_MINES),
+    E(CHANGE_BETWEEN_HOLDS_AND_ROLLS),
+    E(CHANGE_BETWEEN_PLAYER_NUMBERS),
 
-                                                                                                                            E(MIRROR_NOTES_VERTICALLY)
-                                                                                                                                E(MIRROR_NOTES_HORIZONTALLY)
-                                                                                                                                    E(MIRROR_NOTES_FULL)
+    E(MIRROR_NOTES_VERTICALLY),
+    E(MIRROR_NOTES_HORIZONTALLY),
+    E(MIRROR_NOTES_FULL),
 
-                                                                                                                                        E(EXPORT_NOTES_AS_LUA_TABLE)
+    E(EXPORT_NOTES_AS_LUA_TABLE),
 
-                                                                                                                                            E(SCALE_NOTES_2_TO_1) E(SCALE_NOTES_3_TO_2) E(SCALE_NOTES_4_TO_3) E(SCALE_NOTES_1_TO_2) E(SCALE_NOTES_2_TO_3) E(
-                                                                                                                                                SCALE_NOTES_3_TO_4)
+    E(SCALE_NOTES_2_TO_1),
+    E(SCALE_NOTES_3_TO_2),
+    E(SCALE_NOTES_4_TO_3),
+    E(SCALE_NOTES_1_TO_2),
+    E(SCALE_NOTES_2_TO_3),
+    E(SCALE_NOTES_3_TO_4),
 
-                                                                                                                                                E(SWITCH_TO_SYNC_MODE)
+    E(SWITCH_TO_SYNC_MODE),
 
-                                                                                                                                                    E(VOLUME_RESET) E(
-                                                                                                                                                        VOLUME_INCREASE)
-                                                                                                                                                        E(VOLUME_DECREASE)
-                                                                                                                                                            E(VOLUME_MUTE)
+    E(VOLUME_RESET),
+    E(VOLUME_INCREASE),
+    E(VOLUME_DECREASE),
+    E(VOLUME_MUTE),
 
-                                                                                                                                                                E(SPEED_RESET) E(SPEED_INCREASE) E(SPEED_DECREASE)
+    E(SPEED_RESET),
+    E(SPEED_INCREASE),
+    E(SPEED_DECREASE),
 
-                                                                                                                                                                    E(TOGGLE_BEAT_TICK) E(
-                                                                                                                                                                        TOGGLE_NOTE_TICK)
+    E(TOGGLE_BEAT_TICK),
+    E(TOGGLE_NOTE_TICK),
 
-                                                                                                                                                                        E(TOGGLE_SHOW_WAVEFORM) E(
-                                                                                                                                                                            TOGGLE_SHOW_BEAT_LINES)
-                                                                                                                                                                            E(TOGGLE_SHOW_NOTES)
-                                                                                                                                                                                E(TOGGLE_SHOW_TEMPO_BOXES)
-                                                                                                                                                                                    E(TOGGLE_SHOW_TEMPO_HELP) E(TOGGLE_REVERSE_SCROLL) E(TOGGLE_CHART_PREVIEW)
+    E(TOGGLE_SHOW_WAVEFORM),
+    E(TOGGLE_SHOW_BEAT_LINES),
+    E(TOGGLE_SHOW_NOTES),
+    E(TOGGLE_SHOW_TEMPO_BOXES),
+    E(TOGGLE_SHOW_TEMPO_HELP),
+    E(TOGGLE_REVERSE_SCROLL),
+    E(TOGGLE_CHART_PREVIEW),
 
-                                                                                                                                                                                        E(MINIMAP_SET_NOTES)
-                                                                                                                                                                                            E(MINIMAP_SET_DENSITY)
+    E(MINIMAP_SET_NOTES),
+    E(MINIMAP_SET_DENSITY),
 
-                                                                                                                                                                                                E(BACKGROUND_HIDE)
-                                                                                                                                                                                                    E(BACKGROUND_INCREASE_ALPHA)
-                                                                                                                                                                                                        E(BACKGROUND_DECREASE_ALPHA) E(BACKGROUND_SET_STRETCH) E(BACKGROUND_SET_LETTERBOX) E(
-                                                                                                                                                                                                            BACKGROUND_SET_CROP)
+    E(BACKGROUND_HIDE),
+    E(BACKGROUND_INCREASE_ALPHA),
+    E(BACKGROUND_DECREASE_ALPHA),
+    E(BACKGROUND_SET_STRETCH),
+    E(BACKGROUND_SET_LETTERBOX),
+    E(BACKGROUND_SET_CROP),
 
-                                                                                                                                                                                                            E(USE_TIME_BASED_VIEW) E(
-                                                                                                                                                                                                                USE_ROW_BASED_VIEW)
+    E(USE_TIME_BASED_VIEW),
+    E(USE_ROW_BASED_VIEW),
 
-                                                                                                                                                                                                                E(ZOOM_RESET) E(
-                                                                                                                                                                                                                    ZOOM_IN) E(ZOOM_OUT) E(SCALE_INCREASE) E(SCALE_DECREASE)
+    E(ZOOM_RESET),
+    E(ZOOM_IN),
+    E(ZOOM_OUT),
+    E(SCALE_INCREASE),
+    E(SCALE_DECREASE),
 
-                                                                                                                                                                                                                    E(SNAP_RESET)
-                                                                                                                                                                                                                        E(SNAP_NEXT)
-                                                                                                                                                                                                                            E(SNAP_PREVIOUS)
+    E(SNAP_RESET),
+    E(SNAP_NEXT),
+    E(SNAP_PREVIOUS),
 
-                                                                                                                                                                                                                                E(CURSOR_UP) E(CURSOR_DOWN) E(CURSOR_PREVIOUS_BEAT) E(
-                                                                                                                                                                                                                                    CURSOR_NEXT_BEAT)
-                                                                                                                                                                                                                                    E(CURSOR_PREVIOUS_MEASURE)
-                                                                                                                                                                                                                                        E(CURSOR_NEXT_MEASURE)
-                                                                                                                                                                                                                                            E(CURSOR_STREAM_START)
-                                                                                                                                                                                                                                                E(CURSOR_STREAM_END)
-                                                                                                                                                                                                                                                    E(
-                                                                                                                                                                                                                                                        CURSOR_SELECTION_START) E(CURSOR_SELECTION_END) E(CURSOR_CHART_START) E(CURSOR_CHART_END)
+    E(CURSOR_UP),
+    E(CURSOR_DOWN),
+    E(CURSOR_PREVIOUS_BEAT),
+    E(CURSOR_NEXT_BEAT),
+    E(CURSOR_PREVIOUS_MEASURE),
+    E(CURSOR_NEXT_MEASURE),
+    E(CURSOR_STREAM_START),
+    E(CURSOR_STREAM_END),
+    E(CURSOR_SELECTION_START),
+    E(CURSOR_SELECTION_END),
+    E(CURSOR_CHART_START),
+    E(CURSOR_CHART_END),
 
-                                                                                                                                                                                                                                                        E(TOGGLE_STATUS_CHART) E(TOGGLE_STATUS_SNAP) E(TOGGLE_STATUS_BPM)
-                                                                                                                                                                                                                                                            E(TOGGLE_STATUS_ROW) E(
-                                                                                                                                                                                                                                                                TOGGLE_STATUS_BEAT)
-                                                                                                                                                                                                                                                                E(TOGGLE_STATUS_MEASURE) E(TOGGLE_STATUS_TIME) E(TOGGLE_STATUS_TIMING_MODE)
-                                                                                                                                                                                                                                                                    E(TOGGLE_STATUS_SCROLL)
-                                                                                                                                                                                                                                                                        E(TOGGLE_STATUS_SPEED)
+    E(TOGGLE_STATUS_CHART),
+    E(TOGGLE_STATUS_SNAP),
+    E(TOGGLE_STATUS_BPM),
+    E(TOGGLE_STATUS_ROW),
+    E(TOGGLE_STATUS_BEAT),
+    E(TOGGLE_STATUS_MEASURE),
+    E(TOGGLE_STATUS_TIME),
+    E(TOGGLE_STATUS_TIMING_MODE),
+    E(TOGGLE_STATUS_SCROLL),
+    E(TOGGLE_STATUS_SPEED),
 
-                                                                                                                                                                                                                                                                            E(PREVIEW_TOGGLE_ENABLED) E(PREVIEW_TOGGLE_SHOW_BEAT_LINES) E(PREVIEW_TOGGLE_REVERSE_SCROLL)
-                                                                                                                                                                                                                                                                                E(PREVIEW_VIEW_CMOD)
-                                                                                                                                                                                                                                                                                    E(PREVIEW_VIEW_XMOD)
-                                                                                                                                                                                                                                                                                        E(PREVIEW_VIEW_XMOD_ALL)
+    E(PREVIEW_TOGGLE_ENABLED),
+    E(PREVIEW_TOGGLE_SHOW_BEAT_LINES),
+    E(PREVIEW_TOGGLE_REVERSE_SCROLL),
+    E(PREVIEW_VIEW_CMOD),
+    E(PREVIEW_VIEW_XMOD),
+    E(PREVIEW_VIEW_XMOD_ALL),
 
-                                                                                                                                                                                                                                                                                            E(SHOW_SHORTCUTS) E(SHOW_MESSAGE_LOG)
-                                                                                                                                                                                                                                                                                                E(SHOW_DEBUG_LOG)
-                                                                                                                                                                                                                                                                                                    E(SHOW_ABOUT)
+    E(SHOW_SHORTCUTS),
+    E(SHOW_MESSAGE_LOG),
+    E(SHOW_DEBUG_LOG),
+    E(SHOW_ABOUT)
+
 #undef E
 
 };

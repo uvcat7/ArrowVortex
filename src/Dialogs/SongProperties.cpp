@@ -28,14 +28,20 @@ struct DialogSongProperties::BannerWidget : public GuiWidget {
         height_ = BANNER_H;
     }
     void onDraw() override {
-        recti r = rect_;
-        if (tex.handle()) {
-            Draw::fill(rect_, Colors::white, tex.handle());
-        } else {
-            Draw::fill(rect_, Color32(26));
+        if (tex.size() == 0 || !tex[0].handle()) return;
+
+        auto index = 0;
+        if (tex.size() > 1) {
+            timer += clamp(deltaTime.count(), 0.0, 1.0);
+            index = static_cast<int>(timer / 0.1) % tex.size();  // 10 FPS
         }
+
+        Texture frame = tex[index];
+        recti r = rect_;
+        Draw::fill(rect_, Colors::white, frame.handle());
     }
-    Texture tex;
+    std::vector<Texture> tex;
+    double timer = 0;
 };
 
 struct DialogSongProperties::CdTitleWidget : public GuiWidget {
@@ -44,9 +50,18 @@ struct DialogSongProperties::CdTitleWidget : public GuiWidget {
         height_ = 75;
     }
     void onDraw() override {
+        if (tex.size() == 0 || !tex[0].handle()) return;
+
+        auto index = 0;
+        if (tex.size() > 1) {
+            timer += clamp(deltaTime.count(), 0.0, 1.0);
+            index = static_cast<int>(timer / 0.1) % tex.size();  // 10 FPS
+        }
+
+        Texture frame = tex[index];
         recti r = rect_;
-        auto h = tex.height();
-        auto w = tex.width();
+        auto h = frame.height();
+        auto w = frame.width();
         // Scale the CD Title to fit if it is too big
         auto aspect = static_cast<float>(w) / static_cast<float>(h);
         if (h > height_) {
@@ -59,11 +74,10 @@ struct DialogSongProperties::CdTitleWidget : public GuiWidget {
         }
         // Place the CD Title in the middle of the box
         r = {rect_.x + (width_ - w) / 2, rect_.y + (height_ - h) / 2, w, h};
-        if (tex.handle()) {
-            Draw::fill(r, Colors::white, tex.handle());
-        }
+        Draw::fill(r, Colors::white, frame.handle());
     }
-    Texture tex;
+    std::vector<Texture> tex;
+    double timer = 0;
 };
 
 DialogSongProperties::~DialogSongProperties() {
@@ -281,37 +295,57 @@ void DialogSongProperties::myUpdateProperties() {
 }
 
 void DialogSongProperties::myUpdateBanner() {
-    myBannerWidget->tex = Texture();
+    myBannerWidget->tex.clear();
     if (gSimfile->isOpen()) {
         auto meta = gSimfile->get();
         std::string filename = meta->banner;
         if (filename.length()) {
             std::string path = gSimfile->getDir() + filename;
-            myBannerWidget->tex = Texture(path.c_str());
-            if (myBannerWidget->tex.handle() == 0) {
-                HudWarning("Could not open \"%s\".", filename.c_str());
-            }
+            myBannerWidget->tex = extractSpriteSheet(path, filename);
         }
     }
 }
 
 void DialogSongProperties::myUpdateCdTitle() {
-    myCdTitleWidget->tex = Texture();
+    myCdTitleWidget->tex.clear();
     if (gSimfile->isOpen()) {
         auto meta = gSimfile->get();
         std::string filename = meta->cdTitle;
         if (filename.length()) {
             std::string path = gSimfile->getDir() + filename;
-            myCdTitleWidget->tex = Texture(path.c_str());
-            if (myCdTitleWidget->tex.handle() == 0) {
-                HudWarning("Could not open \"%s\".", filename.c_str());
-            }
+            myCdTitleWidget->tex = extractSpriteSheet(path, filename);
         }
     }
 }
 
 // ================================================================================================
 // Other functions.
+
+std::vector<Texture> DialogSongProperties::extractSpriteSheet(
+    const std::string& path, const std::string& filename) {
+    Texture full = Texture(path.c_str());
+    std::vector<Texture> frames;
+
+    if (full.handle() == 0) {
+        HudWarning("Could not open \"%s\".", filename.c_str());
+        frames.push_back(full);
+        return frames;
+    }
+
+    int w = 0, h = 0, tiles = 1;
+    if (sscanf(filename.c_str(), "%*[^ ] %dx%d.%*s", &w, &h) == 2) {
+        tiles = max(1, w * h);
+    }
+
+    if (tiles > 1) {
+        auto tileW = full.width() / w;
+        auto tileH = full.height() / h;
+        Texture::createTiles(path.c_str(), tileW, tileH, tiles, frames);
+    } else
+        frames.push_back(full);
+
+    return frames;
+}
 
 void DialogSongProperties::onChanges(int changes) {
     if (changes & VCM_SONG_PROPERTIES_CHANGED) {
