@@ -406,3 +406,4 @@ vcpkg_installed
 build
 out
 enc_temp_folder
+/path_sources

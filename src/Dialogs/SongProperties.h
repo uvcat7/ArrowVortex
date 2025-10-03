@@ -39,6 +39,9 @@ class DialogSongProperties : public EditorDialog {
     void mySetProperty(int p);
     void mySetDisplayBpm();
 
+    std::vector<Texture> extractSpriteSheet(const std::string& path,
+                                            const std::string& filename);
+
     std::string myTitle;
     std::string mySubtitle;
     std::string myArtist;
