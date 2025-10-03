@@ -522,4 +522,31 @@ int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
     return tileIndex;
 }
 
+int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
+                         std::vector<Texture>& outTiles, bool mipmap,
+                         Format fmt) {
+    ImageLoader::Data image = ImageLoader::load(path, TexLoadFormats[fmt]);
+    int ch = sNumChannels[fmt];
+
+    Vector<uint8_t> pixelData;
+    pixelData.resize(tileW * tileH * ch, 0);
+    uint8_t* dst = pixelData.begin();
+    int tileIndex = 0;
+
+    for (int y = 0; y + tileH <= image.height; y += tileH) {
+        for (int x = 0; x + tileW <= image.width; x += tileW) {
+            if (tileIndex < numTiles) {
+                uint8_t* src = image.pixels + ((y * image.width) + x) * ch;
+                for (int line = 0; line < tileH; ++line) {
+                    memcpy(dst + line * tileW * ch,
+                           src + line * image.width * ch, tileW * ch);
+                }
+                outTiles.emplace_back(tileW, tileH, dst, mipmap, fmt);
+            }
+        }
+    }
+    ImageLoader::release(image);
+
+    return tileIndex;
+}
 };  // namespace Vortex

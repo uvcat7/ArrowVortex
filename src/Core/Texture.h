@@ -75,6 +75,11 @@ class Texture {
                            Texture* outTiles, bool mipmap = false,
                            Format fmt = RGBA);
 
+    /// Creates a set of textures from a sprite sheet / tile sheet.
+    static int createTiles(const char* path, int tileW, int tileH, int numTiles,
+                           std::vector<Texture>& outTiles, bool mipmap = false,
+                           Format fmt = RGBA);
+
    private:
     Data* data_;  // TODO: replace with a more descriptive variable name.
 };
