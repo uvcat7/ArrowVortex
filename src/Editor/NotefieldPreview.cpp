@@ -8,6 +8,8 @@
 #include <Core/Draw.h>
 #include <Core/Gui.h>
 #include <Core/Utils.h>
+#include <Core/Text.h>
+#include <Core/StringUtils.h>
 #include <Core/ImageLoader.h>
 #include <Core/QuadBatch.h>
 #include <Core/Xmr.h>
@@ -47,7 +49,7 @@ struct DrawPosHelper {
             baseY = -floor(gView->getCursorBeat() * ROWS_PER_BEAT * deltaY);
             advanceFunc = RowBasedAdvance;
             getFunc = RowBasedGet;
-        } else if (mode == DrawMode::XMOD_ALL) {
+        } else if (mode == DrawMode::VARIABLE) {
             deltaY = -gView->getPixPerRow() * dir;
             baseY =
                 -floor(gTempo->beatToScroll(gView->getCursorBeat()) * deltaY);
@@ -106,10 +108,17 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
     int scale, cols;
     double speed, currentRow;
 
-    bool myEnabled;
-    bool myShowBeatLines;
-    bool myUseReverseScroll;
-    DrawMode myDrawMode = XMOD_ALL;
+    bool guideCModEnabled_ = true, guideXModEnabled_ = true, guideCrop_ = false;
+    int guideCMod_ = 850;
+    double guideXMod_ = 4.5;
+    int guideHeight_ = 0;
+
+    bool transFakeNotes_ = true, transFakeRegions_ = true;
+
+    bool enabled_ = false;
+    bool beatlines_ = true;
+    bool reverse_ = false;
+    DrawMode drawMode_ = VARIABLE;
 
     // ================================================================================================
     // NotefieldPreviewImpl :: constructor and destructor.
@@ -117,9 +126,6 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
     ~NotefieldPreviewImpl() = default;
 
     NotefieldPreviewImpl() {
-        myEnabled = false;
-        myShowBeatLines = true;
-        myUseReverseScroll = false;
         myNoteLabelsTex = Texture("assets/note labels.png", false);
 
         BatchSprite::init(myNoteLabels, 2, 2, 1, 32, 32);
@@ -129,13 +135,13 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
     // NotefieldPreviewImpl :: load / save settings.
 
     static const char* ToString(DrawMode mode) {
-        if (mode == XMOD_ALL) return "all";
+        if (mode == VARIABLE) return "variable";
         if (mode == XMOD) return "xmod";
         return "cmod";
     }
 
     static DrawMode ToMode(const std::string& str) {
-        if (str == "all") return XMOD_ALL;
+        if (str == "variable") return VARIABLE;
         if (str == "xmod") return XMOD;
         return CMOD;
     }
@@ -143,12 +149,19 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
     void loadSettings(XmrNode& settings) {
         XmrNode* preview = settings.child("preview");
         if (preview) {
-            preview->get("enabled", &myEnabled);
-            preview->get("beatlines", &myShowBeatLines);
-            preview->get("reverse", &myUseReverseScroll);
+            preview->get("enabled", &enabled_);
+            preview->get("beatlines", &beatlines_);
+            preview->get("reverse", &reverse_);
+            preview->get("fakeNotes", &transFakeNotes_);
+            preview->get("fakeRegions", &transFakeRegions_);
+            preview->get("useCrop", &guideCrop_);
+            preview->get("useCMOD", &guideCModEnabled_);
+            preview->get("useXMOD", &guideXModEnabled_);
+            preview->get("cmod", &guideCMod_);
+            preview->get("xmod", &guideXMod_);
 
             const char* mode = preview->get("mode");
-            if (mode) myDrawMode = ToMode(mode);
+            if (mode) drawMode_ = ToMode(mode);
         }
     }
 
@@ -156,10 +169,17 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         XmrNode* preview = settings.child("preview");
         if (!preview) preview = settings.addChild("preview");
 
-        preview->addAttrib("enabled", myEnabled);
-        preview->addAttrib("beatlines", myShowBeatLines);
-        preview->addAttrib("reverse", myUseReverseScroll);
-        preview->addAttrib("mode", ToString(myDrawMode));
+        preview->addAttrib("enabled", enabled_);
+        preview->addAttrib("beatlines", beatlines_);
+        preview->addAttrib("reverse", reverse_);
+        preview->addAttrib("fakeNotes", transFakeNotes_);
+        preview->addAttrib("fakeRegions", transFakeRegions_);
+        preview->addAttrib("useCrop", guideCrop_);
+        preview->addAttrib("useCMOD", guideCModEnabled_);
+        preview->addAttrib("useXMOD", guideXModEnabled_);
+        preview->addAttrib("cmod", static_cast<long>(guideCMod_));
+        preview->addAttrib("xmod", static_cast<double>(guideXMod_));
+        preview->addAttrib("mode", ToString(drawMode_));
     }
 
     // ================================================================================================
@@ -171,23 +191,23 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         myW = coords.xr - coords.xl;
         myX = coords.xl + gView->getPreviewOffset();
-        myY = coords.y;
+        myY = coords.y - 1;
 
         maxY = gView->getHeight() + 32;
 
-        if (myUseReverseScroll) {
+        if (reverse_) {
             myY = maxY - 32 - myY;
         }
     }
 
     void draw() override {
-        if (!myEnabled || gChart->isClosed()) return;
+        if (!enabled_ || gChart->isClosed()) return;
 
         // Update common variables.
         auto beat = gView->getCursorBeat(), time = gView->getCursorTime();
 
         speed =
-            (myDrawMode == XMOD_ALL ? gTempo->positionToSpeed(beat, time) : 1);
+            (drawMode_ == VARIABLE ? gTempo->positionToSpeed(beat, time) : 1);
         cols = gStyle->getNumCols();
         scale = gView->getNoteScale();
         currentRow = beat * ROWS_PER_BEAT;
@@ -206,14 +226,47 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         recti view = gView->getRect();
         Draw::fill({myX, view.y, myW, view.h}, RGBAtoColor32(0, 0, 0, 128));
 
-        if (myShowBeatLines) drawBeatLines();
+        if (beatlines_) drawBeatLines();
         drawReceptors();
         drawNotes();
+        drawViewLines();
         if (!gMusic->isPaused()) drawReceptorGlow();
     }
 
     // ================================================================================================
     // NotefieldPreviewImpl :: segments.
+
+    void drawViewLines() {
+        guideHeight_ = 0;
+
+        if (guideCModEnabled_ && drawMode_ == CMOD) {
+            drawViewLine((gView->getPixPerSec() * (500.0f / guideCMod_)),
+                         Str::fmt("C%1").arg(guideCMod_),
+                         ToColor32({1, 1, 0, 1.0f}));
+        }
+
+        if (guideXModEnabled_ && drawMode_ != CMOD) {
+            drawViewLine((gView->getPixPerRow() * (400.0f / guideXMod_)),
+                         Str::fmt("%1x").arg(guideXMod_),
+                         ToColor32({1, 0.65, 0, 1.0f}));
+        }
+    }
+
+    void drawViewLine(int h, Str::fmt fmt, uint32_t color) {
+        guideHeight_ = h * (reverse_ ? -1 : 1);
+
+        Renderer::resetColor();
+        Renderer::bindShader(Renderer::SH_COLOR);
+
+        auto batch = Renderer::batchC();
+        Draw::fill(&batch, {myX, myY + guideHeight_ - 1, myW, 3}, color);
+        batch.flush();
+
+        // Draw Speed Info
+        TextStyle textStyle;
+        Text::arrange(Text::MR, textStyle, fmt);
+        Text::draw(vec2i{myX - 5, myY + guideHeight_});
+    }
 
     void drawBeatLines() {
         Renderer::resetColor();
@@ -251,7 +304,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         auto batch = Renderer::batchC();
         uint32_t halfColor = ToColor32({1, 1, 1, 0.4f});
         uint32_t fullColor = ToColor32({1, 1, 1, 0.7f});
-        DrawPosHelper drawPos = DrawPosHelper(myDrawMode, myUseReverseScroll);
+        DrawPosHelper drawPos = DrawPosHelper(drawMode_, reverse_);
         while (it != end && row < drawEndRow) {
             int endRow = drawEndRow;
             if (next != end) endRow = min(endRow, next->row);
@@ -345,13 +398,21 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
     void drawNotes() {
         auto noteskin = gNoteskin->get();
 
+        auto doCrop = guideCrop_ && guideHeight_ != 0;
+
+        if (doCrop) {
+            int sy = guideHeight_ < 0 ? myY + guideHeight_ : myY - 32;
+            Renderer::pushScissorRect(
+                {myX - 32, sy, myW + 64, abs(guideHeight_) + 32});
+        }
+
         Renderer::resetColor();
         Renderer::bindShader(Renderer::SH_TEXTURE);
         Renderer::bindTexture(noteskin->noteTex.handle());
 
         // Render arrows/holds/mines interleaved, so the z-order is correct.
         auto batch = Renderer::batchTC();
-        DrawPosHelper drawPos = DrawPosHelper(myDrawMode, myUseReverseScroll);
+        DrawPosHelper drawPos = DrawPosHelper(drawMode_, reverse_);
         for (auto& note : *gNotes) {
             // Determine the y-position of the note.
             int y = myY - drawPos.get(note.row, note.time),
@@ -407,10 +468,14 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
                 case NOTE_ROLL:
                 case NOTE_LIFT:
                 case NOTE_FAKE: {
+                    bool transparent =
+                        ((note.type == NOTE_FAKE && transFakeNotes_) ||
+                         (note.type != NOTE_FAKE && note.isFake &&
+                          transFakeRegions_));
                     int index =
                         (note.player * cols + note.col) * NUM_ROW_TYPES +
                         rowtype;
-                    uint8_t alpha = note.isFake ? 128 : 255;
+                    uint8_t alpha = transparent ? 128 : 255;
                     noteskin->note[index].draw(&batch, x, y, alpha);
                     break;
                 }
@@ -438,6 +503,8 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
             }
         }
         batch.flush();
+
+        if (doCrop) Renderer::popScissorRect();
     }
 
     // ================================================================================================
@@ -445,34 +512,61 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
     int getY() override { return myY; }
 
+    void setGuideCMod(int value) override { guideCMod_ = value; }
+    int getGuideCMod() override { return guideCMod_; }
+
+    void setGuideXMod(double value) override { guideXMod_ = value; }
+    double getGuideXMod() override { return guideXMod_; }
+
     void setMode(DrawMode mode) override {
-        myDrawMode = mode;
+        drawMode_ = mode;
         gMenubar->update(Menubar::PREVIEW_VIEW_MODE);
     }
 
-    DrawMode getMode() override { return myDrawMode; }
+    void setMode(int mode) override {
+        drawMode_ = static_cast<DrawMode>(mode);
+        gMenubar->update(Menubar::PREVIEW_VIEW_MODE);
+    }
+
+    DrawMode getMode() override { return drawMode_; }
 
     void toggleEnabled() override {
-        myEnabled = !myEnabled;
-        gView->adjustForPreview(myEnabled);
+        enabled_ = !enabled_;
+        gView->adjustForPreview(enabled_);
         gMenubar->update(Menubar::PREVIEW_ENABLED);
     }
 
     void toggleShowBeatLines() override {
-        myShowBeatLines = !myShowBeatLines;
+        beatlines_ = !beatlines_;
         gMenubar->update(Menubar::PREVIEW_SHOW_BEATLINES);
     }
 
     void toggleReverseScroll() override {
-        myUseReverseScroll = !myUseReverseScroll;
+        reverse_ = !reverse_;
         gMenubar->update(Menubar::PREVIEW_SHOW_REVERSE_SCROLL);
     }
 
-    bool hasEnabled() override { return myEnabled; }
+    void toggleTransparentNotes() override {
+        transFakeNotes_ = !transFakeNotes_;
+    }
 
-    bool hasReverseScroll() override { return myUseReverseScroll; }
+    void toggleTransparentRegions() override {
+        transFakeRegions_ = !transFakeRegions_;
+    }
 
-    bool hasShowBeatLines() override { return myShowBeatLines; }
+    void toggleGuideCMod() override { guideCModEnabled_ = !guideCModEnabled_; }
+    void toggleGuideXMod() override { guideXModEnabled_ = !guideXModEnabled_; }
+    void toggleGuideCrop() override { guideCrop_ = !guideCrop_; }
+
+    bool hasEnabled() override { return enabled_; }
+    bool hasReverseScroll() override { return reverse_; }
+    bool hasShowBeatLines() override { return beatlines_; }
+    bool hasTransparentNotes() override { return transFakeNotes_; }
+    bool hasTransparentRegions() override { return transFakeRegions_; }
+
+    bool hasGuideCMod() override { return guideCModEnabled_; }
+    bool hasGuideXMod() override { return guideXModEnabled_; }
+    bool hasGuideCrop() override { return guideCrop_; }
 };
 
 // ================================================================================================

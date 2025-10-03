@@ -278,6 +278,7 @@ struct MenuBarImpl : public Menubar {
 
         // View > Preview menu.
         myPreviewMenu = newMenu();
+        add(myPreviewMenu, OPEN_DIALOG_PREVIEW_SETTINGS, "Options");
         add(myPreviewMenu, PREVIEW_TOGGLE_ENABLED, "Enabled");
         sep(myPreviewMenu);
         add(myPreviewMenu, PREVIEW_TOGGLE_SHOW_BEAT_LINES, "Show beat lines");
@@ -285,7 +286,7 @@ struct MenuBarImpl : public Menubar {
         sep(myPreviewMenu);
         add(myPreviewMenu, PREVIEW_VIEW_CMOD, "Time based (C-mod)");
         add(myPreviewMenu, PREVIEW_VIEW_XMOD, "Row based (X-mod)");
-        add(myPreviewMenu, PREVIEW_VIEW_XMOD_ALL, "X-mod All");
+        add(myPreviewMenu, PREVIEW_VIEW_VARIABLE, "Variable");
 
         // View > Minimap menu.
         Item* hViewMm = myMinimapMenu = newMenu();
@@ -501,8 +502,8 @@ struct MenuBarImpl : public Menubar {
                                             mode == NotefieldPreview::CMOD);
             MENU->myPreviewMenu->setChecked(PREVIEW_VIEW_XMOD,
                                             mode == NotefieldPreview::XMOD);
-            MENU->myPreviewMenu->setChecked(PREVIEW_VIEW_XMOD_ALL,
-                                            mode == NotefieldPreview::XMOD_ALL);
+            MENU->myPreviewMenu->setChecked(PREVIEW_VIEW_VARIABLE,
+                                            mode == NotefieldPreview::VARIABLE);
         };
         myUpdateFunctions[VIEW_MINIMAP] = [] {
             auto mode = gMinimap->getMode();

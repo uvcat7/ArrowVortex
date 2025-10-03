@@ -8,7 +8,7 @@ static const char* IdStrings[NUM_DIALOG_IDS] = {
     "chartList",      "chartProperties", "dancingBot",
     "generateNotes",  "newChart",        "songProperties",
     "tempoBreakdown", "labelBreakdown",  "waveformSettings",
-    "zoom",           "customSnap"};
+    "zoom",           "customSnap",      "previewSettings"};
 
 EditorDialog::~EditorDialog() { gEditor->onDialogClosed(myId); }
 
