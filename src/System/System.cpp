@@ -18,13 +18,14 @@
 
 #define UNICODE
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#ifdef _WIN32
+#include <System/OpenGL.h>
 #include <winuser.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <gl/gl.h>
+#endif
 #undef ERROR
 
 #include <chrono>

@@ -6,10 +6,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <chrono>
+#include <iostream>
+#include <fstream>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <gl/gl.h>
+#include <System/OpenGL.h>
 #undef ERROR
 
 namespace Vortex {
@@ -52,22 +52,33 @@ void openLogFile() {
 void openConsole() {
     if (sHasConsole) return;
 
+#ifdef _WIN32
     AllocConsole();
 
-    long hOut = _open_osfhandle(
-        reinterpret_cast<intptr_t>(GetStdHandle(STD_OUTPUT_HANDLE)), _O_WTEXT);
-    long hIn = _open_osfhandle(
-        reinterpret_cast<intptr_t>(GetStdHandle(STD_INPUT_HANDLE)), _O_WTEXT);
-    long hErr = _open_osfhandle(
-        reinterpret_cast<intptr_t>(GetStdHandle(STD_ERROR_HANDLE)), _O_WTEXT);
+    FILE* fp = nullptr;
+    // Redirect STDIN if the console has an input handle
+    if (GetStdHandle(STD_INPUT_HANDLE) != INVALID_HANDLE_VALUE)
+        if (freopen_s(&fp, "CONIN$", "r", stdin) != 0)
+            sHasConsole = false;
+        else
+            setvbuf(stdin, nullptr, _IONBF, 0);
 
-    *stdout = *_fdopen(hOut, "w");
-    *stdin = *_fdopen(hIn, "r");
-    *stderr = *_fdopen(hErr, "w");
+    // Redirect STDOUT if the console has an output handle
+    if (GetStdHandle(STD_OUTPUT_HANDLE) != INVALID_HANDLE_VALUE)
+        if (freopen_s(&fp, "CONOUT$", "w", stdout) != 0)
+            sHasConsole = false;
+        else
+            setvbuf(stdout, nullptr, _IONBF, 0);
 
-    setvbuf(stdout, nullptr, _IONBF, 0);
-    setvbuf(stdin, nullptr, _IONBF, 0);
-    setvbuf(stderr, nullptr, _IONBF, 0);
+    // Redirect STDERR if the console has an error handle
+    if (GetStdHandle(STD_ERROR_HANDLE) != INVALID_HANDLE_VALUE)
+        if (freopen_s(&fp, "CONOUT$", "w", stderr) != 0)
+            sHasConsole = false;
+        else
+            setvbuf(stderr, nullptr, _IONBF, 0);
+#endif
+
+    std::ios::sync_with_stdio();
 
     sHasConsole = true;
 }
@@ -85,9 +96,7 @@ static void WriteToLogAndConsole(const char* msg) {
         fclose(fp);
     }
     if (sHasConsole) {
-        WideString wmsg = Widen(msg);
-        WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wmsg.str(),
-                      wmsg.length(), nullptr, nullptr);
+        std::cout << msg;
     }
 }
 
