@@ -424,8 +424,8 @@ void DialogSongProperties::onFindBanner(bool open) {
 }
 
 void DialogSongProperties::onFindBG(bool open) {
-    std::string path =
-        open ? fileDlgPath("Open BG file") : gMetadata->findBackgroundFile();
+    std::string path = open ? fileDlgPath("Open background file")
+                            : gMetadata->findBackgroundFile();
     if (path.empty()) {
         HudNote("Could not find any background art...");
     } else {
@@ -435,7 +435,7 @@ void DialogSongProperties::onFindBG(bool open) {
 
 void DialogSongProperties::onFindCdTitle(bool open) {
     std::string path =
-        open ? fileDlgPath("Open cdtitle file") : gMetadata->findCdTitleFile();
+        open ? fileDlgPath("Open CD Title file") : gMetadata->findCdTitleFile();
     if (path.empty()) {
         HudNote("Could not find any CD Title art...");
     } else {
