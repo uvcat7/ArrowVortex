@@ -43,7 +43,7 @@ class DialogSongProperties : public EditorDialog {
                                             const std::string& filename);
 
     std::string fileDlgPath(const std::string& title);
-    
+
     std::string myTitle;
     std::string mySubtitle;
     std::string myArtist;
