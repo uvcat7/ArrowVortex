@@ -1,26 +1,26 @@
 #include <Editor/TempoBoxes.h>
 
+#include <Core/Draw.h>
+#include <Core/Gui.h>
+#include <Core/QuadBatch.h>
+#include <Core/StringUtils.h>
+#include <Core/Text.h>
+#include <Core/Texture.h>
 #include <Core/Utils.h>
 #include <Core/Vector.h>
-#include <Core/StringUtils.h>
-#include <Core/QuadBatch.h>
-#include <Core/Texture.h>
-#include <Core/Gui.h>
-#include <Core/Text.h>
-#include <Core/Draw.h>
 #include <Core/Xmr.h>
 
-#include <Simfile/TimingData.h>
 #include <Simfile/SegmentGroup.h>
+#include <Simfile/TimingData.h>
 
-#include <Managers/TempoMan.h>
 #include <Managers/ChartMan.h>
 #include <Managers/SimfileMan.h>
+#include <Managers/TempoMan.h>
 
 #include <Editor/Common.h>
-#include <Editor/View.h>
-#include <Editor/Selection.h>
 #include <Editor/Menubar.h>
+#include <Editor/Selection.h>
+#include <Editor/View.h>
 
 #include <System/System.h>
 
@@ -153,17 +153,11 @@ struct TempoBoxesImpl : public TempoBoxes {
         for (auto& box : myBoxes) {
             box.isSelected = 0;
         }
-        if (gSelection->getType() == Selection::TEMPO) {
-            gSelection->setType(Selection::NONE);
-        }
     }
 
     int selectAll() override {
         for (auto& box : myBoxes) {
             box.isSelected = 1;
-        }
-        if (myBoxes.size()) {
-            gSelection->setType(Selection::TEMPO);
         }
         return myBoxes.size();
     }
@@ -171,9 +165,6 @@ struct TempoBoxesImpl : public TempoBoxes {
     int selectType(Segment::Type type) override {
         for (auto& box : myBoxes) {
             box.isSelected = (box.type == type ? 1 : 0);
-        }
-        if (myBoxes.size()) {
-            gSelection->setType(Selection::TEMPO);
         }
         return myBoxes.size();
     }
@@ -223,7 +214,6 @@ struct TempoBoxesImpl : public TempoBoxes {
                 box->isSelected &= set ^ 1;
             }
         }
-        gSelection->setType(Selection::TEMPO);
         return numSelected;
     }
 
@@ -243,6 +233,7 @@ struct TempoBoxesImpl : public TempoBoxes {
                    int xr) override {
         auto coords = gView->getNotefieldCoords();
         const int baseX[2] = {coords.xl, coords.xr};
+
         TempoTimeTracker tracker;
         return performSelection(mod, [&](const TempoBox* box) {
             int side = Segment::meta[box->type]->side;

@@ -12,16 +12,16 @@
 
 #include <Editor/Common.h>
 #include <Editor/Editor.h>
-#include <Editor/View.h>
-#include <Editor/TextOverlay.h>
 #include <Editor/Menubar.h>
 #include <Editor/Selection.h>
+#include <Editor/TextOverlay.h>
+#include <Editor/View.h>
 
-#include <Managers/TempoMan.h>
-#include <Managers/SimfileMan.h>
 #include <Managers/ChartMan.h>
-#include <Managers/StyleMan.h>
 #include <Managers/NoteMan.h>
+#include <Managers/SimfileMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
 
 namespace Vortex {
 
@@ -379,8 +379,8 @@ struct MinimapImpl : public Minimap {
         rect = myGetMapRect();
 
         // Draw the region selection if there is one.
-        if (gSelection->getType() == Selection::REGION) {
-            auto region = gSelection->getSelectedRegion();
+        auto region = gSelection->getSelectedRegion();
+        if (!region.isOmni()) {
             double top = gView->rowToOffset(region.beginRow);
             double btm = gView->rowToOffset(region.endRow);
             drawRegion(rect.x, rect.w, top, btm,

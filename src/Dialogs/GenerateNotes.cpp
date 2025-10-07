@@ -1,18 +1,17 @@
 #include <Dialogs/GenerateNotes.h>
 
-#include <Core/Draw.h>
 #include <Core/WidgetsLayout.h>
 
+#include <Editor/Common.h>
 #include <Editor/Selection.h>
 #include <Editor/StreamGenerator.h>
-#include <Editor/Common.h>
-#include <Editor/Editor.h>
 
 #include <Core/Utils.h>
 
-#include <Managers/ChartMan.h>
-#include <Managers/StyleMan.h>
+#include <Core/Core.h>
+#include <Core/Widgets.h>
 #include <Managers/SimfileMan.h>
+#include <Managers/StyleMan.h>
 
 namespace Vortex {
 
@@ -93,7 +92,7 @@ void DialogGenerateNotes::myGenerateNotes() {
     auto region = gSelection->getSelectedRegion();
     if (gSimfile->isClosed()) {
         HudNote("%s", "Open a simfile or music file first.");
-    } else if (region.beginRow == region.endRow) {
+    } else if (region.isOmni()) {
         HudNote("%s", "Select a region first.");
     } else {
         streamGenerator_.generate(region.beginRow, region.endRow,

@@ -2,30 +2,30 @@
 
 #include <algorithm>
 
-#include <Core/Utils.h>
-#include <Core/Xmr.h>
 #include <Core/Draw.h>
 #include <Core/Gui.h>
+#include <Core/Utils.h>
+#include <Core/Xmr.h>
 
 #include <System/System.h>
 
-#include <Editor/Music.h>
-#include <Editor/Editor.h>
 #include <Editor/Action.h>
+#include <Editor/Editor.h>
 #include <Editor/Menubar.h>
-#include <Managers/MetadataMan.h>
-#include <Managers/StyleMan.h>
+#include <Editor/Music.h>
 #include <Managers/ChartMan.h>
+#include <Managers/MetadataMan.h>
 #include <Managers/NoteskinMan.h>
-#include <Managers/TempoMan.h>
 #include <Managers/SimfileMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
 
-#include <Editor/Notefield.h>
-#include <Editor/NotefieldPreview.h>
+#include <Editor/Common.h>
 #include <Editor/Editing.h>
 #include <Editor/Minimap.h>
+#include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/Selection.h>
-#include <Editor/Common.h>
 #include <Editor/Waveform.h>
 
 namespace Vortex {
@@ -449,7 +449,7 @@ struct ViewImpl : public View, public InputHandler {
         if (gView->hasReverseScroll()) top = !top;
 
         auto region = gSelection->getSelectedRegion();
-        if (region.beginRow != region.endRow) {
+        if (!region.isOmni()) {
             setCursorRow(top ? region.beginRow : region.endRow);
         } else {
             NoteList notes;
