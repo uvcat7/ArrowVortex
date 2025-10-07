@@ -363,15 +363,21 @@ struct EditingImpl : public Editing {
             return;
         }
 
-        bool needsChain =
-            !gNotes->noneSelected() && !gTempoBoxes->noneSelected();
-
-        if (needsChain) {
+        // There's four different cases that need addressing
+        if (gNotes->noneSelected() && gTempoBoxes->noneSelected()) {
+            // Nothing is selected, so delete region
+            gNotes->removeSelectedNotes();
+        } else if (!gNotes->noneSelected() && gTempoBoxes->noneSelected()) {
+            // Some notes are selected, delete only those, not the region
+            gNotes->removeSelectedNotes();
+        } else if (gNotes->noneSelected() && !gTempoBoxes->noneSelected()) {
+            // Only segments are chosen, delete those
+            gTempo->removeSelectedSegments();
+        } else {
+            // Both segments and notes are chosen, make this removal atomic
             gHistory->startChain();
-        }
-        gNotes->removeSelectedNotes();
-        gTempo->removeSelectedSegments();
-        if (needsChain) {
+            gNotes->removeSelectedNotes();
+            gTempo->removeSelectedSegments();
             gHistory->finishChain("Deleted selected objects");
         }
     }
