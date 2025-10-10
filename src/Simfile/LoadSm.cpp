@@ -358,7 +358,7 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
     // Derive the column count from the first note row.
     int numPlayers = 1;
     int numCols = 0;
-    while (*p == ' ' || *p == '\n') ++p;
+    while (*p == ' ' || *p == '\n' || *p == ',') ++p;
     for (; *p && *p != '\n'; ++p) {
         if (*p == '[') {
             while (*p && *p != ']') ++p;
