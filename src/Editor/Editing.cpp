@@ -408,7 +408,7 @@ struct EditingImpl : public Editing {
         };
         if (numHolds > 0 || numRolls > 0) {
             auto* desc = descs + (numRolls ? (numHolds ? 2 : 1) : 0);
-            gNotes->modify(edit, true, desc);
+            gNotes->modify(edit, false, desc);
 
             // Reselect the notes.
             gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
