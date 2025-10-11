@@ -6,7 +6,7 @@
 #include <Managers/SimfileMan.h>
 #include <Managers/TempoMan.h>
 
-#include "Dialog.h"
+#include <Dialogs/Dialog.h>
 #include <Core/Widgets.h>
 #include <Editor/Common.h>
 #include <Editor/FindTempo.h>
