@@ -550,17 +550,25 @@ struct EditingImpl : public Editing {
             return;
         }
 
-        if (!style.id.endsWith("double")) {
+        if (!style->id.ends_with("double")) {
             HudNote("Switch side is only available in a double style.");
             return;
         }
 
         NoteEdit edit;
         gSelection->getSelectedNotes(edit.add);
-        edit.rem = edit.add;
-        
-        int halfpoint = style.numCols / 2;
-        
+
+        int halfpoint = style->numCols / 2;
+
+        // Copied from mirrorNotes to sort per row first (to stop an error
+        // message).
+        auto ptr = edit.add.begin();
+        for (int i = 0, size = edit.add.size(); i < size;) {
+            int row = (ptr + i)->row, begin = i;
+            while (i != size && (ptr + i)->row == row) ++i;
+            std::sort(ptr + begin, ptr + i, LessThanRowCol<Note, Note>);
+        }
+
         for (auto& n : edit.add) {
             if (n.col <= (halfpoint - 1)) {
                 n.col += halfpoint;

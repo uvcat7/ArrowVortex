@@ -182,7 +182,6 @@ struct ActionEntry {
 
 static ActionEntry actionMap[] = {
 
-
 #define E(x) {#x, x}
 
     E(FILE_OPEN),
@@ -364,7 +363,7 @@ static ActionEntry actionMap[] = {
     E(SHOW_MESSAGE_LOG),
     E(SHOW_DEBUG_LOG),
     E(SHOW_ABOUT)
-      
+
 #undef E
 
 };
