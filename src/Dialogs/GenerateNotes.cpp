@@ -92,7 +92,7 @@ void DialogGenerateNotes::myGenerateNotes() {
     auto region = gSelection->getSelectedRegion();
     if (gSimfile->isClosed()) {
         HudNote("%s", "Open a simfile or music file first.");
-    } else if (region.isOmni()) {
+    } else if (region.isEmpty()) {
         HudNote("%s", "Select a region first.");
     } else {
         streamGenerator_.generate(region.beginRow, region.endRow,

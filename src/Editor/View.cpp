@@ -449,7 +449,7 @@ struct ViewImpl : public View, public InputHandler {
         if (gView->hasReverseScroll()) top = !top;
 
         auto region = gSelection->getSelectedRegion();
-        if (!region.isOmni()) {
+        if (!region.isEmpty()) {
             setCursorRow(top ? region.beginRow : region.endRow);
         } else {
             NoteList notes;

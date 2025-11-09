@@ -1,3 +1,4 @@
+#include <Editor/Editor.h>
 #include <Editor/Selection.h>
 
 #include <Core/Draw.h>
@@ -76,7 +77,6 @@ struct SelectionImpl : public Selection {
             gNotes->deselectAll();
             gTempoBoxes->deselectAll();
             this->setRegion(0, 0);
-
             evt.setHandled();
         }
     }
@@ -102,6 +102,13 @@ struct SelectionImpl : public Selection {
 
             selectTempoBoxes(mod, t, b, l, r);
             selectNotes(mod, t, b, l, r);
+
+            // Clear the selection region if we didn't select anything.
+            if (mod == SELECT_SET && gNotes->noneSelected() &&
+                gTempoBoxes->noneSelected()) {
+                this->setRegion(0, 0);
+                gEditor->reportChanges(VCM_SELECTION_CHANGED);
+            }
 
             myIsDraggingSelection = false;
         }
@@ -193,18 +200,19 @@ struct SelectionImpl : public Selection {
             }
             selectNotes(mod, begin, end, true);
         }
+        gEditor->reportChanges(VCM_SELECTION_CHANGED);
     }
 
     void drawRegionSelection() override {
         // Draw area selection box.
-        if (myIsSelectingRegion || !myRegion.isOmni()) {
+        if (myIsSelectingRegion || !myRegion.isEmpty()) {
             uint32_t outline = RGBAtoColor32(153, 255, 153, 153);
             auto coords = gView->getReceptorCoords();
             int x = coords.xl, w = coords.xr - coords.xl;
             if (myIsSelectingRegion) {
                 int y = gView->rowToY(myRegion.beginRow);
                 Draw::fill({x, y - 1, w, 2}, outline);
-            } else if (!myRegion.isOmni()) {
+            } else if (!myRegion.isEmpty()) {
                 int t = gView->rowToY(myRegion.beginRow);
                 int b = gView->rowToY(myRegion.endRow);
                 Draw::fill({x, t, w, b - t}, RGBAtoColor32(153, 255, 153, 90));
@@ -298,16 +306,17 @@ struct SelectionImpl : public Selection {
     }
 
     int getSelectedNotes(NoteList& out) override {
-        if (myRegion.isOmni()) {
-            for (auto& note : *gNotes) {
-                if (note.isSelected) out.append(CompressNote(note));
-            }
-        } else {
+        // Get both manually selected notes and the region, since they're
+        // independent now
+        if (!myRegion.isEmpty()) {
             auto note = gNotes->begin(), end = gNotes->end();
             for (; note != end && note->row < myRegion.beginRow; ++note);
             for (; note != end && note->row <= myRegion.endRow; ++note) {
-                out.append(CompressNote(*note));
+                if (!note->isSelected) out.append(CompressNote(*note));
             }
+        }
+        for (auto& note : *gNotes) {
+            if (note.isSelected) out.append(CompressNote(note));
         }
         return out.size();
     }
@@ -329,9 +338,11 @@ struct SelectionImpl : public Selection {
     void selectRegion(int row, int endRow) override {
         setRegion(row, endRow);
 
+        auto firstRow = std::min(row, endRow);
+        auto lastRow = std::max(row, endRow);
         if (row != endRow) {
-            double m1 = gTempo->beatToMeasure(row * BEATS_PER_ROW);
-            double m2 = gTempo->beatToMeasure(endRow * BEATS_PER_ROW);
+            double m1 = gTempo->beatToMeasure(firstRow * BEATS_PER_ROW);
+            double m2 = gTempo->beatToMeasure(lastRow * BEATS_PER_ROW);
 
             Str::fmt fmt("Selected measure %1 to %2 (%3 measures)");
             fmt.arg(m1, 0, 2).arg(m2, 0, 2).arg(m2 - m1, 0, 2);

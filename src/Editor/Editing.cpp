@@ -411,8 +411,7 @@ struct EditingImpl : public Editing {
             gNotes->modify(edit, false, desc);
 
             // Reselect the notes.
-            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
-                           false);
+            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
         } else {
             HudNote("There are no holds/rolls selected.");
         }
@@ -441,8 +440,7 @@ struct EditingImpl : public Editing {
             gNotes->modify(edit, false, &descs[type]);
 
             // Reselect the notes.
-            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
-                           false);
+            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
         } else {
             HudNote("There are no holds/rolls selected.");
         }
@@ -470,8 +468,7 @@ struct EditingImpl : public Editing {
             gNotes->modify(edit, false, desc);
 
             // Reselect the notes.
-            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
-                           false);
+            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
         } else {
             HudNote("There are no notes selected.");
         }
@@ -669,7 +666,7 @@ struct EditingImpl : public Editing {
         gNotes->modify(edit, false, descs + type);
 
         // Reselect the mirrored notes.
-        gNotes->select(SELECT_SET, edit.add.begin(), edit.rem.size(), false);
+        gNotes->select(SELECT_SET, edit.add.begin(), edit.rem.size(), true);
     }
 
     void scaleNotes(int numerator, int denominator) override {
@@ -692,10 +689,13 @@ struct EditingImpl : public Editing {
         // If we are using region selection, we remove all expanded notes
         // outside the selection range.
         auto region = gSelection->getSelectedRegion();
-
-        if (!region.isOmni()) {
+        bool truncated = false;
+        if (!region.isEmpty()) {
             for (auto& it : edit.add) {
-                if (it.row > region.endRow) it.row = -1;
+                if (it.row > region.endRow || it.row < region.beginRow) {
+                    truncated = true;
+                    it.row = -1;
+                }
             }
             edit.add.cleanup();
         }
@@ -703,14 +703,21 @@ struct EditingImpl : public Editing {
         // Perform the scale operation.
         static const NotesMan::EditDescription tExp = {"Expanded %1 note.",
                                                        "Expanded %1 notes."};
+        static const NotesMan::EditDescription tExpTrunc = {
+            "Expanded %1 note, bounded to the selection area.",
+            "Expanded %1 notes, bounded to the selection area."};
         static const NotesMan::EditDescription tCom = {"Compressed %1 note.",
                                                        "Compressed %1 notes."};
+        static const NotesMan::EditDescription tComTrunc = {
+            "Compressed %1 note, bounded to the selection area.",
+            "Compressed %1 notes, bounded to the selection area."};
         const NotesMan::EditDescription* desc =
-            (numerator > denominator) ? &tExp : &tCom;
+            (numerator > denominator) ? (truncated ? &tExpTrunc : &tExp)
+                                      : (truncated ? &tComTrunc : &tCom);
         gNotes->modify(edit, true, desc);
 
         // Reselect the scaled notes.
-        gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(), false);
+        gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
     }
 
     void insertRows(int row, int numRows, bool curChartOnly) override {
@@ -968,13 +975,15 @@ struct EditingImpl : public Editing {
     // EditingImpl :: clipboard functions.
 
     void copySelectionToClipboard(bool remove) {
-        bool hasSelectedNotes = !gNotes->noneSelected();
+        bool hasSelectedNotes = !gNotes->noneSelected() ||
+                                !(gSelection->getSelectedRegion()).isEmpty();
         bool hasSelectedSegments = !gTempoBoxes->noneSelected();
 
         if (hasSelectedNotes && hasSelectedSegments) {
-            HudError(
-                "Both timing segments and notes selected, cannot copy both.");
-            return;
+            HudWarning(
+                "Both timing segments and notes selected, copying notes only.");
+            gNotes->copyToClipboard(myUseTimeBasedCopy);
+            if (remove) gNotes->removeSelectedNotes();
         } else if (hasSelectedNotes && !hasSelectedSegments) {
             gNotes->copyToClipboard(myUseTimeBasedCopy);
             if (remove) gNotes->removeSelectedNotes();

@@ -380,7 +380,7 @@ struct MinimapImpl : public Minimap {
 
         // Draw the region selection if there is one.
         auto region = gSelection->getSelectedRegion();
-        if (!region.isOmni()) {
+        if (!region.isEmpty()) {
             double top = gView->rowToOffset(region.beginRow);
             double btm = gView->rowToOffset(region.endRow);
             drawRegion(rect.x, rect.w, top, btm,

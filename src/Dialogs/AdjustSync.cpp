@@ -217,7 +217,7 @@ void DialogAdjustSync::onFindBPM() {
     if (!myTempoDetector) {
         myResetBPMDetection();
         auto region = gSelection->getSelectedRegion();
-        if (!region.isOmni()) {
+        if (!region.isEmpty()) {
             myDetectionRow = region.beginRow;
             double time = gTempo->rowToTime(region.beginRow);
             double len = gTempo->rowToTime(region.endRow) - time;

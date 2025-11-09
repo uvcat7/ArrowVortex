@@ -13,10 +13,10 @@ struct SelectionRegion {
     int beginRow;
     int endRow;
 
-    const bool isOmni() const { return this->beginRow == this->endRow; }
+    const bool isEmpty() const { return this->beginRow == this->endRow; }
 
     const bool rowIsInRegion(int row) const {
-        return this->isOmni() || this->beginRow <= row && row <= this->endRow;
+        return this->isEmpty() || this->beginRow <= row && row <= this->endRow;
     }
 };
 
