@@ -351,6 +351,26 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p,
     }
 }
 
+static bool IsQuantizationCompressionValid(char* measureText, int quantization,
+                                           int numCols) {
+    // Create an empty note line for quick comparison.
+    std::string emptylinestr(numCols, '0');
+    const char* emptyline = emptylinestr.c_str();
+    char* line = measureText;
+    float mod = static_cast<float>(ROWS_PER_NOTE_SECTION) / quantization;
+    for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j, line += numCols) {
+        float rem = round(fmod(j, mod));
+        // Check all the compressed rows and make sure they are
+        // empty
+        if (rem > 0 && rem < static_cast<int>(mod) &&
+            memcmp(line, emptyline, numCols) != 0) {
+            return false;
+            break;
+        }
+    }
+    return true;
+}
+
 static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
                        char* notes) {
     char* p = notes;
@@ -421,26 +441,35 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
 
             // Try to find custom quantizations in any 192nd snap measures
             if (numLines == ROWS_PER_NOTE_SECTION) {
-                // Nothing better to than to check them all by hand
-                for (int i = 4; i < ROWS_PER_NOTE_SECTION; i++) {
-                    bool valid = true;
-                    line = measureText;
-                    float mod = static_cast<float>(ROWS_PER_NOTE_SECTION) / i;
-                    for (int j = 0; valid && j < ROWS_PER_NOTE_SECTION;
-                         ++j, line += numCols) {
-                        float rem = round(fmod(j, mod));
-                        // Check all the compressed rows and make sure they are
-                        // empty
-                        if (rem > 0 && rem < static_cast<int>(mod) &&
-                            memcmp(line, emptyline, numCols) != 0) {
-                            valid = false;
+                // First check common quantizations up to 64ths, then standard
+                // abnormal quantizations, before checking everything up to
+                // 96ths. We don't want to check between 96ths and 192nds
+                // because anything other than full 192nds stream will false
+                // trigger the detection, so we stick to 192nds.
+                for (int i = 0; i < NUM_MEASURE_SUBDIV - 2; i++) {
+                    if (IsQuantizationCompressionValid(
+                            measureText, MEASURE_SUBDIV[i], numCols)) {
+                        quantization = MEASURE_SUBDIV[i];
+                        break;
+                    }
+                }
+                if (quantization == ROWS_PER_NOTE_SECTION) {
+                    static const int ABNORMAL_QUANTS[] = {20, 28, 36, 40};
+                    for (auto q : ABNORMAL_QUANTS) {
+                        if (IsQuantizationCompressionValid(measureText, q,
+                                                           numCols)) {
+                            quantization = q;
                             break;
                         }
                     }
-                    // The first (smallest) match is always the best
-                    if (valid) {
-                        quantization = i;
-                        break;
+                }
+                if (quantization == ROWS_PER_NOTE_SECTION) {
+                    for (int i = 5; i < ROWS_PER_NOTE_SECTION / 2; i++) {
+                        if (IsQuantizationCompressionValid(measureText, i,
+                                                           numCols)) {
+                            quantization = i;
+                            break;
+                        }
                     }
                 }
             }

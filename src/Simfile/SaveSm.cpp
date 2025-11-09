@@ -61,7 +61,7 @@ static std::string Escape(const char* name, const char* str) {
     Str::replace(s, "\\", "\\\\");
     Str::replace(s, ":", "\\:");
     Str::replace(s, ";", "\\;");
-    Str::replace(s, ";", "\\#");
+    Str::replace(s, "#", "\\#");
     return s;
 }
 
@@ -71,7 +71,7 @@ static std::string Escape(const std::string& name, const std::string& _str) {
     Str::replace(s, "\\", "\\\\");
     Str::replace(s, ":", "\\:");
     Str::replace(s, ";", "\\;");
-    Str::replace(s, ";", "\\#");
+    Str::replace(s, "#", "\\#");
     return s;
 }
 
