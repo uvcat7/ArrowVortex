@@ -12,6 +12,7 @@
 #include <Editor/View.h>
 
 #include <cmath>
+#include <algorithm>
 #include <Core/Core.h>
 #include <Core/Input.h>
 #include <Core/Texture.h>
@@ -317,6 +318,10 @@ struct SelectionImpl : public Selection {
         }
         for (auto& note : *gNotes) {
             if (note.isSelected) out.append(CompressNote(note));
+        }
+        if (!std::is_sorted(out.begin(), out.end(),
+                            LessThanRowCol<Note, Note>)) {
+            std::sort(out.begin(), out.end(), LessThanRowCol<Note, Note>);
         }
         return out.size();
     }

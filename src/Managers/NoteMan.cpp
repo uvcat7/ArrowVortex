@@ -359,8 +359,10 @@ struct NotesManImpl : public NotesMan {
 
             if (undo) {
                 NOTE_MAN->myApplyNotes(bound.chart, rem, add, false);
+                NOTE_MAN->select(SELECT_SET, rem.begin(), rem.size(), true);
             } else {
                 NOTE_MAN->myApplyNotes(bound.chart, add, rem, !redo);
+                NOTE_MAN->select(SELECT_SET, add.begin(), add.size(), redo);
             }
         }
         return msg;
