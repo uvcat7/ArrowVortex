@@ -7,6 +7,7 @@
 #include <Core/Shader.h>
 #include <Core/Utils.h>
 
+#include <System/File.h>
 #include <System/Debug.h>
 
 #include <set>
@@ -56,7 +57,7 @@ Texture::Data* TextureManager::load(fs::path path, Texture::Format fmt,
     if (!TM) return nullptr;
 
     // Combine path/format/mipmap information to form the key String.
-    std::string key(reinterpret_cast<const char*>(path.u8string().c_str()));
+    std::string key = pathToUtf8(path);
     key = key + ("0" + fmt);
     key = key + (mipmap ? "y" : "n");
 

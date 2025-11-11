@@ -155,8 +155,8 @@ struct NotefieldImpl : public Notefield {
                 filename = gSimfile->get()->background;
             }
             if (filename.length()) {
-                fs::path path = fs::path(gSimfile->getDir().c_str());
-                path.append(filename);
+                fs::path path = utf8ToPath(gSimfile->getDir());
+                path.append(stringToUtf8(filename));
                 ImageLoader::Data img =
                     ImageLoader::load(path, ImageLoader::RGBA);
                 if (img.pixels == nullptr) {

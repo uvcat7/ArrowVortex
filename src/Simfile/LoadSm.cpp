@@ -667,8 +667,7 @@ static void ParseTag(ParseData& data, std::string tag, char* val) {
 bool LoadSm(fs::path path, Simfile* sim) {
     ParseData data;
 
-    auto ext = std::string(
-        reinterpret_cast<const char*>(path.extension().u8string().c_str()));
+    auto ext = pathToUtf8(path.extension());
     Str::toLower(ext);
     data.sim = sim;
     data.chart = nullptr;

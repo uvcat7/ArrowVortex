@@ -225,8 +225,7 @@ bool Sound::load(fs::path path, bool threaded, std::string& title,
     if (std::ifstream file(path.c_str(), std::ios::in | std::ios::binary);
         file.good()) {
         // Call the load function associated with the extension.
-        auto ext = std::string(
-            reinterpret_cast<char*>(path.extension().u8string().data()));
+        auto ext = pathToUtf8(path.extension());
         Str::toLower(ext);
         if (ext == ".ogg")
             source = LoadOgg(std::move(file), title, artist);
@@ -236,7 +235,7 @@ bool Sound::load(fs::path path, bool threaded, std::string& title,
             source = LoadWav(std::move(file), title, artist);
         else {
             Debug::blockBegin(Debug::ERROR, "could not load audio file");
-            Debug::log("file: %s\n", path.u8string().c_str());
+            Debug::log("file: %s\n", pathToUtf8(path).c_str());
             Debug::log("reason: unknown audio format\n");
             Debug::blockEnd();
         }

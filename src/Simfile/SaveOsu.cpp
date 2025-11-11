@@ -253,11 +253,11 @@ static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
 
 bool SaveOsu(const Simfile* sim, bool backup) {
     if (sim->charts.empty()) {
-        fs::path path = fs::path(sim->dir.c_str());
-        path.append(sim->file.c_str());
+        fs::path path = utf8ToPath(sim->dir);
+        path.append(stringToUtf8(sim->file));
         path.append(".osu");
         SaveChart(path, sim, nullptr);
-        HudInfo("Saved: %s", path.filename().c_str());
+        HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
     } else {
         std::map<std::string, int> duplicateCounters;
         for (auto chart : sim->charts) {
@@ -269,10 +269,10 @@ bool SaveOsu(const Simfile* sim, bool backup) {
                 file += Str::fmt(" %1").arg(counter).str;
             }
             file += "].osu";
-            path.append(sim->file.c_str());
+            path.append(stringToUtf8(sim->file));
             SaveChart(path, sim, chart);
         }
-        HudInfo("Saved: %s", sim->file.c_str());
+        HudInfo("Saved: %s", utf8ToPath(sim->file).c_str());
     }
 
     return true;

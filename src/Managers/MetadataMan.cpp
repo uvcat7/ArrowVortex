@@ -203,8 +203,7 @@ struct MetadataManImpl : public MetadataMan {
             paths.push_back(path);
         }
         for (auto& path : paths) {
-            std::string f(reinterpret_cast<const char*>(
-                path.filename().u8string().c_str()));
+            std::string f = pathToUtf8(path.filename());
             Str::toLower(f);
             std::string cmp[] = {" ", "-", "_"};
             for (auto& s : cmp) {
@@ -230,8 +229,7 @@ struct MetadataManImpl : public MetadataMan {
         auto audioFiles =
             File::findFiles(gSimfile->getDir(), false, ".ogg;.wav;.mp3");
         for (auto& audioFile : audioFiles) {
-            auto ext = std::string(reinterpret_cast<const char*>(
-                audioFile.extension().u8string().c_str()));
+            auto ext = pathToUtf8(audioFile.extension());
             Str::toLower(ext);
             if (ext == ".ogg" && priority < 3) {
                 out = audioFile;

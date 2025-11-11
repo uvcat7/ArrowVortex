@@ -517,7 +517,7 @@ static bool ParseDir(Vector<OsuFile*>& out, fs::path dir, std::string& err) {
 
 bool LoadOsu(fs::path path, Simfile* sim) {
     bool result = true;
-    bool isZip = (path.extension().u8string() == u8"osz");
+    bool isZip = (pathToUtf8(path.extension()) == "osz");
 
     // Parse all osu files in the current directory.
     std::string err;
@@ -525,7 +525,7 @@ bool LoadOsu(fs::path path, Simfile* sim) {
     if (isZip) {
         // ParseOsz(files, path, err);
     } else {
-        ParseDir(files, fs::path(sim->dir), err);
+        ParseDir(files, utf8ToPath(sim->dir), err);
     }
 
     // Check if there are any osu files.

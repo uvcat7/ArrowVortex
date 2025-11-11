@@ -408,8 +408,7 @@ bool LoadDwi(fs::path path, Simfile* sim) {
     simname = simname.substr(0, simname.find_last_of("."));
     Str::toLower(simname);
     for (auto& path : paths) {
-        std::string f(
-            reinterpret_cast<const char*>(path.filename().u8string().c_str()));
+        std::string f = pathToUtf8(path.filename());
         std::string fl(f);
         Str::toLower(fl);
 

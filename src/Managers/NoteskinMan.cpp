@@ -232,11 +232,11 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
         std::string filename =
             type.supportsAll ? "all-styles.txt" : skin->style->id + ".txt";
         path = fs::path("noteskins/" + type.name + "/");
-        path.append(filename);
+        path.append(stringToUtf8(filename));
         if (doc.loadFile(path) == XMR_SUCCESS) {
             loadFallback = false;
         } else {
-            HudError("Unable to load noteskin: %s", path.c_str());
+            HudError("Unable to load noteskin: %s", pathToUtf8(path).c_str());
         }
     }
 
@@ -244,7 +244,7 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
     if (loadFallback) {
         path = fs::path("noteskins/fallback.txt");
         if (doc.loadFile(path) != XMR_SUCCESS) {
-            HudError("Unable to load noteskin: %s", path.c_str());
+            HudError("Unable to load noteskin: %s", pathToUtf8(path).c_str());
         }
     }
 
@@ -302,17 +302,17 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
 
     // Load the noteskin textures.
     auto notesPath = fs::path(dir);
-    notesPath.append(node->get("Texture-notes", ""));
+    notesPath.append(stringToUtf8(node->get("Texture-notes", "")));
     if (!LoadTexture(notesPath, skin->noteTex)) {
         HudError("Could not load notes texture.");
     }
     auto receptorsPath = fs::path(dir);
-    receptorsPath.append(node->get("Texture-receptors", ""));
+    receptorsPath.append(stringToUtf8(node->get("Texture-receptors", "")));
     if (!LoadTexture(receptorsPath, skin->recepTex)) {
         HudError("Could not load receptors texture.");
     }
     auto glowPath = fs::path(dir);
-    glowPath.append(node->get("Texture-glow", ""));
+    glowPath.append(stringToUtf8(node->get("Texture-glow", "")));
     if (!LoadTexture(glowPath, skin->glowTex)) {
         HudError("Could not load glow texture.");
     }
@@ -368,16 +368,14 @@ struct NoteskinManImpl : public NoteskinMan {
             type.supportsAll = false;
 
             // Capitalize the first letter.
-            type.name = std::string(reinterpret_cast<const char*>(
-                skin.filename().u8string().c_str()));
+            type.name = pathToUtf8(skin.filename());
             char* c = &type.name[0];
             if (*c >= 'a' && *c <= 'z') *c += 'A' - 'a';
 
             // Make a list of available noteskin files.
             for (auto files : File::findFiles(skin, false, ".txt")) {
                 files.replace_extension();
-                std::string id = std::string(reinterpret_cast<const char*>(
-                    files.filename().u8string().c_str()));
+                std::string id = pathToUtf8(files.filename());
                 if (id == "all-styles") {
                     type.supportsAll = true;
                 } else {

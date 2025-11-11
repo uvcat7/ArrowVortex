@@ -316,8 +316,7 @@ struct EditorImpl : public Editor, public InputHandler {
             if (path.empty()) return;
 
             if (std::ifstream testPath(path.c_str()); testPath.good())
-                myFontPath = std::string(
-                    reinterpret_cast<const char*>(path.u8string().c_str()));
+                myFontPath = pathToUtf8(path);
         }
     }
 
@@ -465,7 +464,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
     bool openSimfile(int recentFileIndex) override {
         if (recentFileIndex >= 0 || recentFileIndex < myRecentFiles.size()) {
-            return openSimfile(myRecentFiles[recentFileIndex]);
+            return openSimfile(utf8ToPath(myRecentFiles[recentFileIndex]));
         }
         return false;
     }
@@ -535,8 +534,8 @@ struct EditorImpl : public Editor, public InputHandler {
             saveFmt = SIM_OSU;
         }
 
-        fs::path save_path = fs::path(dir.c_str());
-        save_path.append(file.c_str());
+        fs::path save_path = utf8ToPath(dir);
+        save_path.append(stringToUtf8(file));
 
         // If the path is empty, ask a path from the user.
         if (save_path.empty() || showSaveAsDialog) {
@@ -561,8 +560,7 @@ struct EditorImpl : public Editor, public InputHandler {
                                                  filters, &filterIndex);
             if (path.empty()) return false;
 
-            auto ext = std::string(reinterpret_cast<const char*>(
-                path.extension().u8string().c_str()));
+            auto ext = pathToUtf8(path.extension());
             Str::toLower(ext);
 
             // Update the save format based on the selected filter index.
@@ -603,8 +601,7 @@ struct EditorImpl : public Editor, public InputHandler {
     // EditorImpl :: recent files.
 
     void addToRecentfiles(fs::path path) {
-        std::string spath =
-            std::string(reinterpret_cast<const char*>(path.u8string().c_str()));
+        std::string spath = pathToUtf8(path);
         myRecentFiles.erase_values(spath);
         myRecentFiles.insert(0, spath, 1);
         myRecentFiles.truncate(MAX_RECENT_FILES);
@@ -730,8 +727,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void onCommandLineArgs(const std::string* args, int numArgs) override {
         if (numArgs >= 2 && args[1].length()) {
-            fs::path path(gSystem->getRunDir().c_str());
-            path.append(args[1].c_str());
+            fs::path path = utf8ToPath(gSystem->getRunDir());
+            path.append(stringToUtf8(args[1]));
             openSimfile(findSimfile(path, false));
         }
     }

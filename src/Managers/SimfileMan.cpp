@@ -149,16 +149,13 @@ struct SimfileManImpl : public SimfileMan {
         if (path.empty()) return false;
 
         // Extract the filename and extension.
-        std::string filename = std::string(
-            reinterpret_cast<const char*>(path.filename().u8string().c_str()));
-        std::string ext = std::string(
-            reinterpret_cast<const char*>(path.extension().u8string().c_str()));
+        std::string filename = pathToUtf8(path.filename());
+        std::string ext = pathToUtf8(path.extension());
         Str::toLower(ext);
 
         // Create a new simfile.
         mySimfile = new Simfile;
-        mySimfile->dir = std::string(reinterpret_cast<const char*>(
-            path.parent_path().u8string().c_str()));
+        mySimfile->dir = pathToUtf8(path.parent_path());
         mySimfile->file = filename;
         HudInfo("Opening: %s", filename.c_str());
 
@@ -192,10 +189,10 @@ struct SimfileManImpl : public SimfileMan {
         // Try to fill in some metadata.
         gMetadata->update(mySimfile);
         if (loadedFromAudio) {
-            mySimfile->background = std::string(reinterpret_cast<const char*>(
-                gMetadata->findBackgroundFile().filename().u8string().c_str()));
-            mySimfile->banner = std::string(reinterpret_cast<const char*>(
-                gMetadata->findBannerFile().filename().u8string().c_str()));
+            mySimfile->background =
+                pathToUtf8(gMetadata->findBackgroundFile().filename());
+            mySimfile->banner =
+                pathToUtf8(gMetadata->findBannerFile().filename());
             mySimfile->title = gMusic->getTitle();
             mySimfile->artist = gMusic->getArtist();
         }

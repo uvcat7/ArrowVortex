@@ -9,6 +9,18 @@
 
 namespace Vortex {
 
+std::string pathToUtf8(fs::path path) {
+    return std::string(reinterpret_cast<const char*>(path.u8string().c_str()));
+}
+
+std::u8string stringToUtf8(std::string str) {
+    return std::u8string(reinterpret_cast<const char8_t*>(str.c_str()));
+}
+
+fs::path utf8ToPath(std::string str) {
+    return fs::path(reinterpret_cast<const char8_t*>(str.c_str()));
+}
+
 // ================================================================================================
 // File utilities.
 namespace File {
@@ -44,8 +56,7 @@ Vector<std::string> getLines(fs::path path, bool* success) {
 }
 
 static bool HasValidExt(fs::path path, const Vector<std::string>& filters) {
-    auto ext = std::string(
-        reinterpret_cast<const char*>(path.extension().u8string().c_str()));
+    auto ext = pathToUtf8(path.extension());
     for (auto& filter : filters) {
         if (Str::iequal(filter, ext)) {
             return true;

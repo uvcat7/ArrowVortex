@@ -146,8 +146,8 @@ struct MusicImpl : public Music, public MixSource {
 
         if (gSimfile->isClosed()) return;
 
-        fs::path path = fs::path(gSimfile->getDir());
-        path.append(gSimfile->get()->music);
+        fs::path path = utf8ToPath(gSimfile->getDir());
+        path.append(stringToUtf8(gSimfile->get()->music));
 
         if (gSimfile->get()->music.empty()) {
             HudError("Could not load music, the music property is blank.");
@@ -352,10 +352,9 @@ struct MusicImpl : public Music, public MixSource {
         std::string dir = gSimfile->getDir();
         std::string file = gSimfile->get()->music;
 
-        fs::path path = fs::path(dir.c_str());
-        path.append(file.c_str());
-        auto ext = std::string(
-            reinterpret_cast<const char*>(path.extension().u8string().c_str()));
+        fs::path path = utf8ToPath(dir);
+        path.append(stringToUtf8(file));
+        auto ext = pathToUtf8(path.extension());
         Str::toLower(ext);
 
         if (ext == ".ogg") {
@@ -368,12 +367,10 @@ struct MusicImpl : public Music, public MixSource {
             HudNote("Conversion is currently in progress.");
         } else {
             myOggConversionThread = new OggConversionThread;
-            myOggConversionThread->inPath = std::string(
-                reinterpret_cast<const char*>(path.u8string().c_str()));
+            myOggConversionThread->inPath = pathToUtf8(path);
             fs::path ogg_path = fs::path(path);
             ogg_path.replace_extension(".ogg");
-            myOggConversionThread->outPath = std::string(
-                reinterpret_cast<const char*>(ogg_path.u8string().c_str()));
+            myOggConversionThread->outPath = pathToUtf8(ogg_path);
 
             if (gEditor->hasMultithreading()) {
                 auto box = myInfoBox.create();
@@ -397,9 +394,8 @@ struct MusicImpl : public Music, public MixSource {
     void finishOggConversion() {
         if (myOggConversionThread) {
             if (myOggConversionThread->error.empty()) {
-                gMetadata->setMusicPath(std::string(reinterpret_cast<
-                                                    const char*>(
-                    gMetadata->findMusicFile().filename().u8string().c_str())));
+                gMetadata->setMusicPath(
+                    pathToUtf8(gMetadata->findMusicFile().filename()));
             } else {
                 HudError("Conversion failed: %s.",
                          myOggConversionThread->error.c_str());

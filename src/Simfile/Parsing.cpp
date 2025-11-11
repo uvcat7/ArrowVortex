@@ -169,10 +169,8 @@ bool ParseBeat(const char* str, int& outRow) {
 static void ClearSimfile(Simfile& sim, fs::path path) {
     sim.~Simfile();
     new (&sim) Simfile();
-    sim.dir = std::string(
-        reinterpret_cast<const char*>(path.parent_path().u8string().c_str()));
-    sim.file = std::string(
-        reinterpret_cast<const char*>(path.filename().u8string().c_str()));
+    sim.dir = pathToUtf8(path.parent_path());
+    sim.file = pathToUtf8(path.filename());
 }
 
 bool LoadSimfile(Simfile& sim, fs::path path) {
@@ -181,8 +179,7 @@ bool LoadSimfile(Simfile& sim, fs::path path) {
 
     // Call the load function associated with the extension.
     bool success = false;
-    std::string ext = std::string(
-        reinterpret_cast<const char*>(path.extension().u8string().c_str()));
+    std::string ext = pathToUtf8(path.extension());
     Str::toLower(ext);
     if (ext == ".sm" || ext == ".ssc") {
         success = Sm::LoadSm(path, &sim);
@@ -192,7 +189,7 @@ bool LoadSimfile(Simfile& sim, fs::path path) {
         success = Osu::LoadOsu(path, &sim);
     } else {
         Debug::blockBegin(Debug::ERROR, "could not load sim");
-        Debug::log("file: %s\n", path.u8string().c_str());
+        Debug::log("file: %s\n", pathToUtf8(path).c_str());
         Debug::log("reason: unknown sim format\n");
         Debug::blockEnd();
     }

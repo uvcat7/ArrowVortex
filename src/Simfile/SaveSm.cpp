@@ -601,9 +601,8 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
     data.chart = nullptr;
     data.sim = sim;
 
-    fs::path path =
-        fs::path(reinterpret_cast<const char8_t*>(sim->dir.c_str()));
-    path.append(reinterpret_cast<const char8_t*>(sim->file.c_str()));
+    fs::path path = utf8ToPath(sim->dir);
+    path.append(stringToUtf8(sim->file));
     path.replace_extension(ssc ? ".ssc" : ".sm");
     fs::path oldPath = fs::path(path);
     oldPath.concat(".old");
@@ -615,16 +614,14 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
         fs::rename(path, oldPath, error);
         if (error) {
             HudError("Could not backup \"%s\", error %s.",
-                     path.u8string().c_str(), error.message().c_str());
+                     pathToUtf8(path).c_str(), error.message().c_str());
         }
     }
 
     // Open the output file.
     data.file.open(path.c_str());
     if (data.file.fail()) return false;
-    GiveUnicodeWarning(
-        std::string(reinterpret_cast<char*>(path.filename().u8string().data())),
-        "sim");
+    GiveUnicodeWarning(pathToUtf8(path.filename()), "sim");
 
     // Start with a version tag for SSC files.
     if (ssc) WriteTag(data, "VERSION", "0.83", ALWAYS, true);
@@ -672,7 +669,7 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
         data.chart = nullptr;
     }
 
-    HudInfo("Saved: %s", path.filename().u8string().c_str());
+    HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
 
     return true;
 }
