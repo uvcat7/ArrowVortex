@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -22,7 +24,7 @@ struct Editor {
     /// Closes the current simfile and tries to load a new simfile from the
     /// given path. If closing is aborted or loading fails, false is returned.
     /// If loading succeeds, true is returned.
-    virtual bool openSimfile(const std::string& path) = 0;
+    virtual bool openSimfile(fs::path path) = 0;
 
     /// Calls "openSimfile" with a path from the list of recently opened files.
     virtual bool openSimfile(int recentFileIndex) = 0;

@@ -390,7 +390,7 @@ static void ParseTag(Simfile* sim, std::string tag, char* val) {
 // ===================================================================================
 // File loading.
 
-bool LoadDwi(const std::string& path, Simfile* sim) {
+bool LoadDwi(fs::path path, Simfile* sim) {
     // Read the file.
     std::string str;
     if (!ParseSimfile(str, path)) return false;
@@ -408,7 +408,8 @@ bool LoadDwi(const std::string& path, Simfile* sim) {
     simname = simname.substr(0, simname.find_last_of("."));
     Str::toLower(simname);
     for (auto& path : paths) {
-        std::string f(path.filename());
+        std::string f(
+            reinterpret_cast<const char*>(path.filename().u8string().c_str()));
         std::string fl(f);
         Str::toLower(fl);
 

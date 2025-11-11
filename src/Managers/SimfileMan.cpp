@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <math.h>
 #include <set>
+#include <string>
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
@@ -139,7 +140,7 @@ struct SimfileManImpl : public SimfileMan {
     // ================================================================================================
     // SimfileManImpl :: open and close functions.
 
-    bool load(const std::string& path) override {
+    bool load(fs::path path) override {
         close();
 
         bool loadedFromAudio = false;
@@ -148,20 +149,22 @@ struct SimfileManImpl : public SimfileMan {
         if (path.empty()) return false;
 
         // Extract the filename and extension.
-        Path file(path);
-        std::string filename = file.filename();
-        std::string ext = file.ext();
+        std::string filename = std::string(
+            reinterpret_cast<const char*>(path.filename().u8string().c_str()));
+        std::string ext = std::string(
+            reinterpret_cast<const char*>(path.extension().u8string().c_str()));
         Str::toLower(ext);
 
         // Create a new simfile.
         mySimfile = new Simfile;
-        mySimfile->dir = file.dir();
-        mySimfile->file = file.name();
+        mySimfile->dir = std::string(reinterpret_cast<const char*>(
+            path.parent_path().u8string().c_str()));
+        mySimfile->file = filename;
         HudInfo("Opening: %s", filename.c_str());
 
         // Check if we are loading a stepmania simfile.
-        if (ext == "sm" || ext == "ssc" || ext == "dwi" || ext == "osu" ||
-            ext == "osz") {
+        if (ext == ".sm" || ext == ".ssc" || ext == ".dwi" || ext == ".osu" ||
+            ext == ".osz") {
             if (!LoadSimfile(*mySimfile, path)) {
                 close();
                 return false;
@@ -189,8 +192,10 @@ struct SimfileManImpl : public SimfileMan {
         // Try to fill in some metadata.
         gMetadata->update(mySimfile);
         if (loadedFromAudio) {
-            mySimfile->background = gMetadata->findBackgroundFile();
-            mySimfile->banner = gMetadata->findBannerFile();
+            mySimfile->background = std::string(reinterpret_cast<const char*>(
+                gMetadata->findBackgroundFile().filename().u8string().c_str()));
+            mySimfile->banner = std::string(reinterpret_cast<const char*>(
+                gMetadata->findBannerFile().filename().u8string().c_str()));
             mySimfile->title = gMusic->getTitle();
             mySimfile->artist = gMusic->getArtist();
         }

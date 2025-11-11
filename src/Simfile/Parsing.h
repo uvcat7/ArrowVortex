@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Simfile/Simfile.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -8,7 +10,7 @@ namespace Vortex {
 // Parsing utilities.
 
 /// Opens and reads a text file, removing comments, tabs, and carriage returns.
-bool ParseSimfile(std::string& out, const std::string& path);
+bool ParseSimfile(std::string& out, fs::path path);
 
 /// Parses the next tag-value pair in a list of sm-style tags (e.g. #TAG:VAL;).
 bool ParseNextTag(char*& p, char*& outTag, char*& outVal);
@@ -37,7 +39,7 @@ bool ParseBeat(const char* str, int& outRow);
 
 /// Loads a simfile from the given path and writes the output data to song and
 /// charts.
-bool LoadSimfile(Simfile& simfile, const std::string& path);
+bool LoadSimfile(Simfile& simfile, fs::path path);
 
 /// Saves the given simfile, to the path specified in the simfile, in the given
 /// save format.

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Simfile/Simfile.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -13,7 +15,7 @@ struct SimfileMan {
     virtual void onChanges(int changes) = 0;
 
     /// Loads a new simfile from file and opens it for editing.
-    virtual bool load(const std::string& path) = 0;
+    virtual bool load(fs::path path) = 0;
 
     /// Saves the simfile that is currently open for editing.
     virtual bool save(const std::string& dir, const std::string& name,

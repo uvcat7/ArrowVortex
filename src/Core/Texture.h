@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -28,7 +30,7 @@ class Texture {
     Texture(int w, int h, Format fmt = RGBA);
 
     /// Loads a texture from an image file.
-    Texture(const char* path, bool mipmap = false, Format fmt = RGBA);
+    Texture(fs::path path, bool mipmap = false, Format fmt = RGBA);
 
     /// Creates a texture from a buffer of [w * h * channels] pixel values.
     Texture(int w, int h, const uint8_t* pixeldata, bool mipmap = false,
@@ -71,12 +73,12 @@ class Texture {
     static void LogInfo();
 
     /// Creates a set of textures from a sprite sheet / tile sheet.
-    static int createTiles(const char* path, int tileW, int tileH, int numTiles,
+    static int createTiles(fs::path path, int tileW, int tileH, int numTiles,
                            Texture* outTiles, bool mipmap = false,
                            Format fmt = RGBA);
 
     /// Creates a set of textures from a sprite sheet / tile sheet.
-    static int createTiles(const char* path, int tileW, int tileH, int numTiles,
+    static int createTiles(fs::path path, int tileW, int tileH, int numTiles,
                            std::vector<Texture>& outTiles, bool mipmap = false,
                            Format fmt = RGBA);
 

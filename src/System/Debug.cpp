@@ -1,7 +1,5 @@
 #include <System/Debug.h>
 
-#include <Core/WideString.h>
-
 #include <io.h>
 #include <fcntl.h>
 #include <stdio.h>

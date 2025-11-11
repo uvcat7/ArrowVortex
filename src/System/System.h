@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Input.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -46,17 +48,15 @@ struct System {
                                   Icon icon = I_INFO) = 0;
 
     /// Shows an open file dialog, see class description.
-    virtual std::string openFileDlg(
-        const std::string& title,
-        const std::string& initialPath = std::string(),
+    virtual fs::path openFileDlg(
+        const std::string& title, fs::path initialPath = std::string(),
         const std::string& extFilters = std::string()) = 0;
 
     /// Shows a save file dialog, see class description.
-    virtual std::string saveFileDlg(
-        const std::string& title,
-        const std::string& initialPath = std::string(),
-        const std::string& extFilters = std::string(),
-        int* outFilterIndex = nullptr) = 0;
+    virtual fs::path saveFileDlg(const std::string& title,
+                                 fs::path initialPath = std::string(),
+                                 const std::string& extFilters = std::string(),
+                                 int* outFilterIndex = nullptr) = 0;
 
     /// Runs a system command.
     virtual bool runSystemCommand(const std::string& cmd) = 0;

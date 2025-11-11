@@ -1,5 +1,4 @@
 ﻿#include <Core/StringUtils.h>
-#include <Core/WideString.h>
 #include <Core/Utils.h>
 
 #include <System/File.h>
@@ -17,6 +16,7 @@
 #include <fstream>
 #include <iomanip>
 #include <list>
+#include <filesystem>
 
 namespace Vortex {
 namespace Sm {
@@ -601,22 +601,30 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
     data.chart = nullptr;
     data.sim = sim;
 
-    Path path = sim->dir + sim->file + (ssc ? ".ssc" : ".sm");
-    fs::path fpath(Widen(path.str).str());
+    fs::path path =
+        fs::path(reinterpret_cast<const char8_t*>(sim->dir.c_str()));
+    path.append(reinterpret_cast<const char8_t*>(sim->file.c_str()));
+    path.replace_extension(ssc ? ".ssc" : ".sm");
+    fs::path oldPath = fs::path(path);
+    oldPath.concat(".old");
 
     // If a backup file is requested, rename the existing sim before saving over
     // it.
-    if (backup && fs::exists(fpath)) {
-        if (!File::moveFile(path.str, path.str + ".old", true)) {
-            std::string name = path.filename();
-            HudError("Could not backup \"%s\".", name.c_str());
+    if (backup && fs::exists(path)) {
+        std::error_code error;
+        fs::rename(path, oldPath, error);
+        if (error) {
+            HudError("Could not backup \"%s\", error %s.",
+                     path.u8string().c_str(), error.message().c_str());
         }
     }
 
     // Open the output file.
-    data.file.open(fpath);
+    data.file.open(path.c_str());
     if (data.file.fail()) return false;
-    GiveUnicodeWarning(path, "sim");
+    GiveUnicodeWarning(
+        std::string(reinterpret_cast<char*>(path.filename().u8string().data())),
+        "sim");
 
     // Start with a version tag for SSC files.
     if (ssc) WriteTag(data, "VERSION", "0.83", ALWAYS, true);
@@ -664,7 +672,7 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
         data.chart = nullptr;
     }
 
-    HudInfo("Saved: %s", path.filename().c_str());
+    HudInfo("Saved: %s", path.filename().u8string().c_str());
 
     return true;
 }

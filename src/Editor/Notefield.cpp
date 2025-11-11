@@ -155,9 +155,10 @@ struct NotefieldImpl : public Notefield {
                 filename = gSimfile->get()->background;
             }
             if (filename.length()) {
-                std::string path = gSimfile->getDir() + filename;
+                fs::path path = fs::path(gSimfile->getDir().c_str());
+                path.append(filename);
                 ImageLoader::Data img =
-                    ImageLoader::load(path.c_str(), ImageLoader::RGBA);
+                    ImageLoader::load(path, ImageLoader::RGBA);
                 if (img.pixels == nullptr) {
                     HudWarning("Could not open \"%s\".", filename.c_str());
                 } else {

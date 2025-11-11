@@ -232,7 +232,7 @@ struct StyleManImpl : public StyleMan {
 
     StyleManImpl() {
         XmrDoc doc;
-        if (doc.loadFile("settings/styles.txt") != XMR_SUCCESS) {
+        if (doc.loadFile(fs::path("settings/styles.txt")) != XMR_SUCCESS) {
             HudError("Could not load styles file.");
         }
         ForXmrNodesNamed(node, &doc, "style") {

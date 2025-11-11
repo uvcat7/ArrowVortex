@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -181,7 +183,7 @@ struct XmrDoc : public XmrNode {
     XmrDoc();
 
     /// Loads an XMR document from an XMR file.
-    XmrResult loadFile(const char* path);
+    XmrResult loadFile(fs::path path);
 
     /// Loads an XMR document from a string of text.
     XmrResult loadString(const char* str);

@@ -264,7 +264,7 @@ struct TextOverlayImpl : public TextOverlay {
             LoadShortcuts();
         } else if (textOverlayMode_ == DEBUG_LOG) {
             bool success;
-            debugLog_ = File::getText("ArrowVortex.log", &success);
+            debugLog_ = File::getText(fs::path("ArrowVortex.log"), &success);
             if (success) {
                 Str::erase(debugLog_, 0, 3);  // UTF-8 BOM.
             } else {

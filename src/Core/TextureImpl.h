@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Texture.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -27,8 +29,7 @@ struct TextureManager {
     static void create();
     static void destroy();
 
-    static Texture::Data* load(const char* path, Texture::Format fmt,
-                               bool mipmap);
+    static Texture::Data* load(fs::path path, Texture::Format fmt, bool mipmap);
     static Texture::Data* load(int w, int h, Texture::Format fmt, bool mipmap,
                                const uint8_t* pixels);
 

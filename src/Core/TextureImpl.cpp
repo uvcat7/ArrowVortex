@@ -50,13 +50,13 @@ void TextureManager::destroy() {
     TM = nullptr;
 }
 
-Texture::Data* TextureManager::load(const char* path, Texture::Format fmt,
+Texture::Data* TextureManager::load(fs::path path, Texture::Format fmt,
                                     bool mipmap) {
     // If textures are created before goo is initialized, just return null.
     if (!TM) return nullptr;
 
     // Combine path/format/mipmap information to form the key String.
-    std::string key(path);
+    std::string key(reinterpret_cast<const char*>(path.u8string().c_str()));
     key = key + ("0" + fmt);
     key = key + (mipmap ? "y" : "n");
 
@@ -417,7 +417,7 @@ Texture::Texture(int w, int h, Format fmt) : data_(nullptr) {
     data_ = TexMan::load(w, h, fmt, false, pixels.begin());
 }
 
-Texture::Texture(const char* path, bool mipmap, Format fmt) : data_(nullptr) {
+Texture::Texture(fs::path path, bool mipmap, Format fmt) : data_(nullptr) {
     data_ = TexMan::load(path, fmt, mipmap);
 }
 
@@ -493,7 +493,7 @@ void Texture::LogInfo() {
     Debug::blockEnd();
 }
 
-int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
+int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
                          Texture* outTiles, bool mipmap, Format fmt) {
     ImageLoader::Data image = ImageLoader::load(path, TexLoadFormats[fmt]);
     int ch = sNumChannels[fmt];
@@ -520,7 +520,7 @@ int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
     return tileIndex;
 }
 
-int Texture::createTiles(const char* path, int tileW, int tileH, int numTiles,
+int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
                          std::vector<Texture>& outTiles, bool mipmap,
                          Format fmt) {
     ImageLoader::Data image = ImageLoader::load(path, TexLoadFormats[fmt]);

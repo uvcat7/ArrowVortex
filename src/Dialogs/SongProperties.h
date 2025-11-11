@@ -7,6 +7,8 @@
 #include <Core/Draw.h>
 
 #include <Simfile/Tempo.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -39,10 +41,9 @@ class DialogSongProperties : public EditorDialog {
     void mySetProperty(int p);
     void mySetDisplayBpm();
 
-    std::vector<Texture> extractSpriteSheet(const std::string& path,
-                                            const std::string& filename);
+    std::vector<Texture> extractSpriteSheet(fs::path path);
 
-    std::string fileDlgPath(const std::string& title);
+    fs::path fileDlgPath(const std::string& title);
 
     std::string myTitle;
     std::string mySubtitle;
