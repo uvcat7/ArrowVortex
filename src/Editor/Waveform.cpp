@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <algorithm>
+#include <future>
 
 #include <Core/Utils.h>
 #include <Core/Draw.h>
@@ -19,7 +20,7 @@
 #include <Managers/TempoMan.h>
 #include <Editor/Menubar.h>
 #include <Editor/TextOverlay.h>
-#include <Editor/Butterworth.h>
+#include <Iir.h>
 
 namespace Vortex {
 
@@ -43,15 +44,27 @@ struct WaveFilter {
     Vector<short> samplesR;
 
     static void lowPassFilter(const short* src, short* dst, int numFrames,
-                              int samplerate, double strength) {
-        double cutoff = 0.01 + 0.1 * (1.0 - strength);
-        LowPassFilter(dst, src, numFrames, cutoff);
+                              double samplerate, double strength) {
+        const int order = 3;
+        Iir::Butterworth::LowPass<order> filter;
+        double cutoff = std::min(
+            20050.0, std::max(50.0, 2 * pow(10, 4 * (1 - strength)) + 49));
+        filter.setup(samplerate, cutoff);
+        for (auto i = 0; i < numFrames; ++i) {
+            dst[i] = filter.filter(src[i]);
+        }
     }
 
     static void highPassFilter(const short* src, short* dst, int numFrames,
-                               int samplerate, double strength) {
-        double cutoff = 0.10 + 0.80 * strength;
-        HighPassFilter(dst, src, numFrames, cutoff);
+                               double samplerate, double strength) {
+        const int order = 3;
+        Iir::Butterworth::HighPass<order> filter;
+        double cutoff =
+            std::min(20000.0, std::max(0.5, 2 * pow(10, 4 * strength)));
+        filter.setup(samplerate, cutoff);
+        for (auto i = 0; i < numFrames; ++i) {
+            dst[i] = filter.filter(src[i]);
+        }
     }
 
     WaveFilter(Waveform::FilterType type, double strength)
@@ -71,7 +84,7 @@ struct WaveFilter {
         auto& music = gMusic->getSamples();
         if (music.isCompleted()) {
             int numFrames = music.getNumFrames();
-            int samplerate = music.getFrequency();
+            auto samplerate = static_cast<double>(music.getFrequency());
 
             samplesL.resize(numFrames, 0);
             samplesR.resize(numFrames, 0);

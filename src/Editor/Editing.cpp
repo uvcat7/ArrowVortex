@@ -3,30 +3,42 @@
 #include <algorithm>
 #include <set>
 
-#include <Core/Utils.h>
 #include <Core/StringUtils.h>
+#include <Core/Utils.h>
 #include <Core/Xmr.h>
 
-#include <System/System.h>
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <Simfile/SegmentGroup.h>
 
-#include <Editor/Music.h>
-#include <Editor/Selection.h>
-#include <Editor/View.h>
-#include <Editor/Notefield.h>
-#include <Editor/History.h>
 #include <Editor/Common.h>
-#include <Editor/Editor.h>
+#include <Editor/History.h>
 #include <Editor/Menubar.h>
+#include <Editor/Music.h>
+#include <Editor/Notefield.h>
+#include <Editor/Selection.h>
+#include <Editor/TempoBoxes.h>
+#include <Editor/View.h>
 
-#include <Managers/MetadataMan.h>
+#include <Managers/SimfileMan.h>
 #include <Managers/StyleMan.h>
 #include <Managers/TempoMan.h>
-#include <Managers/SimfileMan.h>
 
-#include <Core/Draw.h>
+#include <cmath>
+#include <Core/Core.h>
+#include <Core/Input.h>
+#include <Core/Vector.h>
+#include <cstdint>
+#include <Managers/ChartMan.h>
+#include <Managers/NoteMan.h>
+#include <Simfile/Chart.h>
+#include <Simfile/Common.h>
+#include <Simfile/NoteList.h>
+#include <Simfile/Notes.h>
+#include <Simfile/Segments.h>
+#include <Simfile/Tempo.h>
+#include <string>
 
 namespace Vortex {
 
@@ -347,10 +359,26 @@ struct EditingImpl : public Editing {
     }
 
     void deleteSelection() override {
-        if (gSelection->getType() == Selection::TEMPO) {
+        if (gChart->isClosed()) {
+            return;
+        }
+
+        // There's four different cases that need addressing
+        if (gNotes->noneSelected() && gTempoBoxes->noneSelected()) {
+            // Nothing is selected, so delete region
+            gNotes->removeSelectedNotes();
+        } else if (!gNotes->noneSelected() && gTempoBoxes->noneSelected()) {
+            // Some notes are selected, delete only those, not the region
+            gNotes->removeSelectedNotes();
+        } else if (gNotes->noneSelected() && !gTempoBoxes->noneSelected()) {
+            // Only segments are chosen, delete those
             gTempo->removeSelectedSegments();
         } else {
+            // Both segments and notes are chosen, make this removal atomic
+            gHistory->startChain();
             gNotes->removeSelectedNotes();
+            gTempo->removeSelectedSegments();
+            gHistory->finishChain("Deleted selected objects");
         }
     }
 
@@ -380,12 +408,11 @@ struct EditingImpl : public Editing {
         };
         if (numHolds > 0 || numRolls > 0) {
             auto* desc = descs + (numRolls ? (numHolds ? 2 : 1) : 0);
-            gNotes->modify(edit, true, desc);
+            gNotes->modify(edit, false, desc);
 
             // Reselect the notes.
-            if (gSelection->getType() == Selection::NOTES) {
-                gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
-            }
+            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
+                           false);
         } else {
             HudNote("There are no holds/rolls selected.");
         }
@@ -414,9 +441,8 @@ struct EditingImpl : public Editing {
             gNotes->modify(edit, false, &descs[type]);
 
             // Reselect the notes.
-            if (gSelection->getType() == Selection::NOTES) {
-                gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
-            }
+            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
+                           false);
         } else {
             HudNote("There are no holds/rolls selected.");
         }
@@ -444,9 +470,8 @@ struct EditingImpl : public Editing {
             gNotes->modify(edit, false, desc);
 
             // Reselect the notes.
-            if (gSelection->getType() == Selection::NOTES) {
-                gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
-            }
+            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(),
+                           false);
         } else {
             HudNote("There are no notes selected.");
         }
@@ -684,9 +709,7 @@ struct EditingImpl : public Editing {
         gNotes->modify(edit, false, descs + type);
 
         // Reselect the mirrored notes.
-        if (gSelection->getType() == Selection::NOTES) {
-            gNotes->select(SELECT_SET, edit.add.begin(), edit.rem.size());
-        }
+        gNotes->select(SELECT_SET, edit.add.begin(), edit.rem.size(), false);
     }
 
     void scaleNotes(int numerator, int denominator) override {
@@ -708,8 +731,9 @@ struct EditingImpl : public Editing {
 
         // If we are using region selection, we remove all expanded notes
         // outside the selection range.
-        if (gSelection->getType() == Selection::REGION) {
-            auto region = gSelection->getSelectedRegion();
+        auto region = gSelection->getSelectedRegion();
+
+        if (!region.isOmni()) {
             for (auto& it : edit.add) {
                 if (it.row > region.endRow) it.row = -1;
             }
@@ -726,9 +750,7 @@ struct EditingImpl : public Editing {
         gNotes->modify(edit, true, desc);
 
         // Reselect the scaled notes.
-        if (gSelection->getType() == Selection::NOTES) {
-            gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size());
-        }
+        gNotes->select(SELECT_SET, edit.add.begin(), edit.add.size(), false);
     }
 
     void insertRows(int row, int numRows, bool curChartOnly) override {
@@ -986,16 +1008,23 @@ struct EditingImpl : public Editing {
     // EditingImpl :: clipboard functions.
 
     void copySelectionToClipboard(bool remove) {
-        if (gSelection->getType() == Selection::NONE) {
-            std::string time = Str::formatTime(gView->getCursorTime());
-            gSystem->setClipboardText(Str::fmt("%1").arg(time));
-            HudNote("Copied timestamp to Clipboard.");
-        } else if (gSelection->getType() == Selection::TEMPO) {
+        bool hasSelectedNotes = !gNotes->noneSelected();
+        bool hasSelectedSegments = !gTempoBoxes->noneSelected();
+
+        if (hasSelectedNotes && hasSelectedSegments) {
+            HudError(
+                "Both timing segments and notes selected, cannot copy both.");
+            return;
+        } else if (hasSelectedNotes && !hasSelectedSegments) {
+            gNotes->copyToClipboard(myUseTimeBasedCopy);
+            if (remove) gNotes->removeSelectedNotes();
+        } else if (!hasSelectedNotes && hasSelectedSegments) {
             gTempo->copyToClipboard();
             if (remove) gTempo->removeSelectedSegments();
         } else {
-            gNotes->copyToClipboard(myUseTimeBasedCopy);
-            if (remove) gNotes->removeSelectedNotes();
+            std::string time = Str::formatTime(gView->getCursorTime());
+            gSystem->setClipboardText(Str::fmt("%1").arg(time));
+            HudNote("Copied timestamp to Clipboard.");
         }
     }
 

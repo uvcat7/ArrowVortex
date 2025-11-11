@@ -8,7 +8,7 @@ namespace Vortex {
 struct OggConversionThread : public BackgroundThread {
     OggConversionThread();
     uint8_t progress;
-    std::string outPath, error;
+    std::string inPath, outPath, error;
     void exec() override;
 };
 

@@ -218,12 +218,14 @@ void Path::clear() { str.clear(); }
 
 void Path::dropExt() {
     auto file = GetFileStart(str);
-    Str::erase(str, static_cast<int>(GetFileEnd(file) - &str[0]));
+    auto dot_pos = static_cast<int>(GetFileEnd(file) - &str[0]);
+    Str::erase(str, dot_pos, str.length() - dot_pos);
 }
 
 void Path::dropFile() {
     auto file = GetFileStart(str);
-    Str::erase(str, static_cast<int>(file - &str[0]));
+    auto dot_pos = static_cast<int>(file - &str[0]);
+    Str::erase(str, dot_pos, str.length() - dot_pos);
 }
 
 bool Path::hasExt(const char* ext) const {

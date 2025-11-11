@@ -3,15 +3,18 @@
 #include <Core/StringUtils.h>
 #include <Core/WidgetsLayout.h>
 
-#include <Managers/TempoMan.h>
 #include <Managers/SimfileMan.h>
-#include <Simfile/SegmentGroup.h>
+#include <Managers/TempoMan.h>
 
-#include <Editor/View.h>
-#include <Editor/Selection.h>
+#include <Dialogs/Dialog.h>
+#include <Core/Widgets.h>
 #include <Editor/Common.h>
-#include <Editor/Editing.h>
+#include <Editor/FindTempo.h>
 #include <Editor/History.h>
+#include <Editor/Selection.h>
+#include <Simfile/Segments.h>
+#include <Simfile/Tempo.h>
+#include <string>
 
 namespace Vortex {
 
@@ -214,7 +217,7 @@ void DialogAdjustSync::onFindBPM() {
     if (!myTempoDetector) {
         myResetBPMDetection();
         auto region = gSelection->getSelectedRegion();
-        if (region.beginRow < region.endRow) {
+        if (!region.isOmni()) {
             myDetectionRow = region.beginRow;
             double time = gTempo->rowToTime(region.beginRow);
             double len = gTempo->rowToTime(region.endRow) - time;

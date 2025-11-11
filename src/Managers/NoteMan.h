@@ -39,14 +39,19 @@ struct NotesMan {
     // Selection functions.
     virtual void deselectAll() = 0;
     virtual int selectAll() = 0;
-    virtual int selectQuant(int rowType) = 0;
+    virtual int selectQuant(int rowType, bool ignoreRegion) = 0;
     virtual int selectRows(SelectModifier mod, int beginCol, int endCol,
-                           int beginRow, int endRow) = 0;
+                           int beginRow, int endRow, bool ignoreRegion) = 0;
     virtual int selectTime(SelectModifier mod, int beginCol, int endCol,
-                           double beginTime, double endTime) = 0;
-    virtual int select(SelectModifier mod, const Vector<RowCol>& indices) = 0;
-    virtual int select(SelectModifier mod, const Note* notes, int numNotes) = 0;
-    virtual int select(SelectModifier mod, Filter filter) = 0;
+                           double beginTime, double endTime,
+                           bool ignoreRegion) = 0;
+    virtual int select(SelectModifier mod, const Vector<RowCol>& indice,
+                       bool ignoreRegions) = 0;
+    virtual int select(SelectModifier mod, const Note* notes, int numNotes,
+                       bool ignoreRegion) = 0;
+    virtual int select(SelectModifier mod, Filter filter,
+                       bool ignoreRegion) = 0;
+
     virtual bool noneSelected() const = 0;
 
     // Editing functions.

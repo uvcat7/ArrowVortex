@@ -347,8 +347,8 @@ static void WriteBgChanges(ExportData& data, const char* tag,
                      bg.transition.empty() && bg.color.empty() &&
                      bg.color2.empty()) {
                      data.file << std::fixed << std::setprecision(6)
-                               << bg.startBeat << '=' << bg.file << bg.rate
-                               << "=0=0=1";
+                               << bg.startBeat << '=' << bg.file << '='
+                               << bg.rate << "=0=0=1";
                  } else {
                      data.file
                          << std::fixed << std::setprecision(6) << bg.startBeat

@@ -1,5 +1,20 @@
-file(GLOB SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-file(GLOB INC "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+list(APPEND INC
+	"Debug.h"
+	"File.h"
+	"Mixer.h"
+	"OpenGL.h"
+	"Resources.h"
+	"System.h"
+	"Thread.h"
+)
+
+list(APPEND SRC
+	"Debug.cpp"
+	"File.cpp"
+	"Mixer.cpp"
+	"System.cpp"
+	"Thread.cpp"
+)
 
 add_library(System STATIC ${SRC} ${INC}) 
 target_link_libraries(System PRIVATE Core Editor OpenGL::GL winmm)

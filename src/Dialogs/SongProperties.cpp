@@ -3,6 +3,7 @@
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
 
+#include <System/System.h>
 #include <System/File.h>
 
 #include <Core/Draw.h>
@@ -17,6 +18,8 @@
 #include <Managers/SimfileMan.h>
 
 #include <Editor/Music.h>
+
+#include <filesystem>
 
 namespace Vortex {
 
@@ -135,16 +138,21 @@ void DialogSongProperties::myCreateWidgets() {
 
     myLayout.row().col(418);
     myLayout.add<WgSeperator>();
-    myLayout.row().col(72).col(314).col(24);
+    myLayout.row().col(72).col(290).col(24).col(24);
 
     w = CreateField(myLayout, "Music", myMusic,
                     [](std::string& s) { gMetadata->setMusicPath(s); });
     w->setTooltip("Path of the music file");
 
     auto findMusic = myLayout.add<WgButton>();
-    findMusic->onPress.bind(this, &DialogSongProperties::onFindMusic);
+    findMusic->onPress.bind(this, &DialogSongProperties::onFindMusic, false);
     findMusic->text.set("{g:search}");
     findMusic->setTooltip("Search the stepfile directory for audio files");
+
+    findMusic = myLayout.add<WgButton>();
+    findMusic->onPress.bind(this, &DialogSongProperties::onFindMusic, true);
+    findMusic->text.set("{g:folder}");
+    findMusic->setTooltip("Select a audio file directly");
 
     w = CreateField(myLayout, "BG", myBackground,
                     [](std::string& s) { gMetadata->setBackgroundPath(s); });
@@ -153,9 +161,14 @@ void DialogSongProperties::myCreateWidgets() {
         "larger");
 
     auto findBG = myLayout.add<WgButton>();
-    findBG->onPress.bind(this, &DialogSongProperties::onFindBG);
+    findBG->onPress.bind(this, &DialogSongProperties::onFindBG, false);
     findBG->text.set("{g:search}");
     findBG->setTooltip("Search the stepfile directory for background images");
+
+    findBG = myLayout.add<WgButton>();
+    findBG->onPress.bind(this, &DialogSongProperties::onFindBG, true);
+    findBG->text.set("{g:folder}");
+    findBG->setTooltip("Select a background image directly");
 
     w = CreateField(myLayout, "Banner", myBanner,
                     [](std::string& s) { gMetadata->setBannerPath(s); });
@@ -164,11 +177,14 @@ void DialogSongProperties::myCreateWidgets() {
         "418x164 (ITG)");
 
     auto findBanner = myLayout.add<WgButton>();
-    findBanner->onPress.bind(this, &DialogSongProperties::onFindBanner);
+    findBanner->onPress.bind(this, &DialogSongProperties::onFindBanner, false);
     findBanner->text.set("{g:search}");
     findBanner->setTooltip("Search the stepfile directory for banner images");
 
-    // myLayout.row().col(72).col(342);
+    findBanner = myLayout.add<WgButton>();
+    findBanner->onPress.bind(this, &DialogSongProperties::onFindBanner, true);
+    findBanner->text.set("{g:folder}");
+    findBanner->setTooltip("Select a banner file directly");
 
     w = CreateField(myLayout, "CD Title", myCdTitle,
                     [](std::string& s) { gMetadata->setCdTitlePath(s); });
@@ -177,10 +193,16 @@ void DialogSongProperties::myCreateWidgets() {
         "size: around 64x48 (DDR/ITG)");
 
     auto findCDTitle = myLayout.add<WgButton>();
-    findCDTitle->onPress.bind(this, &DialogSongProperties::onFindCdTitle);
+    findCDTitle->onPress.bind(this, &DialogSongProperties::onFindCdTitle,
+                              false);
     findCDTitle->text.set("{g:search}");
     findCDTitle->setTooltip(
         "Search the stepfile directory for CD title images");
+
+    findCDTitle = myLayout.add<WgButton>();
+    findCDTitle->onPress.bind(this, &DialogSongProperties::onFindCdTitle, true);
+    findCDTitle->text.set("{g:folder}");
+    findCDTitle->setTooltip("Select a cdtitle file directly");
 
     myLayout.row().col(418);
     myLayout.add<WgSeperator>();
@@ -373,8 +395,17 @@ void DialogSongProperties::onPlayPreview() {
     }
 }
 
-void DialogSongProperties::onFindMusic() {
-    std::string path = gMetadata->findMusicFile();
+std::string DialogSongProperties::fileDlgPath(const std::string& title) {
+    std::string path = gSystem->openFileDlg(title);
+    // Hack: FileDlg eats the mouse release event, stop mouse capture directly.
+    GuiManager::stopCapturingMouse(GuiManager::getMouseCapture());
+    if (path.empty()) return path;
+    return fs::relative(fs::path(path), fs::path(gSimfile->getDir())).string();
+}
+
+void DialogSongProperties::onFindMusic(bool open) {
+    std::string path =
+        open ? fileDlgPath("Open audio file") : gMetadata->findMusicFile();
     if (path.empty()) {
         HudNote("Could not find any audio files...");
     } else {
@@ -382,8 +413,9 @@ void DialogSongProperties::onFindMusic() {
     }
 }
 
-void DialogSongProperties::onFindBanner() {
-    std::string path = gMetadata->findBannerFile();
+void DialogSongProperties::onFindBanner(bool open) {
+    std::string path =
+        open ? fileDlgPath("Open banner file") : gMetadata->findBannerFile();
     if (path.empty()) {
         HudNote("Could not find any banner art...");
     } else {
@@ -391,8 +423,9 @@ void DialogSongProperties::onFindBanner() {
     }
 }
 
-void DialogSongProperties::onFindBG() {
-    std::string path = gMetadata->findBackgroundFile();
+void DialogSongProperties::onFindBG(bool open) {
+    std::string path = open ? fileDlgPath("Open background file")
+                            : gMetadata->findBackgroundFile();
     if (path.empty()) {
         HudNote("Could not find any background art...");
     } else {
@@ -400,8 +433,9 @@ void DialogSongProperties::onFindBG() {
     }
 }
 
-void DialogSongProperties::onFindCdTitle() {
-    std::string path = gMetadata->findCdTitleFile();
+void DialogSongProperties::onFindCdTitle(bool open) {
+    std::string path =
+        open ? fileDlgPath("Open CD Title file") : gMetadata->findCdTitleFile();
     if (path.empty()) {
         HudNote("Could not find any CD Title art...");
     } else {

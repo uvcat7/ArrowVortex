@@ -27,7 +27,7 @@ status of the original code as provided to them.
 
 Code from the following projects is included in this repository:
 
- 1. freetype , using the FreeType License, which is compatible with GPLv3
+ 1. freetype, using the FreeType License, which is compatible with GPLv3
     See https://freetype.org/license.html for more info.
 
  2. libogg & libvorbis, using its BSD-style license, which is compatible with
@@ -39,18 +39,14 @@ Code from the following projects is included in this repository:
  4. lua, using its GPLv3-compatible permissive license
     See https://www.lua.org/license.html for more info.
 
- 5. Code from liir.c by Exstrom Labratories, which is GPL, is present in
-    src/Editor/Butterworth.cpp
-    https://www.exstrom.com/journal/sigproc/dsigproc.html
+ 5. Iir1, which is MIT-licensed, is compatible with GPLv3
+    See https://github.com/berndporr/iir1 for more info.
 
- 6. Code from Takuya OOURA's General Purpose FFT Package, which is released
-    freely, is present in src/Editor/FFT.cpp
-    https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html
+ 6. aubio, which is also GPLv3
+    See https://github.com/aubio/aubio for more info.
 
- 7. Code from the aubio library, which is also GPLv3, is present in
-    src/Editor/Aubio.h and src/Editor/FindOnsets.cpp
-    https://github.com/aubio/aubio
+ 7. stb_image, which is in the public domain
+    See https://github.com/nothings/stb for more info.
 
- 8. Code from the stb library, which is in public domain, is present in
-    src/Core/ImageLoader.cpp
-    https://github.com/nothings/stb
+ 8. ffmpeg, which is LGPL3-licensed, is compatible with GPLv3
+    See https://ffmpeg.org/legal.html for more info.

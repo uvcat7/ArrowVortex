@@ -2,24 +2,30 @@
 
 #include <algorithm>
 
-#include <Core/Utils.h>
 #include <Core/StringUtils.h>
-#include <Core/VectorUtils.h>
+#include <Core/Utils.h>
 
-#include <Managers/TempoMan.h>
-#include <Managers/MetadataMan.h>
-#include <Managers/ChartMan.h>
-#include <Managers/StyleMan.h>
 #include <Managers/SimfileMan.h>
-#include <Simfile/Parsing.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
 #include <Simfile/TimingData.h>
 
+#include <Core/ByteStream.h>
+#include <Core/Core.h>
+#include <Core/Vector.h>
+#include <cstdint>
+#include <Editor/Common.h>
+#include <Editor/Editing.h>
 #include <Editor/Editor.h>
 #include <Editor/History.h>
-#include <Editor/View.h>
-#include <Editor/Common.h>
 #include <Editor/Selection.h>
-#include <Editor/Editing.h>
+#include <Editor/View.h>
+#include <Simfile/Chart.h>
+#include <Simfile/Common.h>
+#include <Simfile/NoteList.h>
+#include <Simfile/Notes.h>
+#include <Simfile/Simfile.h>
+#include <string>
 
 namespace Vortex {
 
@@ -236,7 +242,7 @@ struct NotesManImpl : public NotesMan {
         }
 
         if (myChart == chart) {
-            if (!firstTime) select(SELECT_SET, add.begin(), add.size());
+            if (!firstTime) select(SELECT_SET, add.begin(), add.size(), false);
 
             if (!updated) myUpdateNotes();
 
@@ -457,50 +463,37 @@ struct NotesManImpl : public NotesMan {
 
     // ================================================================================================
     // NotesManImpl :: selection functions.
-
-    template <typename Func>
-    void forAllSelectedNotes(Func f) {
-        if (gSelection->getType() == Selection::REGION) {
-            auto region = gSelection->getSelectedRegion();
-            for (auto& note : myNotes) {
-                if (note.row >= region.beginRow && note.row <= region.endRow) {
-                    f(note);
-                }
-            }
-        } else if (gSelection->getType() == Selection::NOTES) {
-            for (auto& note : myNotes) {
-                if (note.isSelected) {
-                    f(note);
-                }
-            }
-        }
-    }
-
     template <typename Predicate>
-    int performSelection(SelectModifier mod, Predicate pred) {
+    int performSelection(SelectModifier mod, bool ignoreRegion,
+                         Predicate pred) {
         int numSelected = 0;
         auto note = myNotes.begin();
         auto end = myNotes.end();
+
+        auto region = gSelection->getSelectedRegion();
+
         if (mod == SELECT_SET) {
             for (; note != end; ++note) {
                 uint32_t set = pred(note);
+                set &= ignoreRegion || region.rowIsInRegion(note->row);
                 numSelected += set;
                 note->isSelected = set;
             }
         } else if (mod == SELECT_ADD) {
             for (; note != end; ++note) {
                 uint32_t set = pred(note);
+                set &= ignoreRegion || region.rowIsInRegion(note->row);
                 numSelected += set & (note->isSelected ^ 1);
                 note->isSelected |= set;
             }
         } else if (mod == SELECT_SUB) {
             for (; note != end; ++note) {
                 uint32_t set = pred(note);
+                set &= ignoreRegion || region.rowIsInRegion(note->row);
                 numSelected += set & note->isSelected;
                 note->isSelected &= set ^ 1;
             }
         }
-        gSelection->setType(Selection::NOTES);
         return numSelected;
     }
 
@@ -508,111 +501,129 @@ struct NotesManImpl : public NotesMan {
         for (auto& note : myNotes) {
             note.isSelected = 0;
         }
-        if (gSelection->getType() == Selection::NOTES) {
-            gSelection->setType(Selection::NONE);
-        }
     }
 
     int selectAll() override {
+        auto region = gSelection->getSelectedRegion();
+
         for (auto& note : myNotes) {
-            note.isSelected = 1;
-        }
-        if (myNotes.size()) {
-            gSelection->setType(Selection::NOTES);
+            note.isSelected = region.rowIsInRegion(note.row);
         }
         return myNotes.size();
     }
 
-    int selectQuant(int rowType) override {
+    int selectQuant(int rowType, bool ignoreRegion) override {
         int numSelected = 0;
+        auto region = gSelection->getSelectedRegion();
+
         for (auto& note : myNotes) {
             note.isSelected = (ToRowType(note.row) == rowType);
+            note.isSelected &= ignoreRegion || region.rowIsInRegion(note.row);
             numSelected += note.isSelected;
-        }
-        if (numSelected) {
-            gSelection->setType(Selection::NOTES);
         }
         return numSelected;
     }
 
     int selectRows(SelectModifier mod, int firstCol, int lastCol, int firstRow,
-                   int lastRow) override {
-        return performSelection(mod, [&](const ExpandedNote* note) {
-            return (note->col >= firstCol && note->col < lastCol &&
-                    note->row >= firstRow && note->row < lastRow);
-        });
+                   int lastRow, bool ignoreRegion) override {
+        auto region = gSelection->getSelectedRegion();
+
+        return performSelection(
+            mod, ignoreRegion, [&](const ExpandedNote* note) {
+                bool isInInterval =
+                    (note->col >= firstCol && note->col < lastCol &&
+                     note->row >= firstRow && note->row < lastRow);
+                bool isInRegion =
+                    ignoreRegion || region.rowIsInRegion(note->row);
+
+                return (note->col >= firstCol && note->col < lastCol &&
+                        note->row >= firstRow && note->row < lastRow);
+            });
     }
 
     int selectTime(SelectModifier mod, int firstCol, int lastCol,
-                   double firstTime, double lastTime) override {
-        gSelection->setType(Selection::NOTES);
-        return performSelection(mod, [&](const ExpandedNote* note) {
-            return (note->col >= firstCol && note->col < lastCol &&
-                    note->time >= firstTime && note->time <= lastTime);
-        });
+                   double firstTime, double lastTime,
+                   bool ignoreRegion) override {
+        auto region = gSelection->getSelectedRegion();
+
+        return performSelection(
+            mod, ignoreRegion, [&](const ExpandedNote* note) {
+                return (note->col >= firstCol && note->col < lastCol &&
+                        note->time >= firstTime && note->time <= lastTime);
+            });
     }
 
-    int select(SelectModifier mod, const Vector<RowCol>& indices) override {
+    int select(SelectModifier mod, const Vector<RowCol>& indices,
+               bool ignoreRegion) override {
         auto it = indices.begin(), end = indices.end();
-        return performSelection(mod, [&](const ExpandedNote* note) {
-            while (it != end && LessThanRowCol(*it, *note)) ++it;
-            if (it == end) return false;
-            return !LessThanRowCol(*note, *it);
-        });
+
+        return performSelection(
+            mod, ignoreRegion, [&](const ExpandedNote* note) {
+                while (it != end && LessThanRowCol(*it, *note)) ++it;
+                if (it == end) return false;
+                return !LessThanRowCol(*note, *it);
+            });
     }
 
-    int select(SelectModifier mod, const Note* notes, int numNotes) override {
+    int select(SelectModifier mod, const Note* notes, int numNotes,
+               bool ignoreRegion) override {
         auto it = notes, end = notes + numNotes;
-        return performSelection(mod, [&](const ExpandedNote* note) {
-            while (it != end && LessThanRowCol(*it, *note)) ++it;
-            if (it == end) return false;
-            return !LessThanRowCol(*note, *it);
-        });
+        return performSelection(
+            mod, ignoreRegion, [&](const ExpandedNote* note) {
+                while (it != end && LessThanRowCol(*it, *note)) ++it;
+                if (it == end) return false;
+                return !LessThanRowCol(*note, *it);
+            });
     }
 
-    int select(SelectModifier mod, Filter filter) override {
+    int select(SelectModifier mod, Filter filter, bool ignoreRegion) override {
         auto first = myNotes.begin();
         auto last = myNotes.end() - 1;
         switch (filter) {
             case SELECT_STEPS:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return !note->isMine;
-                });
+                return performSelection(
+                    mod, ignoreRegion,
+                    [&](const ExpandedNote* note) { return !note->isMine; });
             case SELECT_JUMPS:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    if (note->isMine) {
+                return performSelection(
+                    mod, ignoreRegion, [&](const ExpandedNote* note) {
+                        if (note->isMine) {
+                            return false;
+                        } else if (note > first && note[-1].row == note->row) {
+                            return true;
+                        } else if (note < last && note[+1].row == note->row) {
+                            return true;
+                        }
                         return false;
-                    } else if (note > first && note[-1].row == note->row) {
-                        return true;
-                    } else if (note < last && note[+1].row == note->row) {
-                        return true;
-                    }
-                    return false;
-                });
+                    });
             case SELECT_MINES:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return note->isMine;
-                });
+                return performSelection(
+                    mod, ignoreRegion,
+                    [&](const ExpandedNote* note) { return note->isMine; });
             case SELECT_HOLDS:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return note->endrow != note->row && !note->isRoll;
-                });
+                return performSelection(
+                    mod, ignoreRegion, [&](const ExpandedNote* note) {
+                        return note->endrow != note->row && !note->isRoll;
+                    });
             case SELECT_ROLLS:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return note->endrow != note->row && note->isRoll;
-                });
+                return performSelection(
+                    mod, ignoreRegion, [&](const ExpandedNote* note) {
+                        return note->endrow != note->row && note->isRoll;
+                    });
             case SELECT_WARPS:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return note->isWarped;
-                });
+                return performSelection(
+                    mod, ignoreRegion,
+                    [&](const ExpandedNote* note) { return note->isWarped; });
             case SELECT_FAKES:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return note->type == NoteType::NOTE_FAKE;
-                });
+                return performSelection(
+                    mod, ignoreRegion, [&](const ExpandedNote* note) {
+                        return note->type == NoteType::NOTE_FAKE;
+                    });
             case SELECT_LIFTS:
-                return performSelection(mod, [&](const ExpandedNote* note) {
-                    return note->type == NoteType::NOTE_LIFT;
-                });
+                return performSelection(
+                    mod, ignoreRegion, [&](const ExpandedNote* note) {
+                        return note->type == NoteType::NOTE_LIFT;
+                    });
         };
         return 0;
     }
@@ -647,9 +658,20 @@ struct NotesManImpl : public NotesMan {
     void removeSelectedNotes() override {
         NoteEdit edit;
         Vector<RowCol> indices;
-        forAllSelectedNotes([&](const ExpandedNote& note) {
-            edit.rem.append(CompressNote(note));
-        });
+
+        auto region = gSelection->getSelectedRegion();
+
+        bool hasSelectedNotes = !this->noneSelected();
+
+        for (auto& note : myNotes) {
+            bool isEligible =
+                (hasSelectedNotes   ? note.isSelected
+                 : !region.isOmni() ? region.rowIsInRegion(note.row)
+                                    : false);
+            if (isEligible) {
+                edit.rem.append(CompressNote(note));
+            }
+        }
         modify(edit, false, nullptr);
     }
 
@@ -710,7 +732,7 @@ struct NotesManImpl : public NotesMan {
         static const NotesMan::EditDescription desc = {"Pasted %1 note",
                                                        "Pasted %1 notes"};
         modify(edit, !insert, &desc);
-        select(SELECT_SET, edit.add.begin(), edit.add.size());
+        this->select(SELECT_SET, edit.add.begin(), edit.add.size(), false);
     }
 
     // ================================================================================================

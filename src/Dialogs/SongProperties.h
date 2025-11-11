@@ -20,10 +20,10 @@ class DialogSongProperties : public EditorDialog {
     void onSetPreview();
     void onPlayPreview();
 
-    void onFindMusic();
-    void onFindBanner();
-    void onFindBG();
-    void onFindCdTitle();
+    void onFindMusic(bool open);
+    void onFindBanner(bool open);
+    void onFindBG(bool open);
+    void onFindCdTitle(bool open);
 
    private:
     struct BannerWidget;
@@ -41,6 +41,8 @@ class DialogSongProperties : public EditorDialog {
 
     std::vector<Texture> extractSpriteSheet(const std::string& path,
                                             const std::string& filename);
+
+    std::string fileDlgPath(const std::string& title);
 
     std::string myTitle;
     std::string mySubtitle;

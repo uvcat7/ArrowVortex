@@ -360,11 +360,12 @@ struct MusicImpl : public Music, public MixSource {
         } else if (myOggConversionThread) {
             HudNote("Conversion is currently in progress.");
         } else {
-            path.dropExt();
-            Str::append(path.str, ".ogg");
-
             myOggConversionThread = new OggConversionThread;
-            myOggConversionThread->outPath = path;
+            myOggConversionThread->inPath = path;
+            Path ogg_path(dir, file);
+            ogg_path.dropExt();
+            Str::append(ogg_path.str, ".ogg");
+            myOggConversionThread->outPath = ogg_path;
 
             if (gEditor->hasMultithreading()) {
                 auto box = myInfoBox.create();

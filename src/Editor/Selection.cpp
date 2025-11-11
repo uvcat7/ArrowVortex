@@ -1,19 +1,29 @@
 #include <Editor/Selection.h>
 
-#include <Core/Utils.h>
-#include <Core/StringUtils.h>
 #include <Core/Draw.h>
+#include <Core/StringUtils.h>
+#include <Core/Utils.h>
 
 #include <System/System.h>
 
-#include <Editor/View.h>
 #include <Editor/Common.h>
-#include <Editor/Editor.h>
 #include <Editor/TempoBoxes.h>
+#include <Editor/View.h>
 
+#include <cmath>
+#include <Core/Core.h>
+#include <Core/Input.h>
+#include <Core/Texture.h>
+#include <Core/Vector.h>
+#include <cstdint>
+#include <Managers/ChartMan.h>
 #include <Managers/NoteMan.h>
-#include <Managers/TempoMan.h>
 #include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
+#include <Simfile/Common.h>
+#include <Simfile/NoteList.h>
+#include <Simfile/Notes.h>
+#include <Simfile/Tempo.h>
 
 namespace Vortex {
 
@@ -29,7 +39,6 @@ struct SelectionImpl : public Selection {
 
     SelectionRegion myRegion;
     bool myIsSelectingRegion;
-    Type myType;
 
     // ================================================================================================
     // SelectionImpl :: constructor and destructor.
@@ -48,8 +57,6 @@ struct SelectionImpl : public Selection {
                              false, Texture::RGBA);
         myAddIcon = icons[0];
         mySubIcon = icons[1];
-
-        myType = NONE;
     }
 
     // ================================================================================================
@@ -65,8 +72,11 @@ struct SelectionImpl : public Selection {
         }
 
         // Clear selection.
-        if (myType != NONE && evt.button == Mouse::RMB && evt.unhandled()) {
-            setType(NONE);
+        if (evt.button == Mouse::RMB && evt.unhandled()) {
+            gNotes->deselectAll();
+            gTempoBoxes->deselectAll();
+            this->setRegion(0, 0);
+
             evt.setHandled();
         }
     }
@@ -90,14 +100,8 @@ struct SelectionImpl : public Selection {
             if (t > b) swapValues(t, b);
             if (l > r) swapValues(l, r);
 
-            if (myType == TEMPO && mod != SELECT_SET) {
-                selectTempoBoxes(mod, t, b, l, r);
-            } else if (myType == NOTES && mod != SELECT_SET) {
-                selectNotes(mod, t, b, l, r);
-            } else {
-                bool done = selectNotes(mod, t, b, l, r);
-                if (!done) selectTempoBoxes(mod, t, b, l, r);
-            }
+            selectTempoBoxes(mod, t, b, l, r);
+            selectNotes(mod, t, b, l, r);
 
             myIsDraggingSelection = false;
         }
@@ -134,11 +138,15 @@ struct SelectionImpl : public Selection {
         }
     }
 
-    bool selectNotes(SelectModifier mod, double torT, double torB, int xl,
+    void selectNotes(SelectModifier mod, double torT, double torB, int xl,
                      int xr) {
         // If the selection rectangle is empty, we will select a single note
         // under the mouse.
         bool timeBased = gView->isTimeBased();
+
+        // For this particular case, since this is done via mouse selection, we
+        // allow notes to be selected
+        //   outside the region
         if (xl == xr && torT == torB) {
             double clickY = gView->offsetToY(torT);
             const ExpandedNote* closest = nullptr;
@@ -159,11 +167,10 @@ struct SelectionImpl : public Selection {
                 }
             }
             if (closest) {
-                selectNotes(mod,
-                            Vector<RowCol>(1, {closest->row, closest->col}));
-                return true;
+                selectNotes(
+                    mod, Vector<RowCol>(1, {closest->row, closest->col}), true);
             } else {
-                selectNotes(mod, {0, 0}, {0, 0});
+                selectNotes(mod, {0, 0}, {0, 0}, true);
             }
         } else  // The selection rectangle is non-empty.
         {
@@ -184,57 +191,20 @@ struct SelectionImpl : public Selection {
                 begin.row = static_cast<int>(torT);
                 end.row = static_cast<int>(torB) + 1;
             }
-            return selectNotes(mod, begin, end) > 0;
+            selectNotes(mod, begin, end, true);
         }
-        return false;
     }
-
-    void setType(Type type) override {
-        myType = type;
-
-        // Region selection.
-        if (myType == REGION) {
-            if (myRegion.beginRow == myRegion.endRow) {
-                myRegion = {0, 0};
-                myType = NONE;
-            }
-        } else {
-            myRegion = {0, 0};
-        }
-
-        // Note selection.
-        if (myType == NOTES) {
-            if (gNotes->noneSelected()) {
-                myType = NONE;
-            }
-        } else {
-            gNotes->deselectAll();
-        }
-
-        // Tempo box selection.
-        if (myType == TEMPO) {
-            if (gTempoBoxes->noneSelected()) {
-                myType = NONE;
-            }
-        } else {
-            gTempoBoxes->deselectAll();
-        }
-
-        gEditor->reportChanges(VCM_SELECTION_CHANGED);
-    }
-
-    Type getType() const override { return myType; }
 
     void drawRegionSelection() override {
         // Draw area selection box.
-        if (myIsSelectingRegion || myRegion.beginRow != myRegion.endRow) {
+        if (myIsSelectingRegion || !myRegion.isOmni()) {
             uint32_t outline = RGBAtoColor32(153, 255, 153, 153);
             auto coords = gView->getReceptorCoords();
             int x = coords.xl, w = coords.xr - coords.xl;
             if (myIsSelectingRegion) {
                 int y = gView->rowToY(myRegion.beginRow);
                 Draw::fill({x, y - 1, w, 2}, outline);
-            } else if (myRegion.beginRow != myRegion.endRow) {
+            } else if (!myRegion.isOmni()) {
                 int t = gView->rowToY(myRegion.beginRow);
                 int b = gView->rowToY(myRegion.endRow);
                 Draw::fill({x, t, w, b - t}, RGBAtoColor32(153, 255, 153, 90));
@@ -298,36 +268,37 @@ struct SelectionImpl : public Selection {
         showSelectionResult(SELECT_SET, gNotes->selectAll());
     }
 
-    int selectNotes(NotesMan::Filter filter) override {
+    int selectNotes(NotesMan::Filter filter, bool ignoreRegion) override {
         const char* names[NotesMan::NUM_FILTERS] = {
             "step", "jump note", "mine", "hold", "roll", "warped note"};
-        int numSelected = gNotes->select(SELECT_SET, filter);
+        int numSelected = gNotes->select(SELECT_SET, filter, ignoreRegion);
         showSelectionResult(SELECT_SET, numSelected, names[filter]);
         return numSelected;
     }
 
-    int selectNotes(RowType rowType) override {
-        int numSelected = gNotes->selectQuant(rowType);
+    int selectNotes(RowType rowType, bool ignoreRegion) override {
+        int numSelected = gNotes->selectQuant(rowType, ignoreRegion);
         showSelectionResult(SELECT_SET, numSelected);
         return numSelected;
     }
 
-    int selectNotes(SelectModifier mod, RowCol begin, RowCol end) override {
-        int numSelected =
-            gNotes->selectRows(mod, begin.col, end.col, begin.row, end.row);
+    int selectNotes(SelectModifier mod, RowCol begin, RowCol end,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->selectRows(mod, begin.col, end.col, begin.row,
+                                             end.row, ignoreRegion);
         showSelectionResult(mod, numSelected);
         return numSelected;
     }
 
-    int selectNotes(SelectModifier mod,
-                    const Vector<RowCol>& indices) override {
-        int numSelected = gNotes->select(mod, indices);
+    int selectNotes(SelectModifier mod, const Vector<RowCol>& indices,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->select(mod, indices, ignoreRegion);
         showSelectionResult(mod, numSelected);
         return numSelected;
     }
 
     int getSelectedNotes(NoteList& out) override {
-        if (myRegion.beginRow == myRegion.endRow) {
+        if (myRegion.isOmni()) {
             for (auto& note : *gNotes) {
                 if (note.isSelected) out.append(CompressNote(note));
             }
@@ -346,11 +317,8 @@ struct SelectionImpl : public Selection {
 
     void selectRegion() override {
         if (!myIsSelectingRegion) {
-            gTempoBoxes->deselectAll();
-            gNotes->deselectAll();
-
             int row = gView->getCursorRow();
-            myRegion = {row, row};
+            setRegion(row, row);
             myIsSelectingRegion = true;
         } else {
             myIsSelectingRegion = false;
@@ -358,25 +326,28 @@ struct SelectionImpl : public Selection {
         }
     }
 
-    void selectRegion(int row, int endrow) override {
-        if (row != endrow) {
-            if (row > endrow) swapValues(row, endrow);
-            myRegion = {row, endrow};
+    void selectRegion(int row, int endRow) override {
+        setRegion(row, endRow);
 
+        if (row != endRow) {
             double m1 = gTempo->beatToMeasure(row * BEATS_PER_ROW);
-            double m2 = gTempo->beatToMeasure(endrow * BEATS_PER_ROW);
+            double m2 = gTempo->beatToMeasure(endRow * BEATS_PER_ROW);
 
             Str::fmt fmt("Selected measure %1 to %2 (%3 measures)");
             fmt.arg(m1, 0, 2).arg(m2, 0, 2).arg(m2 - m1, 0, 2);
             HudNote("%s", static_cast<const char*>(fmt));
-
-            setType(REGION);
-        } else {
-            setType(NONE);
         }
     }
 
     SelectionRegion getSelectedRegion() override { return myRegion; }
+
+    void setRegion(int row, int endRow) {
+        if (row < endRow) {
+            myRegion = {row, endRow};
+        } else {
+            myRegion = {endRow, row};
+        }
+    }
 
 };  // SelectionImpl
 
