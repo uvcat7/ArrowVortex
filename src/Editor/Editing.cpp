@@ -567,6 +567,46 @@ struct EditingImpl : public Editing {
         gNotes->modify(edit, false, desc);
     }
 
+    void changeNoteSide() override {
+        Style* style = gStyle->get();
+
+        if (!style) {
+            HudNote("No style is currently active.");
+            return;
+        }
+
+        if (!style->id.ends_with("double")) {
+            HudNote("Switch side is only available in a double style.");
+            return;
+        }
+
+        NoteEdit edit;
+        gSelection->getSelectedNotes(edit.add);
+
+        int halfpoint = style->numCols / 2;
+
+        // Copied from mirrorNotes to sort per row first (to stop an error
+        // message).
+        auto ptr = edit.add.begin();
+        for (int i = 0, size = edit.add.size(); i < size;) {
+            int row = (ptr + i)->row, begin = i;
+            while (i != size && (ptr + i)->row == row) ++i;
+            std::sort(ptr + begin, ptr + i, LessThanRowCol<Note, Note>);
+        }
+
+        for (auto& n : edit.add) {
+            if (n.col <= (halfpoint - 1)) {
+                n.col += halfpoint;
+            } else {
+                n.col -= halfpoint;
+            }
+        }
+
+        static const NotesMan::EditDescription desc = {
+            "Switched side for %1 note.", "Switched side for %1 notes."};
+        gNotes->modify(edit, true, &desc);
+    }
+
     template <typename T>
     static T readFromBuffer(Vector<uint8_t>& buffer, int& pos) {
         if (pos + sizeof(T) <= buffer.size()) {

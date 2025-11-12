@@ -190,6 +190,7 @@ struct MenuBarImpl : public Menubar {
         add(hNoteConvert, CHANGE_HOLDS_TO_MINES, L"Holds \x2192 Mines");
         sep(hNoteConvert);
         add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, L"Switch Player");
+        add(hNoteConvert, CHANGE_NOTE_SIDE, L"Switch Sides");
 
         // Notes > Mirror menu.
         Item* hNoteMirror = newMenu();
