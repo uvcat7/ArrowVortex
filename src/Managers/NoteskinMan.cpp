@@ -34,9 +34,8 @@ struct SpriteTransform {
     int x = 0, y = 0, w = 0, h = 0, rot = 0, mir = 0;
 };
 
-static bool LoadTexture(const std::string& path, const std::string& dir,
-                        Texture& out) {
-    out = Texture((dir + path).c_str());
+static bool LoadTexture(fs::path path, Texture& out) {
+    out = Texture(path);
     if (out.handle()) return true;
 
     uint8_t dummyTex[4] = {255, 0, 255, 255};
@@ -225,30 +224,31 @@ static void DeleteNoteskin(NoteskinImpl* skin) {
 
 static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
     XmrDoc doc;
-    std::string dir, path;
+    fs::path path, dir;
 
     // Load the noteskin file.
     bool loadFallback = true;
     if (type.name.length()) {
         std::string filename =
-            type.supportsAll ? "all-styles" : skin->style->id;
-        dir = "noteskins/" + type.name + "/";
-        path = dir + filename + ".txt";
-        if (doc.loadFile(path.c_str()) == XMR_SUCCESS) {
+            type.supportsAll ? "all-styles.txt" : skin->style->id + ".txt";
+        path = fs::path("noteskins/" + type.name + "/");
+        path.append(stringToUtf8(filename));
+        if (doc.loadFile(path) == XMR_SUCCESS) {
             loadFallback = false;
         } else {
-            HudError("Unable to load noteskin: %s", path.c_str());
+            HudError("Unable to load noteskin: %s", pathToUtf8(path).c_str());
         }
     }
 
     // If necessary, load the fallback noteskin.
     if (loadFallback) {
-        dir = "noteskins/";
-        path = dir + "fallback.txt";
-        if (doc.loadFile(path.c_str()) != XMR_SUCCESS) {
-            HudError("Unable to load noteskin: %s", path.c_str());
+        path = fs::path("noteskins/fallback.txt");
+        if (doc.loadFile(path) != XMR_SUCCESS) {
+            HudError("Unable to load noteskin: %s", pathToUtf8(path).c_str());
         }
     }
+
+    dir = path.parent_path();
 
     XmrNode* node = &doc;
 
@@ -301,16 +301,19 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
     }
 
     // Load the noteskin textures.
-    auto notesPath = node->get("Texture-notes", "");
-    if (!LoadTexture(notesPath, dir, skin->noteTex)) {
+    auto notesPath = fs::path(dir);
+    notesPath.append(stringToUtf8(node->get("Texture-notes", "")));
+    if (!LoadTexture(notesPath, skin->noteTex)) {
         HudError("Could not load notes texture.");
     }
-    auto receptorsPath = node->get("Texture-receptors", "");
-    if (!LoadTexture(receptorsPath, dir, skin->recepTex)) {
+    auto receptorsPath = fs::path(dir);
+    receptorsPath.append(stringToUtf8(node->get("Texture-receptors", "")));
+    if (!LoadTexture(receptorsPath, skin->recepTex)) {
         HudError("Could not load receptors texture.");
     }
-    auto glowPath = node->get("Texture-glow", "");
-    if (!LoadTexture(glowPath, dir, skin->glowTex)) {
+    auto glowPath = fs::path(dir);
+    glowPath.append(stringToUtf8(node->get("Texture-glow", "")));
+    if (!LoadTexture(glowPath, skin->glowTex)) {
         HudError("Could not load glow texture.");
     }
 
@@ -365,13 +368,14 @@ struct NoteskinManImpl : public NoteskinMan {
             type.supportsAll = false;
 
             // Capitalize the first letter.
-            type.name = skin.name();
+            type.name = pathToUtf8(skin.filename());
             char* c = &type.name[0];
             if (*c >= 'a' && *c <= 'z') *c += 'A' - 'a';
 
             // Make a list of available noteskin files.
-            for (auto files : File::findFiles(skin, false, "txt")) {
-                std::string id = files.name();
+            for (auto files : File::findFiles(skin, false, ".txt")) {
+                files.replace_extension();
+                std::string id = pathToUtf8(files.filename());
                 if (id == "all-styles") {
                     type.supportsAll = true;
                 } else {

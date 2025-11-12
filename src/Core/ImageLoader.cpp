@@ -4,7 +4,6 @@
 
 #include <System/File.h>
 #include <System/Debug.h>
-#include <Core/WideString.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,12 +20,13 @@ namespace Vortex {
 // ================================================================================================
 // ImageLoader :: API functions.
 
-ImageLoader::Data ImageLoader::load(const char *path, ImageLoader::Format fmt) {
+ImageLoader::Data ImageLoader::load(fs::path path, ImageLoader::Format fmt) {
     int channels = 0, w = 0, h = 0;
     static const int sFmtChannels[] = {4, 3, 2, 1, 1};
     auto desiredChannels = sFmtChannels[fmt];
     ImageLoader::Data out = {nullptr, 0, 0};
-    stbi_uc *pixels = stbi_load(path, &w, &h, &channels, 0);
+    auto path_str = pathToUtf8(path);
+    stbi_uc *pixels = stbi_load(path_str.c_str(), &w, &h, &channels, 0);
     if (pixels && w > 0 && h > 0) {
         // stb is missing the ability to convert to alpha-only format from 2 and
         // 4 channels, so we do it ourselves here.
@@ -36,7 +36,7 @@ ImageLoader::Data ImageLoader::load(const char *path, ImageLoader::Format fmt) {
             if (!out.pixels) {
                 Debug::blockBegin(Debug::WARNING,
                                   "malloc failed on loading image");
-                Debug::log("file: %s\n", path);
+                Debug::log("file: %s\n", path_str.c_str());
                 Debug::blockEnd();
                 stbi_image_free(pixels);
                 return out;
@@ -57,7 +57,7 @@ ImageLoader::Data ImageLoader::load(const char *path, ImageLoader::Format fmt) {
         out.width = w, out.height = h;
     } else {
         Debug::blockBegin(Debug::WARNING, "could not load image");
-        Debug::log("file: %s\n", path);
+        Debug::log("file: %s\n", path_str.c_str());
         if (stbi__g_failure_reason) {
             Debug::log("reason: %s\n", stbi__g_failure_reason);
         }

@@ -2,7 +2,6 @@
 
 #include <System/File.h>
 #include <System/Debug.h>
-#include <Core/WideString.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -790,12 +789,12 @@ XmrDoc::XmrDoc() : lastError(NO_ERROR) {
     childPtr = nextPtr = nullptr;
 }
 
-XmrResult XmrDoc::loadFile(const char* path) {
+XmrResult XmrDoc::loadFile(fs::path path) {
     clear();
     SetError(this, nullptr);
 
     // Open the XMR file.
-    std::ifstream file(Widen(path).str());
+    std::ifstream file(path.c_str());
     if (file.fail()) {
         xstring err(16);
         err.append("could not open file");

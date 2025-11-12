@@ -21,7 +21,7 @@ namespace Vortex {
 // ===================================================================================
 // External load and save functions.
 
-#define LOAD_ARGS const std::string &path, Simfile *sim
+#define LOAD_ARGS fs::path path, Simfile *sim
 #define SAVE_ARGS const Simfile *sim, bool backup
 
 namespace Sm {
@@ -40,7 +40,7 @@ bool LoadDwi(LOAD_ARGS);  // Defined in LoadDwi.cpp
 // ================================================================================================
 // Parsing utilities.
 
-bool ParseSimfile(std::string& out, const std::string& path) {
+bool ParseSimfile(std::string& out, fs::path path) {
     bool success;
     out = File::getText(path, &success);
     if (!success) return false;
@@ -166,31 +166,30 @@ bool ParseBeat(const char* str, int& outRow) {
 // ================================================================================================
 // Simfile importing and exporting.
 
-static void ClearSimfile(Simfile& sim, Path& path) {
+static void ClearSimfile(Simfile& sim, fs::path path) {
     sim.~Simfile();
     new (&sim) Simfile();
-    sim.dir = path.dir();
-    sim.file = path.name();
+    sim.dir = pathToUtf8(path.parent_path());
+    sim.file = pathToUtf8(path.filename());
 }
 
-bool LoadSimfile(Simfile& sim, const std::string& path) {
+bool LoadSimfile(Simfile& sim, fs::path path) {
     // Store the song directory, filename and extension.
-    Path filePath = path;
-    ClearSimfile(sim, filePath);
+    ClearSimfile(sim, path);
 
     // Call the load function associated with the extension.
     bool success = false;
-    std::string ext = filePath.ext();
+    std::string ext = pathToUtf8(path.extension());
     Str::toLower(ext);
-    if (ext == "sm" || ext == "ssc") {
-        success = Sm::LoadSm(filePath, &sim);
-    } else if (ext == "dwi") {
-        success = Dwi::LoadDwi(filePath, &sim);
-    } else if (ext == "osu") {
-        success = Osu::LoadOsu(filePath, &sim);
+    if (ext == ".sm" || ext == ".ssc") {
+        success = Sm::LoadSm(path, &sim);
+    } else if (ext == ".dwi") {
+        success = Dwi::LoadDwi(path, &sim);
+    } else if (ext == ".osu") {
+        success = Osu::LoadOsu(path, &sim);
     } else {
         Debug::blockBegin(Debug::ERROR, "could not load sim");
-        Debug::log("file: %s\n", path.c_str());
+        Debug::log("file: %s\n", pathToUtf8(path).c_str());
         Debug::log("reason: unknown sim format\n");
         Debug::blockEnd();
     }

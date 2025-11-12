@@ -7,7 +7,6 @@
 #include <Core/Draw.h>
 #include <Core/Shader.h>
 #include <Core/StringUtils.h>
-#include <Core/WideString.h>
 
 #include <System/System.h>
 #include <System/File.h>
@@ -170,7 +169,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Load the editor settings.
         XmrDoc settings;
-        settings.loadFile("settings/settings.txt");
+        settings.loadFile(fs::path("settings/settings.txt"));
         loadSettings(settings);
 
         // Disable v-sync if requested.
@@ -313,11 +312,11 @@ struct EditorImpl : public Editor, public InputHandler {
         if (interface) {
             interface->get("fontSize", &myFontSize);
 
-            const char* path = interface->get("fontPath");
-            if (path == nullptr) return;
+            fs::path path = fs::path(interface->get("fontPath"));
+            if (path.empty()) return;
 
-            if (std::ifstream testPath(Widen(path).str()); testPath.good())
-                myFontPath = path;
+            if (std::ifstream testPath(path.c_str()); testPath.good())
+                myFontPath = pathToUtf8(path);
         }
     }
 
@@ -379,8 +378,8 @@ struct EditorImpl : public Editor, public InputHandler {
     // ================================================================================================
     // EditorImpl :: saving and loading of simfiles.
 
-    static std::string findSimfile(const Path& path, bool ignoreAudio) {
-        std::string out;
+    static fs::path findSimfile(fs::path path, bool ignoreAudio) {
+        fs::path out;
 
         // Make a list of loadable extensions, from high priority to low
         // priority.
@@ -389,16 +388,17 @@ struct EditorImpl : public Editor, public InputHandler {
         const char** extEnd = extList + (ignoreAudio ? 4 : 7);
 
         // Check if the path is a directory.
-        if (fs::is_directory(path.str)) {
+        if (fs::is_directory(path)) {
             // If so, look for loadable files in the given directory.
             auto curPriority = extEnd;
             for (auto& file : File::findFiles(path, false)) {
-                std::string ext = file.ext();
+                std::string ext(reinterpret_cast<const char*>(
+                    file.extension().u8string().c_str()));
                 Str::toLower(ext);
                 auto priority = std::find(extList, extEnd, ext);
                 if (priority != extEnd && priority < curPriority) {
                     curPriority = priority;
-                    out = file.str;
+                    out = file;
                 }
             }
             if (out.empty()) {
@@ -444,14 +444,14 @@ struct EditorImpl : public Editor, public InputHandler {
 
     bool openSimfile() override {
         std::string filters(loadFilters, sizeof(loadFilters));
-        std::string path =
+        fs::path path =
             gSystem->openFileDlg("Open file", std::string(), filters);
         return openSimfile(path);
     }
 
-    bool openSimfile(const std::string& path) override {
+    bool openSimfile(fs::path path) override {
         bool result = false;
-        if (path.length() && closeSimfile()) {
+        if (!path.empty() && closeSimfile()) {
             if (gSimfile->load(path)) {
                 addToRecentfiles(path);
                 result = true;
@@ -464,7 +464,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
     bool openSimfile(int recentFileIndex) override {
         if (recentFileIndex >= 0 || recentFileIndex < myRecentFiles.size()) {
-            return openSimfile(myRecentFiles[recentFileIndex]);
+            return openSimfile(utf8ToPath(myRecentFiles[recentFileIndex]));
         }
         return false;
     }
@@ -474,15 +474,13 @@ struct EditorImpl : public Editor, public InputHandler {
         if (gSimfile->isClosed()) return false;
 
         // Make a list of all simfiles in the current pack.
-        Path packDir = gSimfile->getDir();
-        std::string curDir = packDir.dirWithoutSlash();
-        packDir.pop();
+        fs::path packDir = fs::path(gSimfile->getDir());
         auto songDirs = File::findDirs(packDir, false);
 
         // Find the current simfile.
         int index = -1;
         for (int i = 0; i < songDirs.size(); ++i) {
-            if (songDirs[i].str == curDir) {
+            if (songDirs[i].u8string() == packDir.u8string()) {
                 index = i;
             }
         }
@@ -492,11 +490,11 @@ struct EditorImpl : public Editor, public InputHandler {
         }
 
         // Find the previous/next simfile with a different directory.
-        std::string path;
+        fs::path path;
         if (iterateForward) {
             while (++index < songDirs.size()) {
                 path = findSimfile(songDirs[index], true);
-                if (path.length()) break;
+                if (path.empty()) break;
             }
             if (index == songDirs.size()) {
                 HudInfo("This is the last simfile.");
@@ -505,7 +503,7 @@ struct EditorImpl : public Editor, public InputHandler {
         } else {
             while (--index >= 0) {
                 path = findSimfile(songDirs[index], true);
-                if (path.length()) break;
+                if (path.empty()) break;
             }
             if (index < 0) {
                 HudInfo("This is the first simfile.");
@@ -536,8 +534,11 @@ struct EditorImpl : public Editor, public InputHandler {
             saveFmt = SIM_OSU;
         }
 
+        fs::path save_path = utf8ToPath(dir);
+        save_path.append(stringToUtf8(file));
+
         // If the path is empty, ask a path from the user.
-        if (file.empty() || showSaveAsDialog) {
+        if (save_path.empty() || showSaveAsDialog) {
             // Set the default filter index based on the save format.
             int filterIndex;
             switch (saveFmt) {
@@ -554,15 +555,13 @@ struct EditorImpl : public Editor, public InputHandler {
             };
 
             // Show the save file dialog.
-            std::string str = dir + file;
             std::string filters(saveFilters, sizeof(saveFilters));
-            str = gSystem->saveFileDlg("save file", str, filters, &filterIndex);
-            if (str.empty()) return false;
+            fs::path path = gSystem->saveFileDlg("save file", save_path,
+                                                 filters, &filterIndex);
+            if (path.empty()) return false;
 
-            // Update the song directory and filename.
-            Path tmp(str);
-            dir = tmp.dir();
-            file = tmp.name();
+            auto ext = pathToUtf8(path.extension());
+            Str::toLower(ext);
 
             // Update the save format based on the selected filter index.
             switch (filterIndex) {
@@ -576,9 +575,9 @@ struct EditorImpl : public Editor, public InputHandler {
                     saveFmt = SIM_OSU;
                     break;
                 default:
-                    if (tmp.hasExt("ssc")) {
+                    if (ext == ".ssc") {
                         saveFmt = SIM_SSC;
-                    } else if (tmp.hasExt("osu")) {
+                    } else if (ext == ".osu") {
                         saveFmt = SIM_OSU;
                     } else {
                         saveFmt = SIM_SM;
@@ -601,9 +600,10 @@ struct EditorImpl : public Editor, public InputHandler {
     // ================================================================================================
     // EditorImpl :: recent files.
 
-    void addToRecentfiles(std::string path) {
-        myRecentFiles.erase_values(path);
-        myRecentFiles.insert(0, path, 1);
+    void addToRecentfiles(fs::path path) {
+        std::string spath = pathToUtf8(path);
+        myRecentFiles.erase_values(spath);
+        myRecentFiles.insert(0, spath, 1);
         myRecentFiles.truncate(MAX_RECENT_FILES);
         gMenubar->update(Menubar::RECENT_FILES);
     }
@@ -727,17 +727,16 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void onCommandLineArgs(const std::string* args, int numArgs) override {
         if (numArgs >= 2 && args[1].length()) {
-            Path argPath(gSystem->getRunDir(), args[1]);
-            std::string simfilePath = findSimfile(argPath, false);
-            openSimfile(simfilePath);
+            fs::path path = utf8ToPath(gSystem->getRunDir());
+            path.append(stringToUtf8(args[1]));
+            openSimfile(findSimfile(path, false));
         }
     }
 
     void onFileDrop(FileDrop& evt) override {
         if (evt.count >= 1) {
-            Path dropPath(evt.files[0]);
-            std::string simfilePath = findSimfile(dropPath, false);
-            openSimfile(simfilePath);
+            fs::path path(evt.files[0]);
+            openSimfile(findSimfile(path, false));
         }
     }
 

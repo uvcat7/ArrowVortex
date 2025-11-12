@@ -195,10 +195,15 @@ struct MetadataManImpl : public MetadataMan {
     // ================================================================================================
     // MetadataManImpl :: autofill functions.
 
-    std::string findImageFile(const char* full, const char* abbrev) {
-        auto paths = File::findFiles(gSimfile->getDir(), false);
+    fs::path findImageFile(const char* full, const char* abbrev) {
+        fs::path sim_dir = fs::path(gSimfile->getDir().c_str());
+        auto paths = File::findFiles(sim_dir, false);
+        auto parent_paths = File::findFiles(sim_dir.parent_path(), false);
+        for (auto& path : parent_paths) {
+            paths.push_back(path);
+        }
         for (auto& path : paths) {
-            std::string f(path.filename());
+            std::string f = pathToUtf8(path.filename());
             Str::toLower(f);
             std::string cmp[] = {" ", "-", "_"};
             for (auto& s : cmp) {
@@ -206,68 +211,49 @@ struct MetadataManImpl : public MetadataMan {
                 std::string postfix = s + abbrev;
                 if (Str::startsWith(f, prefix.c_str()) ||
                     Str::endsWith(f, postfix.c_str())) {
-                    return path.filename();
+                    return fs::relative(path,
+                                        fs::path(gSimfile->getDir().c_str()));
                 }
             }
             if (Str::find(f, abbrev) != std::string::npos ||
                 Str::find(f, full) != std::string::npos) {
-                return path.filename();
+                return fs::relative(path, fs::path(gSimfile->getDir().c_str()));
             }
         }
-        paths = File::findFiles(gSimfile->getDir() + "../", false);
-        for (auto& path : paths) {
-            std::string f(path.filename());
-            Str::toLower(f);
-            std::string cmp[] = {" ", "-", "_"};
-            for (auto& s : cmp) {
-                std::string prefix = abbrev + s;
-                std::string postfix = s + abbrev;
-                if (Str::startsWith(f, prefix.c_str()) ||
-                    Str::endsWith(f, postfix.c_str())) {
-                    return "../" + path.filename();
-                }
-            }
-            if (Str::find(f, abbrev) != std::string::npos ||
-                Str::find(f, full) != std::string::npos) {
-                return "../" + path.filename();
-            }
-        }
-        return {};
+        return fs::path("");
     }
 
-    std::string findMusicFile() override {
-        std::string out;
+    fs::path findMusicFile() override {
+        fs::path out;
         int priority = 0;
         auto audioFiles =
-            File::findFiles(gSimfile->getDir(), false, "ogg;wav;mp3");
+            File::findFiles(gSimfile->getDir(), false, ".ogg;.wav;.mp3");
         for (auto& audioFile : audioFiles) {
-            if (audioFile.hasExt("ogg") && priority < 3) {
-                out = audioFile.filename();
+            auto ext = pathToUtf8(audioFile.extension());
+            Str::toLower(ext);
+            if (ext == ".ogg" && priority < 3) {
+                out = audioFile;
                 priority = 3;
             }
-            if (audioFile.hasExt("wav") && priority < 2) {
-                out = audioFile.filename();
+            if (ext == ".wav" && priority < 2) {
+                out = audioFile;
                 priority = 2;
             }
-            if (audioFile.hasExt("mp3") && priority < 1) {
-                out = audioFile.filename();
+            if (ext == ".mp3" && priority < 1) {
+                out = audioFile;
                 priority = 1;
             }
         }
-        return out;
+        return fs::relative(out, fs::path(gSimfile->getDir().c_str()));
     }
 
-    std::string findBannerFile() override {
-        return findImageFile("bn", "banner");
-    }
+    fs::path findBannerFile() override { return findImageFile("bn", "banner"); }
 
-    std::string findBackgroundFile() override {
+    fs::path findBackgroundFile() override {
         return findImageFile("bg", "background");
     }
 
-    std::string findCdTitleFile() override {
-        return findImageFile("cd", "title");
-    }
+    fs::path findCdTitleFile() override { return findImageFile("cd", "title"); }
 
     // ================================================================================================
     // MetadataManImpl :: other member functions.

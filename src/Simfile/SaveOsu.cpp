@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <fstream>
 
-#include <Core/WideString.h>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
 
@@ -166,10 +165,9 @@ static void WriteNotes(std::ofstream& out, const Chart* chart,
 // ===================================================================================
 // Chart exporting.
 
-static void SaveChart(const std::string& path, const Simfile* sim,
-                      const Chart* chart) {
+static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
     // Open the output file.
-    std::ofstream out(path);
+    std::ofstream out(path.c_str());
     if (out.fail()) return;
 
     // Write the version number;
@@ -255,23 +253,26 @@ static void SaveChart(const std::string& path, const Simfile* sim,
 
 bool SaveOsu(const Simfile* sim, bool backup) {
     if (sim->charts.empty()) {
-        Path path(sim->dir + sim->file + ".osu");
+        fs::path path = utf8ToPath(sim->dir);
+        path.append(stringToUtf8(sim->file));
+        path.append(".osu");
         SaveChart(path, sim, nullptr);
-        HudInfo("Saved: %s", path.filename().c_str());
+        HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
     } else {
         std::map<std::string, int> duplicateCounters;
         for (auto chart : sim->charts) {
-            std::string path = sim->dir + sim->file;
-            path = path + " [";
-            path = path + GetDifficultyName(chart->difficulty);
-            int& counter = duplicateCounters[path];
+            fs::path path = fs::path(sim->dir.c_str());
+            std::string file = " [";
+            file += std::string(GetDifficultyName(chart->difficulty));
+            int& counter = duplicateCounters[file];
             if (++counter > 1) {
-                path = path + Str::fmt(" %1").arg(counter).str;
+                file += Str::fmt(" %1").arg(counter).str;
             }
-            path = path + "].osu";
+            file += "].osu";
+            path.append(stringToUtf8(sim->file));
             SaveChart(path, sim, chart);
         }
-        HudInfo("Saved: %s", sim->file.c_str());
+        HudInfo("Saved: %s", utf8ToPath(sim->file).c_str());
     }
 
     return true;

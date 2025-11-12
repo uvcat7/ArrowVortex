@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <chrono>
+#include <filesystem>
 
 #include <Core/Vector.h>
 #include <Core/Reference.h>
@@ -97,12 +98,14 @@ struct MusicImpl : public Music, public MixSource {
         std::string placeholderTitle;
         std::string placeholderArtist;
 
-        success = myBeatTick.sound.load("assets/sound beat tick.wav", false,
-                                        placeholderTitle, placeholderArtist);
+        success =
+            myBeatTick.sound.load(fs::path("assets/sound beat tick.wav"), false,
+                                  placeholderTitle, placeholderArtist);
         if (!success) HudError("%s", "Failed to load beat tick.\n");
 
-        success = myNoteTick.sound.load("assets/sound note tick.wav", false,
-                                        placeholderTitle, placeholderArtist);
+        success =
+            myNoteTick.sound.load(fs::path("assets/sound note tick.wav"), false,
+                                  placeholderTitle, placeholderArtist);
         if (!success) HudError("%s", "Failed to load note tick.\n");
     }
 
@@ -143,17 +146,16 @@ struct MusicImpl : public Music, public MixSource {
 
         if (gSimfile->isClosed()) return;
 
-        std::string dir = gSimfile->getDir();
-        std::string file = gSimfile->get()->music;
+        fs::path path = utf8ToPath(gSimfile->getDir());
+        path.append(stringToUtf8(gSimfile->get()->music));
 
-        if (file.empty()) {
+        if (gSimfile->get()->music.empty()) {
             HudError("Could not load music, the music property is blank.");
             return;
         }
 
-        Path path(dir, file);
-        bool success = mySamples.load(
-            path.str.c_str(), gEditor->hasMultithreading(), myTitle, myArtist);
+        bool success = mySamples.load(path, gEditor->hasMultithreading(),
+                                      myTitle, myArtist);
 
         if (success && mySamples.getFrequency() > 0) {
             myLoadState = LOADING_ALLOCATING_AND_READING;
@@ -164,7 +166,7 @@ struct MusicImpl : public Music, public MixSource {
             box->left = "Loading music...";
         } else {
             mySamples.clear();
-            HudError("Could not load \"%s\".", path.filename().c_str());
+            HudError("Could not load \"%s\".", gSimfile->get()->music.c_str());
         }
     }
 
@@ -350,8 +352,12 @@ struct MusicImpl : public Music, public MixSource {
         std::string dir = gSimfile->getDir();
         std::string file = gSimfile->get()->music;
 
-        Path path(dir, file);
-        if (path.hasExt("ogg")) {
+        fs::path path = utf8ToPath(dir);
+        path.append(stringToUtf8(file));
+        auto ext = pathToUtf8(path.extension());
+        Str::toLower(ext);
+
+        if (ext == ".ogg") {
             HudNote("Music is already in Ogg Vorbis format.");
         } else if (!mySamples.isCompleted()) {
             HudNote("Wait for the music to finish loading.");
@@ -361,11 +367,10 @@ struct MusicImpl : public Music, public MixSource {
             HudNote("Conversion is currently in progress.");
         } else {
             myOggConversionThread = new OggConversionThread;
-            myOggConversionThread->inPath = path;
-            Path ogg_path(dir, file);
-            ogg_path.dropExt();
-            Str::append(ogg_path.str, ".ogg");
-            myOggConversionThread->outPath = ogg_path;
+            myOggConversionThread->inPath = pathToUtf8(path);
+            fs::path ogg_path = fs::path(path);
+            ogg_path.replace_extension(".ogg");
+            myOggConversionThread->outPath = pathToUtf8(ogg_path);
 
             if (gEditor->hasMultithreading()) {
                 auto box = myInfoBox.create();
@@ -389,7 +394,8 @@ struct MusicImpl : public Music, public MixSource {
     void finishOggConversion() {
         if (myOggConversionThread) {
             if (myOggConversionThread->error.empty()) {
-                gMetadata->setMusicPath(gMetadata->findMusicFile());
+                gMetadata->setMusicPath(
+                    pathToUtf8(gMetadata->findMusicFile().filename()));
             } else {
                 HudError("Conversion failed: %s.",
                          myOggConversionThread->error.c_str());

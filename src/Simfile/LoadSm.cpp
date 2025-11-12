@@ -664,12 +664,14 @@ static void ParseTag(ParseData& data, std::string tag, char* val) {
 // ===================================================================================
 // File importing
 
-bool LoadSm(const std::string& path, Simfile* sim) {
+bool LoadSm(fs::path path, Simfile* sim) {
     ParseData data;
 
+    auto ext = pathToUtf8(path.extension());
+    Str::toLower(ext);
     data.sim = sim;
     data.chart = nullptr;
-    data.isSM5 = Str::endsWith(path, ".ssc", false);
+    data.isSM5 = (ext == ".ssc");
     data.numKeySounds = 0;
 
     MapSimfileTags(data.simMap1, data.simMap2, sim);

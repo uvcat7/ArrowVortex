@@ -215,6 +215,8 @@ void Action::perform(Type action) {
         gEditing->changeHoldsToRolls();
         CASE(CHANGE_BETWEEN_PLAYER_NUMBERS)
         gEditing->changePlayerNumber();
+        CASE(CHANGE_NOTE_SIDE)
+        gEditing->changeNoteSide();
 
         CASE(MIRROR_NOTES_VERTICALLY)
         gEditing->mirrorNotes(Editing::MIRROR_V);

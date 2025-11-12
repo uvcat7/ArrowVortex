@@ -322,8 +322,9 @@ void DialogSongProperties::myUpdateBanner() {
         auto meta = gSimfile->get();
         std::string filename = meta->banner;
         if (filename.length()) {
-            std::string path = gSimfile->getDir() + filename;
-            myBannerWidget->tex = extractSpriteSheet(path, filename);
+            fs::path path = utf8ToPath(gSimfile->getDir());
+            path.append(stringToUtf8(filename));
+            myBannerWidget->tex = extractSpriteSheet(path);
         }
     }
 }
@@ -334,8 +335,9 @@ void DialogSongProperties::myUpdateCdTitle() {
         auto meta = gSimfile->get();
         std::string filename = meta->cdTitle;
         if (filename.length()) {
-            std::string path = gSimfile->getDir() + filename;
-            myCdTitleWidget->tex = extractSpriteSheet(path, filename);
+            fs::path path = fs::path(gSimfile->getDir().c_str());
+            path.append(stringToUtf8(filename));
+            myCdTitleWidget->tex = extractSpriteSheet(path);
         }
     }
 }
@@ -343,26 +345,28 @@ void DialogSongProperties::myUpdateCdTitle() {
 // ================================================================================================
 // Other functions.
 
-std::vector<Texture> DialogSongProperties::extractSpriteSheet(
-    const std::string& path, const std::string& filename) {
-    Texture full = Texture(path.c_str());
+std::vector<Texture> DialogSongProperties::extractSpriteSheet(fs::path path) {
+    Texture full = Texture(path);
     std::vector<Texture> frames;
 
     if (full.handle() == 0) {
-        HudWarning("Could not open \"%s\".", filename.c_str());
+        HudWarning("Could not open \"%s\".",
+                   pathToUtf8(path.filename()).c_str());
         frames.push_back(full);
         return frames;
     }
 
     int w = 0, h = 0, tiles = 1;
-    if (sscanf(filename.c_str(), "%*[^ ] %dx%d.%*s", &w, &h) == 2) {
+    if (sscanf(pathToUtf8(path.filename()).c_str(), "%*[^ ] %dx%d.%*s", &w,
+               &h) == 2) {
         tiles = max(1, w * h);
     }
 
     if (tiles > 1) {
         auto tileW = full.width() / w;
         auto tileH = full.height() / h;
-        Texture::createTiles(path.c_str(), tileW, tileH, tiles, frames);
+        Texture::createTiles(pathToUtf8(path).c_str(), tileW, tileH, tiles,
+                             frames);
     } else
         frames.push_back(full);
 
@@ -395,51 +399,51 @@ void DialogSongProperties::onPlayPreview() {
     }
 }
 
-std::string DialogSongProperties::fileDlgPath(const std::string& title) {
-    std::string path = gSystem->openFileDlg(title);
+fs::path DialogSongProperties::fileDlgPath(const std::string& title) {
+    auto path = gSystem->openFileDlg(title);
     // Hack: FileDlg eats the mouse release event, stop mouse capture directly.
     GuiManager::stopCapturingMouse(GuiManager::getMouseCapture());
     if (path.empty()) return path;
-    return fs::relative(fs::path(path), fs::path(gSimfile->getDir())).string();
+    return fs::relative(path, utf8ToPath(gSimfile->getDir()));
 }
 
 void DialogSongProperties::onFindMusic(bool open) {
-    std::string path =
+    auto path =
         open ? fileDlgPath("Open audio file") : gMetadata->findMusicFile();
     if (path.empty()) {
         HudNote("Could not find any audio files...");
     } else {
-        gMetadata->setMusicPath(path);
+        gMetadata->setMusicPath(pathToUtf8(path));
     }
 }
 
 void DialogSongProperties::onFindBanner(bool open) {
-    std::string path =
+    auto path =
         open ? fileDlgPath("Open banner file") : gMetadata->findBannerFile();
     if (path.empty()) {
         HudNote("Could not find any banner art...");
     } else {
-        gMetadata->setBannerPath(path);
+        gMetadata->setBannerPath(pathToUtf8(path));
     }
 }
 
 void DialogSongProperties::onFindBG(bool open) {
-    std::string path = open ? fileDlgPath("Open background file")
-                            : gMetadata->findBackgroundFile();
+    auto path = open ? fileDlgPath("Open background file")
+                     : gMetadata->findBackgroundFile();
     if (path.empty()) {
         HudNote("Could not find any background art...");
     } else {
-        gMetadata->setBackgroundPath(path);
+        gMetadata->setBackgroundPath(pathToUtf8(path));
     }
 }
 
 void DialogSongProperties::onFindCdTitle(bool open) {
-    std::string path =
+    auto path =
         open ? fileDlgPath("Open CD Title file") : gMetadata->findCdTitleFile();
     if (path.empty()) {
         HudNote("Could not find any CD Title art...");
     } else {
-        gMetadata->setCdTitlePath(path);
+        gMetadata->setCdTitlePath(pathToUtf8(path));
     }
 }
 

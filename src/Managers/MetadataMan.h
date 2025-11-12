@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Simfile/Simfile.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -13,18 +15,18 @@ struct MetadataMan {
     virtual void update(Simfile* simfile) = 0;
 
     /// Returns the relative path of first music file in the simfile directory.
-    virtual std::string findMusicFile() = 0;
+    virtual fs::path findMusicFile() = 0;
 
     /// Returns the relative path of first banner file in the simfile directory.
-    virtual std::string findBannerFile() = 0;
+    virtual fs::path findBannerFile() = 0;
 
     /// Returns the relative path of the first background file in the simfile
     /// directory.
-    virtual std::string findBackgroundFile() = 0;
+    virtual fs::path findBackgroundFile() = 0;
 
     /// Returns the relative path of the first CD title file in the simfile
     /// directory.
-    virtual std::string findCdTitleFile() = 0;
+    virtual fs::path findCdTitleFile() = 0;
 
     /// Sets the song title.
     virtual void setTitle(const std::string& s) = 0;

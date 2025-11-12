@@ -2,6 +2,8 @@
 
 #include <Core/Core.h>
 #include <ios>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -32,7 +34,7 @@ class Sound {
     /// If title/artist fields are found in the metadata, they are written to
     /// the corresponding strings. When threaded, "isAllocated" and
     /// "isCompleted" can be used to check loading progress.
-    bool load(const char* path, bool threaded, std::string& title,
+    bool load(fs::path path, bool threaded, std::string& title,
               std::string& artist);
 
     /// Returns the number of frames per second.

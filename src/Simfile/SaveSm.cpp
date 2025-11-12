@@ -1,5 +1,4 @@
 ﻿#include <Core/StringUtils.h>
-#include <Core/WideString.h>
 #include <Core/Utils.h>
 
 #include <System/File.h>
@@ -17,6 +16,7 @@
 #include <fstream>
 #include <iomanip>
 #include <list>
+#include <filesystem>
 
 namespace Vortex {
 namespace Sm {
@@ -601,22 +601,27 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
     data.chart = nullptr;
     data.sim = sim;
 
-    Path path = sim->dir + sim->file + (ssc ? ".ssc" : ".sm");
-    fs::path fpath(Widen(path.str).str());
+    fs::path path = utf8ToPath(sim->dir);
+    path.append(stringToUtf8(sim->file));
+    path.replace_extension(ssc ? ".ssc" : ".sm");
+    fs::path oldPath = fs::path(path);
+    oldPath.concat(".old");
 
     // If a backup file is requested, rename the existing sim before saving over
     // it.
-    if (backup && fs::exists(fpath)) {
-        if (!File::moveFile(path.str, path.str + ".old", true)) {
-            std::string name = path.filename();
-            HudError("Could not backup \"%s\".", name.c_str());
+    if (backup && fs::exists(path)) {
+        std::error_code error;
+        fs::rename(path, oldPath, error);
+        if (error) {
+            HudError("Could not backup \"%s\", error %s.",
+                     pathToUtf8(path).c_str(), error.message().c_str());
         }
     }
 
     // Open the output file.
-    data.file.open(fpath);
+    data.file.open(path.c_str());
     if (data.file.fail()) return false;
-    GiveUnicodeWarning(path, "sim");
+    GiveUnicodeWarning(pathToUtf8(path.filename()), "sim");
 
     // Start with a version tag for SSC files.
     if (ssc) WriteTag(data, "VERSION", "0.83", ALWAYS, true);
@@ -664,7 +669,7 @@ bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
         data.chart = nullptr;
     }
 
-    HudInfo("Saved: %s", path.filename().c_str());
+    HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
 
     return true;
 }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <math.h>
 #include <set>
+#include <string>
 
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
@@ -139,7 +140,7 @@ struct SimfileManImpl : public SimfileMan {
     // ================================================================================================
     // SimfileManImpl :: open and close functions.
 
-    bool load(const std::string& path) override {
+    bool load(fs::path path) override {
         close();
 
         bool loadedFromAudio = false;
@@ -148,20 +149,19 @@ struct SimfileManImpl : public SimfileMan {
         if (path.empty()) return false;
 
         // Extract the filename and extension.
-        Path file(path);
-        std::string filename = file.filename();
-        std::string ext = file.ext();
+        std::string filename = pathToUtf8(path.filename());
+        std::string ext = pathToUtf8(path.extension());
         Str::toLower(ext);
 
         // Create a new simfile.
         mySimfile = new Simfile;
-        mySimfile->dir = file.dir();
-        mySimfile->file = file.name();
+        mySimfile->dir = pathToUtf8(path.parent_path());
+        mySimfile->file = filename;
         HudInfo("Opening: %s", filename.c_str());
 
         // Check if we are loading a stepmania simfile.
-        if (ext == "sm" || ext == "ssc" || ext == "dwi" || ext == "osu" ||
-            ext == "osz") {
+        if (ext == ".sm" || ext == ".ssc" || ext == ".dwi" || ext == ".osu" ||
+            ext == ".osz") {
             if (!LoadSimfile(*mySimfile, path)) {
                 close();
                 return false;
@@ -189,8 +189,10 @@ struct SimfileManImpl : public SimfileMan {
         // Try to fill in some metadata.
         gMetadata->update(mySimfile);
         if (loadedFromAudio) {
-            mySimfile->background = gMetadata->findBackgroundFile();
-            mySimfile->banner = gMetadata->findBannerFile();
+            mySimfile->background =
+                pathToUtf8(gMetadata->findBackgroundFile().filename());
+            mySimfile->banner =
+                pathToUtf8(gMetadata->findBannerFile().filename());
             mySimfile->title = gMusic->getTitle();
             mySimfile->artist = gMusic->getArtist();
         }

@@ -353,7 +353,8 @@ static void AssignDifficulties(Simfile* sim,
                   });
         int offset = max(0, min(charts[0]->meter / 2, 5 - charts.size()));
         for (int i = 0; i < charts.size(); ++i) {
-            charts[i]->difficulty = static_cast<Difficulty>(offset + i);
+            charts[i]->difficulty = static_cast<Difficulty>(
+                std::min(offset + i, static_cast<int>(NUM_DIFFICULTIES - 1)));
         }
     }
 }
@@ -500,23 +501,23 @@ buffer, 512); if(read <= 0) break; Str::append(str, buffer, read);
 }
 */
 
-static bool ParseDir(Vector<OsuFile*>& out, const std::string& dir,
-                     std::string& err) {
-    for (auto& file : File::findFiles(dir, false, "osu")) {
+static bool ParseDir(Vector<OsuFile*>& out, fs::path dir, std::string& err) {
+    for (auto& file : File::findFiles(dir, false, ".osu")) {
         bool success;
         std::string str = File::getText(file, &success);
         if (str.empty() || !success) continue;
 
         out.push_back(new OsuFile);
         ParseFile(*out.back(), str);
-        out.back()->filename = file.name();
+        out.back()->filename = std::string(
+            reinterpret_cast<const char*>(file.filename().u8string().c_str()));
     }
     return true;
 }
 
-bool LoadOsu(const std::string& path, Simfile* sim) {
+bool LoadOsu(fs::path path, Simfile* sim) {
     bool result = true;
-    bool isZip = Path(path).hasExt("osz");
+    bool isZip = (pathToUtf8(path.extension()) == "osz");
 
     // Parse all osu files in the current directory.
     std::string err;
@@ -524,7 +525,7 @@ bool LoadOsu(const std::string& path, Simfile* sim) {
     if (isZip) {
         // ParseOsz(files, path, err);
     } else {
-        ParseDir(files, sim->dir, err);
+        ParseDir(files, utf8ToPath(sim->dir), err);
     }
 
     // Check if there are any osu files.

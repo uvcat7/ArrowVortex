@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Texture.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
@@ -11,7 +13,7 @@ struct Data {
     uint8_t* pixels;
     int width, height;
 };
-Data load(const char* path, Format targetFormat);
+Data load(fs::path path, Format targetFormat);
 void release(Data& data);
 };  // namespace ImageLoader
 

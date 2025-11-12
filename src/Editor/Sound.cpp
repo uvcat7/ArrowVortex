@@ -7,7 +7,6 @@
 #include <Core/Core.h>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
-#include <Core/WideString.h>
 
 #include <stdint.h>
 #include <limits.h>
@@ -216,27 +215,27 @@ void Sound::clear() {
     myIsCompleted = true;
 }
 
-bool Sound::load(const char* path, bool threaded, std::string& title,
+bool Sound::load(fs::path path, bool threaded, std::string& title,
                  std::string& artist) {
     clear();
 
     SoundSource* source = nullptr;
 
     // Try to open the file.
-    if (std::ifstream file(Widen(path).str(), std::ios::in | std::ios::binary);
+    if (std::ifstream file(path.c_str(), std::ios::in | std::ios::binary);
         file.good()) {
         // Call the load function associated with the extension.
-        std::string ext = Path(path).ext();
+        auto ext = pathToUtf8(path.extension());
         Str::toLower(ext);
-        if (ext == "ogg")
+        if (ext == ".ogg")
             source = LoadOgg(std::move(file), title, artist);
-        else if (ext == "mp3")
+        else if (ext == ".mp3")
             source = LoadMP3(std::move(file), title, artist);
-        else if (ext == "wav")
+        else if (ext == ".wav")
             source = LoadWav(std::move(file), title, artist);
         else {
             Debug::blockBegin(Debug::ERROR, "could not load audio file");
-            Debug::log("file: %s\n", path);
+            Debug::log("file: %s\n", pathToUtf8(path).c_str());
             Debug::log("reason: unknown audio format\n");
             Debug::blockEnd();
         }

@@ -109,29 +109,28 @@ static int sDlgIcon[System::NUM_ICONS] = {0, MB_ICONASTERISK, MB_ICONWARNING,
                                           MB_ICONHAND};
 
 // Shows an open/save message box and returns the path selected by the user.
-static std::string ShowFileDialog(std::string title, std::string path,
-                                  std::string filters, int* index, bool save) {
-    WideString wfilter = Widen(filters);
-    WideString wtitle = Widen(title);
+static fs::path ShowFileDialog(std::string title, fs::path path,
+                               std::string filters, int* index, bool save) {
+    std::wstring wfilter = Widen(filters);
+    std::wstring wtitle = Widen(title);
 
     // Split the input path into a directory and filename.
-    Path fpath = path;
-    WideString wdir = Widen(fpath.dirWithoutSlash());
-    WideString wfile = Widen(fpath.filename());
+    std::wstring wdir = path.parent_path().wstring();
+    std::wstring wfile = path.filename().wstring();
 
     // Write the input filename to the output path buffer.
     wchar_t outPath[MAX_PATH + 1] = {};
     if (wfile.size() && wfile.length() <= MAX_PATH)
-        memcpy(outPath, wfile.str(), sizeof(wchar_t) * wfile.length());
+        memcpy(outPath, wfile.data(), sizeof(wchar_t) * wfile.length());
 
     // Prepare the open/save file dialog.
     OPENFILENAMEW ofns = {sizeof(OPENFILENAMEW)};
-    ofns.lpstrFilter = wfilter.str();
+    ofns.lpstrFilter = wfilter.c_str();
     ofns.hwndOwner = static_cast<HWND>(gSystem->getHWND());
     ofns.lpstrFile = outPath;
     ofns.nMaxFile = MAX_PATH;
-    ofns.lpstrTitle = wtitle.str();
-    if (wdir.size()) ofns.lpstrInitialDir = wdir.str();
+    ofns.lpstrTitle = wtitle.c_str();
+    if (wdir.size()) ofns.lpstrInitialDir = wdir.data();
     ofns.Flags = save ? 0 : OFN_FILEMUSTEXIST;
     ofns.nFilterIndex = index ? *index : 0;
 
@@ -140,7 +139,7 @@ static std::string ShowFileDialog(std::string title, std::string path,
     if (res == 0) outPath[0] = 0;
     gSystem->setWorkingDir(gSystem->getExeDir());
 
-    return Narrow(outPath, wcslen(outPath));
+    return fs::path(outPath);
 }
 
 // ================================================================================================
@@ -179,13 +178,13 @@ void MItem::addSeperator() {
 }
 void MItem::addItem(int item, const std::string& text) {
     AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
-                Widen(text).str());
+                Widen(text).c_str());
 }
 
 void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed) {
     int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
     AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).str());
+                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
 }
 
 void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
@@ -193,7 +192,7 @@ void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
     int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
     DeleteMenu(reinterpret_cast<HMENU>(this), pos, MF_BYPOSITION);
     InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).str());
+                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
 }
 
 void MItem::setChecked(int item, bool state) {
@@ -222,7 +221,7 @@ struct SystemImpl : public System {
     std::bitset<Key::MAX_VALUE> myKeyState;
     std::bitset<Mouse::MAX_VALUE> myMouseState;
     std::string myTitle;
-    WideString myInput;
+    std::wstring myInput;
     DWORD myStyle, myExStyle;
     HWND myHWND;
     HDC myHDC;
@@ -542,12 +541,12 @@ struct SystemImpl : public System {
         bool result = false;
         if (OpenClipboard(nullptr)) {
             EmptyClipboard();
-            WideString wtext = Widen(text);
+            std::wstring wtext = Widen(text);
             size_t size = sizeof(wchar_t) * (wtext.length() + 1);
             HGLOBAL bufferHandle = GlobalAlloc(GMEM_DDESHARE, size);
             char* buffer = static_cast<char*>(GlobalLock(bufferHandle));
             if (buffer) {
-                memcpy(buffer, wtext.str(), size);
+                memcpy(buffer, wtext.c_str(), size);
                 GlobalUnlock(bufferHandle);
                 if (SetClipboardData(CF_UNICODETEXT, bufferHandle)) {
                     result = true;
@@ -788,9 +787,9 @@ struct SystemImpl : public System {
                         // without nullbyte.
                         UINT pathLen = DragQueryFileW(
                             reinterpret_cast<HDROP>(wp), i, nullptr, 0);
-                        WideString wstr(pathLen, 0);
+                        std::wstring wstr(pathLen, 0);
                         DragQueryFileW(reinterpret_cast<HDROP>(wp), i,
-                                       wstr.begin(), pathLen + 1);
+                                       wstr.data(), pathLen + 1);
                         files[i] = Narrow(wstr);
                     }
 
@@ -848,10 +847,10 @@ struct SystemImpl : public System {
 
     Result showMessageDlg(const std::string& title, const std::string& text,
                           Buttons b, Icon i) override {
-        WideString wtitle = Widen(title), wtext = Widen(text);
+        std::wstring wtitle = Widen(title), wtext = Widen(text);
         int flags = sDlgType[b] | sDlgIcon[i], result = R_OK;
-        switch (MessageBoxW(static_cast<HWND>(gSystem->getHWND()), wtext.str(),
-                            wtitle.str(), flags)) {
+        switch (MessageBoxW(static_cast<HWND>(gSystem->getHWND()),
+                            wtext.c_str(), wtitle.c_str(), flags)) {
             case IDOK:
                 return R_OK;
             case IDYES:
@@ -862,15 +861,13 @@ struct SystemImpl : public System {
         return R_CANCEL;
     }
 
-    std::string openFileDlg(const std::string& title,
-                            const std::string& filename,
-                            const std::string& filters) override {
+    fs::path openFileDlg(const std::string& title, fs::path filename,
+                         const std::string& filters) override {
         return ShowFileDialog(title, filename, filters, nullptr, false);
     }
 
-    std::string saveFileDlg(const std::string& title,
-                            const std::string& filename,
-                            const std::string& filters, int* index) override {
+    fs::path saveFileDlg(const std::string& title, fs::path filename,
+                         const std::string& filters, int* index) override {
         return ShowFileDialog(title, filename, filters, index, true);
     }
 
@@ -887,10 +884,10 @@ struct SystemImpl : public System {
 
         // Copy the command to a Vector because CreateProcessW requires a
         // modifiable buffer, urgh.
-        WideString wcommand = Widen(cmd);
+        std::wstring wcommand = Widen(cmd);
         Vector<wchar_t> wbuffer;
         wbuffer.resize(wcommand.length() + 1);
-        memcpy(wbuffer.begin(), wcommand.begin(),
+        memcpy(wbuffer.begin(), wcommand.data(),
                sizeof(wchar_t) * (wcommand.length() + 1));
 
         // Create a pipe for the process's stdin.
@@ -941,12 +938,12 @@ struct SystemImpl : public System {
     }
 
     void openWebpage(const std::string& link) override {
-        ShellExecuteW(nullptr, nullptr, Widen(link).str(), nullptr, nullptr,
+        ShellExecuteW(nullptr, nullptr, Widen(link).c_str(), nullptr, nullptr,
                       SW_SHOW);
     }
 
     void setWorkingDir(const std::string& path) override {
-        SetCurrentDirectoryW(Widen(path).str());
+        SetCurrentDirectoryW(Widen(path).c_str());
     }
 
     void setCursor(Cursor::Icon c) override { myCursor = c; }
@@ -982,7 +979,7 @@ struct SystemImpl : public System {
 
     void setWindowTitle(const std::string& text) override {
         if (!(myTitle == text)) {
-            SetWindowTextW(myHWND, Widen(text).str());
+            SetWindowTextW(myHWND, Widen(text).c_str());
             myTitle = text;
         }
     }
