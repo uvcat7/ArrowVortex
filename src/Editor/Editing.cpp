@@ -1060,8 +1060,13 @@ struct EditingImpl : public Editing {
         if (HasClipboardData()) {
             auto clipboard = GetClipboardData();
 
+            if (clipboard.count > 1) gHistory->startChain();
+
             if (gChart->isOpen()) gNotes->pasteFromClipboard(clipboard, insert);
             gTempo->pasteFromClipboard(clipboard, insert);
+
+            if (clipboard.count > 1)
+                gHistory->finishChain("Pasted from clipboard.");
         } else {
             std::string text = gSystem->getClipboardText();
             double target = Str::readTime(text);

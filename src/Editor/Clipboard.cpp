@@ -47,11 +47,15 @@ ClipboardData GetClipboardData() {
             if (key == "ver")
                 clip.version = Str::readInt(value);
 
-            else if (key == NotesMan::clipboardTag)
+            else if (key == NotesMan::clipboardTag) {
                 Base64Decode(clip.notes, value.c_str());
+                clip.count++;
+            }
 
-            else if (key == TempoMan::clipboardTag)
+            else if (key == TempoMan::clipboardTag) {
                 Base64Decode(clip.tempos, value.c_str());
+                clip.count++;
+            }
         }
     }
 
