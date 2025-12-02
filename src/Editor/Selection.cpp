@@ -118,20 +118,12 @@ struct SelectionImpl : public Selection {
     void onKeyPress(KeyPress& evt) override {
         if (evt.key == Key::A && (evt.keyflags & Keyflag::CTRL) &&
             !evt.handled) {
-
-            // Ctrl + Shift + A == Notes + Tempo
             if ((evt.keyflags & Keyflag::SHIFT)) {
                 gTempoBoxes->selectAll();
                 if (gChart->isOpen()) gNotes->selectAll();
-            }
-
-            // Ctrl + Alt + A || Chart Closed == Tempo
-            if (!gChart->isOpen() || (evt.keyflags & Keyflag::ALT)) {
+            } else if (!gChart->isOpen() || (evt.keyflags & Keyflag::ALT)) {
                 gTempoBoxes->selectAll();
-            }
-            
-            // Ctrl + A == Notes
-            else {
+            } else {
                 gNotes->selectAll();
             }
             evt.handled = true;
