@@ -1,17 +1,19 @@
 #include <Editor/Editing.h>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <set>
+#include <string>
 
+#include <Core/Core.h>
+#include <Core/Input.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
+#include <Core/Vector.h>
 #include <Core/Xmr.h>
 
-#include <System/Debug.h>
-#include <System/System.h>
-
-#include <Simfile/SegmentGroup.h>
-
+#include <Editor/Clipboard.h>
 #include <Editor/Common.h>
 #include <Editor/History.h>
 #include <Editor/Menubar.h>
@@ -21,24 +23,22 @@
 #include <Editor/TempoBoxes.h>
 #include <Editor/View.h>
 
+#include <Managers/ChartMan.h>
+#include <Managers/NoteMan.h>
 #include <Managers/SimfileMan.h>
 #include <Managers/StyleMan.h>
 #include <Managers/TempoMan.h>
 
-#include <cmath>
-#include <Core/Core.h>
-#include <Core/Input.h>
-#include <Core/Vector.h>
-#include <cstdint>
-#include <Managers/ChartMan.h>
-#include <Managers/NoteMan.h>
 #include <Simfile/Chart.h>
 #include <Simfile/Common.h>
 #include <Simfile/NoteList.h>
 #include <Simfile/Notes.h>
+#include <Simfile/SegmentGroup.h>
 #include <Simfile/Segments.h>
 #include <Simfile/Tempo.h>
-#include <string>
+
+#include <System/Debug.h>
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -1019,17 +1019,36 @@ struct EditingImpl : public Editing {
                                 !(gSelection->getSelectedRegion()).isEmpty();
         bool hasSelectedSegments = !gTempoBoxes->noneSelected();
 
-        if (hasSelectedNotes && hasSelectedSegments) {
-            HudWarning(
-                "Both timing segments and notes selected, copying notes only.");
-            gNotes->copyToClipboard(myUseTimeBasedCopy);
-            if (remove) gNotes->removeSelectedNotes();
-        } else if (hasSelectedNotes && !hasSelectedSegments) {
-            gNotes->copyToClipboard(myUseTimeBasedCopy);
-            if (remove) gNotes->removeSelectedNotes();
-        } else if (!hasSelectedNotes && hasSelectedSegments) {
-            gTempo->copyToClipboard();
-            if (remove) gTempo->removeSelectedSegments();
+        if (hasSelectedNotes || hasSelectedSegments) {
+            std::string out;
+            auto useTimeCopy = myUseTimeBasedCopy && !hasSelectedSegments;
+
+            // Time-Based Warning for Tempo
+            if (hasSelectedNotes && hasSelectedSegments && myUseTimeBasedCopy)
+                HudWarning(
+                    "Time-based copy does not work for tempo segments, using "
+                    "Row-based copy for both.");
+
+            // Find starting row.
+            int minRow = INT_MAX;
+            if (hasSelectedSegments)
+                minRow = min(minRow, gTempo->minSelectionRow());
+            if (hasSelectedNotes)
+                minRow = min(minRow, gNotes->minSelectionRow());
+
+            // Notes
+            if (hasSelectedNotes) {
+                gNotes->copyToClipboard(out, minRow, useTimeCopy);
+                if (remove) gNotes->removeSelectedNotes();
+            }
+            // Tempo
+            if (hasSelectedSegments) {
+                gTempo->copyToClipboard(out, minRow);
+                if (remove) gTempo->removeSelectedSegments();
+            }
+
+            if (out.length() > 0) SetClipboardData(out);
+
         } else {
             std::string time = Str::formatTime(gView->getCursorTime());
             gSystem->setClipboardText(Str::fmt("%1").arg(time));
@@ -1038,10 +1057,11 @@ struct EditingImpl : public Editing {
     }
 
     void pasteFromClipboard(bool insert) {
-        if (gChart->isOpen() && HasClipboardData(NotesMan::clipboardTag)) {
-            gNotes->pasteFromClipboard(insert);
-        } else if (HasClipboardData(TempoMan::clipboardTag)) {
-            gTempo->pasteFromClipboard(insert);
+        if (HasClipboardData()) {
+            auto clipboard = GetClipboardData();
+
+            if (gChart->isOpen()) gNotes->pasteFromClipboard(clipboard, insert);
+            gTempo->pasteFromClipboard(clipboard, insert);
         } else {
             std::string text = gSystem->getClipboardText();
             double target = Str::readTime(text);

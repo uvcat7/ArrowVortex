@@ -1,5 +1,6 @@
 list(APPEND INC
 	"Action.h"
+	"Clipboard.h"
 	"Common.h"
 	"ConvertToOgg.h"
 	"Editing.h"
@@ -26,6 +27,7 @@ list(APPEND INC
 
 list(APPEND SRC
 	"Action.cpp"
+	"Clipboard.cpp"
 	"Common.cpp"
 	"ConvertToOgg.cpp"
 	"Editing.cpp"
