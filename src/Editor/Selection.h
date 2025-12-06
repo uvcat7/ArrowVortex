@@ -9,35 +9,43 @@
 
 namespace Vortex {
 
-struct SelectionRegion { int beginRow, endRow; };
+struct SelectionRegion {
+    int beginRow;
+    int endRow;
 
-struct Selection : public InputHandler
-{
-	enum Type { NONE, REGION, NOTES, TEMPO };
+    const bool isEmpty() const { return this->beginRow == this->endRow; }
 
-	static void create();
-	static void destroy();
+    const bool rowIsInRegion(int row) const {
+        return this->isEmpty() || this->beginRow <= row && row <= this->endRow;
+    }
+};
 
-	virtual void setType(Type type) = 0;
-	virtual Type getType() const = 0;
+struct Selection : public InputHandler {
+    enum Type { NONE, REGION, NOTES, TEMPO };
 
-	virtual void drawRegionSelection() = 0;
-	virtual void drawSelectionBox() = 0;
+    static void create();
+    static void destroy();
 
-	// Note selection.
-	virtual void selectAllNotes() = 0;
-	virtual int selectNotes(NotesMan::Filter filter) = 0;
-	virtual int selectNotes(RowType rowType) = 0;
-	virtual int selectNotes(SelectModifier t, RowCol begin, RowCol end) = 0;
-	virtual int selectNotes(SelectModifier t, const Vector<RowCol>& indices) = 0;
-	virtual int getSelectedNotes(NoteList& out) = 0;
+    virtual void drawRegionSelection() = 0;
+    virtual void drawSelectionBox() = 0;
 
-	// Region selection.
-	virtual void selectRegion() = 0;
-	virtual void selectRegion(int row, int endrow) = 0;
-	virtual SelectionRegion getSelectedRegion() = 0;
+    // Note selection.
+    virtual void selectAllNotes() = 0;
+    virtual int selectNotes(NotesMan::Filter filter,
+                            bool ignoreRegion = false) = 0;
+    virtual int selectNotes(RowType rowType, bool ignoreRegion = false) = 0;
+    virtual int selectNotes(SelectModifier t, RowCol begin, RowCol end,
+                            bool ignoreRegion = false) = 0;
+    virtual int selectNotes(SelectModifier t, const Vector<RowCol>& indices,
+                            bool ignoreRegion = false) = 0;
+    virtual int getSelectedNotes(NoteList& out) = 0;
+
+    // Region selection.
+    virtual void selectRegion() = 0;
+    virtual void selectRegion(int row, int endrow) = 0;
+    virtual SelectionRegion getSelectedRegion() = 0;
 };
 
 extern Selection* gSelection;
 
-}; // namespace Vortex
+};  // namespace Vortex

@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 80 
+IndentPPDirectives: None
+SortIncludes: false

@@ -1,0 +1,60 @@
+list(APPEND INC
+	"Action.h"
+	"Common.h"
+	"ConvertToOgg.h"
+	"Editing.h"
+	"Editor.h"
+	"FindOnsets.h"
+	"FindTempo.h"
+	"History.h"
+	"Menubar.h"
+	"Minimap.h"
+	"Music.h"
+	"Notefield.h"
+	"NotefieldPreview.h"
+	"RatingEstimator.h"
+	"Selection.h"
+	"Shortcuts.h"
+	"Sound.h"
+	"Statusbar.h"
+	"StreamGenerator.h"
+	"TempoBoxes.h"
+	"TextOverlay.h"
+	"View.h"
+	"Waveform.h"
+)
+
+list(APPEND SRC
+	"Action.cpp"
+	"Common.cpp"
+	"ConvertToOgg.cpp"
+	"Editing.cpp"
+	"Editor.cpp"
+	"FindOnsets.cpp"
+	"FindTempo.cpp"
+	"History.cpp"
+	"LoadMp3.cpp"
+	"LoadOgg.cpp"
+	"LoadWav.cpp"
+	"Menubar.cpp"
+	"Minimap.cpp"
+	"Music.cpp"
+	"Notefield.cpp"
+	"NotefieldPreview.cpp"
+	"RatingEstimator.cpp"
+	"Selection.cpp"
+	"Shortcuts.cpp"
+	"Sound.cpp"
+	"Statusbar.cpp"
+	"StreamGenerator.cpp"
+	"TempoBoxes.cpp"
+	"TextOverlay.cpp"
+	"View.cpp"
+	"Waveform.cpp"
+)
+
+add_library(Editor STATIC ${SRC} ${INC})
+target_include_directories(Editor PRIVATE ${FFMPEG_INCLUDE_DIRS})
+target_link_directories(Editor PRIVATE ${FFMPEG_LIBRARY_DIRS})
+message("${FFMPEG_LIBRARIES}")
+target_link_libraries(Editor PRIVATE Core Dialogs MAD::MAD Managers Simfile System Aubio::aubio iir::iir_static Vorbis::vorbisfile Vorbis::vorbis Ogg::ogg ${FFMPEG_LIBRARIES})

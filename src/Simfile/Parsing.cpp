@@ -21,225 +21,193 @@ namespace Vortex {
 // ===================================================================================
 // External load and save functions.
 
-#define LOAD_ARGS StringRef path, Simfile* sim
-#define SAVE_ARGS const Simfile* sim, bool backup
+#define LOAD_ARGS fs::path path, Simfile *sim
+#define SAVE_ARGS const Simfile *sim, bool backup
 
-namespace Sm
-{
-	bool LoadSm(LOAD_ARGS);  // Defined in LoadSm.cpp
-	bool SaveSm(SAVE_ARGS);  // Defined in SaveSm.cpp
-	bool SaveSsc(SAVE_ARGS); // Defined in SaveSm.cpp
-};
-namespace Osu
-{
-	bool LoadOsu(LOAD_ARGS); // Defined in LoadOsu.cpp
-	bool SaveOsu(SAVE_ARGS); // Defined in SaveOsu.cpp
-};
-namespace Dwi
-{
-	bool LoadDwi(LOAD_ARGS); // Defined in LoadDwi.cpp
+namespace Sm {
+bool LoadSm(LOAD_ARGS);   // Defined in LoadSm.cpp
+bool SaveSm(SAVE_ARGS);   // Defined in SaveSm.cpp
+bool SaveSsc(SAVE_ARGS);  // Defined in SaveSm.cpp
+};  // namespace Sm
+namespace Osu {
+bool LoadOsu(LOAD_ARGS);  // Defined in LoadOsu.cpp
+bool SaveOsu(SAVE_ARGS);  // Defined in SaveOsu.cpp
+};  // namespace Osu
+namespace Dwi {
+bool LoadDwi(LOAD_ARGS);  // Defined in LoadDwi.cpp
 };
 
 // ================================================================================================
 // Parsing utilities.
 
-bool ParseSimfile(String& out, StringRef path)
-{
-	bool success;
-	out = File::getText(path, &success);
-	if(!success) return false;
+bool ParseSimfile(std::string& out, fs::path path) {
+    bool success;
+    out = File::getText(path, &success);
+    if (!success) return false;
 
-	// Preprocess the file contents.
-	const char* read = out.begin();
-	char* write = out.begin();
-	while(*read)
-	{
-		if(read[0] == '/' && read[1] == '/')
-		{
-			while(*read && *read != '\n') ++read;
-		}
-		else if(*read == '\r')
-		{
-			++read;
-		}
-		else if(*read == '\t')
-		{
-			*write = ' ';
-			++read, ++write;
-		}
-		else
-		{
-			*write = *read;
-			++read, ++write;
-		}
-	}
-	Str::truncate(out, write - out.begin());
+    // Preprocess the file contents.
+    const char* read = &out[0];
+    char* write = &out[0];
+    while (*read) {
+        if (read[0] == '/' && read[1] == '/') {
+            while (*read && *read != '\n') ++read;
+        } else if (*read == '\r') {
+            ++read;
+        } else if (*read == '\t') {
+            *write = ' ';
+            ++read, ++write;
+        } else {
+            *write = *read;
+            ++read, ++write;
+        }
+    }
+    Str::truncate(out, static_cast<int>(write - &out[0]));
 
-	return true;
+    return true;
 }
 
-static char* ZeroTerminateItem(char* start, char* end)
-{
-	while(end != start && (end[-1] == ' ' || end[-1] == '\n')) --end;
-	*end = 0;
-	return start;
+static char* ZeroTerminateItem(char* start, char* end) {
+    while (end != start && (end[-1] == ' ' || end[-1] == '\n')) --end;
+    *end = 0;
+    return start;
 }
 
-bool ParseNextTag(char*& p, char*& outTag, char*& outVal)
-{
+bool ParseNextTag(char*& p, char*& outTag, char*& outVal) {
+    while (*p && *p != '#') ++p;
+    if (*p == 0) return false;
+    outTag = ++p;
 
-	while(*p && *p != '#') ++p;
-	if(*p == 0) return false;
-	outTag = ++p;
+    while (*p && *p != ':') ++p;
+    if (*p) *p++ = 0;
 
-	while(*p && *p != ':') ++p;
-	if(*p) *p++ = 0;
+    outVal = p;
+    // Allow : and ; to be escaped
+    while (*p && (*p != ';' || *(p - 1) == '\\') &&
+           !(p[0] == '\n' && p[1] == '#'))
+        ++p;
+    if (*p) *p++ = 0;
 
-	outVal = p;
-	//Allow : and ; to be escaped
-	while(*p && (*p != ';' || *(p-1) == '\\') && !(p[0] == '\n' && p[1] == '#')) ++p;
-	if(*p) *p++ = 0;
-
-	return true;
+    return true;
 }
 
-bool ParseNextItem(char*& p, char*& outVal, char seperator)
-{
-	while(*p == ' ' || *p == '\n') ++p;
-	if(*p == 0) return false;
+bool ParseNextItem(char*& p, char*& outVal, char seperator) {
+    while (*p == ' ' || *p == '\n') ++p;
+    if (*p == 0) return false;
 
-	char* start = p;
-	while(*p && *p != seperator) ++p;
-	char* end = p;
+    char* start = p;
+    while (*p && *p != seperator) ++p;
+    char* end = p;
 
-	if(*p == seperator) ++p;
+    if (*p == seperator) ++p;
 
-	outVal = ZeroTerminateItem(start, end);
+    outVal = ZeroTerminateItem(start, end);
 
-	return true;
+    return true;
 }
 
-bool ParseNextItem(char*& p, char** outVals, int numVals, char setSeperator, char valSeperator)
-{
-	while(*p == ' ' || *p == '\n') ++p;
-	if(*p == 0) return false;
+bool ParseNextItem(char*& p, char** outVals, int numVals, char setSeperator,
+                   char valSeperator) {
+    while (*p == ' ' || *p == '\n') ++p;
+    if (*p == 0) return false;
 
-	bool setEnded = false;
-	for(int i = 0; i < numVals; ++i)
-	{
-		char* start = p;
-		while(*p && *p != setSeperator && *p != valSeperator) ++p;
-		char end = *p;
+    bool setEnded = false;
+    for (int i = 0; i < numVals; ++i) {
+        char* start = p;
+        while (*p && *p != setSeperator && *p != valSeperator) ++p;
+        char end = *p;
 
-		outVals[i] = ZeroTerminateItem(start, p);
+        outVals[i] = ZeroTerminateItem(start, p);
 
-		if(end == valSeperator)
-		{
-			++p;
-			while(*p == ' ' || *p == '\n') ++p;
-		}
-		else
-		{
-			for(++i; i < numVals; ++i) outVals[i] = p;
-			if(end == setSeperator) *p++ = 0;
-			setEnded = true;
-		}
-	}
-	if(!setEnded)
-	{
-		while(*p && *p != setSeperator) ++p;
-		if(*p == setSeperator) ++p;
-	}
+        if (end == valSeperator) {
+            ++p;
+            while (*p == ' ' || *p == '\n') ++p;
+        } else {
+            for (++i; i < numVals; ++i) outVals[i] = p;
+            if (end == setSeperator) *p++ = 0;
+            setEnded = true;
+        }
+    }
+    if (!setEnded) {
+        while (*p && *p != setSeperator) ++p;
+        if (*p == setSeperator) ++p;
+    }
 
-	return true;
+    return true;
 }
 
-bool ParseBool(const char* str, bool& outVal)
-{
-	outVal = !Str::iequal(str, "NO");
-	return true;
+bool ParseBool(const char* str, bool& outVal) {
+    outVal = !Str::iequal(str, "NO");
+    return true;
 }
 
-bool ParseVal(const char* str, double& outVal)
-{
-	char* end;
-	double v = strtod(str, &end);
-	if(v == 0 && (*str == 0 || *end != 0)) return false;
-	outVal = v;
-	return true;
+bool ParseVal(const char* str, double& outVal) {
+    char* end;
+    double v = strtod(str, &end);
+    if (v == 0 && (*str == 0 || *end != 0)) return false;
+    outVal = v;
+    return true;
 }
 
-bool ParseVal(const char* str, int& outInt)
-{
-	char* end;
-	int v = strtol(str, &end, 10);
-	if(v == 0 && (*str == 0 || *end != 0)) return false;
-	outInt = v;
-	return true;
+bool ParseVal(const char* str, int& outInt) {
+    char* end;
+    int v = strtol(str, &end, 10);
+    if (v == 0 && (*str == 0 || *end != 0)) return false;
+    outInt = v;
+    return true;
 }
 
-bool ParseBeat(const char* str, int& outRow)
-{
-	double beat;
-	if(!ParseVal(str, beat)) return false;
-	outRow = (int)(beat * 48 + 0.5);
-	return true;
+bool ParseBeat(const char* str, int& outRow) {
+    double beat;
+    if (!ParseVal(str, beat)) return false;
+    outRow = static_cast<int>(beat * 48 + 0.5);
+    return true;
 }
 
 // ================================================================================================
 // Simfile importing and exporting.
 
-static void ClearSimfile(Simfile& sim, Path& path)
-{
-	sim.~Simfile();
-	new (&sim) Simfile();
-	sim.dir = path.dir();
-	sim.file = path.name();
+static void ClearSimfile(Simfile& sim, fs::path path) {
+    sim.~Simfile();
+    new (&sim) Simfile();
+    sim.dir = pathToUtf8(path.parent_path());
+    sim.file = pathToUtf8(path.filename());
 }
 
-bool LoadSimfile(Simfile& sim, StringRef path)
-{
-	// Store the song directory, filename and extension.
-	Path filePath = path;
-	ClearSimfile(sim, filePath);
+bool LoadSimfile(Simfile& sim, fs::path path) {
+    // Store the song directory, filename and extension.
+    ClearSimfile(sim, path);
 
-	// Call the load function associated with the extension.
-	bool success = false;
-	String ext = filePath.ext();
-	Str::toLower(ext);
-	if(ext == "sm" || ext == "ssc")
-	{
-		success = Sm::LoadSm(filePath, &sim);
-	}
-	else if(ext == "dwi")
-	{
-		success = Dwi::LoadDwi(filePath, &sim);
-	}
-	else if(ext == "osu")
-	{
-		success = Osu::LoadOsu(filePath, &sim);
-	}
-	else
-	{
-		Debug::blockBegin(Debug::ERROR, "could not load sim");
-		Debug::log("file: %s\n", path);
-		Debug::log("reason: unknown sim format\n");
-		Debug::blockEnd();
-	}
-	if(!success) return false;
+    // Call the load function associated with the extension.
+    bool success = false;
+    std::string ext = pathToUtf8(path.extension());
+    Str::toLower(ext);
+    if (ext == ".sm" || ext == ".ssc") {
+        success = Sm::LoadSm(path, &sim);
+    } else if (ext == ".dwi") {
+        success = Dwi::LoadDwi(path, &sim);
+    } else if (ext == ".osu") {
+        success = Osu::LoadOsu(path, &sim);
+    } else {
+        Debug::blockBegin(Debug::ERROR, "could not load sim");
+        Debug::log("file: %s\n", pathToUtf8(path).c_str());
+        Debug::log("reason: unknown sim format\n");
+        Debug::blockEnd();
+    }
+    if (!success) return false;
 
-	return true;
+    return true;
 }
 
-bool SaveSimfile(const Simfile& sim, SimFormat format, bool backup)
-{
-	switch(format)
-	{
-		case SIM_SM:  return Sm::SaveSm(&sim, backup);
-		case SIM_SSC: return Sm::SaveSsc(&sim, backup);
-		case SIM_OSU: return Osu::SaveOsu(&sim, backup);
-	};
-	return false;
+bool SaveSimfile(const Simfile& sim, SimFormat format, bool backup) {
+    switch (format) {
+        case SIM_SM:
+            return Sm::SaveSm(&sim, backup);
+        case SIM_SSC:
+            return Sm::SaveSsc(&sim, backup);
+        case SIM_OSU:
+            return Osu::SaveOsu(&sim, backup);
+    };
+    return false;
 }
 
-}; // namespace Vortex
+};  // namespace Vortex
