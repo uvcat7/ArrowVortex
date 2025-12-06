@@ -118,10 +118,13 @@ struct SelectionImpl : public Selection {
     void onKeyPress(KeyPress& evt) override {
         if (evt.key == Key::A && (evt.keyflags & Keyflag::CTRL) &&
             !evt.handled) {
-            if (gChart->isOpen()) {
-                gNotes->selectAll();
-            } else {
+            if ((evt.keyflags & Keyflag::SHIFT)) {
                 gTempoBoxes->selectAll();
+                if (gChart->isOpen()) gNotes->selectAll();
+            } else if (!gChart->isOpen() || (evt.keyflags & Keyflag::ALT)) {
+                gTempoBoxes->selectAll();
+            } else {
+                gNotes->selectAll();
             }
             evt.handled = true;
         }
@@ -343,8 +346,8 @@ struct SelectionImpl : public Selection {
     void selectRegion(int row, int endRow) override {
         setRegion(row, endRow);
 
-        auto firstRow = std::min(row, endRow);
-        auto lastRow = std::max(row, endRow);
+        auto firstRow = min(row, endRow);
+        auto lastRow = max(row, endRow);
         if (row != endRow) {
             double m1 = gTempo->beatToMeasure(firstRow * BEATS_PER_ROW);
             double m2 = gTempo->beatToMeasure(lastRow * BEATS_PER_ROW);

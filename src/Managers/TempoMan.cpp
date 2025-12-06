@@ -1,26 +1,26 @@
 #include <Managers/TempoMan.h>
 
+#include <algorithm>
 #include <math.h>
 
-#include <Core/Utils.h>
-#include <Core/StringUtils.h>
-#include <Core/VectorUtils.h>
 #include <Core/ByteStream.h>
+#include <Core/StringUtils.h>
+#include <Core/Utils.h>
+#include <Core/VectorUtils.h>
 
-#include <Simfile/SegmentList.h>
-#include <Simfile/SegmentGroup.h>
-#include <Simfile/TimingData.h>
+#include <Editor/Clipboard.h>
+#include <Editor/Common.h>
+#include <Editor/Editor.h>
+#include <Editor/History.h>
+#include <Editor/Selection.h>
+#include <Editor/TempoBoxes.h>
+#include <Editor/View.h>
 
 #include <Managers/SimfileMan.h>
 
-#include <Editor/History.h>
-#include <Editor/Common.h>
-#include <Editor/Editor.h>
-#include <Editor/Selection.h>
-#include <Editor/View.h>
-#include <Editor/TempoBoxes.h>
-
-#include <algorithm>
+#include <Simfile/SegmentGroup.h>
+#include <Simfile/SegmentList.h>
+#include <Simfile/TimingData.h>
 
 #define TEMPO_MAN ((TempoManImpl*)gTempo)
 
@@ -461,7 +461,15 @@ struct TempoManImpl : public TempoMan {
     // ================================================================================================
     // TempoManImpl :: clipboard functions.
 
-    void copyToClipboard() override {
+    int minSelectionRow() const override {
+        auto boxes = gTempoBoxes->getBoxes();
+        for (auto& box : boxes) {
+            if (box.isSelected) return box.row;
+        }
+        return INT_MAX;
+    }
+
+    void copyToClipboard(std::string& out, int minRow) override {
         SegmentGroup clipboard;
 
         // Copy all the selected segments.
@@ -484,10 +492,12 @@ struct TempoManImpl : public TempoMan {
         }
 
         // Find out what the first row is.
-        int row = INT_MAX;
-        for (auto& list : clipboard) {
-            if (list.size()) {
-                row = min(row, list.begin()->row);
+        int row = minRow;
+        if (row == INT_MAX) {
+            for (auto& list : clipboard) {
+                if (list.size()) {
+                    row = min(row, list.begin()->row);
+                }
             }
         }
 
@@ -502,18 +512,21 @@ struct TempoManImpl : public TempoMan {
         if (clipboard.numSegments() > 0) {
             WriteStream stream;
             clipboard.encode(stream);
-            SetClipboardData(clipboardTag, stream.data(), stream.size());
+            out.append(clipboardTag);
+            Base64Encode(out, stream.data(), stream.size());
             HudNote("Copied %s", clipboard.description().c_str());
         }
     }
 
-    void pasteFromClipboard(bool insert) override {
-        SegmentEdit clipboard;
+    void pasteFromClipboard(ClipboardData clipboard, bool insert) override {
+        SegmentEdit edit;
 
         // Decode the clipboard data.
-        Vector<uint8_t> data = GetClipboardData(clipboardTag);
-        ReadStream stream(data.begin(), data.size());
-        clipboard.add.decode(stream);
+        Vector<uint8_t> buffer = clipboard.tempos;
+        if (buffer.size() == 0) return;
+
+        ReadStream stream(buffer.begin(), buffer.size());
+        edit.add.decode(stream);
         if (stream.success() == false || stream.bytesleft() > 0) {
             HudError("Clipboard contains invalid tempo data.");
             return;
@@ -521,14 +534,14 @@ struct TempoManImpl : public TempoMan {
 
         // Offset all segments to the cursor row.
         int row = gView->getCursorRow();
-        for (auto& list : clipboard.add) {
+        for (auto& list : edit.add) {
             for (auto seg = list.begin(), end = list.end(); seg != end; ++seg) {
                 seg->row += row;
             }
         }
 
         // Add the pasted segments to the current tempo.
-        modify(clipboard, !insert);
+        modify(edit, !insert);
     }
 
     // ================================================================================================

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Editor/Clipboard.h>
+
 #include <Simfile/Tempo.h>
 #include <Simfile/SegmentGroup.h>
 
@@ -72,8 +74,11 @@ struct TempoMan {
     virtual void modify(const SegmentEdit& edit, bool clearRegion) = 0;
     virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;
     virtual void removeSelectedSegments() = 0;
-    virtual void pasteFromClipboard(bool insert) = 0;
-    virtual void copyToClipboard() = 0;
+
+    /// Clipboard
+    virtual int minSelectionRow() const = 0;
+    virtual void pasteFromClipboard(ClipboardData clipboard, bool insert) = 0;
+    virtual void copyToClipboard(std::string& out, int minRow) = 0;
 
     /// Sets the global music offset.
     virtual void setOffset(double offset) = 0;
