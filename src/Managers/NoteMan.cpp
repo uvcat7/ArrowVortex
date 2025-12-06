@@ -1,31 +1,33 @@
 #include <Managers/NoteMan.h>
 
 #include <algorithm>
-
-#include <Core/StringUtils.h>
-#include <Core/Utils.h>
-
-#include <Managers/SimfileMan.h>
-#include <Managers/StyleMan.h>
-#include <Managers/TempoMan.h>
-#include <Simfile/TimingData.h>
+#include <cstdint>
+#include <string>
 
 #include <Core/ByteStream.h>
 #include <Core/Core.h>
+#include <Core/StringUtils.h>
+#include <Core/Utils.h>
 #include <Core/Vector.h>
-#include <cstdint>
+
+#include <Editor/Clipboard.h>
 #include <Editor/Common.h>
 #include <Editor/Editing.h>
 #include <Editor/Editor.h>
 #include <Editor/History.h>
 #include <Editor/Selection.h>
 #include <Editor/View.h>
+
+#include <Managers/SimfileMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
+
 #include <Simfile/Chart.h>
 #include <Simfile/Common.h>
 #include <Simfile/NoteList.h>
 #include <Simfile/Notes.h>
 #include <Simfile/Simfile.h>
-#include <string>
+#include <Simfile/TimingData.h>
 
 namespace Vortex {
 
@@ -684,7 +686,26 @@ struct NotesManImpl : public NotesMan {
     // ================================================================================================
     // NotesManImpl :: clipboard functions.
 
-    void copyToClipboard(bool timeBased) override {
+    int minSelectionRow() const override {
+        int minRow = INT_MAX;
+
+        // Region
+        auto region = gSelection->getSelectedRegion();
+        if (!region.isEmpty()) minRow = min(minRow, region.beginRow);
+
+        // Notes
+        for (auto& note : myNotes) {
+            if (note.isSelected) {
+                minRow = min(minRow, note.row);
+                break;
+            }
+        }
+
+        return minRow;
+    }
+
+    void copyToClipboard(std::string& out, int minRow,
+                         bool timeBased) override {
         // Get the note selection.
         NoteList notes;
         int numNotes = gSelection->getSelectedNotes(notes);
@@ -697,15 +718,18 @@ struct NotesManImpl : public NotesMan {
             if (timeBased) {
                 notes.encode(stream, gTempo->getTimingData(), true);
             } else {
-                notes.encode(stream, true);
+                notes.encode(stream, true, minRow);
             }
-            SetClipboardData(clipboardTag, stream.data(), stream.size());
+            out.append(clipboardTag);
+            Base64Encode(out, stream.data(), stream.size());
             HudInfo("Copied %i notes", numNotes);
         }
     }
 
-    void pasteFromClipboard(bool insert) override {
-        Vector<uint8_t> buffer = GetClipboardData(clipboardTag);
+    void pasteFromClipboard(ClipboardData clipboard, bool insert) override {
+        Vector<uint8_t> buffer = clipboard.notes;
+        if (buffer.size() == 0) return;
+
         ReadStream stream(buffer.data(), buffer.size());
 
         // Check if the note data is time-based.

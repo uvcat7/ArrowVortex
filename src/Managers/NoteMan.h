@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Editor/Clipboard.h>
+
 #include <Simfile/Notes.h>
 
 namespace Vortex {
@@ -61,8 +63,10 @@ struct NotesMan {
     virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;
 
     // Clipboard functions.
-    virtual void copyToClipboard(bool timeBased) = 0;
-    virtual void pasteFromClipboard(bool insert) = 0;
+    virtual int minSelectionRow() const = 0;
+    virtual void copyToClipboard(std::string& out, int minRow,
+                                 bool timeBased) = 0;
+    virtual void pasteFromClipboard(ClipboardData clipboard, bool insert) = 0;
 
     // Statistics functions.
     virtual int getNumSteps() const = 0;  ///< Includes jumps/holds/rolls.

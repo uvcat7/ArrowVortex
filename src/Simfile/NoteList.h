@@ -49,6 +49,7 @@ class NoteList {
 
     // Encodes the note data and writes it to a bytestream.
     void encode(WriteStream& out, bool removeOffset) const;
+    void encode(WriteStream& out, bool removeOffset, int rowStart) const;
 
     // Alternative version of encode that writes time stamps instead of rows.
     void encode(WriteStream& out, const TimingData& timing, bool removeOffset);
