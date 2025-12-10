@@ -259,10 +259,10 @@ void DialogAdjustTempoSM5::onAction(int id) {
             if (strpbrk(myLabelText.c_str(), ";,=") != nullptr) {
                 HudWarning(
                     "A Label cannot contain commas, semicolons, or equal "
-                    "signs; they will be replaced with underscores.");
-                Str::replace(myLabelText, ",", "_");
-                Str::replace(myLabelText, ";", "_");
-                Str::replace(myLabelText, "=", "_");
+                    "signs; they will be replaced with very similar-looking characters.");
+                Str::replace(myLabelText, ",", "¸");
+                Str::replace(myLabelText, ";", ";");
+                Str::replace(myLabelText, "=", "᐀");
             }
             gTempo->addSegment(Label(row, myLabelText));
         } break;
