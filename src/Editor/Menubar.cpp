@@ -351,6 +351,7 @@ struct MenuBarImpl : public Menubar {
         add(myStatusMenu, TOGGLE_STATUS_ROW, "Show row");
         add(myStatusMenu, TOGGLE_STATUS_BEAT, "Show beat");
         add(myStatusMenu, TOGGLE_STATUS_MEASURE, "Show measure");
+        add(myStatusMenu, TOGGLE_STATUS_HOVER, "Show hover position");
         add(myStatusMenu, TOGGLE_STATUS_TIME, "Show time");
         add(myStatusMenu, TOGGLE_STATUS_TIMING_MODE, "Show timing mode");
         add(myStatusMenu, TOGGLE_STATUS_SCROLL, "Show scroll mod");
@@ -570,6 +571,10 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[STATUSBAR_MEASURE] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_MEASURE,
                                            gStatusbar->hasMeasure());
+        };
+        myUpdateFunctions[STATUSBAR_HOVER] = [] {
+            MENU->myStatusMenu->setChecked(TOGGLE_STATUS_HOVER,
+                                           gStatusbar->hasHover());
         };
         myUpdateFunctions[STATUSBAR_TIME] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_TIME,

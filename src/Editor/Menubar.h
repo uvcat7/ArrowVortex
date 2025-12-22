@@ -46,6 +46,7 @@ struct Menubar {
         STATUSBAR_ROW,
         STATUSBAR_BEAT,
         STATUSBAR_MEASURE,
+        STATUSBAR_HOVER,
         STATUSBAR_TIME,
         STATUSBAR_TIMING_MODE,
         STATUSBAR_SCROLL,

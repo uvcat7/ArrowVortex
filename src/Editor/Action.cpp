@@ -377,6 +377,8 @@ void Action::perform(Type action) {
         gStatusbar->toggleBeat();
         CASE(TOGGLE_STATUS_MEASURE)
         gStatusbar->toggleMeasure();
+        CASE(TOGGLE_STATUS_HOVER)
+        gStatusbar->toggleHover();
         CASE(TOGGLE_STATUS_TIME)
         gStatusbar->toggleTime();
         CASE(TOGGLE_STATUS_TIMING_MODE)

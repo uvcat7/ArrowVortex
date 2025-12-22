@@ -16,6 +16,7 @@ struct Statusbar {
     virtual void toggleRow() = 0;
     virtual void toggleBeat() = 0;
     virtual void toggleMeasure() = 0;
+    virtual void toggleHover() = 0;
     virtual void toggleTime() = 0;
     virtual void toggleTimingMode() = 0;
     virtual void toggleScroll() = 0;
@@ -27,6 +28,7 @@ struct Statusbar {
     virtual bool hasRow() = 0;
     virtual bool hasBeat() = 0;
     virtual bool hasMeasure() = 0;
+    virtual bool hasHover() = 0;
     virtual bool hasTime() = 0;
     virtual bool hasTimingMode() = 0;
     virtual bool hasScroll() = 0;
