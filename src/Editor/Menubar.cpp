@@ -39,6 +39,7 @@ struct MenuBarImpl : public Menubar {
     Item* myFileMenu;
     Item* myVisualSyncMenu;
     Item* myViewMenu;
+    Item* myBeatlineMenu;
     Item* myPreviewMenu;
     Item* myMinimapMenu;
     Item* myBgStyleMenu;
@@ -277,6 +278,14 @@ struct MenuBarImpl : public Menubar {
         sep(hAudio);
         add(hAudio, CONVERT_MUSIC_TO_OGG, "Convert to ogg");
 
+        // View > Beatlines menu.
+        myBeatlineMenu = newMenu();
+        add(myBeatlineMenu, BEATLINE_TOGGLE_ENABLED, "Enabled");
+        sep(myBeatlineMenu);
+        add(myBeatlineMenu, BEATLINE_TOGGLE_SNAP, "Use current snap");
+        add(myBeatlineMenu, BEATLINE_TOGGLE_COLOR, "Use snap colors");
+        add(myBeatlineMenu, BEATLINE_TOGGLE_HOVER, "Highlight mouse position");
+
         // View > Preview menu.
         myPreviewMenu = newMenu();
         add(myPreviewMenu, OPEN_DIALOG_PREVIEW_SETTINGS, "Options");
@@ -360,7 +369,6 @@ struct MenuBarImpl : public Menubar {
         // View menu.
         myViewMenu = newMenu();
         add(myViewMenu, TOGGLE_SHOW_WAVEFORM, "Show waveform");
-        add(myViewMenu, TOGGLE_SHOW_BEAT_LINES, "Show beat lines");
         add(myViewMenu, TOGGLE_SHOW_TEMPO_BOXES, "Show tempo boxes");
         add(myViewMenu, TOGGLE_SHOW_TEMPO_HELP, "Show tempo help");
         add(myViewMenu, TOGGLE_SHOW_NOTES, "Show notes");
@@ -373,6 +381,7 @@ struct MenuBarImpl : public Menubar {
         sep(myViewMenu);
         add(myViewMenu, OPEN_DIALOG_WAVEFORM_SETTINGS, "Waveform...");
         add(myViewMenu, 0 /*dummy*/, "Noteskins");
+        sub(myViewMenu, myBeatlineMenu, "Beatlines");
         sub(myViewMenu, myPreviewMenu, "Preview");
         sub(myViewMenu, myMinimapMenu, "Minimap");
         sub(myViewMenu, myBgStyleMenu, "Background");
@@ -432,9 +441,21 @@ struct MenuBarImpl : public Menubar {
             MENU->myViewMenu->setChecked(TOGGLE_SHOW_WAVEFORM,
                                          gNotefield->hasShowWaveform());
         };
-        myUpdateFunctions[SHOW_BEATLINES] = [] {
-            MENU->myViewMenu->setChecked(TOGGLE_SHOW_BEAT_LINES,
-                                         gNotefield->hasShowBeatLines());
+        myUpdateFunctions[BEATLINE_ENABLED] = [] {
+            MENU->myBeatlineMenu->setChecked(BEATLINE_TOGGLE_ENABLED,
+                                             gNotefield->hasShowBeatLines());
+        };
+        myUpdateFunctions[BEATLINE_SNAP] = [] {
+            MENU->myBeatlineMenu->setChecked(
+                BEATLINE_TOGGLE_SNAP, gNotefield->hasShowBeatLinesSnap());
+        };
+        myUpdateFunctions[BEATLINE_COLOR] = [] {
+            MENU->myBeatlineMenu->setChecked(
+                BEATLINE_TOGGLE_COLOR, gNotefield->hasShowBeatLinesColor());
+        };
+        myUpdateFunctions[BEATLINE_HOVER] = [] {
+            MENU->myBeatlineMenu->setChecked(
+                BEATLINE_TOGGLE_HOVER, gNotefield->hasShowBeatLinesHover());
         };
         myUpdateFunctions[SHOW_NOTES] = [] {
             MENU->myViewMenu->setChecked(TOGGLE_SHOW_NOTES,
@@ -545,7 +566,7 @@ struct MenuBarImpl : public Menubar {
             if (!activeType) {
                 hSkins->setChecked((SET_NOTESKIN_BEGIN), true);
             }
-            MENU->myViewMenu->replaceSubmenu(13, hSkins, "Noteskins",
+            MENU->myViewMenu->replaceSubmenu(12, hSkins, "Noteskins",
                                              (numValid == 0));
         };
         myUpdateFunctions[STATUSBAR_CHART] = [] {
