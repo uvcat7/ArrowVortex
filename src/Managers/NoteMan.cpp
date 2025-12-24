@@ -691,7 +691,15 @@ struct NotesManImpl : public NotesMan {
 
         // Region
         auto region = gSelection->getSelectedRegion();
-        if (!region.isEmpty()) minRow = min(minRow, region.beginRow);
+        if (!region.isEmpty()) {
+            for (auto& note : myNotes) {
+                if (note.row < region.beginRow) continue;
+                if (note.row > region.endRow) break;
+
+                minRow = min(minRow, note.row);
+                break;
+            }
+        }
 
         // Notes
         for (auto& note : myNotes) {

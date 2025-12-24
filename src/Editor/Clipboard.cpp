@@ -93,7 +93,7 @@ void Base64Encode(std::string& out, const uint8_t* in, int size) {
         uint32_t v = (in[i] << 16) | ((i + 1 < size ? in[i + 1] : 0) << 8) |
                      ((i + 2 < size ? in[i + 2] : 0));
 
-        // Compression - 3 chars -> 1 char
+        // Compression - 4 chars -> 1 char
         if (v == 0 && i + 2 < size) {
             out.push_back('-');
             i += 3;
@@ -115,7 +115,7 @@ void Base64Decode(Vector<uint8_t>& out, const char* in) {
     int valb = -8;
 
     for (const char* p = in; *p; p++) {
-        // Compression - 1 char -> 3 chars
+        // Compression - 1 char -> 4 chars
         if (*p == '-') {
             out.push_back(0);
             out.push_back(0);

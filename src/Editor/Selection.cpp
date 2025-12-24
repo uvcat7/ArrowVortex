@@ -156,8 +156,7 @@ struct SelectionImpl : public Selection {
         bool timeBased = gView->isTimeBased();
 
         // For this particular case, since this is done via mouse selection, we
-        // allow notes to be selected
-        //   outside the region
+        // allow notes to be selected outside the region.
         if (xl == xr && torT == torB) {
             double clickY = gView->offsetToY(torT);
             const ExpandedNote* closest = nullptr;

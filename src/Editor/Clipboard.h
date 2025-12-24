@@ -7,8 +7,8 @@
 namespace Vortex {
 
 struct ClipboardData {
-    uint8_t version;
-    uint8_t count;
+    uint8_t version = 0;
+    uint8_t count = 0;
     Vector<uint8_t> notes;
     Vector<uint8_t> tempos;
 };
