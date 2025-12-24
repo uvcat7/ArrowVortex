@@ -122,39 +122,42 @@ struct StatusbarImpl : public Statusbar {
             int row = gView->getCursorRow();
             int hrow = gView->getHoveredRow();
 
-            if (myShowHover && hrow >= 0)
+            if (myShowHover && hrow >= 0) {
                 info.push_back(Str::fmt("{tc:888}Row:{tc} %1 {tc:CCC}(%2){tc}")
                                    .arg(row)
                                    .arg(hrow));
-            else
+            } else {
                 info.push_back(Str::fmt("{tc:888}Row:{tc} %1").arg(row));
+            }
         }
 
         if (myShowBeat) {
             double beat = gView->getCursorBeat();
             double hbeat = gView->getHoveredBeat();
 
-            if (myShowHover && hbeat >= 0)
+            if (myShowHover && hbeat >= 0) {
                 info.push_back(Str::fmt("{tc:888}Beat:{tc} %1 {tc:CCC}(%2){tc}")
                                    .arg(beat, 3, 3)
                                    .arg(hbeat, 3, 3));
-            else
+            } else {
                 info.push_back(
                     Str::fmt("{tc:888}Beat:{tc} %1").arg(beat, 3, 3));
+            }
         }
 
         if (myShowMeasure) {
             double measure = gTempo->beatToMeasure(gView->getCursorBeat());
             double hmeasure = gTempo->beatToMeasure(gView->getHoveredBeat());
 
-            if (myShowHover && hmeasure >= 0)
+            if (myShowHover && hmeasure >= 0) {
                 info.push_back(
                     Str::fmt("{tc:888}Measure:{tc} %1 {tc:CCC}(%2){tc}")
                         .arg(measure, 2, 2)
                         .arg(hmeasure, 2, 2));
-            else
+            } else {
                 info.push_back(
                     Str::fmt("{tc:888}Measure:{tc} %1").arg(measure, 2, 2));
+            }
         }
 
         if (myShowTime) {
@@ -167,9 +170,9 @@ struct StatusbarImpl : public Statusbar {
                 info.push_back(Str::fmt("{tc:888}Time:{tc} %1 {tc:CCC}(%2){tc}")
                                    .arg(time)
                                    .arg(htime));
-            }
-            else
+            } else {
                 info.push_back(Str::fmt("{tc:888}Time:{tc} %1").arg(time));
+            }
         }
         if (myShowTimingMode) {
             switch (gTempo->getTimingMode()) {
