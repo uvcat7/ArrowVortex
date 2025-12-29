@@ -30,6 +30,8 @@ struct Menubar {
 
         VISUAL_SYNC_ANCHOR,
 
+        SELECT_DENSITY,
+
         VIEW_MINIMAP,
         VIEW_MODE,
         VIEW_BACKGROUND,

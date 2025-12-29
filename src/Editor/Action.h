@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <Core/Core.h>
+#include <Editor/Common.h>
 
 namespace Vortex {
 
@@ -81,6 +82,9 @@ enum Type {
     SELECT_QUANT_48,
     SELECT_QUANT_64,
     SELECT_QUANT_192,
+
+    SELECT_DENSITY_BEGIN,
+    SELECT_DENSITY_END = SELECT_DENSITY_BEGIN + SIM_MAX_COLUMNS,
 
     SELECT_TEMPO_BPM,
     SELECT_TEMPO_STOP,

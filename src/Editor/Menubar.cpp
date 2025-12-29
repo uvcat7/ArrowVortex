@@ -38,6 +38,7 @@ struct MenuBarImpl : public Menubar {
 
     Item* myFileMenu;
     Item* myVisualSyncMenu;
+    Item* myNotesSelectMenu;
     Item* myViewMenu;
     Item* myPreviewMenu;
     Item* myMinimapMenu;
@@ -158,8 +159,9 @@ struct MenuBarImpl : public Menubar {
         add(hSelectQuant, SELECT_QUANT_192, "192nd");
 
         // Notes > Select menu.
-        Item* hSelection = newMenu();
+        Item* hSelection = myNotesSelectMenu = newMenu();
         sub(hSelection, hSelectQuant, "Quantization");
+        add(hSelection, 0 /*dummy*/, "Density");
         sep(hSelection);
         add(hSelection, SELECT_ALL_STEPS, "Steps");
         add(hSelection, SELECT_ALL_MINES, "Mines");
@@ -476,6 +478,18 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[USE_CHART_PREVIEW] = [] {
             MENU->myViewMenu->setChecked(TOGGLE_CHART_PREVIEW,
                                          gView->hasChartPreview());
+        };
+        myUpdateFunctions[SELECT_DENSITY] = [] {
+            Item* density = newMenu();
+            int numCol = gStyle->getNumCols();
+            if (numCol > 0) {
+                for (int i = 0; i < numCol; ++i) {
+                    add(density, static_cast<Type>(SELECT_DENSITY_BEGIN + i),
+                        Str::val(i + 1).c_str());
+                }
+            }
+            MENU->myNotesSelectMenu->replaceSubmenu(1, density, "Density",
+                                                    (numCol == 0));
         };
         myUpdateFunctions[VIEW_MODE] = [] {
             MENU->myViewMenu->setChecked(USE_ROW_BASED_VIEW,

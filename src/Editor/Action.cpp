@@ -400,6 +400,10 @@ void Action::perform(Type action) {
 if (action >= FILE_OPEN_RECENT_BEGIN && action < FILE_OPEN_RECENT_END) {
     gEditor->openSimfile(action - FILE_OPEN_RECENT_BEGIN);
 }
+if (action >= SELECT_DENSITY_BEGIN && action < SELECT_DENSITY_END) {
+    gSelection->selectNotes(SelectModifier::SELECT_SET,
+                            action - SELECT_DENSITY_BEGIN + 1);
+}
 if (action >= SET_NOTESKIN_BEGIN && action < SET_NOTESKIN_END) {
     gNoteskin->setType(action - SET_NOTESKIN_BEGIN);
 }

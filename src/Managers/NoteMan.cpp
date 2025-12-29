@@ -528,6 +528,35 @@ struct NotesManImpl : public NotesMan {
         return numSelected;
     }
 
+    int selectDensity(SelectModifier mod, int density,
+                      bool ignoreRegion) override {
+        auto first = myNotes.begin();
+        auto last = myNotes.end() - 1;
+
+        return performSelection(
+            mod, ignoreRegion, [&](const ExpandedNote* note) {
+                if (note->isMine) {
+                    return false;
+                }
+
+                int count = 1;
+                for (const ExpandedNote* it = note - 1;
+                     it >= first && it->row == note->row; --it) {
+                    if (!it->isMine) {
+                        count++;
+                    }
+                }
+                for (const ExpandedNote* it = note + 1;
+                     it <= last && it->row == note->row; ++it) {
+                    if (!it->isMine) {
+                        count++;
+                    }
+                }
+
+                return count == density;
+            });
+    }
+
     int selectRows(SelectModifier mod, int firstCol, int lastCol, int firstRow,
                    int lastRow, bool ignoreRegion) override {
         auto region = gSelection->getSelectedRegion();

@@ -363,9 +363,26 @@ static ActionEntry actionMap[] = {
     E(SHOW_SHORTCUTS),
     E(SHOW_MESSAGE_LOG),
     E(SHOW_DEBUG_LOG),
-    E(SHOW_ABOUT)
+    E(SHOW_ABOUT),
 
 #undef E
+
+#define E_DENSITY(n)       \
+    {"SELECT_DENSITY_" #n, \
+     static_cast<Action::Type>(SELECT_DENSITY_BEGIN + (n - 1))}
+
+    E_DENSITY(1),
+    E_DENSITY(2),
+    E_DENSITY(3),
+    E_DENSITY(4),
+    E_DENSITY(5),
+    E_DENSITY(6),
+    E_DENSITY(7),
+    E_DENSITY(8),
+    E_DENSITY(9),
+    E_DENSITY(10)
+
+#undef E_DENSITY
 
 };
 

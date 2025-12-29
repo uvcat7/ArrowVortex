@@ -293,6 +293,13 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
+    int selectNotes(SelectModifier mod, int density,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->selectDensity(mod, density, ignoreRegion);
+        showSelectionResult(mod, numSelected);
+        return numSelected;
+    }
+
     int selectNotes(SelectModifier mod, RowCol begin, RowCol end,
                     bool ignoreRegion) override {
         int numSelected = gNotes->selectRows(mod, begin.col, end.col, begin.row,
