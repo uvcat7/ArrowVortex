@@ -32,17 +32,6 @@ static const int MAP_WIDTH = 16;
 static const int TEXTURE_SIZE = 256;  // sqrt(MAP_HEIGHT_MAX * MAP_WIDTH)
 static const int NUM_PIECES = MAP_HEIGHT / TEXTURE_SIZE;
 
-static const uint32_t arrowcol[9] = {
-    RGBAtoColor32(255, 0, 0, 255),      // Red.
-    RGBAtoColor32(12, 74, 206, 255),    // Blue.
-    RGBAtoColor32(145, 12, 206, 255),   // Purple.
-    RGBAtoColor32(255, 255, 0, 255),    // Yellow.
-    RGBAtoColor32(206, 12, 113, 255),   // Pink.
-    RGBAtoColor32(247, 148, 29, 255),   // Orange.
-    RGBAtoColor32(105, 231, 245, 255),  // Teal.
-    RGBAtoColor32(0, 198, 0, 255),      // Green.
-    RGBAtoColor32(132, 132, 132, 255),  // Gray.
-};
 static const uint32_t freezecol = {
     RGBAtoColor32(64, 128, 0, 255)  // Green
 };
@@ -121,7 +110,7 @@ struct MinimapImpl : public Minimap {
     void renderNotes(SetPixelData& spd, const int* colx) {
         if (gView->isTimeBased()) {
             for (auto& note : *gNotes) {
-                int rowtype = ToRowType(note.row);
+                RowType rowtype = ToRowType(note.row);
                 if (note.endrow > note.row) {
                     uint32_t color = (note.isRoll) ? rollcol : freezecol;
                     SetPixels(spd, colx[note.col], note.time, note.endtime,
@@ -131,13 +120,13 @@ struct MinimapImpl : public Minimap {
                 if (note.isSelected) {
                     color = RGBAtoColor32(255, 255, 255, 255);
                 } else {
-                    color = (note.isMine) ? minecol : arrowcol[rowtype];
+                    color = (note.isMine) ? minecol : ToRowTypeColor(rowtype);
                 }
                 SetPixels(spd, colx[note.col], note.time, color);
             }
         } else {
             for (auto& note : *gNotes) {
-                int rowtype = ToRowType(note.row);
+                RowType rowtype = ToRowType(note.row);
                 if (note.endrow > note.row) {
                     uint32_t color = (note.isRoll) ? rollcol : freezecol;
                     SetPixels(spd, colx[note.col], note.row, note.endrow,
@@ -147,7 +136,7 @@ struct MinimapImpl : public Minimap {
                 if (note.isSelected) {
                     color = RGBAtoColor32(255, 255, 255, 255);
                 } else {
-                    color = (note.isMine) ? minecol : arrowcol[rowtype];
+                    color = (note.isMine) ? minecol : ToRowTypeColor(rowtype);
                 }
                 SetPixels(spd, colx[note.col], note.row, color);
             }

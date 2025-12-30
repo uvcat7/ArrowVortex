@@ -71,6 +71,9 @@ RowType ToRowType(int rowIndex) {
     return map[rowIndex % 192];
 }
 
+uint32_t ToRowTypeColor(RowType type) { return ROW_TYPE_COLOR[type]; }
+uint32_t ToRowTypeColor(int type) { return ROW_TYPE_COLOR[type]; }
+
 // ================================================================================================
 // Hud message functions.
 

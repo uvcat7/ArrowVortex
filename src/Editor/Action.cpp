@@ -270,8 +270,14 @@ void Action::perform(Type action) {
 
         CASE(TOGGLE_SHOW_WAVEFORM)
         gNotefield->toggleShowWaveform();
-        CASE(TOGGLE_SHOW_BEAT_LINES)
+        CASE(BEATLINE_TOGGLE_ENABLED)
         gNotefield->toggleShowBeatLines();
+        CASE(BEATLINE_TOGGLE_SNAP)
+        gNotefield->toggleShowBeatLinesSnap();
+        CASE(BEATLINE_TOGGLE_COLOR)
+        gNotefield->toggleShowBeatLinesColor();
+        CASE(BEATLINE_TOGGLE_HOVER)
+        gNotefield->toggleShowBeatLinesHover();
         CASE(TOGGLE_SHOW_NOTES)
         gNotefield->toggleShowNotes();
         CASE(TOGGLE_SHOW_TEMPO_BOXES)
@@ -377,6 +383,8 @@ void Action::perform(Type action) {
         gStatusbar->toggleBeat();
         CASE(TOGGLE_STATUS_MEASURE)
         gStatusbar->toggleMeasure();
+        CASE(TOGGLE_STATUS_HOVER)
+        gStatusbar->toggleHover();
         CASE(TOGGLE_STATUS_TIME)
         gStatusbar->toggleTime();
         CASE(TOGGLE_STATUS_TIMING_MODE)

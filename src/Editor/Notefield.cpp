@@ -119,6 +119,9 @@ struct NotefieldImpl : public Notefield {
 
     bool myShowWaveform;
     bool myShowBeatLines;
+    bool myShowBeatLinesSnap;
+    bool myShowBeatLinesColor;
+    bool myShowBeatLinesHover;
     bool myShowNotes;
     bool myShowSongPreview;
 
@@ -133,6 +136,9 @@ struct NotefieldImpl : public Notefield {
 
         myShowWaveform = true;
         myShowBeatLines = true;
+        myShowBeatLinesSnap = false;
+        myShowBeatLinesColor = false;
+        myShowBeatLinesHover = false;
         myShowNotes = true;
         myShowSongPreview = false;
 
@@ -142,6 +148,33 @@ struct NotefieldImpl : public Notefield {
 
         BatchSprite::init(mySnapIcons, NUM_SNAP_TYPES, 4, 4, 32, 32);
         BatchSprite::init(myNoteLabels, 2, 2, 1, 32, 32);
+    }
+
+    // ================================================================================================
+    // NotefieldImpl :: load / save settings.
+
+    void loadSettings(XmrNode& settings) {
+        XmrNode* notefield = settings.child("notefield");
+        if (notefield) {
+            notefield->get("showWaveform", &myShowWaveform);
+            notefield->get("showBeatLines", &myShowBeatLines);
+            notefield->get("showBeatLinesSnap", &myShowBeatLinesSnap);
+            notefield->get("showBeatLinesColor", &myShowBeatLinesColor);
+            notefield->get("showBeatLinesHover", &myShowBeatLinesHover);
+            notefield->get("showNotes", &myShowNotes);
+        }
+    }
+
+    void saveSettings(XmrNode& settings) override {
+        XmrNode* notefield = settings.child("notefield");
+        if (!notefield) notefield = settings.addChild("notefield");
+
+        notefield->addAttrib("showWaveform", myShowWaveform);
+        notefield->addAttrib("showBeatLines", myShowBeatLines);
+        notefield->addAttrib("showBeatLinesSnap", myShowBeatLinesSnap);
+        notefield->addAttrib("showBeatLinesColor", myShowBeatLinesColor);
+        notefield->addAttrib("showBeatLinesHover", myShowBeatLinesHover);
+        notefield->addAttrib("showNotes", myShowNotes);
     }
 
     // ================================================================================================
@@ -347,8 +380,14 @@ struct NotefieldImpl : public Notefield {
 
         // Start drawing measures and beat lines.
         auto batch = Renderer::batchC();
-        uint32_t halfColor = ToColor32({1, 1, 1, 0.4f});
-        uint32_t fullColor = ToColor32({1, 1, 1, 0.7f});
+        uint32_t halfColor = ToColor32({1, 1, 1, 0.5f});
+        uint32_t fullColor = myShowBeatLinesColor ? ToRowTypeColor(0)
+                                                  : ToColor32({1, 1, 1, 0.7f});
+
+        double snapStep = myShowBeatLinesSnap && gView->getSnapType() > ST_4TH
+                              ? 192.0f / gView->getSnapQuant()
+                              : ROWS_PER_BEAT;
+
         DrawPosHelper drawPos;
         while (it != end && row < drawEndRow) {
             int endRow = drawEndRow;
@@ -361,14 +400,20 @@ struct NotefieldImpl : public Notefield {
 
                 // Beat lines.
                 if (zoomedIn) {
-                    int beatRow = row + ROWS_PER_BEAT;
+                    double beatRow = row + snapStep;
                     int measureEnd = row + it->rowsPerMeasure;
                     while (beatRow < measureEnd) {
                         if (beatRow > drawEndRow) break;
 
-                        int y = drawPos.advance(beatRow);
-                        Draw::fill(&batch, {myX, y, myW, 1}, halfColor);
-                        beatRow += ROWS_PER_BEAT;
+                        int r = static_cast<int>(round(beatRow));
+                        uint32_t color =
+                            myShowBeatLinesColor
+                                ? (ToRowTypeColor(ToRowType(r)) & halfColor)
+                                : halfColor;
+
+                        int y = drawPos.advance(r);
+                        Draw::fill(&batch, {myX, y, myW, 1}, color);
+                        beatRow += snapStep;
                     }
                 }
 
@@ -377,6 +422,20 @@ struct NotefieldImpl : public Notefield {
             }
             it = next, ++next;
         }
+
+        // Draw Hovered Row
+        if (myShowBeatLinesHover) {
+            int hoverRow = gView->getHoveredRow();
+            if (hoverRow >= 0) {
+                uint32_t hoverColor =
+                    myShowBeatLinesColor
+                        ? ToRowTypeColor(ToRowType(hoverRow)) & halfColor
+                        : halfColor;
+                int y = drawPos.get(hoverRow, gTempo->rowToTime(hoverRow));
+                Draw::fill(&batch, {myX, y - 1, myW, 3}, hoverColor);
+            }
+        }
+
         batch.flush();
 
         // Draw the measure labels.
@@ -734,7 +793,22 @@ struct NotefieldImpl : public Notefield {
 
     void toggleShowBeatLines() override {
         myShowBeatLines = !myShowBeatLines;
-        gMenubar->update(Menubar::SHOW_BEATLINES);
+        gMenubar->update(Menubar::BEATLINE_ENABLED);
+    }
+
+    void toggleShowBeatLinesSnap() override {
+        myShowBeatLinesSnap = !myShowBeatLinesSnap;
+        gMenubar->update(Menubar::BEATLINE_SNAP);
+    }
+
+    void toggleShowBeatLinesColor() override {
+        myShowBeatLinesColor = !myShowBeatLinesColor;
+        gMenubar->update(Menubar::BEATLINE_COLOR);
+    }
+
+    void toggleShowBeatLinesHover() override {
+        myShowBeatLinesHover = !myShowBeatLinesHover;
+        gMenubar->update(Menubar::BEATLINE_HOVER);
     }
 
     void toggleShowNotes() override {
@@ -749,6 +823,12 @@ struct NotefieldImpl : public Notefield {
     bool hasShowWaveform() override { return myShowWaveform; }
 
     bool hasShowBeatLines() override { return myShowBeatLines; }
+
+    bool hasShowBeatLinesSnap() override { return myShowBeatLinesSnap; }
+
+    bool hasShowBeatLinesColor() override { return myShowBeatLinesColor; }
+
+    bool hasShowBeatLinesHover() override { return myShowBeatLinesHover; }
 
     bool hasShowNotes() override { return myShowNotes; }
 
@@ -800,7 +880,10 @@ void TweakInfoBox::draw(recti r) {
 
 Notefield* gNotefield = nullptr;
 
-void Notefield::create() { gNotefield = new NotefieldImpl; }
+void Notefield::create(XmrNode& settings) {
+    gNotefield = new NotefieldImpl;
+    static_cast<NotefieldImpl*>(gNotefield)->loadSettings(settings);
+}
 
 void Notefield::destroy() {
     delete static_cast<NotefieldImpl*>(gNotefield);
