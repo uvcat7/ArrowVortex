@@ -23,10 +23,6 @@
 #ifdef _WIN32
 #define _UNICODE
 #include <System/OpenGL.h>
-#include <winuser.h>
-#include <shellapi.h>
-#include <shlwapi.h>
-#include <commdlg.h>
 #include <gl/gl.h>
 #endif
 #undef ERROR

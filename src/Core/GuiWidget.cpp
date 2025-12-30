@@ -88,16 +88,7 @@ void GuiWidget::onUpdateSize() {}
 
 void GuiWidget::arrange(recti r) { onArrange(r); }
 
-void GuiWidget::onArrange(recti r) {
-    rect_ = r;
-    // float scale = gSystem->getScaleFactor();
-    // rect_.x -= rect_.w / 2;
-    // rect_.y -= rect_.h / 2;
-    // rect_.w = static_cast<int>(scale * rect_.w);
-    // rect_.h = static_cast<int>(scale * rect_.h);
-    // rect_.x += rect_.w / 2;
-    // rect_.y += rect_.h / 2;
-}
+void GuiWidget::onArrange(recti r) { rect_ = r; }
 
 void GuiWidget::tick() {
     if (!isCapturingFocus()) {
