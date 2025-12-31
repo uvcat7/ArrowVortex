@@ -22,6 +22,7 @@
 #include <Editor/Common.h>
 #include <Editor/Editor.h>
 #include <Editor/Notefield.h>
+#include <Editor/Menubar.h>
 
 #include <Managers/MetadataMan.h>
 #include <Managers/ChartMan.h>
@@ -125,6 +126,8 @@ struct SimfileManImpl : public SimfileMan {
         gNoteskin->update(myChart);
         gNotes->update(mySimfile, myChart);
         gTempo->update(mySimfile, myChart);
+
+        gMenubar->update(Menubar::SELECT_DENSITY);
 
         gEditor->reportChanges(VCM_CHART_CHANGED |
                                VCM_CHART_PROPERTIES_CHANGED);
