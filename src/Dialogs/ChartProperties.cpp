@@ -1,19 +1,22 @@
 #include <Dialogs/ChartProperties.h>
 
-#include <Core/Utils.h>
-#include <Core/StringUtils.h>
 #include <Core/Draw.h>
+#include <Core/StringUtils.h>
+#include <Core/Utils.h>
 
-#include <System/System.h>
-
+#include <Editor/Common.h>
 #include <Editor/Editor.h>
-#include <Managers/MetadataMan.h>
-#include <Managers/StyleMan.h>
+#include <Editor/Notefield.h>
 #include <Editor/Selection.h>
 #include <Editor/View.h>
-#include <Editor/Notefield.h>
-#include <Editor/Common.h>
+
 #include <Managers/ChartMan.h>
+#include <Managers/MetadataMan.h>
+#include <Managers/SimfileMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
+
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -43,6 +46,7 @@ DialogChartProperties::DialogChartProperties()
 
     myCreateChartProperties();
     myCreateNoteInfo();
+    myCreateGraph();
     myCreateBreakdown();
 
     onChanges(VCM_ALL_CHANGES);
@@ -73,7 +77,12 @@ void DialogChartProperties::onChanges(int changes) {
     // Update the chart breakdown and note counts if notes change.
     if (changes & VCM_NOTES_CHANGED) {
         myUpdateNoteInfo();
+        myUpdateGraph();
         myUpdateBreakdown();
+    }
+
+    if (changes & (VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED)) {
+        myUpdateGraph();
     }
 }
 
@@ -92,7 +101,7 @@ void DialogChartProperties::myCreateChartProperties() {
 
     auto diff = myLayout.add<WgDroplist>("Difficulty");
     diff->value.bind(&myDifficulty);
-    diff->onChange.bind(this, &DCP::mySetDifficulty);
+    diff->onChange.bind(this, &DialogChartProperties::mySetDifficulty);
     for (int i = 0; i < NUM_DIFFICULTIES; ++i) {
         diff->addItem(GetDifficultyName(static_cast<Difficulty>(i)));
     }
@@ -101,19 +110,19 @@ void DialogChartProperties::myCreateChartProperties() {
     WgSpinner* meter = myLayout.add<WgSpinner>();
     meter->value.bind(&myRating);
     meter->setRange(1.0, 100000.0);
-    meter->onChange.bind(this, &DCP::mySetRating);
+    meter->onChange.bind(this, &DialogChartProperties::mySetRating);
     meter->setTooltip("Difficulty rating/meter of the chart");
 
     WgButton* calc = myLayout.add<WgButton>();
     calc->text.set("{g:calculate}");
-    calc->onPress.bind(this, &DCP::myCalcRating);
+    calc->onPress.bind(this, &DialogChartProperties::myCalcRating);
     calc->setTooltip("Estimate the chart difficulty by analyzing the notes");
 
     myLayout.row().col(76).col(260);
 
     WgLineEdit* artist = myLayout.add<WgLineEdit>("Step artist");
     artist->text.bind(&myStepArtist);
-    artist->onChange.bind(this, &DCP::mySetStepArtist);
+    artist->onChange.bind(this, &DialogChartProperties::mySetStepArtist);
     artist->setTooltip("Author of the chart");
 }
 
@@ -161,7 +170,7 @@ void DialogChartProperties::myCreateNoteInfo() {
     WgButton* copy = myLayout.add<WgButton>();
     copy->text.set("{g:copy}");
     copy->setTooltip("Copy note information to clipboard");
-    copy->onPress.bind(this, &DCP::myCopyNoteInfo);
+    copy->onPress.bind(this, &DialogChartProperties::myCopyNoteInfo);
 
     WgLabel* info = myLayout.add<WgLabel>();
     info->text.set("Note information");
@@ -175,7 +184,7 @@ void DialogChartProperties::myCreateNoteInfo() {
     myLayout.row().col(53).col(53).col(53).col(53).col(53).col(53);
     for (int i = 0; i < 6; ++i) {
         WgButton* b = myLayout.add<WgButton>(noteItemLabels[i]);
-        b->onPress.bind(this, &DCP::mySelectNotes, i);
+        b->onPress.bind(this, &DialogChartProperties::mySelectNotes, i);
         b->setTooltip(tooltips[i]);
         myNoteInfo[i] = b;
     }
@@ -250,6 +259,105 @@ void DialogChartProperties::mySelectNotes(int type) {
     };
     gSelection->selectNotes(f);
 }
+
+// ================================================================================================
+// NPS Graph.
+
+class DialogChartProperties::GraphWidget : public GuiWidget {
+   public:
+    ~GraphWidget() override;
+    explicit GraphWidget(GuiContext* gui);
+
+    void updateGraph();
+
+    void onDraw() override;
+
+   private:
+    DialogChartProperties* myDialog;
+    std::vector<int> data;
+    double peak = 0.0;
+    int scale = 1;
+    double endTime = 0.0;
+};
+
+DialogChartProperties::GraphWidget::~GraphWidget() = default;
+
+DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
+    : GuiWidget(gui) {
+    width_ = 340;
+    height_ = 100;
+}
+
+void DialogChartProperties::GraphWidget::updateGraph() {
+    if (gNotes->empty()) {
+        return;
+    }
+
+    endTime = gTempo->rowToTime(gSimfile->getEndRow());
+
+    int buckets = max(0, static_cast<int>(endTime)) + 1;
+    scale = max(1, static_cast<int>(ceil(buckets / 300)));
+    if (scale > 1) buckets = static_cast<int>(buckets / scale) + 1;
+
+    peak = 0;
+    data.resize(buckets);
+    for (int i = 0; i < buckets; i++) data[i] = 0;
+
+    for (auto& note : *gNotes) {
+        if (note.isMine || note.isWarped || note.isFake) continue;
+        int bucket = static_cast<int>((note.time + 0.5) / scale);
+        data[bucket]++;
+    }
+
+    for (int i = 0; i < buckets; i++) {
+        peak = max(peak, static_cast<double>(data[i]));
+    }
+}
+
+void DialogChartProperties::GraphWidget::onDraw() {
+    if (gNotes->empty()) {
+        Draw::fill(rect_, Color32(20, 20, 20, 255));
+        return;
+    }
+
+    int count = data.size();
+    double barWidth = (static_cast<double>(width_) / count);
+    int w = barWidth + 1;
+
+    auto batch = Renderer::batchC();
+    Draw::fill(rect_, Color32(20, 20, 20, 255));
+
+    for (int i = 0; i < count; ++i) {
+        int h = data[i] / peak * height_;
+        int x = rect_.x + static_cast<int>(i * barWidth);
+        int y = rect_.y + height_ - h;
+
+        Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
+    }
+
+    double time = min(endTime, gView->getCursorTime());
+    int x = (time / endTime) * width_;
+    Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
+               Color32(160, 160, 160, 255));
+
+    batch.flush();
+
+    TextStyle textStyle;
+    std::string info = Str::fmt("Peak: %1 NPS").arg(peak / scale, 0, 0).str;
+    Text::arrange(Text::TL, textStyle, info.c_str());
+    Text::draw(vec2i{rect_.x + 4, rect_.y + 2});
+}
+
+void DialogChartProperties::myCreateGraph() {
+    myLayout.row().col(340);
+    myLayout.add<WgSeperator>();
+
+    myLayout.row().col(340);
+    myGraph = new GraphWidget(getGui());
+    myLayout.add(myGraph);
+}
+
+void DialogChartProperties::myUpdateGraph() { myGraph->updateGraph(); }
 
 // ================================================================================================
 // Stream breakdown.
@@ -358,7 +466,7 @@ void DialogChartProperties::myCreateBreakdown() {
     WgButton* copy = myLayout.add<WgButton>();
     copy->text.set("{g:copy}");
     copy->setTooltip("Copy stream breakdown to clipboard");
-    copy->onPress.bind(this, &DCP::myCopyBreakdown);
+    copy->onPress.bind(this, &DialogChartProperties::myCopyBreakdown);
 
     WgLabel* info = myLayout.add<WgLabel>();
     info->text.set("Stream breakdown");

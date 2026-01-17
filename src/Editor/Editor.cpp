@@ -754,10 +754,6 @@ struct EditorImpl : public Editor, public InputHandler {
     void notifyChanges() {
         if (!myChanges) return;
 
-        for (auto dialog : myDialogs) {
-            if (dialog.ptr) dialog.ptr->onChanges(myChanges);
-        }
-
         gSimfile->onChanges(myChanges);
         gView->onChanges(myChanges);
         gMusic->onChanges(myChanges);
@@ -766,6 +762,10 @@ struct EditorImpl : public Editor, public InputHandler {
         gNotefield->onChanges(myChanges);
         gTempoBoxes->onChanges(myChanges);
         gWaveform->onChanges(myChanges);
+
+        for (auto dialog : myDialogs) {
+            if (dialog.ptr) dialog.ptr->onChanges(myChanges);
+        }
 
         myChanges = 0;
     }
