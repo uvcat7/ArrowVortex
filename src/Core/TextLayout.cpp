@@ -497,6 +497,28 @@ static void ClearLayout() {
     LD->textH = 0;
 }
 
+static void FindWrapIndex(const char* str, int& index) {
+    int startIndex = LD->charIndex;
+    int startNextIndex = LD->nextCharIndex;
+    int startWidth = LD->lineW;
+
+    while (true) {
+        auto glyph = ReadGlyph(reinterpret_cast<const uint8_t*>(str));
+        if (!glyph || glyph->isNewline) {
+            index = INT_MAX;
+            break;
+        }
+        startWidth += glyph->advance;
+
+        // Only wrap on whitespace.
+        if (glyph->isWhitespace) index = LD->charIndex;
+        if (startWidth > LD->maxLineW) break;
+    }
+
+    LD->charIndex = startIndex;
+    LD->nextCharIndex = startNextIndex;
+}
+
 static void CreateLayout(const char* str) {
     // Make a list of every line of glyphs.
     bool isMultiline = !(LD->flags & Text::SINGLE_LINE);
@@ -546,28 +568,6 @@ static void CreateLayout(const char* str) {
     if (LD->glyphs.size() > LD->lineBeginGlyph && LD->previousGlyph) {
         FinishCurrentLine(true);
     }
-}
-
-static void FindWrapIndex(const char* str, int& index) {
-    int startIndex = LD->charIndex;
-    int startNextIndex = LD->nextCharIndex;
-    int startWidth = LD->lineW;
-
-    while (true) {
-        auto glyph = ReadGlyph(reinterpret_cast<const uint8_t*>(str));
-        if (!glyph || glyph->isNewline) {
-            index = INT_MAX;
-            break;
-        }
-        startWidth += glyph->advance;
-
-        // Only wrap on whitespace.
-        if (glyph->isWhitespace) index = LD->charIndex;
-        if (startWidth > LD->maxLineW) break;
-    }
-
-    LD->charIndex = startIndex;
-    LD->nextCharIndex = startNextIndex;
 }
 
 static void AlignText() {
