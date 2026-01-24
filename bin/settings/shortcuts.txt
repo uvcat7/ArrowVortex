@@ -67,6 +67,8 @@ INJECT_BOUNDING_BPM_CHANGE      = ctrl + b
 SHIFT_ROW_NONDESTRUCTIVE        = b
 SHIFT_ROW_DESTRUCTIVE           = alt + b
 
+REQUANTIZE_NOTES = ctrl + r
+
 CHART_PREVIOUS = F5
 CHART_NEXT     = F6
 CHART_DELETE   = ctrl + delete
