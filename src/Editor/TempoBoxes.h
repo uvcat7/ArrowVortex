@@ -9,9 +9,10 @@ struct TempoBox {
     std::string str;
     int row;
     Segment::Type type;
-    signed int x : 16;
-    uint32_t width : 15;
-    uint32_t isSelected : 1;
+    int16_t x;
+    uint16_t width;
+    uint16_t height;
+    uint8_t isSelected : 1;
 };
 
 struct TempoBoxes {
