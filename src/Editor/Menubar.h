@@ -29,6 +29,8 @@ struct Menubar {
 
         VISUAL_SYNC_ANCHOR,
 
+        SELECT_DENSITY,
+
         BEATLINE_ENABLED,
         BEATLINE_SNAP,
         BEATLINE_COLOR,
