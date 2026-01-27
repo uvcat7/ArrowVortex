@@ -42,6 +42,8 @@ struct NotesMan {
     virtual void deselectAll() = 0;
     virtual int selectAll() = 0;
     virtual int selectQuant(int rowType, bool ignoreRegion) = 0;
+    virtual int selectDensity(SelectModifier mod, int rowType,
+                              bool ignoreRegion) = 0;
     virtual int selectRows(SelectModifier mod, int beginCol, int endCol,
                            int beginRow, int endRow, bool ignoreRegion) = 0;
     virtual int selectTime(SelectModifier mod, int beginCol, int endCol,

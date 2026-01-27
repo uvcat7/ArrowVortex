@@ -34,6 +34,8 @@ struct Selection : public InputHandler {
     virtual int selectNotes(NotesMan::Filter filter,
                             bool ignoreRegion = false) = 0;
     virtual int selectNotes(RowType rowType, bool ignoreRegion = false) = 0;
+    virtual int selectNotes(SelectModifier t, int density,
+                            bool ignoreRegion = false) = 0;
     virtual int selectNotes(SelectModifier t, RowCol begin, RowCol end,
                             bool ignoreRegion = false) = 0;
     virtual int selectNotes(SelectModifier t, const Vector<RowCol>& indices,
