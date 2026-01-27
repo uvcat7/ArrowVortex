@@ -31,11 +31,14 @@ namespace Vortex {
 // ================================================================================================
 // TempoBoxesImpl :: member data.
 
+static const int MAX_WIDTH = 400;
+
 struct TempoBoxesImpl : public TempoBoxes {
+    TextStyle textStyle;
     Vector<TempoBox> myBoxes;
     int myMouseOverBox;
-    TileBar myBoxBar;
-    TileBar myBoxHl;
+    TileRect myBoxBar;
+    TileRect myBoxHl;
 
     bool myShowBoxes;
     bool myShowHelp;
@@ -46,6 +49,8 @@ struct TempoBoxesImpl : public TempoBoxes {
     ~TempoBoxesImpl() = default;
 
     TempoBoxesImpl() {
+        textStyle.textFlags |= Text::WRAP_LINE;
+
         myBoxBar.texture = myBoxHl.texture =
             Texture("assets/icons tempo.png", false);
         myBoxBar.border = myBoxHl.border = 8;
@@ -100,13 +105,14 @@ struct TempoBoxesImpl : public TempoBoxes {
                          });
 
         // Precalculate the x-position and width of each box.
-        TextStyle textStyle;
         int previousRow = -1;
         int stacks[2] = {0, 0};
         for (TempoBox& box : myBoxes) {
-            Text::arrange(Text::MC, textStyle, box.str.c_str());
-            int width = max(32, Text::getWidth() + 24);
+            vec2i bounds =
+                Text::arrange(Text::MC, textStyle, MAX_WIDTH, box.str.c_str());
+            int width = max(32, bounds.x + 24);
             box.width = width;
+            box.height = bounds.y + 16;
 
             int side = Segment::meta[box.type]->side;
             int offset = width * (side * 2 - 1);
@@ -272,8 +278,9 @@ struct TempoBoxesImpl : public TempoBoxes {
                                          : static_cast<double>(box.row)));
                 int side = Segment::meta[box.type]->side;
                 int x = baseX[side] + box.x;
-                if (IsInside(recti{x, y - 16, static_cast<int>(box.width), 32},
-                             mpos.x, mpos.y)) {
+                if (IsInside(
+                        recti{x, y - (box.height / 2), box.width, box.height},
+                        mpos.x, mpos.y)) {
                     myMouseOverBox = i;
                     break;
                 }
@@ -316,7 +323,7 @@ struct TempoBoxesImpl : public TempoBoxes {
             int x = baseX[side] + box.x;
 
             int flags = side * TileBar::FLIP_H;
-            recti r = {x, y - 16, static_cast<int>(box.width), 32};
+            recti r = {x, y - (box.height / 2), box.width, box.height};
 
             uint32_t color = Segment::meta[box.type]->color;
             myBoxBar.draw(&batch, r, color, flags);
@@ -328,7 +335,6 @@ struct TempoBoxesImpl : public TempoBoxes {
 
         // Second pass, draw the text labels.
         tracker = TempoTimeTracker();
-        TextStyle textStyle;
         for (const TempoBox& box : myBoxes) {
             int y = static_cast<int>(
                 oy + dy * (timeBased ? tracker.advance(box.row)
@@ -338,7 +344,7 @@ struct TempoBoxesImpl : public TempoBoxes {
             int side = Segment::meta[box.type]->side;
             int x = baseX[side] + box.x + side * 4 - 2;
 
-            Text::arrange(Text::MC, textStyle, box.str.c_str());
+            Text::arrange(Text::MC, textStyle, MAX_WIDTH, box.str.c_str());
             Text::draw(recti{x, y - 17, static_cast<int>(box.width), 32});
         }
 
@@ -354,7 +360,7 @@ struct TempoBoxesImpl : public TempoBoxes {
 
         auto coords = gView->getNotefieldCoords();
         int x = (meta->side ? coords.xr : coords.xl) + box.x + box.width / 2;
-        int y = gView->rowToY(box.row) + 24;
+        int y = gView->rowToY(box.row) + (box.height / 2) + 8;
 
         TextStyle style;
 
