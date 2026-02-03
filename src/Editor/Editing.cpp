@@ -52,6 +52,15 @@ struct PlacingNote {
     uint32_t quant;
 };
 
+struct RequantizeNote {
+    const ExpandedNote* note;
+    double time[3];
+    double bpm[3];
+    double scroll[3];
+    int bounds[3];
+    bool linked = false;
+};
+
 static int KeyToCol(Key::Code code) {
     return (code == Key::DIGIT_0) ? 9 : (code - Key::DIGIT_1);
 }
@@ -818,30 +827,45 @@ struct EditingImpl : public Editing {
             return;
         }
 
-        // Get all Notes by Row
+        // Get all selected Notes.
         NoteEdit selection;
-        gSelection->getSelectedNotes(selection.rem);
+        gSelection->getSelectedNotes(selection.add);
 
-        if (selection.rem.empty()) {
+        if (selection.add.empty()) {
             HudNote("There are no notes selected.");
             return;
         }
 
-        auto select = selection.rem.begin();
+        // Get all valid notes to edit, such as chords.
+        // Remove already correct quantized notes.
+        const RowType snapToRowType[NUM_SNAP_TYPES] = {
+            RT_192TH, RT_4TH,  RT_8TH,  RT_12TH,  RT_16TH,  RT_24TH,
+            RT_32ND,  RT_48TH, RT_64TH, RT_192TH, RT_192TH, RT_192TH};
+        auto currentType = snapToRowType[gView->getSnapType()];
+
+        std::vector<RequantizeNote> source;
+        auto select = selection.add.begin();
         auto notes = gNotes->begin();
 
-        while (select != selection.rem.end() && notes != gNotes->end()) {
+        while (select != selection.add.end() && notes != gNotes->end()) {
             if (notes->row < select->row) {
                 ++notes;
             } else if (notes->row > select->row) {
                 ++select;
             } else {
-                selection.add.append(CompressNote(*notes));
+                if (ToRowType(notes->row) != currentType) {
+                    source.push_back({notes});
+                }
                 ++notes;
             }
         }
 
-        // Begin Editing
+        if (source.empty()) {
+            HudNote("There are no notes selected.");
+            return;
+        }
+
+        // Find valid snap nearest to note position.
         auto findSnapRow = [](int start, int mid, int end, RowType snap) {
             int row = -1;
             int snapDistance = INT_MAX;
@@ -859,55 +883,51 @@ struct EditingImpl : public Editing {
             return row;
         };
 
+        // Calculate a BPM to reach a relative row in relative time.
         auto calculateBPM = [](int prev_row, double prev_time, int target_row,
                                double target_time) {
             return 60 * ((target_row - prev_row) / 48.0) /
                    (target_time - prev_time);
         };
 
-        // BUG: Sequential edits during chaining use stale data.
-        // Enable when this is fixed to create a single history item.
-        // gHistory->startChain();
+        // Queue note movement from one row to another.
+        auto moveNote = [](const ExpandedNote* note, int target,
+                           NoteEdit& edit) {
+            edit.rem.append(Note(note->row, note->endrow, note->col,
+                                 note->player, note->type, 192));
+            edit.add.append(
+                Note(target, target, note->col, note->player, note->type, 192));
+        };
 
-        // Get RowType from SnapType
-        const RowType snapToRowType[NUM_SNAP_TYPES] = {
-            RT_192TH, RT_4TH,  RT_8TH,  RT_12TH,  RT_16TH,  RT_24TH,
-            RT_32ND,  RT_48TH, RT_64TH, RT_192TH, RT_192TH, RT_192TH};
-        auto currentType = snapToRowType[gView->getSnapType()];
-
-        // Start Per-Note Edits, from end to beginning.
+        int lastRow = -1;
+        int lastBoundStart = INT_MAX;
         auto segs = gTempo->getSegments();
-        auto lastRow = -1;
-        auto lastRowPosition = -1;
-        auto lastSnap = -1;
 
-        auto note = selection.add.end();
-        while (note != selection.add.begin()) {
-            --note;
-
-            // Check if move is required.
-            if (ToRowType(note->row) == currentType) continue;
-
-            NoteEdit notesEdit;
-            SegmentEdit tempoEdit;
-
-            // Quick Edit chords.
-            if (note->row == lastRow) {
-                note->row = lastRowPosition;
-                notesEdit.rem.append(*note);
-                notesEdit.add.append({lastSnap, lastSnap, note->col,
-                                      note->player, note->type, 192});
-                gNotes->modify(notesEdit, false);
-                continue;
+        // Step 1: Insert Beats where valid quantization couldn't be found.
+        // This is done in 2 steps to overcome history chaining using stale data
+        // on sequential edits to tempo or note data, and additionally reduces
+        // the total amount of edits down to a single batch for each.
+        gHistory->startChain();
+        auto rit = source.rbegin();
+        while (rit != source.rend()) {
+            // Only process the first note on the row.
+            auto next = rit + 1;
+            if (next != source.rend()) {
+                if (rit->note->row == next->note->row) {
+                    rit++;
+                    continue;
+                }
             }
 
-            // Find Note Bounds
+            lastRow = rit->note->row;
             int before = 0, after = INT_MAX;
+
+            // Find Note Bounds
             auto it = gNotes->begin();
             while (it != gNotes->end()) {
-                if (it->row < note->row) {
+                if (it->row < lastRow) {
                     before = it->row;
-                } else if (it->row > note->row) {
+                } else if (it->row > lastRow) {
                     after = it->row;
                     break;
                 }
@@ -915,96 +935,137 @@ struct EditingImpl : public Editing {
             }
 
             // Find Tempo Bounds
-            auto segments = gTempo->getSegments();
-            for (const auto& segment : *segments) {
+            for (const auto& segment : *segs) {
                 for (auto seg = segment.begin(), segEnd = segment.end();
                      seg != segEnd; ++seg) {
-                    if (seg->row < note->row) {
+                    if (seg->row < lastRow) {
                         before = max(before, seg->row);
-                    } else if (seg->row > note->row) {
+                    } else if (seg->row > lastRow) {
                         after = min(after, seg->row);
                         break;
                     }
                 }
             }
 
-            // Store previous values.
-            auto boundStart = max(before, note->row - ROWS_PER_BEAT);
-            auto boundMid = note->row;
-            auto boundEnd = min(after, note->row + ROWS_PER_BEAT);
+            // Calculate search bounds.
+            int boundStart = max(before, lastRow - ROWS_PER_BEAT);
+            int boundMid = lastRow;
+            int boundEnd = min(after, lastRow + ROWS_PER_BEAT);
 
-            int range[] = {boundStart, boundMid, boundEnd};
-            double time[] = {gTempo->rowToTime(boundStart),
-                             gTempo->rowToTime(boundMid),
-                             gTempo->rowToTime(boundEnd)};
-
-            double bpms[] = {segs->getRecent<BpmChange>(boundStart).bpm,
-                             segs->getRecent<BpmChange>(boundMid).bpm,
-                             segs->getRecent<BpmChange>(boundEnd).bpm};
-
-            double scrolls[] = {segs->getRecent<Scroll>(boundStart).ratio,
-                                segs->getRecent<Scroll>(boundMid).ratio,
-                                segs->getRecent<Scroll>(boundEnd).ratio};
-
-            // Find Nearest Valid Snap Point
-            int snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
-                                   currentType);
-
-            // No Snap Point, Insert beat and try again.
-            if (snap == -1) {
-                gNotes->insertRows(boundMid, ROWS_PER_BEAT, false);
-                gTempo->insertRows(boundMid, ROWS_PER_BEAT, false);
-
-                note->row += ROWS_PER_BEAT;
-                boundEnd += ROWS_PER_BEAT;
-
-                // Find Snap
-                snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
-                                   currentType);
-
-                notesEdit.rem.append(*note);
-                notesEdit.add.append(
-                    {snap, snap, note->col, note->player, note->type, 192});
-
-                tempoEdit.rem.append(
-                    BpmChange(boundMid + ROWS_PER_BEAT, bpms[1]));
-                tempoEdit.rem.append(
-                    Scroll(boundMid + ROWS_PER_BEAT, scrolls[1]));
+            // Previous note placement and bound end are shared positions.
+            if (lastBoundStart == boundMid) {
+                boundEnd = (rit - 1)->note->row;
+                (rit - 1)->linked = true;
             }
 
-            // It fits, move note.
-            else {
-                notesEdit.rem.append(*note);
-                notesEdit.add.append(
-                    {snap, snap, note->col, note->player, note->type, 192});
+            if (boundEnd > lastBoundStart) {
+                boundEnd = lastBoundStart;
             }
+
+            // Insert Beat if required.
+            int snap = findSnapRow(boundStart + 1, boundMid,
+                                   lastRow + ROWS_PER_BEAT - 1, currentType);
+            rit->bounds[0] = boundStart - boundMid;
+            rit->bounds[1] = snap - boundMid;
+            rit->bounds[2] = boundEnd - boundMid;
+            if (snap > boundEnd - 1) {
+                gNotes->insertRows(boundMid + 1, ROWS_PER_BEAT, false);
+                gTempo->insertRows(boundMid + 1, ROWS_PER_BEAT, false);
+                rit->bounds[2] += ROWS_PER_BEAT;
+            }
+
+            // Store Note State
+            rit->time[0] = gTempo->rowToTime(boundStart);
+            rit->time[1] = gTempo->rowToTime(boundMid);
+            rit->time[2] = gTempo->rowToTime(boundEnd);
+
+            rit->bpm[0] = segs->getRecent<BpmChange>(boundStart).bpm;
+            rit->bpm[1] = segs->getRecent<BpmChange>(boundMid).bpm;
+            rit->bpm[2] = segs->getRecent<BpmChange>(boundEnd).bpm;
+
+            rit->scroll[0] = segs->getRecent<Scroll>(boundStart).ratio;
+            rit->scroll[1] = segs->getRecent<Scroll>(boundMid).ratio;
+            rit->scroll[2] = segs->getRecent<Scroll>(boundEnd).ratio;
+
+            lastBoundStart = boundStart;
+            rit++;
+        }
+        gHistory->finishChain("[Recolorize] Beat Inserts");
+
+        // Step 2: Move Notes, and Tempo changes.
+        // The selected notes will now have moved from the beat inserts, so the
+        // relative location will be accurate. Now just adjust the BPM / Scroll
+        // to offset the changes needed.
+        gHistory->startChain();
+
+        NoteEdit notesEdit;
+        SegmentEdit tempoEdit;
+
+        BpmChange bufferbpm[2] = {{INT_MAX, 0}, {INT_MAX, 0}};
+        Scroll bufferscroll[2] = {{INT_MAX, 0}, {INT_MAX, 0}};
+
+        lastRow = -1;
+        int lastSnap = -1;
+        auto it = source.begin();
+        while (it != source.end()) {
+            // Skip Notes on same row.
+            if (it->note->row == lastRow) {
+                moveNote(it->note, lastSnap, notesEdit);
+                it++;
+                continue;
+            }
+
+            int boundStart = it->note->row + it->bounds[0];
+            int boundMid = it->note->row;
+            int boundEnd = it->note->row + it->bounds[2];
+
+            if (it->linked) {
+                boundStart = lastSnap;
+            }
+
+            int snap = it->note->row + it->bounds[1];
+            moveNote(it->note, snap, notesEdit);
 
             // Tempo Changes
             double newbpms[] = {
-                calculateBPM(boundStart, time[0], snap, time[1]),
-                calculateBPM(snap, time[1], boundEnd, time[2])};
+                calculateBPM(boundStart, it->time[0], snap, it->time[1]),
+                calculateBPM(snap, it->time[1], boundEnd, it->time[2])};
 
+            if (bufferbpm[0].row < boundStart) {
+                tempoEdit.add.append(bufferbpm[0]);
+                tempoEdit.add.append(bufferscroll[0]);
+            }
+            if (bufferbpm[1].row < boundStart) {
+                tempoEdit.add.append(bufferbpm[1]);
+                tempoEdit.add.append(bufferscroll[1]);
+            }
+
+            tempoEdit.rem.append(BpmChange(boundMid, it->bpm[1]));
             tempoEdit.add.append(BpmChange(boundStart, newbpms[0]));
-            tempoEdit.add.append(BpmChange(snap, newbpms[1]));
-            tempoEdit.add.append(BpmChange(boundEnd, bpms[2]));
-            tempoEdit.rem.append(BpmChange(boundMid, bpms[1]));
 
+            bufferbpm[0] = BpmChange(snap, newbpms[1]);
+            bufferbpm[1] = BpmChange(boundEnd, it->bpm[2]);
+
+            tempoEdit.rem.append(Scroll(boundMid, it->scroll[1]));
             tempoEdit.add.append(
-                Scroll(boundStart, bpms[0] / newbpms[0] * scrolls[0]));
-            tempoEdit.add.append(
-                Scroll(snap, bpms[1] / newbpms[1] * scrolls[1]));
-            tempoEdit.add.append(Scroll(boundEnd, scrolls[2]));
-            tempoEdit.rem.append(Scroll(boundMid, scrolls[1]));
+                Scroll(boundStart, it->bpm[0] / newbpms[0] * it->scroll[0]));
+            bufferscroll[0] =
+                Scroll(snap, it->bpm[1] / newbpms[1] * it->scroll[1]);
+            bufferscroll[1] = Scroll(boundEnd, it->scroll[2]);
 
-            gNotes->modify(notesEdit, false);
-            gTempo->modify(tempoEdit, false);
-
-            lastRow = boundMid;
-            lastRowPosition = note->row;
+            lastRow = it->note->row;
             lastSnap = snap;
+            it++;
         }
 
-        // gHistory->finishChain("Broke the file irrepairable, gg");
+        tempoEdit.add.append(bufferbpm[0]);
+        tempoEdit.add.append(bufferscroll[0]);
+        tempoEdit.add.append(bufferbpm[1]);
+        tempoEdit.add.append(bufferscroll[1]);
+
+        gNotes->modify(notesEdit, false);
+        gTempo->modify(tempoEdit, false);
+        gHistory->finishChain("[Recolorize] Note Movement");
     }
 
     /*
