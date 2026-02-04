@@ -955,7 +955,7 @@ struct EditingImpl : public Editing {
             // Previous note placement and bound end are shared positions.
             if (lastBoundStart == boundMid) {
                 boundEnd = (rit - 1)->note->row;
-                (rit - 1)->linked = true;
+                rit->linked = true;
             }
 
             if (boundEnd > lastBoundStart) {
@@ -1006,6 +1006,7 @@ struct EditingImpl : public Editing {
 
         lastRow = -1;
         int lastSnap = -1;
+        bool linkLast = false;
         auto it = source.begin();
         while (it != source.end()) {
             // Skip Notes on same row.
@@ -1019,7 +1020,7 @@ struct EditingImpl : public Editing {
             int boundMid = it->note->row;
             int boundEnd = it->note->row + it->bounds[2];
 
-            if (it->linked) {
+            if (linkLast) {
                 boundStart = lastSnap;
             }
 
@@ -1055,6 +1056,7 @@ struct EditingImpl : public Editing {
 
             lastRow = it->note->row;
             lastSnap = snap;
+            linkLast = it->linked;
             it++;
         }
 
