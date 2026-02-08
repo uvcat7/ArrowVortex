@@ -33,6 +33,12 @@ struct History : public InputHandler {
     virtual void startChain() = 0;
     virtual void finishChain(std::string message) = 0;
 
+    /// Applies queued changes directly without a history entry.
+    /// This can cause a desync between changes and history if "finishChain()"
+    /// isn't called, but allows for chart state to be updated during a chain
+    /// instead of at the end of it.
+    virtual void updateChain() = 0;
+
     virtual void onFileOpen(Simfile* simfile) = 0;
     virtual void onFileClosed() = 0;
     virtual void onFileSaved() = 0;

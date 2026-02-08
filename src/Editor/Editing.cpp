@@ -990,14 +990,12 @@ struct EditingImpl : public Editing {
             lastBoundStart = boundStart;
             rit++;
         }
-        gHistory->finishChain("[Recolorize] Beat Inserts");
+        gHistory->updateChain();
 
         // Step 2: Move Notes, and Tempo changes.
         // The selected notes will now have moved from the beat inserts, so the
         // relative location will be accurate. Now just adjust the BPM / Scroll
         // to offset the changes needed.
-        gHistory->startChain();
-
         NoteEdit notesEdit;
         SegmentEdit tempoEdit;
 
@@ -1067,7 +1065,7 @@ struct EditingImpl : public Editing {
 
         gNotes->modify(notesEdit, false);
         gTempo->modify(tempoEdit, false);
-        gHistory->finishChain("[Recolorize] Note Movement");
+        gHistory->finishChain("Recolorized Selected Notes");
     }
 
     /*
