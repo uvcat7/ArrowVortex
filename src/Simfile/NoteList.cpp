@@ -354,7 +354,7 @@ void NoteList::prepareEdit(const NoteEdit& in, NoteEditResult& out,
         }
 
         // Check if the note is inside the modified region.
-        if (clearRegion && row >= regionBegin && row < regionEnd) {
+        if (clearRegion && row >= regionBegin && row <= regionEnd) {
             removeNote = true;
         }
 
