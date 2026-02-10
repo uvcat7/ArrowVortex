@@ -44,6 +44,7 @@ struct NotesManImpl : public NotesMan {
     int myNumSteps = 0, myNumJumps = 0;
     int myNumHolds = 0, myNumRolls = 0;
     int myNumMines = 0, myNumWarps = 0;
+    int myNumFakes = 0, myNumJudge = 0;
 
     Simfile* mySimfile;
     Chart* myChart;
@@ -161,6 +162,7 @@ struct NotesManImpl : public NotesMan {
         myNumSteps = 0, myNumJumps = 0;
         myNumHolds = 0, myNumRolls = 0;
         myNumMines = 0, myNumWarps = 0;
+        myNumFakes = 0, myNumJudge = 0;
 
         int lastRow = -1;
         for (auto& note : myNotes) {
@@ -174,7 +176,9 @@ struct NotesManImpl : public NotesMan {
             } else {
                 ++myNumMines;
             }
+            myNumJudge += !(note.isMine | note.isFake | note.isWarped);
             myNumWarps += note.isWarped;
+            myNumFakes += note.isFake;
         }
     }
 
@@ -196,6 +200,7 @@ struct NotesManImpl : public NotesMan {
         myUpdateNoteTimes();
         myUpdateWarpedNotes();
         myUpdateFakedNotes();
+        myUpdateNoteStats();
     }
 
     // ================================================================================================
@@ -812,6 +817,10 @@ struct NotesManImpl : public NotesMan {
     int getNumRolls() const override { return myNumRolls; }
 
     int getNumWarps() const override { return myNumWarps; }
+
+    int getNumFakes() const override { return myNumFakes; }
+
+    int getNumJudge() const override { return myNumJudge; }
 
     const ExpandedNote* begin() const override { return myNotes.begin(); }
 
