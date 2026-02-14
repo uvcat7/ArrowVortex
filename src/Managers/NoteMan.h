@@ -77,6 +77,8 @@ struct NotesMan {
     virtual int getNumHolds() const = 0;
     virtual int getNumRolls() const = 0;
     virtual int getNumWarps() const = 0;
+    virtual int getNumFakes() const = 0;
+    virtual int getNumJudge() const = 0;  ///< only counts hittable steps.
 
     /// Returns a pointer to the first note.
     virtual const ExpandedNote* begin() const = 0;

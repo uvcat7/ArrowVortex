@@ -120,11 +120,12 @@ struct SelectionImpl : public Selection {
             !evt.handled) {
             if ((evt.keyflags & Keyflag::SHIFT)) {
                 gTempoBoxes->selectAll();
-                if (gChart->isOpen()) gNotes->selectAll();
+                if (gChart->isOpen())
+                    showSelectionResult(SELECT_SET, gNotes->selectAll());
             } else if (!gChart->isOpen() || (evt.keyflags & Keyflag::ALT)) {
                 gTempoBoxes->selectAll();
             } else {
-                gNotes->selectAll();
+                showSelectionResult(SELECT_SET, gNotes->selectAll());
             }
             evt.handled = true;
         }
@@ -273,6 +274,7 @@ struct SelectionImpl : public Selection {
                 HudNote("%s %i %ss.", typeName, numSelected, noteName);
             }
         }
+        gEditor->reportChanges(VCM_SELECTION_CHANGED);
     }
 
     void selectAllNotes() override {
