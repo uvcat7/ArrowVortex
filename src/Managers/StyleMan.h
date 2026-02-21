@@ -14,14 +14,14 @@ struct Style {
     int numCols;
     int numPlayers;
 
-    int* mirrorTableH;  // [numCols]
-    int* mirrorTableV;  // [numCols]
+    std::vector<int> mirrorTableH;  // [numCols]
+    std::vector<int> mirrorTableV;  // [numCols]
 
     int padWidth;
     int padHeight;
 
-    vec2i* padColPositions;     // [numCols]
-    vec2i* padInitialFeetCols;  // [numPlayers]
+    std::vector<vec2i> padColPositions;     // [numCols]
+    std::vector<vec2i> padInitialFeetCols;  // [numPlayers]
 };
 
 /// Manages the style of the active simfile.
