@@ -201,6 +201,26 @@ Style* CreateStyle(const XmrNode* node) {
     return out;
 }
 
+Style* CloneStyle(const Style* base, const XmrNode* node) {
+    std::string id = node->get("id", "");
+
+    if (id.empty()) {
+        HudError("One of the styles is missing an id field, ignoring style.");
+        return nullptr;
+    } else if (!base) {
+        HudError("Style %s has an invalid source style.", id.c_str());
+        return nullptr;
+    }
+
+    // At this point returning a style is guaranteed.
+    Style* out = new Style(*base);
+    out->id = id;
+    out->name = node->get("name", "");
+    if (out->name.empty()) out->name = IdToName(id);
+
+    return out;
+}
+
 // ================================================================================================
 // StyleManImpl.
 
@@ -220,6 +240,15 @@ struct StyleManImpl : public StyleMan {
             HudError("Could not load styles file.");
         }
         ForXmrNodesNamed(node, &doc, "style") {
+            const std::string sourceId = node->get("source", "");
+            if (!sourceId.empty()) {
+                Style* proxy = CloneStyle(findStyle(sourceId), node);
+                if (proxy) {
+                    proxy->index = myStyles.size();
+                    myStyles.push_back(proxy);
+                }
+                continue;
+            }
             Style* style = CreateStyle(node);
             if (style) {
                 style->index = myStyles.size();

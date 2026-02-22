@@ -27,15 +27,7 @@ style {
 style {
 	id = dance-couple
 	name = Dance Couple
-	numCols = 8
-	pad {
-		row = -C--G-
-		row = A-DE-H
-		row = -B--F-
-	}
-	feetPos = DE
-	mirrorH = CG, AH, DE, BF
-	mirrorV = CB, GF
+	source = dance-double
 }
 style {
 	id = dance-routine
@@ -106,13 +98,5 @@ style {
 style {
 	id = pump-couple
 	name = Pump Couple
-	numCols = 10
-	pad {
-		row = B-DG-I
-		row = -C--H-
-		row = A-EF-J
-	}
-	feetPos = CH
-	mirrorH = BI, DG, CH, AJ, EF
-	mirrorV = BA, DE, GF, IJ
+	source = pump-double
 }
