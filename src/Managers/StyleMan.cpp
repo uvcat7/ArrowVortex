@@ -88,6 +88,7 @@ Style* NewStyle() {
     Style* out = new Style;
 
     out->index = 0;
+    out->alias = "";
     out->numCols = 0;
     out->numPlayers = 0;
     out->padWidth = 0;
@@ -215,6 +216,7 @@ Style* CloneStyle(const Style* base, const XmrNode* node) {
     // At this point returning a style is guaranteed.
     Style* out = new Style(*base);
     out->id = id;
+    out->alias = base->id;
     out->name = node->get("name", "");
     if (out->name.empty()) out->name = IdToName(id);
 
@@ -352,6 +354,16 @@ struct StyleManImpl : public StyleMan {
         HudWarning("%s has an unknown style %s, %s.", chartName.c_str(),
                    id.c_str(), text.c_str());
         return createFallbackStyle(id, numCols, numPlayers);
+    }
+
+    std::vector<const Style*> getAliases(const std::string& id) const override {
+        std::vector<const Style*> out;
+        for (auto style : myStyles) {
+            if (style->alias == id) {
+                out.push_back(style);
+            }
+        }
+        return out;
     }
 
     void update(Chart* chart) override {
