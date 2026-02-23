@@ -281,7 +281,8 @@ struct MinimapImpl : public Minimap {
             int coldx = (cols <= 4) ? 3 : (cols <= 8) ? 2 : 1;
             int colx[SIM_MAX_COLUMNS] = {};
             for (int c = 0; c < cols; ++c) {
-                colx[c] = MAP_WIDTH / 2 + (c - cols / 2) * coldx;
+                colx[c] =
+                    clamp(MAP_WIDTH / 2 + (c - cols / 2) * coldx, 0, MAP_WIDTH);
             }
 
             auto rect = myGetMapRect();
