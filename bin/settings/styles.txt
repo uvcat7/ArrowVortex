@@ -57,6 +57,19 @@ style {
 	mirrorV = CD
 }
 style {
+	id = dance-threepanel
+	name = Dance 3 Panel
+	numCols = 3
+	pad {
+		row = A-C
+		row = ---
+		row = -B-
+	}
+	feetPos = AC
+	mirrorH = AC
+	mirrorV = 
+}
+style {
 	id = pump-single
 	name = Pump Single
 	numCols = 5 
