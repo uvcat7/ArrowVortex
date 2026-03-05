@@ -527,7 +527,11 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Give priority to the load format.
         SimFormat fmt = gSimfile->get()->format;
-        if (fmt == SIM_SM || fmt == SIM_DWI) {
+        if (fmt == SIM_NONE &&
+            (myDefaultSaveFormat == SIM_SM || myDefaultSaveFormat == SIM_SSC)) {
+            bool needSSC = gTempo->getSegments()->count(SIM_SSC) > 0;
+            saveFmt = needSSC ? SIM_SSC : SIM_SM;
+        } else if (fmt == SIM_SM || fmt == SIM_DWI) {
             saveFmt = (myDefaultSaveFormat == SIM_SSC) ? SIM_SSC : SIM_SM;
         } else if (fmt == SIM_SSC) {
             saveFmt = SIM_SSC;
