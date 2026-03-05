@@ -40,6 +40,7 @@ struct ExportData {
     const Simfile* sim;
     const Chart* chart;
     bool ssc;
+    bool sscWarning;
 };
 
 // ================================================================================================
@@ -313,6 +314,13 @@ static void WriteDisplayBpm(ExportData& data, const Tempo* tempo) {
 }
 
 static void WriteTempo(ExportData& data, const Tempo* tempo) {
+    if (!data.ssc && !data.sscWarning && tempo->segments->count(SIM_SSC) > 0) {
+        HudWarning(
+            "This file contains SM5 tempo data that will be lost on save, "
+            "consider saving the file as a .ssc to prevent data loss.");
+        data.sscWarning = true;
+    }
+
     WriteOffset(data, tempo);
 
     WriteBpms(data, tempo);
@@ -598,6 +606,7 @@ static void WriteChart(ExportData& data) {
 bool SaveSimfile(const Simfile* sim, bool ssc, bool backup) {
     ExportData data;
     data.ssc = ssc;
+    data.sscWarning = false;
     data.chart = nullptr;
     data.sim = sim;
 
