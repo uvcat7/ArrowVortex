@@ -100,6 +100,9 @@ static const int VKtoKCmap[] = {
     VK_SEPARATOR,  Key::NUMPAD_SEPERATOR,
 };
 
+// Timer ID for rendering during resizing / menu usage.
+static constexpr UINT_PTR RESIZE_TIMER_ID = 1;
+
 // Translates a dialog button type to a windows message box type.
 static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
                                             MB_YESNOCANCEL};
@@ -230,6 +233,20 @@ struct SystemImpl : public System {
     bool myInitSuccesful = false;
     bool myIsTerminated = false;
     bool myIsInsideMessageLoop = false;
+    int myRenderTimerCount = 0;
+
+    // Rendering + Debug Stats
+    // It's all here so MessageLoop and Timer can access it.
+    std::chrono::steady_clock::time_point renderPrevTime =
+        Debug::getElapsedTime();
+#ifndef NDEBUG
+    long long frames = 0;
+    int lowcounts = 0;
+    std::list<double> fpsList, sleepList, frameList, inputList, waitList;
+    // Adjust frameGuess to your VSync target if you are testing with VSync
+    // enabled.
+    int frameGuess = 960;
+#endif
 
     // ================================================================================================
     // SystemImpl :: constructor and destructor.
@@ -369,6 +386,7 @@ struct SystemImpl : public System {
         SetFocus(myHWND);
         myIsActive = true;
         myInitSuccesful = true;
+        SetTimer(myHWND, RESIZE_TIMER_ID, 16, nullptr);
     }
 
     // ================================================================================================
@@ -396,30 +414,18 @@ struct SystemImpl : public System {
 
         if (!myInitSuccesful) return;
 
-#ifndef NDEBUG
-        long long frames = 0;
-        auto lowcounts = 0;
-        std::list<double> fpsList, sleepList, frameList, inputList, waitList;
-        // Adjust frameGuess to your VSync target if you are testing with VSync
-        // enabled
-        auto frameGuess = 960;
-#endif
-
         Editor::create();
         forwardArgs();
         createMenu();
 
-        // Non-vsync FPS max target
-        auto frameTarget = duration<double>(1.0 / 960.0);
-
         // Enter the message loop.
         MSG message;
-        auto prevTime = Debug::getElapsedTime();
         while (!myIsTerminated) {
             auto startTime = Debug::getElapsedTime();
 
             myEvents.clear();
-            // Process all windows messages.
+
+            // Process all pending windows messages.
             myIsInsideMessageLoop = true;
             while (PeekMessage(&message, nullptr, 0, 0,
                                PM_NOREMOVE | PM_NOYIELD)) {
@@ -429,109 +435,113 @@ struct SystemImpl : public System {
             }
             myIsInsideMessageLoop = false;
 
-            // Check if there were text input events.
-            if (!myInput.empty()) {
-                myEvents.addTextInput(Narrow(myInput).c_str());
-                myInput.clear();
-            }
-
-            // Set up the OpenGL view.
-            glViewport(0, 0, mySize.x, mySize.y);
-            glLoadIdentity();
-            glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            // Reset the mouse cursor.
-            myCursor = Cursor::ARROW;
-
-#ifndef NDEBUG
-            auto inputTime = Debug::getElapsedTime();
-
-            VortexCheckGlError();
-#endif
-
-            gEditor->tick();
-
-            // Display.
-            SwapBuffers(myHDC);
-
-#ifndef NDEBUG
-            auto renderTime = Debug::getElapsedTime();
-#endif
-            // Tick function.
-            duration<double> frameTime = Debug::getElapsedTime() - prevTime;
-            auto waitTime = frameTarget.count() - frameTime.count();
-
-            if (wglSwapInterval) {
-                while (Debug::getElapsedTime() - prevTime < frameTarget) {
-                    std::this_thread::yield();
-                }
-            }
-
-            // End of frame
-            auto curTime = Debug::getElapsedTime();
-            deltaTime = duration<double>(static_cast<float> min(
-                max(0, duration<double>(curTime - prevTime).count()), 0.25));
-            prevTime = curTime;
-
-#ifndef NDEBUG
-            // Do frame statistics
-            // Note that these will be wrong with VSync enabled.
-            fpsList.push_front(deltaTime.count());
-            waitList.push_front(duration<double>(curTime - renderTime).count());
-            frameList.push_front(
-                duration<double>(renderTime - inputTime).count());
-            inputList.push_front(
-                duration<double>(inputTime - startTime).count());
-
-            if (abs(deltaTime.count() - 1.0 / static_cast<double>(frameGuess)) /
-                    (1.0 / static_cast<double>(frameGuess)) >
-                0.01) {
-                lowcounts++;
-            }
-            if (fpsList.size() >= frameGuess * 2) {
-                fpsList.pop_back();
-                frameList.pop_back();
-                inputList.pop_back();
-                waitList.pop_back();
-            }
-            auto min = *std::min_element(fpsList.begin(), fpsList.end());
-            auto max = *std::max_element(fpsList.begin(), fpsList.end());
-            auto maxIndex =
-                std::distance(fpsList.begin(),
-                              std::max_element(fpsList.begin(), fpsList.end()));
-            auto siz = fpsList.size();
-            auto avg =
-                std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
-            auto varianceFunc = [&avg, &siz](double accumulator, double val) {
-                return accumulator + (val - avg) * (val - avg);
-            };
-            auto std = sqrt(std::accumulate(fpsList.begin(), fpsList.end(), 0.0,
-                                            varianceFunc) /
-                            siz);
-            auto frameAvg =
-                std::accumulate(frameList.begin(), frameList.end(), 0.0) /
-                frameList.size();
-            auto frameMax = frameList.begin();
-            std::advance(frameMax, maxIndex);
-            auto inputMax = inputList.begin();
-            std::advance(inputMax, maxIndex);
-            auto waitMax = waitList.begin();
-            std::advance(waitMax, maxIndex);
-            if (frames % (frameGuess * 2) == 0) {
-                Debug::log(
-                    "frame total average: %f, frame render average %f, std dev "
-                    "%f, lowest FPS %f, highest FPS %f, highest FPS render "
-                    "time %f, highest FPS input time %f, highest FPS wait time "
-                    "%f, lag frames %d\n",
-                    avg, frameAvg, std, 1.0 / max, 1.0 / min, *frameMax,
-                    *inputMax, *waitMax, lowcounts);
-                lowcounts = 0;
-            }
-            frames++;
-#endif
+            renderFrame(startTime);
         }
         Editor::destroy();
+    }
+
+    void renderFrame(std::chrono::steady_clock::time_point startTime) {
+        using namespace std::chrono;
+
+        // Non-vsync FPS max target
+        auto frameTarget = duration<double>(1.0 / 960.0);
+
+        // Check if there were text input events.
+        if (!myInput.empty()) {
+            myEvents.addTextInput(Narrow(myInput).c_str());
+            myInput.clear();
+        }
+
+        // Set up the OpenGL view.
+        glViewport(0, 0, mySize.x, mySize.y);
+        glLoadIdentity();
+        glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Reset the mouse cursor.
+        myCursor = Cursor::ARROW;
+
+#ifndef NDEBUG
+        auto inputTime = Debug::getElapsedTime();
+        VortexCheckGlError();
+#endif
+
+        gEditor->tick();
+
+        // Display.
+        SwapBuffers(myHDC);
+
+#ifndef NDEBUG
+        auto renderTime = Debug::getElapsedTime();
+#endif
+        // Tick function.
+        duration<double> frameTime = Debug::getElapsedTime() - renderPrevTime;
+        auto waitTime = frameTarget.count() - frameTime.count();
+
+        if (wglSwapInterval) {
+            while (Debug::getElapsedTime() - renderPrevTime < frameTarget) {
+                std::this_thread::yield();
+            }
+        }
+
+        // End of frame
+        auto curTime = Debug::getElapsedTime();
+        deltaTime = duration<double>(static_cast<float> min(
+            max(0, duration<double>(curTime - renderPrevTime).count()), 0.25));
+        renderPrevTime = curTime;
+
+#ifndef NDEBUG
+        // Do frame statistics
+        // Note that these will be wrong with VSync enabled.
+        fpsList.push_front(deltaTime.count());
+        waitList.push_front(duration<double>(curTime - renderTime).count());
+        frameList.push_front(duration<double>(renderTime - inputTime).count());
+        inputList.push_front(duration<double>(inputTime - startTime).count());
+
+        if (abs(deltaTime.count() - 1.0 / static_cast<double>(frameGuess)) /
+                (1.0 / static_cast<double>(frameGuess)) >
+            0.01) {
+            lowcounts++;
+        }
+        if (fpsList.size() >= frameGuess * 2) {
+            fpsList.pop_back();
+            frameList.pop_back();
+            inputList.pop_back();
+            waitList.pop_back();
+        }
+        auto min = *std::min_element(fpsList.begin(), fpsList.end());
+        auto max = *std::max_element(fpsList.begin(), fpsList.end());
+        auto maxIndex = std::distance(
+            fpsList.begin(), std::max_element(fpsList.begin(), fpsList.end()));
+        auto siz = fpsList.size();
+        auto avg = std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
+        auto varianceFunc = [&avg, &siz](double accumulator, double val) {
+            return accumulator + (val - avg) * (val - avg);
+        };
+        auto std = sqrt(
+            std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) /
+            siz);
+        auto frameAvg =
+            std::accumulate(frameList.begin(), frameList.end(), 0.0) /
+            frameList.size();
+        auto frameMax = frameList.begin();
+        std::advance(frameMax, maxIndex);
+        auto inputMax = inputList.begin();
+        std::advance(inputMax, maxIndex);
+        auto waitMax = waitList.begin();
+        std::advance(waitMax, maxIndex);
+        if (frames % (frameGuess * 2) == 0) {
+            Debug::log(
+                "frame total average: %f, frame render average %f, std dev "
+                "%f, lowest FPS %f, highest FPS %f, highest FPS render "
+                "time %f, highest FPS input time %f, highest FPS wait time "
+                "%f, lag frames %d\n",
+                avg, frameAvg, std, 1.0 / max, 1.0 / min, *frameMax, *inputMax,
+                *waitMax, lowcounts);
+            lowcounts = 0;
+        }
+        frames++;
+#endif
     }
 
     // ================================================================================================
@@ -665,6 +675,23 @@ struct SystemImpl : public System {
                 vec2i next = {LOWORD(lp), HIWORD(lp)};
                 if (next.x > 0 && next.y > 0) mySize = next;
                 break;
+            }
+            case WM_ENTERSIZEMOVE:
+            case WM_ENTERMENULOOP: {
+                ++myRenderTimerCount;
+                break;
+            }
+            case WM_EXITSIZEMOVE:
+            case WM_EXITMENULOOP: {
+                --myRenderTimerCount;
+                break;
+            }
+            case WM_TIMER: {
+                if (wp == RESIZE_TIMER_ID && myRenderTimerCount > 0) {
+                    renderFrame(Debug::getElapsedTime());
+                }
+                result = 0;
+                return true;
             }
             case WM_MOUSEMOVE: {
                 if (myIsInsideMessageLoop) {
