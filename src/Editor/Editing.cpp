@@ -816,6 +816,12 @@ struct EditingImpl : public Editing {
     void requantizeNotes() override {
         if (gSimfile->isClosed()) return;
 
+        // Get RowType from SnapType
+        const RowType snapToRowType[NUM_SNAP_TYPES] = {
+            RT_192TH, RT_4TH,  RT_8TH,  RT_12TH,  RT_16TH,  RT_24TH,
+            RT_32ND,  RT_48TH, RT_64TH, RT_192TH, RT_192TH, RT_192TH};
+        auto currentType = snapToRowType[gView->getSnapType()];
+
         // Get all Notes by Row
         NoteEdit selection;
         gSelection->getSelectedNotes(selection.rem);
@@ -829,7 +835,9 @@ struct EditingImpl : public Editing {
         auto notes = gNotes->begin();
 
         while (select != selection.rem.end() && notes != gNotes->end()) {
-            if (notes->row < select->row) {
+            if (notes->isWarped || ToRowType(notes->row) == currentType) {
+                ++notes;
+            } else if (notes->row < select->row) {
                 ++notes;
             } else if (notes->row > select->row) {
                 ++select;
@@ -837,6 +845,11 @@ struct EditingImpl : public Editing {
                 selection.add.append(CompressNote(*notes));
                 ++notes;
             }
+        }
+
+        if (selection.add.empty()) {
+            HudNote("There are no notes selected.");
+            return;
         }
 
         // Begin Editing
@@ -865,12 +878,6 @@ struct EditingImpl : public Editing {
 
         gHistory->startChain();
 
-        // Get RowType from SnapType
-        const RowType snapToRowType[NUM_SNAP_TYPES] = {
-            RT_192TH, RT_4TH,  RT_8TH,  RT_12TH,  RT_16TH,  RT_24TH,
-            RT_32ND,  RT_48TH, RT_64TH, RT_192TH, RT_192TH, RT_192TH};
-        auto currentType = snapToRowType[gView->getSnapType()];
-
         // Start Per-Note Edits, from end to beginning.
         auto segs = gTempo->getSegments();
         auto lastRow = -1;
@@ -880,9 +887,6 @@ struct EditingImpl : public Editing {
         auto note = selection.add.end();
         while (note != selection.add.begin()) {
             --note;
-
-            // Check if move is required.
-            if (ToRowType(note->row) == currentType) continue;
 
             NoteEdit notesEdit;
             SegmentEdit tempoEdit;
