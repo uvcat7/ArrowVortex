@@ -894,6 +894,7 @@ struct EditingImpl : public Editing {
                 notesEdit.add.append({lastSnap, lastSnap, note->col,
                                       note->player, note->type, 192});
                 gNotes->modify(notesEdit, false);
+                gHistory->updateChain();
                 continue;
             }
 
@@ -948,8 +949,8 @@ struct EditingImpl : public Editing {
 
             // No Snap Point, Insert beat and try again.
             if (snap == -1) {
-                gNotes->insertRows(boundMid, ROWS_PER_BEAT, false);
-                gTempo->insertRows(boundMid, ROWS_PER_BEAT, false);
+                gNotes->insertRows(boundMid, ROWS_PER_BEAT, true);
+                gTempo->insertRows(boundMid, ROWS_PER_BEAT, true);
                 gHistory->updateChain();
 
                 note->row += ROWS_PER_BEAT;
