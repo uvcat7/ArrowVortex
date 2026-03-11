@@ -814,9 +814,7 @@ struct EditingImpl : public Editing {
     }
 
     void requantizeNotes() override {
-        if (gSimfile->isClosed()) {
-            return;
-        }
+        if (gSimfile->isClosed()) return;
 
         // Get all Notes by Row
         NoteEdit selection;
@@ -865,9 +863,7 @@ struct EditingImpl : public Editing {
                    (target_time - prev_time);
         };
 
-        // BUG: Sequential edits during chaining use stale data.
-        // Enable when this is fixed to create a single history item.
-        // gHistory->startChain();
+        gHistory->startChain();
 
         // Get RowType from SnapType
         const RowType snapToRowType[NUM_SNAP_TYPES] = {
@@ -954,6 +950,7 @@ struct EditingImpl : public Editing {
             if (snap == -1) {
                 gNotes->insertRows(boundMid, ROWS_PER_BEAT, false);
                 gTempo->insertRows(boundMid, ROWS_PER_BEAT, false);
+                gHistory->updateChain();
 
                 note->row += ROWS_PER_BEAT;
                 boundEnd += ROWS_PER_BEAT;
@@ -998,13 +995,13 @@ struct EditingImpl : public Editing {
 
             gNotes->modify(notesEdit, false);
             gTempo->modify(tempoEdit, false);
+            gHistory->updateChain();
 
             lastRow = boundMid;
             lastRowPosition = note->row;
             lastSnap = snap;
         }
-
-        // gHistory->finishChain("Broke the file irrepairable, gg");
+        gHistory->finishChain("Recolorized Selected Notes");
     }
 
     /*
