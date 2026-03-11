@@ -947,6 +947,12 @@ struct EditingImpl : public Editing {
                                 segs->getRecent<Scroll>(boundMid).ratio,
                                 segs->getRecent<Scroll>(boundEnd).ratio};
 
+            // Prevent Infinite BPMs.
+            if (time[0] == time[1] || time[1] == time[2]) {
+                lastRow = -1;
+                continue;
+            }
+
             // Find Nearest Valid Snap Point
             int snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
                                    currentType);
