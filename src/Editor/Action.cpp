@@ -113,6 +113,9 @@ void Action::perform(Type action) {
         CASE(SHIFT_ROW_DESTRUCTIVE)
         gEditing->shiftAnchorRowToMousePosition(true);
 
+        CASE(REQUANTIZE_NOTES)
+        gEditing->requantizeNotes();
+
         CASE(SELECT_REGION)
         gSelection->selectRegion();
         CASE(SELECT_ALL_STEPS)
