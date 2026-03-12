@@ -242,7 +242,7 @@ struct SystemImpl : public System {
 #ifndef NDEBUG
     long long frames = 0;
     int lowcounts = 0;
-    std::list<double> fpsList, sleepList, frameList, inputList, waitList;
+    std::list<double> fpsList, frameList, inputList, waitList;
     // Adjust frameGuess to your VSync target if you are testing with VSync
     // enabled.
     int frameGuess = 960;
@@ -443,9 +443,6 @@ struct SystemImpl : public System {
     void renderFrame(std::chrono::steady_clock::time_point startTime) {
         using namespace std::chrono;
 
-        // Non-vsync FPS max target
-        auto frameTarget = duration<double>(1.0 / 960.0);
-
         // Check if there were text input events.
         if (!myInput.empty()) {
             myEvents.addTextInput(Narrow(myInput).c_str());
@@ -466,6 +463,7 @@ struct SystemImpl : public System {
         VortexCheckGlError();
 #endif
 
+        // Tick function.
         gEditor->tick();
 
         // Display.
@@ -474,11 +472,9 @@ struct SystemImpl : public System {
 #ifndef NDEBUG
         auto renderTime = Debug::getElapsedTime();
 #endif
-        // Tick function.
-        duration<double> frameTime = Debug::getElapsedTime() - renderPrevTime;
-        auto waitTime = frameTarget.count() - frameTime.count();
-
+        // Non-vsync FPS max target
         if (wglSwapInterval) {
+            auto frameTarget = duration<double>(1.0 / 960.0);
             while (Debug::getElapsedTime() - renderPrevTime < frameTarget) {
                 std::this_thread::yield();
             }
