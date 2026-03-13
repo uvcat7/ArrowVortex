@@ -565,25 +565,43 @@ struct EditingImpl : public Editing {
     }
 
     void changeNoteSide() override {
-        Style* style = gStyle->get();
-
-        if (!style) {
-            HudNote("No style is currently active.");
-            return;
-        }
-
-        if (!style->id.ends_with("double")) {
-            HudNote("Switch side is only available in a double style.");
-            return;
-        }
+        if (gChart->isClosed()) return;
 
         NoteEdit edit;
         gSelection->getSelectedNotes(edit.add);
 
+        if (edit.add.empty()) {
+            HudNote("There are no notes selected.");
+            return;
+        }
+        edit.rem = edit.add;
+
+        // Move the selected notes.
+        auto style = gStyle->get();
         int halfpoint = style->numCols / 2;
 
-        // Copied from mirrorNotes to sort per row first (to stop an error
-        // message).
+        // Even Column Count
+        if (style->numCols % 2 == 0) {
+            for (auto& n : edit.add) {
+                if (n.col <= (halfpoint - 1)) {
+                    n.col += halfpoint;
+                } else {
+                    n.col -= halfpoint;
+                }
+            }
+        }
+        // Odd Column Count
+        else {
+            for (auto& n : edit.add) {
+                if (n.col < halfpoint) {
+                    n.col += halfpoint + 1;
+                } else if (n.col > halfpoint) {
+                    n.col -= halfpoint + 1;
+                }
+            }
+        }
+
+        // Resort the notes per row.
         auto ptr = edit.add.begin();
         for (int i = 0, size = edit.add.size(); i < size;) {
             int row = (ptr + i)->row, begin = i;
@@ -591,17 +609,13 @@ struct EditingImpl : public Editing {
             std::sort(ptr + begin, ptr + i, LessThanRowCol<Note, Note>);
         }
 
-        for (auto& n : edit.add) {
-            if (n.col <= (halfpoint - 1)) {
-                n.col += halfpoint;
-            } else {
-                n.col -= halfpoint;
-            }
-        }
-
+        // Perform the move operation.
         static const NotesMan::EditDescription desc = {
             "Switched side for %1 note.", "Switched side for %1 notes."};
-        gNotes->modify(edit, true, &desc);
+        gNotes->modify(edit, false, &desc);
+
+        // Reselect the moved notes.
+        gNotes->select(SELECT_SET, edit.add.begin(), edit.rem.size(), true);
     }
 
     template <typename T>
