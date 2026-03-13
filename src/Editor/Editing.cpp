@@ -669,8 +669,8 @@ struct EditingImpl : public Editing {
         %1 notes"}; gNotes->add(out, NotesMan::OVERWRITE_ROWS, &tag);*/
     }
 
-    static void switchColumns(NoteList& notes, const int* table) {
-        if (table) {
+    static void switchColumns(NoteList& notes, const std::vector<int>& table) {
+        if (!table.empty()) {
             for (auto& note : notes) {
                 note.col = table[note.col];
             }
