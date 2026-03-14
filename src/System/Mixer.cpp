@@ -1,69 +1,24 @@
 #include <System/Mixer.h>
-#include <SDL3/SDL_audio.h>
-#include <SDL3/SDL_stdinc.h>
-#include <thread>
-#include <atomic>
-#include <condition_variable>
-
-#include <malloc.h>
-
-#include "windows.h"
-#include "mmsystem.h"
+#include <SDL3_mixer/SDL_mixer.h>
+#include <filesystem>
+#include <vector>
+namespace fs = std::filesystem;
 
 namespace Vortex {
-
-static const int WAVEOUT_CHANNELS = 2;
-static const int WAVEOUT_BLOCKS = 8;
-static const int WAVEOUT_BLOCK_FRAMES = 8192;
-static const int WAVEOUT_BLOCK_SIZE =
-    sizeof(short) * WAVEOUT_CHANNELS * WAVEOUT_BLOCK_FRAMES;
-
-static void CALLBACK MixerCallback(HWAVEOUT hwo, UINT msg, DWORD_PTR, DWORD_PTR,
-                                   DWORD_PTR);
-
-    void SDLCALL audio_callback(void* userdata, SDL_AudioStream* stream,
-                            int additional_amount, int total_amount) {};
-
-struct ThreadEvent {
-    ThreadEvent() { handle = CreateEvent(nullptr, FALSE, FALSE, nullptr); }
-    ~ThreadEvent() { CloseHandle(handle); }
-    explicit operator HANDLE() { return handle; }
-    HANDLE handle;
-};
 
 // ================================================================================================
 // MixerImpl :: member data.
 
 struct MixerImpl : public Mixer {
-    enum ThreadEvents {
-        WO_KILL_THREAD = WAIT_OBJECT_0 + 0,
-        WO_RESUME_THREAD = WAIT_OBJECT_0 + 1,
-        WO_PAUSE_THREAD = WAIT_OBJECT_0 + 2,
-        WO_WRITE_BLOCK = WAIT_OBJECT_0 + 3,
-    };
+    MIX_Mixer* mixer = nullptr;
+    MIX_Track* music_track = nullptr;
+    MIX_Audio* music = nullptr;
+    std::vector<MIX_Audio*> sfx;
+    std::vector<MIX_Track*> sfx_tracks;
 
     int myFreeBlockIndex = 0;
 
-    SDL_AudioSpec myAudioSpec = {SDL_AUDIO_U8, WAVEOUT_CHANNELS, 0};
-    SDL_AudioDeviceID myDeviceId = 0;
-    SDL_AudioStream* myAudioStream = nullptr;
-    std::condition_variable myConditionVariable;
-    std::mutex myMutex;
-    std::optional<std::jthread> myThread{};
-
     char* myBlockMemory = nullptr;
-    WAVEHDR myHeaders[WAVEOUT_BLOCKS];
-    HWAVEOUT myWaveout = nullptr;
-
-    std::atomic<bool> myKillThread;
-    std::atomic<bool> myPauseThread = false;
-    std::atomic<bool> myResumeThread = false;
-    std::atomic<bool> myThreadPaused = false;
-    std::atomic<bool> myWriteBlock = false;
-
-    volatile LONG myFreeBlocks = 0;
-
-    std::atomic<bool> myIsOpened = false;
 
     MixSource* mySource;
 
@@ -72,116 +27,74 @@ struct MixerImpl : public Mixer {
 
     ~MixerImpl() override {
         close();
-        SDL_aligned_free(myBlockMemory);
+        for (MIX_Audio* s : sfx) {
+            MIX_DestroyAudio(s);
+        }
+        for (MIX_Track* t : sfx_tracks) {
+            MIX_DestroyTrack(t);
+        }
+        sfx.clear();
     }
 
     MixerImpl() {
-        memset(myHeaders, 0, sizeof(myHeaders));
-        mySource = nullptr;
-        
-        myBlockMemory = static_cast<char*>(
-            SDL_aligned_alloc(WAVEOUT_BLOCK_SIZE * WAVEOUT_BLOCKS, 16));
-        for (WAVEHDR& header : myHeaders) {
-            memset(&header, 0, sizeof(WAVEHDR));
-        }
+        if (MIX_Init())
+            mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+                                          nullptr);
+        if (!mixer) {
+            HudError("Failed to create mixer with error %s.\n", SDL_GetError());
+        };
+        sfx.clear();
+        open_sfx(fs::path("assets/sound beat tick.wav"));
+        open_sfx(fs::path("assets/sound note tick.wav"));
     }
+
+    bool is_initialized() override { return mixer != nullptr; }
 
     void close() override {
-        SDL_DestroyAudioStream(myAudioStream);
-        if (myThread) {
-            myThread.value().request_stop();
-        }
-        if (myDeviceId){
-            SDL_CloseAudioDevice(myDeviceId);
-            myDeviceId = 0;
-        }
-        myFreeBlockIndex = 0;
-        myFreeBlocks = 0;
-        myIsOpened = false;
-        myPauseThread = true;
-    }
-   
-
-    bool open(MixSource* source, int samplerate) override {
-        if (myIsOpened) close();
-
-        myAudioSpec.freq = samplerate;
-        SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &myAudioSpec, audio_callback, &myBlockMemory);
-
-        mySource = source;
-        myIsOpened = true;
-
-        // Start the MixerDevice update thread.
-        if (myThread) myThread.reset();
-        myThread.emplace(new std::jthread(&mixThread, this));
-
-        return true;
+        MIX_StopAllTracks(mixer, 0);
+        MIX_DestroyTrack(music_track);
+        MIX_DestroyAudio(music);
     }
 
-    void pause() override {
-        if (myIsOpened && !myPauseThread) {
-            myPauseThread = true;
-            myThreadPaused.wait(true);
-            waveOutReset(myWaveout);
-        }
+    bool open_sfx(fs::path path) override {
+        MIX_Audio* s = MIX_LoadAudio(mixer, path.string().c_str(), true);
+        MIX_Track* t = MIX_CreateTrack(mixer);
+        MIX_SetTrackAudio(t, s);
+        sfx.push_back(s);
+        sfx_tracks.push_back(t);
+        return s != nullptr;
     }
 
-    void resume() override {
-        if (myIsOpened && myPauseThread) {
-            myPauseThread = false;
-            myFreeBlockIndex = 0;
-            myFreeBlocks = WAVEOUT_BLOCKS;
-            myThreadPaused.wait(false);
-            SetEvent(static_cast<HANDLE>(myResumeThread));
-            waveOutRestart(myWaveout);
-            SetEvent(static_cast<HANDLE>(myWriteBlock));
-        }
+    void play_sfx(SoundEffects s, float volume) override {
+        MIX_Track* track = sfx_tracks.at(static_cast<int>(s));
+        if (!track) return;
+        MIX_SetTrackGain(track, volume);
+        if (!MIX_PlayTrack(music_track, 0))
+            HudError("Failed to start sfx #d playback with error %s",
+                     static_cast<int>(s), SDL_GetError());
     }
 
-    void blockDone() {
-        InterlockedIncrement(&myFreeBlocks);
-        SetEvent(static_cast<HANDLE>(myWriteBlock));
+    bool open(fs::path path) override {
+        music = MIX_LoadAudio(mixer, path.string().c_str(), true);
+        music_track = MIX_CreateTrack(mixer);
+        MIX_SetTrackAudio(music_track, music);
+        return music != nullptr;
     }
 
-    void mixThread() {
-        while (true) {
-            // Wait for a thread event.
-            if (id == WO_KILL_THREAD) {
-                return;
-            } else if (id == WO_PAUSE_THREAD) {
-                SetEvent(static_cast<HANDLE>(myThreadPaused));
-                id = WaitForMultipleObjects(2, events, FALSE, INFINITE);
-                if (id == WO_KILL_THREAD) return;
-            } else if (id == WO_WRITE_BLOCK) {
-                while (myFreeBlocks > 0) {
-                    LONG result = InterlockedDecrement(&myFreeBlocks);
-                    if (result < 0) break;
+    void pause() override { MIX_PauseAllTracks(mixer); }
 
-                    // Get the next free buffer block.
-                    BYTE* samples =
-                        myBlockMemory + myFreeBlockIndex * WAVEOUT_BLOCK_SIZE;
-                    WAVEHDR* header = myHeaders + myFreeBlockIndex;
-                    myFreeBlockIndex = (myFreeBlockIndex + 1) % WAVEOUT_BLOCKS;
-
-                    // Send the filled block to wave out.
-                    mySource->writeFrames(reinterpret_cast<short*>(samples),
-                                          WAVEOUT_BLOCK_FRAMES);
-                    waveOutWrite(myWaveout, header, sizeof(WAVEHDR));
-                }
-            }
-        }
+    void resume(int64_t ms, float rate, float volume) override {
+        if (!MIX_PlayTrack(music_track, 0))
+            HudError("Failed to start music playback with error %s",
+                     SDL_GetError());
+        int64_t frames = MIX_TrackMSToFrames(music_track, ms);
+        MIX_SetTrackFrequencyRatio(music_track, rate);
+        MIX_SetTrackGain(music_track, volume);
+        MIX_SetTrackPlaybackPosition(music_track, frames);
+        HudWarning("Mixer::resume: %d, %d", ms, frames);
     }
 
 };  // MixerImpl
-// ================================================================================================
-// Mixing callback functions.
-
-static void CALLBACK MixerCallback(HWAVEOUT hwo, UINT msg, DWORD_PTR mixer,
-                                   DWORD_PTR, DWORD_PTR) {
-    if (msg == WOM_DONE) {
-        reinterpret_cast<MixerImpl*>(mixer)->blockDone();
-    }
-}
 
 // ================================================================================================
 // Mixer API.

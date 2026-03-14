@@ -60,6 +60,7 @@ struct MusicImpl : public Music, public MixSource {
     int myTickOffsetMs;
     double myPlayPosition;
     double myPlayStartTime;
+    double myLastTickTime;
     bool myIsPaused, myIsMuted;
     LoadState myLoadState;
     Reference<InfoBoxWithProgress> myInfoBox;
@@ -87,13 +88,14 @@ struct MusicImpl : public Music, public MixSource {
         myIsPaused = true;
         myIsMuted = false;
         myLoadState = LOADING_DONE;
+        myLastTickTime = NAN;
 
         myBeatTick.enabled = false;
         myNoteTick.enabled = false;
 
         myOggConversionThread = nullptr;
 
-        bool success;
+        bool success = myMixer->is_initialized();
 
         std::string placeholderTitle;
         std::string placeholderArtist;
@@ -160,7 +162,7 @@ struct MusicImpl : public Music, public MixSource {
         if (success && mySamples.getFrequency() > 0) {
             myLoadState = LOADING_ALLOCATING_AND_READING;
 
-            myMixer->open(this, mySamples.getFrequency());
+            myMixer->open(path);
 
             auto box = myInfoBox.create();
             box->left = "Loading music...";
@@ -420,11 +422,20 @@ struct MusicImpl : public Music, public MixSource {
             myPlayPosition =
                 myPlayStartTime * static_cast<double>(mySamples.getFrequency());
             myPlayTimer = Debug::getElapsedTime();
-            myMixer->resume();
+            myMixer->resume(static_cast<int64_t>(myPlayStartTime * 1000.0),
+                            static_cast<float>(myMusicSpeed) / 100.0,
+                            static_cast<float>(myMusicVolume) / 100.0);
         }
     }
 
     void tick() override {
+        if (!myIsPaused) {
+            double now_time = getPlayTime();
+            if (myLastTickTime != NAN) {
+            }
+            myLastTickTime = now_time;
+        }
+
         if (myLoadState != LOADING_DONE && myInfoBox) {
             if (mySamples.getLoadingProgress() > 0) {
                 myInfoBox->setProgress(mySamples.getLoadingProgress() * 0.01f);

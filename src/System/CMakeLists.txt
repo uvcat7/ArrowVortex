@@ -17,7 +17,7 @@ list(APPEND SRC
 )
 
 add_library(System STATIC ${SRC} ${INC}) 
-target_link_libraries(System PRIVATE Core Editor OpenGL::GL winmm SDL3::SDL3)
+target_link_libraries(System PRIVATE Core Editor OpenGL::GL winmm SDL3::SDL3 SDL3_mixer::SDL3_mixer)
 
 add_executable(ArrowVortex WIN32 System.cpp "${CMAKE_CURRENT_SOURCE_DIR}/ArrowVortex.rc")
 add_custom_command(
