@@ -141,12 +141,7 @@ struct SelectionImpl : public Selection {
     void selectTempoBoxes(SelectModifier mod, double t, double b, int l,
                           int r) {
         if (gView->getScaleLevel() >= 2) {
-            if (gView->isTimeBased()) {
-                gTempoBoxes->selectTime(mod, t, b, l, r);
-            } else {
-                gTempoBoxes->selectRows(mod, static_cast<int>(t + 0.5),
-                                        static_cast<int>(b + 0.5), l, r);
-            }
+            gTempoBoxes->select(mod, t, b, l, r);
         }
     }
 

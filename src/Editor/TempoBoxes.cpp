@@ -223,6 +223,20 @@ struct TempoBoxesImpl : public TempoBoxes {
         return numSelected;
     }
 
+    int select(SelectModifier mod, double begin, double end, int xl,
+               int xr) override {
+        if (begin == end && myMouseOverBox >= 0) {
+            auto target = &myBoxes[myMouseOverBox];
+            return performSelection(
+                mod, [&](const TempoBox* box) { return box == target; });
+        } else if (gView->isTimeBased()) {
+            return selectTime(mod, begin, end, xl, xr);
+        } else {
+            return selectRows(mod, static_cast<int>(begin + 0.5),
+                              static_cast<int>(end + 0.5), xl, xr);
+        }
+    }
+
     int selectRows(SelectModifier mod, int begin, int end, int xl,
                    int xr) override {
         auto coords = gView->getNotefieldCoords();
