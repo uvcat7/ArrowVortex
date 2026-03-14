@@ -31,6 +31,19 @@ void EditorDialog::onDraw() { myLayout.onDraw(); }
 
 void EditorDialog::setId(DialogId id) { myId = id; }
 
+void EditorDialog::setWidgetId(GuiWidget* widget, const char* name) {
+    myWidgetMap.push_back({widget, name});
+}
+
+void EditorDialog::setFocus(const char* name) {
+    for (WidgetMapping w : myWidgetMap) {
+        if (strcmp(w.name, name) == 0) {
+            w.widget->setFocus();
+            break;
+        }
+    }
+}
+
 DialogId EditorDialog::getId(const char* name) {
     for (int i = 0; i < NUM_DIALOG_IDS; ++i) {
         if (strcmp(IdStrings[i], name) == 0) {

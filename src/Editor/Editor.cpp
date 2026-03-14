@@ -68,6 +68,12 @@ struct DialogEntry {
     bool requestOpen;
 };
 
+struct DialogFocus {
+    int dialogId;
+    const char* name;
+    bool requestFocus = false;
+};
+
 static const char loadFilters[] =
     "Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.osz, *.ogg, *.mp3, "
     "*.wav)\0*.sm;*.ssc;*.dwi;*.osu;*.osz;*.ogg;*.mp3;*.wav\0"
@@ -122,6 +128,7 @@ static SimFormat ToSimFormat(const std::string& str) {
 struct EditorImpl : public Editor, public InputHandler {
     GuiContext* gui_;
     DialogEntry myDialogs[NUM_DIALOG_IDS];
+    DialogFocus myDialogFocus;
     int myChanges;
     Texture myLogo;
     Vector<std::string> myRecentFiles;
@@ -642,11 +649,25 @@ struct EditorImpl : public Editor, public InputHandler {
         myDialogs[dialogId].requestOpen = true;
     }
 
+    void setDialogFocus(int dialogId, const char* name) override {
+        myDialogFocus.dialogId = dialogId;
+        myDialogFocus.name = name;
+        myDialogFocus.requestFocus = true;
+    }
+
     void handleDialogs() {
         for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
             if (myDialogs[id].requestOpen) {
                 handleDialogOpening(static_cast<DialogId>(id), {0, 0, 0, 0});
             }
+        }
+    }
+
+    void handleDialogFocus() {
+        if (myDialogFocus.requestFocus) {
+            EditorDialog* dlg = myDialogs[myDialogFocus.dialogId].ptr;
+            if (dlg) dlg->setFocus(myDialogFocus.name);
+            myDialogFocus.requestFocus = false;
         }
     }
 
@@ -716,6 +737,8 @@ struct EditorImpl : public Editor, public InputHandler {
             int y = windowSize.y / 2 - dlg->getOuterRect().h / 2;
             dlg->setPosition(x, y);
         }
+
+        if (!myDialogFocus.requestFocus) setDialogFocus(id, "initial");
 
         entry.ptr = dlg;
         entry.requestOpen = false;
@@ -827,6 +850,8 @@ struct EditorImpl : public Editor, public InputHandler {
         handleDialogs();
 
         gui_->tick({0, 0, view.x, view.y}, deltaTime.count(), events);
+
+        handleDialogFocus();
 
         if (!GuiMain::isCapturingText()) {
             for (KeyPress* press = nullptr; events.next(press);) {

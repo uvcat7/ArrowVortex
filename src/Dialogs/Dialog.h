@@ -5,6 +5,11 @@
 
 namespace Vortex {
 
+struct WidgetMapping {
+    GuiWidget* widget;
+    const char* name;
+};
+
 enum DialogId {
     DIALOG_ADJUST_SYNC,
     DIALOG_ADJUST_TEMPO,
@@ -34,6 +39,8 @@ class EditorDialog : public GuiDialog {
     void onDraw() override;
 
     void setId(DialogId id);
+    void setWidgetId(GuiWidget* widget, const char* name);
+    void setFocus(const char* name);
 
     virtual void onChanges(int changes) {}
 
@@ -43,6 +50,7 @@ class EditorDialog : public GuiDialog {
    protected:
     DialogId myId;
     RowLayout myLayout;
+    std::vector<WidgetMapping> myWidgetMap;
 };
 
 };  // namespace Vortex

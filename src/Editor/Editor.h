@@ -54,6 +54,9 @@ struct Editor {
     /// Opens the dialog window with the given id, if it's currently closed.
     virtual void openDialog(int dialogId) = 0;
 
+    /// Sets the input focus to the widget for a given dialog window.
+    virtual void setDialogFocus(int dialogId, const char* name) = 0;
+
     /// Closes the dialog window with the given id, if it's currently open.
     virtual void onDialogClosed(int dialogId) = 0;
 

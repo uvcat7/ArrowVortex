@@ -119,6 +119,7 @@ class GuiWidget : public InputHandler {
     void setSize(int w, int h);
     void setEnabled(bool enabled);
     void setTooltip(const std::string& text);
+    virtual void setFocus();
 
     // Get functions.
     bool isEnabled() const;
