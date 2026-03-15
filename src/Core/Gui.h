@@ -178,6 +178,8 @@ class GuiDialog {
 
     void setCloseable(bool enable);
     void setMinimizable(bool enable);
+    void setPinnable(bool enable);
+    void setDraggable(bool enable);
     void setResizeable(bool horizontal, bool vertical);
 
     GuiContext* getGui() const;
