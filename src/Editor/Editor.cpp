@@ -651,7 +651,10 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void handleDialogOpening(DialogId id, recti rect) {
         auto& entry = myDialogs[id];
-        if (entry.ptr) return;
+        if (entry.ptr) {
+            entry.requestOpen = false;
+            return;
+        }
 
         EditorDialog* dlg = nullptr;
         switch (id) {
@@ -701,6 +704,8 @@ struct EditorImpl : public Editor, public InputHandler {
                 dlg = new DialogPreviewSettings;
                 break;
         };
+
+        if (!dlg) return;
 
         dlg->setId(id);
 
