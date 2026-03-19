@@ -53,6 +53,7 @@
 #include <Dialogs/Zoom.h>
 #include <Dialogs/CustomSnap.h>
 #include <Dialogs/PreviewSettings.h>
+#include <Dialogs/EditSegment.h>
 
 #include <algorithm>
 #include <fstream>
@@ -65,6 +66,12 @@ namespace {
 
 struct DialogEntry {
     EditorDialog* ptr;
+    bool requestOpen;
+};
+
+struct DialogSegment {
+    Segment::Type type;
+    int row;
     bool requestOpen;
 };
 
@@ -129,6 +136,7 @@ struct EditorImpl : public Editor, public InputHandler {
     GuiContext* gui_;
     DialogEntry myDialogs[NUM_DIALOG_IDS];
     DialogFocus myDialogFocus;
+    DialogSegment mySegmentEditor;
     int myChanges;
     Texture myLogo;
     Vector<std::string> myRecentFiles;
@@ -154,6 +162,8 @@ struct EditorImpl : public Editor, public InputHandler {
             dialog.ptr = nullptr;
             dialog.requestOpen = false;
         }
+        mySegmentEditor.requestOpen = false;
+        myDialogFocus.requestFocus = false;
 
         gui_ = nullptr;
         myChanges = 0;
@@ -649,13 +659,22 @@ struct EditorImpl : public Editor, public InputHandler {
         myDialogs[dialogId].requestOpen = true;
     }
 
+    void openSegmentDialog(Segment::Type type, int row) override {
+        auto& entry = myDialogs[DIALOG_EDIT_SEGMENT];
+        if (entry.ptr) entry.ptr->requestClose();
+        entry.requestOpen = true;
+        mySegmentEditor.type = type;
+        mySegmentEditor.row = row;
+        mySegmentEditor.requestOpen = true;
+    }
+
     void setDialogFocus(int dialogId, const char* name) override {
         myDialogFocus.dialogId = dialogId;
         myDialogFocus.name = name;
         myDialogFocus.requestFocus = true;
     }
 
-    void handleDialogs() {
+    void handleDialogOpens() {
         for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
             if (myDialogs[id].requestOpen) {
                 handleDialogOpening(static_cast<DialogId>(id), {0, 0, 0, 0});
@@ -665,10 +684,35 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void handleDialogFocus() {
         if (myDialogFocus.requestFocus) {
-            EditorDialog* dlg = myDialogs[myDialogFocus.dialogId].ptr;
+            auto dlg = myDialogs[myDialogFocus.dialogId].ptr;
             if (dlg) dlg->setFocus(myDialogFocus.name);
             myDialogFocus.requestFocus = false;
         }
+    }
+
+    void handleSegmentEditor() {
+        auto& entry = myDialogs[DIALOG_EDIT_SEGMENT];
+        if (!entry.ptr) return;
+
+        auto dlg = static_cast<DialogEditSegment*>(entry.ptr);
+
+        // Set Type
+        if (mySegmentEditor.requestOpen) {
+            dlg->setSegment(mySegmentEditor.type, mySegmentEditor.row);
+            mySegmentEditor.requestOpen = false;
+        }
+
+        // Set Position
+        auto meta = Segment::meta[mySegmentEditor.type];
+        auto coords = gView->getNotefieldCoords();
+        int offset =
+            gTempoBoxes->getStackWidth(meta->side, mySegmentEditor.row);
+        int x = meta->side ? coords.xr + offset + 16
+                           : coords.xl - offset - 10 - dlg->getFixedWidth();
+        int y =
+            gView->rowToY(mySegmentEditor.row) - (dlg->getFixedHeight() / 2);
+
+        dlg->setPosition(x, y);
     }
 
     void handleDialogOpening(DialogId id, recti rect) {
@@ -721,6 +765,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
             case DIALOG_PREVIEW_SETTINGS:
                 dlg = new DialogPreviewSettings;
+                break;
+            case DIALOG_EDIT_SEGMENT:
+                dlg = new DialogEditSegment;
                 break;
         };
 
@@ -847,7 +894,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
         vec2i view = gSystem->getWindowSize();
 
-        handleDialogs();
+        gui_->closeDialogs();
+        handleDialogOpens();
+        handleSegmentEditor();
 
         gui_->tick({0, 0, view.x, view.y}, deltaTime.count(), events);
 

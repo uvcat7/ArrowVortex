@@ -20,6 +20,8 @@ class GuiContextImpl : public GuiContext {
     void tick(recti view, float deltaTime, InputEvents& events);
     void draw();
 
+    void closeDialogs();
+
     recti getView();
     vec2i getMousePos();
     float getDeltaTime();

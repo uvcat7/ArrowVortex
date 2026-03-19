@@ -47,6 +47,7 @@ struct TempoBoxes {
     virtual void draw() = 0;
 
     virtual const Vector<TempoBox>& getBoxes() = 0;
+    virtual int getStackWidth(int side, int row) = 0;
 };
 
 extern TempoBoxes* gTempoBoxes;

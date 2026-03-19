@@ -225,7 +225,7 @@ struct TempoBoxesImpl : public TempoBoxes {
 
     int select(SelectModifier mod, double begin, double end, int xl,
                int xr) override {
-        if (begin == end && myMouseOverBox >= 0) {
+        if (begin == end && xl == xr && myMouseOverBox >= 0) {
             auto target = &myBoxes[myMouseOverBox];
             return performSelection(
                 mod, [&](const TempoBox* box) { return box == target; });
@@ -404,6 +404,16 @@ struct TempoBoxesImpl : public TempoBoxes {
     }
 
     const Vector<TempoBox>& getBoxes() override { return myBoxes; }
+
+    int getStackWidth(int side, int row) override {
+        int width = 0;
+        for (const TempoBox& box : myBoxes) {
+            if (box.row > row) break;
+            if (box.row == row && side == Segment::meta[box.type]->side)
+                width = max(width, side == 0 ? abs(box.x) : box.x + box.width);
+        }
+        return width;
+    }
 
 };  // TempoBoxesImpl
 

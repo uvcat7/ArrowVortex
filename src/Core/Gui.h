@@ -17,6 +17,7 @@ class GuiContext {
     virtual void draw() = 0;
 
     // Functions used by widgets.
+    virtual void closeDialogs() = 0;
     virtual recti getView() = 0;
     virtual vec2i getMousePos() = 0;
     virtual float getDeltaTime() = 0;
