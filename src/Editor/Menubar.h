@@ -30,6 +30,8 @@ struct Menubar {
         VISUAL_SYNC_ANCHOR,
         TEMPO_EDIT_ANCHOR,
 
+        SELECTION_TEMPO_EDITOR,
+
         SELECT_DENSITY,
 
         BEATLINE_ENABLED,

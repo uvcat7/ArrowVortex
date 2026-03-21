@@ -226,7 +226,7 @@ struct EditorImpl : public Editor, public InputHandler {
         // Create the editor components.
         Shortcuts::create();
         Music::create(settings);
-        Selection::create();
+        Selection::create(settings);
         Editing::create(settings);
         View::create(settings);
         Notefield::create(settings);
@@ -259,6 +259,7 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrDoc settings;
         saveGeneralSettings(settings);
         gStatusbar->saveSettings(settings);
+        gSelection->saveSettings(settings);
         gEditing->saveSettings(settings);
         gWaveform->saveSettings(settings);
         gNotefield->saveSettings(settings);

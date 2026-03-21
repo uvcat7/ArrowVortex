@@ -200,6 +200,8 @@ void Action::perform(Type action) {
         gEditing->openTempoEdit(Segment::FAKE);
         CASE(EDIT_TEMPO_LABEL)
         gEditing->openTempoEdit(Segment::LABEL);
+        CASE(SELECTION_TOGGLE_TEMPO_EDITOR)
+        gSelection->toggleTempoEditor();
 
         CASE(CHART_PREVIOUS)
         gSimfile->previousChart();
