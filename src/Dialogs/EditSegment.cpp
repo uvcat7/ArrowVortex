@@ -17,12 +17,13 @@ namespace Vortex {
 // Height needs to be hardcoded due to flicker from the first tick of it
 // showing, due to the bounds not being calculated yet and is initially
 // positioned wrong.
-const int HEIGHT_1_ROW = 24;
-const int HEIGHT_2_ROW = 24 + 4 + 24;
-const int HEIGHT_3_ROW = 24 + 4 + 24 + 4 + 24;
+const int HEIGHT_1_ROW = 24 * 2 + 4 * 1;
+const int HEIGHT_2_ROW = 24 * 3 + 4 * 2;
+const int HEIGHT_3_ROW = 24 * 4 + 4 * 3;
 
 const int LABEL = 108;
 const int FIELD = 132;
+const int FULL = 244;
 
 // ================================================================================================
 // BpmChange.
@@ -36,15 +37,24 @@ void BpmChangeEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0.001, 10000);
     spinner->setTooltip("Beats per minute");
     spinner->onChange.bind(this, &BpmChangeEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &BpmChangeEditor::deleteSegment);
 }
 
 void BpmChangeEditor::onTick() {
-    myBPM = gTempo->getSegments()->getRow<BpmChange>(myRow).bpm;
+    myBPM = gTempo->getSegments()->getRecent<BpmChange>(myRow).bpm;
 }
 
 void BpmChangeEditor::onChange() {
     gTempo->addSegment(BpmChange(myRow, myBPM));
+}
+
+void BpmChangeEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::BPM, myRow);
 }
 
 int BpmChangeEditor::getHeight() { return HEIGHT_1_ROW; }
@@ -61,7 +71,12 @@ void StopEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 10000);
     spinner->setTooltip("Stop duration in seconds");
     spinner->onChange.bind(this, &StopEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &StopEditor::deleteSegment);
 }
 
 void StopEditor::onTick() {
@@ -69,6 +84,10 @@ void StopEditor::onTick() {
 }
 
 void StopEditor::onChange() { gTempo->addSegment(Stop(myRow, mySeconds)); }
+
+void StopEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::STOP, myRow);
+}
 
 int StopEditor::getHeight() { return HEIGHT_1_ROW; }
 
@@ -84,7 +103,12 @@ void DelayEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 10000);
     spinner->setTooltip("Delay duration in seconds");
     spinner->onChange.bind(this, &DelayEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &DelayEditor::deleteSegment);
 }
 
 void DelayEditor::onTick() {
@@ -92,6 +116,10 @@ void DelayEditor::onTick() {
 }
 
 void DelayEditor::onChange() { gTempo->addSegment(Delay(myRow, mySeconds)); }
+
+void DelayEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::DELAY, myRow);
+}
 
 int DelayEditor::getHeight() { return HEIGHT_1_ROW; }
 
@@ -106,7 +134,12 @@ void WarpEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 10000);
     spinner->setTooltip("Warp length in beats");
     spinner->onChange.bind(this, &WarpEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &WarpEditor::deleteSegment);
 }
 
 void WarpEditor::onTick() {
@@ -117,6 +150,10 @@ void WarpEditor::onTick() {
 void WarpEditor::onChange() {
     int numRows = max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
     gTempo->addSegment(Warp(myRow, numRows));
+}
+
+void WarpEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::WARP, myRow);
 }
 
 int WarpEditor::getHeight() { return HEIGHT_1_ROW; }
@@ -133,7 +170,6 @@ void TimeSignatureEditor::createWidgets(RowLayout& layout,
     spinner->setRange(1, 1000);
     spinner->setTooltip("Beats per measure");
     spinner->onChange.bind(this, &TimeSignatureEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
 
     spinner = layout.add<WgSpinner>("Lower");
     spinner->value.bind(&myBeatNote);
@@ -141,6 +177,12 @@ void TimeSignatureEditor::createWidgets(RowLayout& layout,
     spinner->setRange(1, 1000);
     spinner->setTooltip("Beat note type");
     spinner->onChange.bind(this, &TimeSignatureEditor::onChange);
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &TimeSignatureEditor::deleteSegment);
 }
 
 void TimeSignatureEditor::onTick() {
@@ -153,6 +195,10 @@ void TimeSignatureEditor::onChange() {
     int rowsPerMeasure = ROWS_PER_BEAT * max(1, myRowsPerMeasure);
     int beatNote = max(1, myBeatNote);
     gTempo->addSegment(TimeSignature(myRow, rowsPerMeasure, beatNote));
+}
+
+void TimeSignatureEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::TIME_SIG, myRow);
 }
 
 int TimeSignatureEditor::getHeight() { return HEIGHT_2_ROW; }
@@ -168,7 +214,12 @@ void TickCountEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 1000);
     spinner->setTooltip("Hold combo ticks per beat");
     spinner->onChange.bind(this, &TickCountEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &TickCountEditor::deleteSegment);
 }
 
 void TickCountEditor::onTick() {
@@ -178,6 +229,10 @@ void TickCountEditor::onTick() {
 void TickCountEditor::onChange() {
     int ticks = max(0, myTicks);
     gTempo->addSegment(TickCount(myRow, ticks));
+}
+
+void TickCountEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::TICK_COUNT, myRow);
 }
 
 int TickCountEditor::getHeight() { return HEIGHT_1_ROW; }
@@ -193,7 +248,6 @@ void ComboEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 1000);
     spinner->setTooltip("Combo hit multiplier");
     spinner->onChange.bind(this, &ComboEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
 
     spinner = layout.add<WgSpinner>("Miss Multiplier");
     spinner->value.bind(&myMiss);
@@ -201,6 +255,12 @@ void ComboEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 1000);
     spinner->setTooltip("Combo miss multiplier");
     spinner->onChange.bind(this, &ComboEditor::onChange);
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &ComboEditor::deleteSegment);
 }
 
 void ComboEditor::onTick() {
@@ -213,6 +273,10 @@ void ComboEditor::onChange() {
     int hit = max(1, myHit);
     int miss = max(1, myMiss);
     gTempo->addSegment(Combo(myRow, hit, miss));
+}
+
+void ComboEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::COMBO, myRow);
 }
 
 int ComboEditor::getHeight() { return HEIGHT_2_ROW; }
@@ -229,7 +293,6 @@ void SpeedEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(-1000, 1000);
     spinner->setTooltip("Stretch ratio");
     spinner->onChange.bind(this, &SpeedEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
 
     spinner = layout.add<WgSpinner>("Delay Time");
     spinner->value.bind(&myDelay);
@@ -245,6 +308,12 @@ void SpeedEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     cycler->addItem("Beats");
     cycler->addItem("Seconds");
     cycler->onChange.bind(this, &SpeedEditor::onChange);
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &SpeedEditor::deleteSegment);
 }
 
 void SpeedEditor::onTick() {
@@ -261,6 +330,10 @@ void SpeedEditor::onChange() {
     gTempo->addSegment(Speed(myRow, ratio, delay, unit));
 }
 
+void SpeedEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::SPEED, myRow);
+}
+
 int SpeedEditor::getHeight() { return HEIGHT_3_ROW; }
 
 // ================================================================================================
@@ -275,7 +348,12 @@ void ScrollEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(-100000, 100000);
     spinner->setTooltip("Scroll rate multiplier");
     spinner->onChange.bind(this, &ScrollEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &ScrollEditor::deleteSegment);
 }
 
 void ScrollEditor::onTick() {
@@ -283,6 +361,10 @@ void ScrollEditor::onTick() {
 }
 
 void ScrollEditor::onChange() { gTempo->addSegment(Scroll(myRow, myRatio)); }
+
+void ScrollEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::SCROLL, myRow);
+}
 
 int ScrollEditor::getHeight() { return HEIGHT_1_ROW; }
 
@@ -297,7 +379,12 @@ void FakeEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     spinner->setRange(0, 1000);
     spinner->setTooltip("Fake region length in beats");
     spinner->onChange.bind(this, &FakeEditor::onChange);
-    dialog.setWidgetId(spinner, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &FakeEditor::deleteSegment);
 }
 
 void FakeEditor::onTick() {
@@ -308,6 +395,10 @@ void FakeEditor::onTick() {
 void FakeEditor::onChange() {
     int numRows = max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
     gTempo->addSegment(Fake(myRow, numRows));
+}
+
+void FakeEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::FAKE, myRow);
 }
 
 int FakeEditor::getHeight() { return HEIGHT_1_ROW; }
@@ -322,7 +413,12 @@ void LabelEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     text->setMaxLength(1000);
     text->setTooltip("Label text");
     text->onChange.bind(this, &LabelEditor::onChange);
-    dialog.setWidgetId(text, "initial");
+
+    layout.row().col(FULL);
+    layout.add<WgSeperator>();
+    WgButton* button = layout.add<WgButton>();
+    button->text.set("Delete");
+    button->onPress.bind(this, &LabelEditor::deleteSegment);
 }
 
 void LabelEditor::onTick() {
@@ -339,6 +435,10 @@ void LabelEditor::onChange() {
         Str::replace(myText, "=", "_");
     }
     gTempo->addSegment(Label(myRow, myText));
+}
+
+void LabelEditor::deleteSegment() {
+    gTempo->removeSegment(Segment::LABEL, myRow);
 }
 
 int LabelEditor::getHeight() { return HEIGHT_1_ROW; }
@@ -385,7 +485,7 @@ DialogEditSegment::~DialogEditSegment() = default;
 
 DialogEditSegment::DialogEditSegment() : myType(Segment::BPM) {
     setMinimumHeight(HEIGHT_1_ROW);
-    setMinimumWidth(getFixedWidth());
+    setMinimumWidth(FULL);
     setPinnable(false);
     setMinimizable(false);
     setDraggable(false);
@@ -402,7 +502,7 @@ void DialogEditSegment::setSegment(Segment::Type type, int row) {
     }
 }
 
-int DialogEditSegment::getFixedWidth() { return LABEL + FIELD + 12; }
+int DialogEditSegment::getFixedWidth() { return FULL + 8; }
 int DialogEditSegment::getFixedHeight() {
     return myEditor ? myEditor->getHeight() : HEIGHT_1_ROW;
 }

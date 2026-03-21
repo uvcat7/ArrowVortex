@@ -18,6 +18,7 @@ class SegmentEditor {
     virtual void onTick() = 0;
     virtual void onChange() = 0;
     virtual int getHeight() = 0;
+    virtual void deleteSegment() = 0;
 
    protected:
     int myRow = 0;
@@ -31,6 +32,7 @@ class BpmChangeEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double myBPM = 120.0;
@@ -42,6 +44,7 @@ class StopEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double mySeconds = 0.0;
@@ -53,6 +56,7 @@ class DelayEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double mySeconds = 0.0;
@@ -64,6 +68,7 @@ class WarpEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double myBeats = 0.0;
@@ -75,6 +80,7 @@ class TimeSignatureEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     int myRowsPerMeasure = 4;
@@ -87,6 +93,7 @@ class TickCountEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     int myTicks = 0;
@@ -98,6 +105,7 @@ class ComboEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     int myHit = 1;
@@ -110,6 +118,7 @@ class SpeedEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double myRatio = 1.0;
@@ -123,6 +132,7 @@ class ScrollEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double myRatio = 1.0;
@@ -134,6 +144,7 @@ class FakeEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     double myBeats = 0.0;
@@ -145,6 +156,7 @@ class LabelEditor : public SegmentEditor {
     void onTick() override;
     void onChange() override;
     int getHeight() override;
+    void deleteSegment() override;
 
    private:
     std::string myText;
