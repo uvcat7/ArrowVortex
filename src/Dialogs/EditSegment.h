@@ -16,7 +16,7 @@ class SegmentEditor {
 
     virtual void createWidgets(RowLayout& layout, EditorDialog& dialog) = 0;
     virtual void onTick() = 0;
-    virtual void onChange() = 0;
+    virtual void onChange(int id) = 0;
     virtual int getHeight() = 0;
     virtual void deleteSegment() = 0;
 
@@ -30,7 +30,7 @@ class BpmChangeEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -42,7 +42,7 @@ class StopEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -54,7 +54,7 @@ class DelayEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -66,7 +66,7 @@ class WarpEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -78,7 +78,7 @@ class TimeSignatureEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -91,7 +91,7 @@ class TickCountEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -103,7 +103,7 @@ class ComboEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -116,7 +116,7 @@ class SpeedEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -130,7 +130,7 @@ class ScrollEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -142,7 +142,7 @@ class FakeEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 
@@ -154,7 +154,7 @@ class LabelEditor : public SegmentEditor {
    public:
     void createWidgets(RowLayout& layout, EditorDialog& dialog) override;
     void onTick() override;
-    void onChange() override;
+    void onChange(int id) override;
     int getHeight() override;
     void deleteSegment() override;
 

@@ -21,22 +21,54 @@ const int HEIGHT_1_ROW = 24 * 2 + 4 * 1;
 const int HEIGHT_2_ROW = 24 * 3 + 4 * 2;
 const int HEIGHT_3_ROW = 24 * 4 + 4 * 3;
 
-const int LABEL = 108;
-const int FIELD = 132;
-const int FULL = 244;
+const int LABEL = 90;
+const int FIELD = 160;
+const int FIELD_NUM = FIELD - 56;
+const int FULL = 254;
+
+enum Actions {
+    ACT_SET,
+    ACT_HALVE,
+    ACT_DOUBLE,
+    ACT_HALVE_2,
+    ACT_DOUBLE_2,
+};
+
+#define HALVE(id, value) \
+    case id:             \
+        value *= 0.5;    \
+        break
+
+#define DOUBLE(id, value) \
+    case id:              \
+        value *= 2.0;     \
+        break
 
 // ================================================================================================
 // BpmChange.
 
 void BpmChangeEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Tempo");
     spinner->value.bind(&myBPM);
     spinner->setPrecision(3, 6);
     spinner->setStep(0.001);
     spinner->setRange(0.001, 10000);
     spinner->setTooltip("Beats per minute");
-    spinner->onChange.bind(this, &BpmChangeEditor::onChange);
+    spinner->onChange.bind(this, &BpmChangeEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &BpmChangeEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &BpmChangeEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -49,8 +81,12 @@ void BpmChangeEditor::onTick() {
     myBPM = gTempo->getSegments()->getRecent<BpmChange>(myRow).bpm;
 }
 
-void BpmChangeEditor::onChange() {
-    gTempo->addSegment(BpmChange(myRow, myBPM));
+void BpmChangeEditor::onChange(int id) {
+    switch (id) {
+        HALVE(ACT_HALVE, myBPM);
+        DOUBLE(ACT_DOUBLE, myBPM);
+    }
+    if (myBPM != 0.0) gTempo->addSegment(BpmChange(myRow, myBPM));
 }
 
 void BpmChangeEditor::deleteSegment() {
@@ -63,14 +99,26 @@ int BpmChangeEditor::getHeight() { return HEIGHT_1_ROW; }
 // Stop.
 
 void StopEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Seconds");
     spinner->value.bind(&mySeconds);
     spinner->setPrecision(3, 6);
     spinner->setStep(0.001);
     spinner->setRange(0, 10000);
     spinner->setTooltip("Stop duration in seconds");
-    spinner->onChange.bind(this, &StopEditor::onChange);
+    spinner->onChange.bind(this, &StopEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &StopEditor::onChange, static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &StopEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -83,7 +131,13 @@ void StopEditor::onTick() {
     mySeconds = gTempo->getSegments()->getRow<Stop>(myRow).seconds;
 }
 
-void StopEditor::onChange() { gTempo->addSegment(Stop(myRow, mySeconds)); }
+void StopEditor::onChange(int id) {
+    switch (id) {
+        HALVE(ACT_HALVE, mySeconds);
+        DOUBLE(ACT_DOUBLE, mySeconds);
+    }
+    gTempo->addSegment(Stop(myRow, mySeconds));
+}
 
 void StopEditor::deleteSegment() {
     gTempo->removeSegment(Segment::STOP, myRow);
@@ -95,14 +149,27 @@ int StopEditor::getHeight() { return HEIGHT_1_ROW; }
 // Delay.
 
 void DelayEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Seconds");
     spinner->value.bind(&mySeconds);
     spinner->setPrecision(3, 6);
     spinner->setStep(0.001);
     spinner->setRange(0, 10000);
     spinner->setTooltip("Delay duration in seconds");
-    spinner->onChange.bind(this, &DelayEditor::onChange);
+    spinner->onChange.bind(this, &DelayEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &DelayEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &DelayEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -115,7 +182,13 @@ void DelayEditor::onTick() {
     mySeconds = gTempo->getSegments()->getRow<Delay>(myRow).seconds;
 }
 
-void DelayEditor::onChange() { gTempo->addSegment(Delay(myRow, mySeconds)); }
+void DelayEditor::onChange(int id) {
+    switch (id) {
+        HALVE(ACT_HALVE, mySeconds);
+        DOUBLE(ACT_DOUBLE, mySeconds);
+    }
+    gTempo->addSegment(Delay(myRow, mySeconds));
+}
 
 void DelayEditor::deleteSegment() {
     gTempo->removeSegment(Segment::DELAY, myRow);
@@ -127,13 +200,25 @@ int DelayEditor::getHeight() { return HEIGHT_1_ROW; }
 // Warp.
 
 void WarpEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Beats");
     spinner->value.bind(&myBeats);
     spinner->setPrecision(3, 6);
     spinner->setRange(0, 10000);
     spinner->setTooltip("Warp length in beats");
-    spinner->onChange.bind(this, &WarpEditor::onChange);
+    spinner->onChange.bind(this, &WarpEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &WarpEditor::onChange, static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &WarpEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -147,8 +232,12 @@ void WarpEditor::onTick() {
     myBeats = numRows / static_cast<double>(ROWS_PER_BEAT);
 }
 
-void WarpEditor::onChange() {
+void WarpEditor::onChange(int id) {
     int numRows = max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
+    switch (id) {
+        HALVE(ACT_HALVE, numRows);
+        DOUBLE(ACT_DOUBLE, numRows);
+    }
     gTempo->addSegment(Warp(myRow, numRows));
 }
 
@@ -163,20 +252,46 @@ int WarpEditor::getHeight() { return HEIGHT_1_ROW; }
 
 void TimeSignatureEditor::createWidgets(RowLayout& layout,
                                         EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Upper");
     spinner->value.bind(&myRowsPerMeasure);
     spinner->setPrecision(0, 0);
     spinner->setRange(1, 1000);
     spinner->setTooltip("Beats per measure");
-    spinner->onChange.bind(this, &TimeSignatureEditor::onChange);
+    spinner->onChange.bind(this, &TimeSignatureEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &TimeSignatureEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &TimeSignatureEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     spinner = layout.add<WgSpinner>("Lower");
     spinner->value.bind(&myBeatNote);
     spinner->setPrecision(0, 0);
     spinner->setRange(1, 1000);
     spinner->setTooltip("Beat note type");
-    spinner->onChange.bind(this, &TimeSignatureEditor::onChange);
+    spinner->onChange.bind(this, &TimeSignatureEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &TimeSignatureEditor::onChange,
+                      static_cast<int>(ACT_HALVE_2));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &TimeSignatureEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE_2));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -191,9 +306,15 @@ void TimeSignatureEditor::onTick() {
     myBeatNote = sig.beatNote;
 }
 
-void TimeSignatureEditor::onChange() {
+void TimeSignatureEditor::onChange(int id) {
     int rowsPerMeasure = ROWS_PER_BEAT * max(1, myRowsPerMeasure);
     int beatNote = max(1, myBeatNote);
+    switch (id) {
+        HALVE(ACT_HALVE, rowsPerMeasure);
+        DOUBLE(ACT_DOUBLE, rowsPerMeasure);
+        HALVE(ACT_HALVE_2, beatNote);
+        DOUBLE(ACT_DOUBLE_2, beatNote);
+    }
     gTempo->addSegment(TimeSignature(myRow, rowsPerMeasure, beatNote));
 }
 
@@ -207,13 +328,26 @@ int TimeSignatureEditor::getHeight() { return HEIGHT_2_ROW; }
 // TickCount.
 
 void TickCountEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Ticks");
     spinner->value.bind(&myTicks);
     spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
     spinner->setTooltip("Hold combo ticks per beat");
-    spinner->onChange.bind(this, &TickCountEditor::onChange);
+    spinner->onChange.bind(this, &TickCountEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &TickCountEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &TickCountEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -226,8 +360,12 @@ void TickCountEditor::onTick() {
     myTicks = gTempo->getSegments()->getRecent<TickCount>(myRow).ticks;
 }
 
-void TickCountEditor::onChange() {
+void TickCountEditor::onChange(int id) {
     int ticks = max(0, myTicks);
+    switch (id) {
+        HALVE(ACT_HALVE, ticks);
+        DOUBLE(ACT_DOUBLE, ticks);
+    }
     gTempo->addSegment(TickCount(myRow, ticks));
 }
 
@@ -241,20 +379,46 @@ int TickCountEditor::getHeight() { return HEIGHT_1_ROW; }
 // Combo.
 
 void ComboEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
-    WgSpinner* spinner = layout.add<WgSpinner>("Hit Multiplier");
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
+    WgSpinner* spinner = layout.add<WgSpinner>("Hit Multi.");
     spinner->value.bind(&myHit);
     spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
     spinner->setTooltip("Combo hit multiplier");
-    spinner->onChange.bind(this, &ComboEditor::onChange);
+    spinner->onChange.bind(this, &ComboEditor::onChange,
+                           static_cast<int>(ACT_SET));
 
-    spinner = layout.add<WgSpinner>("Miss Multiplier");
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &ComboEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &ComboEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
+
+    spinner = layout.add<WgSpinner>("Miss Multi.");
     spinner->value.bind(&myMiss);
     spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
     spinner->setTooltip("Combo miss multiplier");
-    spinner->onChange.bind(this, &ComboEditor::onChange);
+    spinner->onChange.bind(this, &ComboEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &ComboEditor::onChange,
+                      static_cast<int>(ACT_HALVE_2));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &ComboEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE_2));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -269,9 +433,15 @@ void ComboEditor::onTick() {
     myMiss = combo.missCombo;
 }
 
-void ComboEditor::onChange() {
+void ComboEditor::onChange(int id) {
     int hit = max(1, myHit);
     int miss = max(1, myMiss);
+    switch (id) {
+        HALVE(ACT_HALVE, hit);
+        DOUBLE(ACT_DOUBLE, hit);
+        HALVE(ACT_HALVE_2, miss);
+        DOUBLE(ACT_DOUBLE_2, miss);
+    }
     gTempo->addSegment(Combo(myRow, hit, miss));
 }
 
@@ -285,29 +455,57 @@ int ComboEditor::getHeight() { return HEIGHT_2_ROW; }
 // Speed.
 
 void SpeedEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Multiplier");
     spinner->value.bind(&myRatio);
     spinner->setPrecision(2, 6);
     spinner->setStep(0.1);
     spinner->setRange(-1000, 1000);
     spinner->setTooltip("Stretch ratio");
-    spinner->onChange.bind(this, &SpeedEditor::onChange);
+    spinner->onChange.bind(this, &SpeedEditor::onChange,
+                           static_cast<int>(ACT_SET));
 
-    spinner = layout.add<WgSpinner>("Delay Time");
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &SpeedEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &SpeedEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
+
+    spinner = layout.add<WgSpinner>("Ease Time");
     spinner->value.bind(&myDelay);
     spinner->setPrecision(2, 6);
     spinner->setStep(0.1);
     spinner->setRange(0, 1000);
-    spinner->setTooltip("Delay time");
-    spinner->onChange.bind(this, &SpeedEditor::onChange);
+    spinner->setTooltip("Ease time");
+    spinner->onChange.bind(this, &SpeedEditor::onChange,
+                           static_cast<int>(ACT_SET));
 
-    WgCycleButton* cycler = layout.add<WgCycleButton>("Delay Unit");
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &SpeedEditor::onChange,
+                      static_cast<int>(ACT_HALVE_2));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &SpeedEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE_2));
+    btn->setTooltip("Double the current value");
+
+    layout.row().col(LABEL).col(FIELD);
+    WgCycleButton* cycler = layout.add<WgCycleButton>("Ease Unit");
     cycler->value.bind(&myUnit);
-    cycler->setTooltip("Delay unit (beats/time)");
+    cycler->setTooltip("Ease unit (beats/seconds)");
     cycler->addItem("Beats");
     cycler->addItem("Seconds");
-    cycler->onChange.bind(this, &SpeedEditor::onChange);
+    cycler->onChange.bind(this, &SpeedEditor::onChange,
+                          static_cast<int>(ACT_SET));
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -323,10 +521,16 @@ void SpeedEditor::onTick() {
     myUnit = speed.unit;
 }
 
-void SpeedEditor::onChange() {
+void SpeedEditor::onChange(int id) {
     double ratio = myRatio;
     double delay = max(0.0, myDelay);
     int unit = clamp(myUnit, 0, 1);
+    switch (id) {
+        HALVE(ACT_HALVE, ratio);
+        DOUBLE(ACT_DOUBLE, ratio);
+        HALVE(ACT_HALVE_2, delay);
+        DOUBLE(ACT_DOUBLE_2, delay);
+    }
     gTempo->addSegment(Speed(myRow, ratio, delay, unit));
 }
 
@@ -340,14 +544,27 @@ int SpeedEditor::getHeight() { return HEIGHT_3_ROW; }
 // Scroll.
 
 void ScrollEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Multiplier");
     spinner->value.bind(&myRatio);
     spinner->setPrecision(2, 6);
     spinner->setStep(0.1);
     spinner->setRange(-100000, 100000);
     spinner->setTooltip("Scroll rate multiplier");
-    spinner->onChange.bind(this, &ScrollEditor::onChange);
+    spinner->onChange.bind(this, &ScrollEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &ScrollEditor::onChange,
+                      static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &ScrollEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -360,7 +577,13 @@ void ScrollEditor::onTick() {
     myRatio = gTempo->getSegments()->getRecent<Scroll>(myRow).ratio;
 }
 
-void ScrollEditor::onChange() { gTempo->addSegment(Scroll(myRow, myRatio)); }
+void ScrollEditor::onChange(int id) {
+    switch (id) {
+        HALVE(ACT_HALVE, myRatio);
+        DOUBLE(ACT_DOUBLE, myRatio);
+    }
+    gTempo->addSegment(Scroll(myRow, myRatio));
+}
 
 void ScrollEditor::deleteSegment() {
     gTempo->removeSegment(Segment::SCROLL, myRow);
@@ -372,13 +595,25 @@ int ScrollEditor::getHeight() { return HEIGHT_1_ROW; }
 // Fake.
 
 void FakeEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL).col(FIELD);
+    layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Beats");
     spinner->value.bind(&myBeats);
     spinner->setPrecision(3, 6);
     spinner->setRange(0, 1000);
     spinner->setTooltip("Fake region length in beats");
-    spinner->onChange.bind(this, &FakeEditor::onChange);
+    spinner->onChange.bind(this, &FakeEditor::onChange,
+                           static_cast<int>(ACT_SET));
+
+    WgButton* btn = layout.add<WgButton>();
+    btn->text.set("{g:halve}");
+    btn->onPress.bind(this, &FakeEditor::onChange, static_cast<int>(ACT_HALVE));
+    btn->setTooltip("Halve the current value");
+
+    btn = layout.add<WgButton>();
+    btn->text.set("{g:double}");
+    btn->onPress.bind(this, &FakeEditor::onChange,
+                      static_cast<int>(ACT_DOUBLE));
+    btn->setTooltip("Double the current value");
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -392,8 +627,12 @@ void FakeEditor::onTick() {
     myBeats = numRows / static_cast<double>(ROWS_PER_BEAT);
 }
 
-void FakeEditor::onChange() {
+void FakeEditor::onChange(int id) {
     int numRows = max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
+    switch (id) {
+        HALVE(ACT_HALVE, numRows);
+        DOUBLE(ACT_DOUBLE, numRows);
+    }
     gTempo->addSegment(Fake(myRow, numRows));
 }
 
@@ -407,12 +646,13 @@ int FakeEditor::getHeight() { return HEIGHT_1_ROW; }
 // Label.
 
 void LabelEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
-    layout.row().col(LABEL + FIELD);
+    layout.row().col(LABEL + FIELD + 4);
     WgLineEdit* text = layout.add<WgLineEdit>();
     text->text.bind(&myText);
     text->setMaxLength(1000);
     text->setTooltip("Label text");
-    text->onChange.bind(this, &LabelEditor::onChange);
+    text->onChange.bind(this, &LabelEditor::onChange,
+                        static_cast<int>(ACT_SET));
 
     layout.row().col(FULL);
     layout.add<WgSeperator>();
@@ -425,7 +665,7 @@ void LabelEditor::onTick() {
     myText = gTempo->getSegments()->getRow<Label>(myRow).str;
 }
 
-void LabelEditor::onChange() {
+void LabelEditor::onChange(int id) {
     if (strpbrk(myText.c_str(), ";,=") != nullptr) {
         HudWarning(
             "A Label cannot contain commas, semicolons, or equal signs; "
