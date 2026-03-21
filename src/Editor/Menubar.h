@@ -28,6 +28,7 @@ struct Menubar {
         USE_CHART_PREVIEW,
 
         VISUAL_SYNC_ANCHOR,
+        TEMPO_EDIT_ANCHOR,
 
         SELECT_DENSITY,
 

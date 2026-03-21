@@ -38,6 +38,7 @@ struct MenuBarImpl : public Menubar {
 
     Item* myFileMenu;
     Item* myVisualSyncMenu;
+    Item* myTempoEditMenu;
     Item* myNotesSelectMenu;
     Item* myViewMenu;
     Item* myBeatlineMenu;
@@ -241,6 +242,11 @@ struct MenuBarImpl : public Menubar {
         add(myVisualSyncMenu, SET_VISUAL_SYNC_CURSOR_ANCHOR, "Cursor row");
         add(myVisualSyncMenu, SET_VISUAL_SYNC_RECEPTOR_ANCHOR, "Receptors row");
 
+        // Tempo > Tempo Edit menu
+        myTempoEditMenu = newMenu();
+        add(myTempoEditMenu, SET_TEMPO_EDIT_CURSOR_ANCHOR, "Cursor row");
+        add(myTempoEditMenu, SET_TEMPO_EDIT_RECEPTOR_ANCHOR, "Receptors row");
+
         // Tempo menu.
         Item* hTempo = newMenu();
         sub(hTempo, hSelectTempo, "Select");
@@ -253,6 +259,7 @@ struct MenuBarImpl : public Menubar {
         add(hTempo, OPEN_DIALOG_LABEL_BREAKDOWN, "Labels...");
         add(hTempo, OPEN_DIALOG_TEMPO_BREAKDOWN, "Breakdown...");
         sub(hTempo, myVisualSyncMenu, "Visual sync anchor");
+        sub(hTempo, myTempoEditMenu, "Tempo edit anchor");
 
         // Audio > Volume menu.
         Item* hAudioVol = newMenu();
@@ -486,12 +493,22 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[VISUAL_SYNC_ANCHOR] = [] {
             MENU->myVisualSyncMenu->setChecked(
                 SET_VISUAL_SYNC_CURSOR_ANCHOR,
-                gEditing->getVisualSyncMode() ==
-                    Editing::VisualSyncAnchor::CURSOR);
+                gEditing->getVisualSyncAnchor() ==
+                    Editing::EditingAnchor::CURSOR);
             MENU->myVisualSyncMenu->setChecked(
                 SET_VISUAL_SYNC_RECEPTOR_ANCHOR,
-                gEditing->getVisualSyncMode() ==
-                    Editing::VisualSyncAnchor::RECEPTORS);
+                gEditing->getVisualSyncAnchor() ==
+                    Editing::EditingAnchor::RECEPTORS);
+        };
+        myUpdateFunctions[TEMPO_EDIT_ANCHOR] = [] {
+            MENU->myTempoEditMenu->setChecked(
+                SET_TEMPO_EDIT_CURSOR_ANCHOR,
+                gEditing->getTempoEditAnchor() ==
+                    Editing::EditingAnchor::CURSOR);
+            MENU->myTempoEditMenu->setChecked(
+                SET_TEMPO_EDIT_RECEPTOR_ANCHOR,
+                gEditing->getTempoEditAnchor() ==
+                    Editing::EditingAnchor::RECEPTORS);
         };
         myUpdateFunctions[USE_REVERSE_SCROLL] = [] {
             MENU->myViewMenu->setChecked(TOGGLE_REVERSE_SCROLL,
