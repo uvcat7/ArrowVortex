@@ -51,9 +51,9 @@ void BpmChangeEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Tempo");
     spinner->value.bind(&myBPM);
+    spinner->setRange(VC_MIN_BPM, VC_MAX_BPM);
     spinner->setPrecision(3, 6);
-    spinner->setStep(0.001);
-    spinner->setRange(0.001, 10000);
+    spinner->setStep(1.0);
     spinner->setTooltip("Beats per minute");
     spinner->onChange.bind(this, &BpmChangeEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -102,9 +102,9 @@ void StopEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Seconds");
     spinner->value.bind(&mySeconds);
+    spinner->setRange(VC_MIN_STOP, VC_MAX_STOP);
     spinner->setPrecision(3, 6);
     spinner->setStep(0.001);
-    spinner->setRange(0, 10000);
     spinner->setTooltip("Stop duration in seconds");
     spinner->onChange.bind(this, &StopEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -152,9 +152,9 @@ void DelayEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Seconds");
     spinner->value.bind(&mySeconds);
+    spinner->setRange(0, 1000);
     spinner->setPrecision(3, 6);
     spinner->setStep(0.001);
-    spinner->setRange(0, 10000);
     spinner->setTooltip("Delay duration in seconds");
     spinner->onChange.bind(this, &DelayEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -203,8 +203,8 @@ void WarpEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Beats");
     spinner->value.bind(&myBeats);
+    spinner->setRange(0, 1000);
     spinner->setPrecision(3, 6);
-    spinner->setRange(0, 10000);
     spinner->setTooltip("Warp length in beats");
     spinner->onChange.bind(this, &WarpEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -255,8 +255,8 @@ void TimeSignatureEditor::createWidgets(RowLayout& layout,
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Upper");
     spinner->value.bind(&myRowsPerMeasure);
-    spinner->setPrecision(0, 0);
     spinner->setRange(1, 1000);
+    spinner->setPrecision(0, 0);
     spinner->setTooltip("Beats per measure");
     spinner->onChange.bind(this, &TimeSignatureEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -331,8 +331,8 @@ void TickCountEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Ticks");
     spinner->value.bind(&myTicks);
-    spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
+    spinner->setPrecision(0, 0);
     spinner->setTooltip("Hold combo ticks per beat");
     spinner->onChange.bind(this, &TickCountEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -382,8 +382,8 @@ void ComboEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Hit Multi.");
     spinner->value.bind(&myHit);
-    spinner->setPrecision(0, 0);
     spinner->setRange(0, 1000);
+    spinner->setPrecision(0, 0);
     spinner->setTooltip("Combo hit multiplier");
     spinner->onChange.bind(this, &ComboEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -458,9 +458,9 @@ void SpeedEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Multiplier");
     spinner->value.bind(&myRatio);
+    spinner->setRange(-1000, 1000);
     spinner->setPrecision(2, 6);
     spinner->setStep(0.1);
-    spinner->setRange(-1000, 1000);
     spinner->setTooltip("Stretch ratio");
     spinner->onChange.bind(this, &SpeedEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -547,9 +547,9 @@ void ScrollEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Multiplier");
     spinner->value.bind(&myRatio);
+    spinner->setRange(-100000, 100000);
     spinner->setPrecision(2, 6);
     spinner->setStep(0.1);
-    spinner->setRange(-100000, 100000);
     spinner->setTooltip("Scroll rate multiplier");
     spinner->onChange.bind(this, &ScrollEditor::onChange,
                            static_cast<int>(ACT_SET));
@@ -598,8 +598,8 @@ void FakeEditor::createWidgets(RowLayout& layout, EditorDialog& dialog) {
     layout.row().col(LABEL).col(FIELD_NUM).col(24).col(24);
     WgSpinner* spinner = layout.add<WgSpinner>("Beats");
     spinner->value.bind(&myBeats);
-    spinner->setPrecision(3, 6);
     spinner->setRange(0, 1000);
+    spinner->setPrecision(3, 6);
     spinner->setTooltip("Fake region length in beats");
     spinner->onChange.bind(this, &FakeEditor::onChange,
                            static_cast<int>(ACT_SET));
