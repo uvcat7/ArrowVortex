@@ -416,7 +416,6 @@ struct SelectionImpl : public Selection {
     }
     bool getTempoEditor() override { return myOpenTempoEditor; }
 
-
 };  // SelectionImpl
 
 // ================================================================================================
