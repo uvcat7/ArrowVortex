@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Editor/Sound.h>
+#include <Editor/ConvertToOgg.h>
 
 namespace Vortex {
 
@@ -55,11 +56,17 @@ struct Music {
     /// Enables/disables the note tick sound.
     virtual void toggleNoteTick() = 0;
 
-    /// Starts a thread that converts the current music to ogg-vorbis. If the
-    /// music was loaded from an ogg-vorbis file, nothing happens. When
-    /// conversion is completed, the thread is terminated and the ogg-vorbis
-    /// file is saved.
-    virtual void startOggConversion() = 0;
+    /// Convert a source file to a supported audio format.
+    /// Uses dialogs to select the source and output file.
+    virtual void startAudioConversion() = 0;
+
+    /// Convert the current simfile music to the given audio format.
+    virtual void startAudioConversion(AudioFormat fmt) = 0;
+
+    /// Created a thread audio conversion for a source file to the given audio
+    /// format, updating the simfile audio if it's currently loaded.
+    virtual void startAudioConversion(AudioFormat fmt, fs::path source,
+                                      fs::path output, bool isSimfile) = 0;
 
     /// Returns true if the audio mixer is paused, false otherwise.
     virtual bool isPaused() = 0;

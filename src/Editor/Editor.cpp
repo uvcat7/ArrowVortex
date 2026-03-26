@@ -865,8 +865,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
         gSelection->handleInputs(events);
 
+        gMusic->tick();
+
         if (gSimfile->isOpen()) {
-            gMusic->tick();
             gMinimap->tick();
             gTempoBoxes->tick();
             gWaveform->tick();
