@@ -60,6 +60,10 @@ struct Music {
     /// Uses dialogs to select the source and output file.
     virtual void startAudioConversion() = 0;
 
+    /// Convert a source file to a supported audio format.
+    /// Uses dialogs to select output file.
+    virtual void startAudioConversion(fs::path source, bool isSimfile) = 0;
+
     /// Convert the current simfile music to the given audio format.
     virtual void startAudioConversion(AudioFormat fmt) = 0;
 

@@ -38,10 +38,28 @@ namespace Vortex {
 /* The number of output channels */
 #define OUTPUT_CHANNELS 2
 
-/* Default frame sizes for the output options. */
-#define DEFAULT_FRAME_SIZE_WAV 4096
-#define DEFAULT_FRAME_SIZE_MP3 1152
-#define DEFAULT_FRAME_SIZE_OGG 1024
+bool canConvertAudio(const char *filename) {
+    AVFormatContext *fmt_ctx = nullptr;
+
+    if (avformat_open_input(&fmt_ctx, filename, nullptr, nullptr) < 0)
+        return false;
+
+    if (avformat_find_stream_info(fmt_ctx, nullptr) < 0) {
+        avformat_close_input(&fmt_ctx);
+        return false;
+    }
+
+    for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
+        if (fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO &&
+            avcodec_find_decoder(fmt_ctx->streams[i]->codecpar->codec_id)) {
+            avformat_close_input(&fmt_ctx);
+            return true;
+        }
+    }
+
+    avformat_close_input(&fmt_ctx);
+    return false;
+}
 
 /**
  * Default params for each supported audio format.
@@ -52,18 +70,18 @@ static void format_codec_info(AudioFormat format, AVCodecID *codec_id,
     switch (format) {
         case AudioFormat::MP3:
             *codec_id = AV_CODEC_ID_MP3;
-            *default_frame_size = DEFAULT_FRAME_SIZE_MP3;
+            *default_frame_size = 1152;
             *default_fmt = AV_SAMPLE_FMT_S16P;
             break;
         case AudioFormat::WAV:
             *codec_id = AV_CODEC_ID_PCM_S16LE;
-            *default_frame_size = DEFAULT_FRAME_SIZE_WAV;
+            *default_frame_size = 4096;
             *default_fmt = AV_SAMPLE_FMT_S16;
             break;
         case AudioFormat::OGG:
         default:
             *codec_id = AV_CODEC_ID_VORBIS;
-            *default_frame_size = DEFAULT_FRAME_SIZE_OGG;
+            *default_frame_size = 1024;
             *default_fmt = AV_SAMPLE_FMT_FLTP;
             break;
     }

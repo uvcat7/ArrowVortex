@@ -376,13 +376,23 @@ struct MusicImpl : public Music, public MixSource {
         auto src_ext = pathToUtf8(source.extension());
         Str::toLower(src_ext);
 
+        startAudioConversion(source, false);
+    }
+
+    void startAudioConversion(fs::path source, bool isSimfile) override {
+        if (myAudioConversionThread) {
+            HudNote("Conversion is currently in progress.");
+            return;
+        }
+
         // Get Output File
-        int filterIndex;
+        int filterIndex = 0;
         fs::path initial_path = fs::path(source);
         initial_path.replace_extension();
         std::string svFilters(saveFilters, sizeof(saveFilters));
-        fs::path output = gSystem->saveFileDlg(
-            "Select Output File", initial_path, svFilters, &filterIndex);
+        fs::path output =
+            gSystem->saveFileDlg("Save converted audio as...", initial_path,
+                                 svFilters, &filterIndex);
         if (output.empty()) {
             HudError("No output file given.");
             return;
@@ -401,8 +411,7 @@ struct MusicImpl : public Music, public MixSource {
         else if (filterIndex == 3)
             fmt = AudioFormat::WAV;
 
-        // Convert
-        startAudioConversion(fmt, source, output, false);
+        startAudioConversion(fmt, source, output, isSimfile);
     }
 
     void startAudioConversion(AudioFormat fmt) override {
@@ -421,7 +430,6 @@ struct MusicImpl : public Music, public MixSource {
             fs::path source = utf8ToPath(dir);
             source.append(stringToUtf8(file));
 
-            // Convert
             startAudioConversion(fmt, source, source, true);
         }
     }
@@ -486,9 +494,13 @@ struct MusicImpl : public Music, public MixSource {
                 HudInfo("Conversion finished.");
                 if (myAudioConversionThread->isSimfile) {
                     fs::path out = utf8ToPath(myAudioConversionThread->outPath);
-                    fs::path path =
-                        fs::relative(out, fs::path(gSimfile->getDir().c_str()));
-                    gMetadata->setMusicPath(pathToUtf8(path));
+                    if (gSimfile->isOpen()) {
+                        fs::path path = fs::relative(
+                            out, fs::path(gSimfile->getDir().c_str()));
+                        gMetadata->setMusicPath(pathToUtf8(path));
+                    } else {
+                        gEditor->openSimfile(out);
+                    }
                 }
             } else {
                 HudError("Conversion failed: %s.",
