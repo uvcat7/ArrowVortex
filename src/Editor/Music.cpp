@@ -19,7 +19,7 @@
 
 #include <Simfile/TimingData.h>
 
-#include <Editor/ConvertToOgg.h>
+#include <Editor/ConvertAudio.h>
 #include <Editor/Editor.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
@@ -47,8 +47,10 @@ enum LoadState {
 };
 
 static const char loadFilters[] =
-    "Audio (*.ogg, *.mp3, *.wav, *.wma, *.flac)\0*.ogg;*.mp3;*.wav;*.wma;*.flac\0"
-    "Video (*.mp4, *.mkv, *.avi, *.mov, *.webm, *.flv)\0*.mp4;*.mkv;*.avi;*.mov;*.webm\0"
+    "Audio (*.ogg, *.mp3, *.wav, *.wma, *.flac)\0"
+    "*.ogg;*.mp3;*.wav;*.wma;*.flac\0"
+    "Video (*.mp4, *.mkv, *.avi, *.mov, *.webm, *.flv)\0"
+    "*.mp4;*.mkv;*.avi;*.mov;*.webm\0"
     "All Files (*.*)\0*.*\0";
 
 static const char saveFilters[] =

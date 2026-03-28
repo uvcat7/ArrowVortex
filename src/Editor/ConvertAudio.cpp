@@ -20,7 +20,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-#include <Editor/ConvertToOgg.h>
+#include <Editor/ConvertAudio.h>
 #include <Editor/Music.h>
 
 #include <Core/Utils.h>
