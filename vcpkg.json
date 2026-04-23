@@ -22,7 +22,6 @@
     "libogg",
     "libvorbis",
     "opengl",
-    "sdl3",
-    "sdl3-mixer"
+    "sdl3"
   ]
 }
