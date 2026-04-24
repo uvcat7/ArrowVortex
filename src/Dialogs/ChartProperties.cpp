@@ -267,9 +267,7 @@ class DialogChartProperties::GraphWidget : public GuiWidget {
    public:
     ~GraphWidget() override;
     explicit GraphWidget(GuiContext* gui);
-
     void updateGraph();
-
     void onDraw() override;
 
    private:
@@ -280,92 +278,80 @@ class DialogChartProperties::GraphWidget : public GuiWidget {
     int endMeasure = 0;
     double endTime = 0.0;
 };
-
 DialogChartProperties::GraphWidget::~GraphWidget() = default;
-
 DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
     : GuiWidget(gui) {
     width_ = 340;
     height_ = 100;
 }
-
 void DialogChartProperties::GraphWidget::updateGraph() {
     if (gNotes->empty()) {
         return;
     }
-
     endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     scale = endMeasure / width_;
-
+    HudError("scale is %d", scale);
+    if (scale < 1) scale = 1;
     int buckets = endMeasure;
-
-    // Just calculate everything for charts with <680 measures.
-    if (scale > 2)
-        buckets = buckets / scale + 1;
-    else
-        scale = 1;
-
     peak = 0;
     data.resize(buckets);
     for (int i = 0; i < buckets; i++) data[i] = 0;
-
     for (auto& note : *gNotes) {
         int measure = note.row / (ROWS_PER_BEAT * 4);
-        if (note.isMine || note.isWarped || note.isFake ||
-            (scale > 1 && measure % scale != 0))
-            continue;
-        data[measure / scale]++;
+        if (note.isMine || note.isWarped || note.isFake) continue;
+        data[measure]++;
     }
-
     // The peak calculation isn't always accurate if there is scaling,
     // but it should be good enough.
     for (int i = 0; i < buckets; i++) {
-        peak =
-            max(peak, static_cast<double>(
-                          data[i] / (gTempo->rowToTime((i * scale + 1) * 192) -
-                                     gTempo->rowToTime(i * scale * 192))));
+        peak = max(peak, static_cast<double>(data[i] /
+                                             (gTempo->rowToTime((i + 1) * 192) -
+                                              gTempo->rowToTime(i * 192))));
     }
 }
-
 void DialogChartProperties::GraphWidget::onDraw() {
     if (gNotes->empty()) {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
-
     int count = data.size();
     double barWidth = (static_cast<double>(width_) / count);
     int w = barWidth + 1;
-
     auto batch = Renderer::batchC();
     Draw::fill(rect_, Color32(20, 20, 20, 255));
-
-    for (int i = 0; i < count; ++i) {
-        int h =
-            static_cast<int>(round(data[i] /
-                                   (gTempo->rowToTime((i * scale + 1) * 192) -
-                                    gTempo->rowToTime(i * scale * 192)) /
-                                   peak * height_));
-        int x = rect_.x + static_cast<int>(gTempo->rowToTime(i * scale * 192) /
-                                           endTime * width_);
+    for (int i = 0; i < count;) {
+        int h = 0;
+        // If charts are too big (> 1hr), the averaging will look very strange.
+        // Capping the averaging to 10 measures will help maintain the expected
+        // shape.
+        int max_scale = 10;
+        int scale_iters = std::min(scale, max_scale);
+        int x = rect_.x +
+                static_cast<int>(gTempo->rowToTime(i * 192) / endTime * width_);
+        while (scale_iters > 0 && i < count) {
+            h += static_cast<int>(round(data[i] /
+                                        (gTempo->rowToTime((i + 1) * 192) -
+                                         gTempo->rowToTime(i * 192)) /
+                                        peak * height_));
+            scale_iters--;
+            i++;
+        }
+        h /= std::min(scale, max_scale);
+        if (scale > 4) i += scale - max_scale;
         int y = rect_.y + height_ - h;
-
         Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
     }
-
     double time = min(endTime, gView->getCursorTime());
     int x = (time / endTime) * width_;
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
-
     batch.flush();
-
     TextStyle textStyle;
     std::string info = Str::fmt("Peak: %1 NPS").arg(peak, 1, 1).str;
     Text::arrange(Text::TL, textStyle, info.c_str());
     Text::draw(vec2i{rect_.x + 4, rect_.y + 2});
-}
+};
 
 void DialogChartProperties::myCreateGraph() {
     myLayout.row().col(340);
