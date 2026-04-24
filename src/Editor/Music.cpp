@@ -46,18 +46,18 @@ enum LoadState {
     LOADING_DONE
 };
 
-static const char loadFilters[] =
-    "Audio (*.ogg, *.mp3, *.wav, *.wma, *.flac)\0"
-    "*.ogg;*.mp3;*.wav;*.wma;*.flac\0"
-    "Video (*.mp4, *.mkv, *.avi, *.mov, *.webm, *.flv)\0"
-    "*.mp4;*.mkv;*.avi;*.mov;*.webm\0"
-    "All Files (*.*)\0*.*\0";
+#define LOAD_FILTERS_COUNT 3
+static SDL_DialogFileFilter loadFilters[] = {
+    {"Audio (*.ogg, *.mp3, *.wav, *.wma, *.flac)", "ogg;mp3;wav;wma;flac"},
+    {"Video (*.mp4, *.mkv, *.avi, *.mov, *.webm, *.flv)",
+     "mp4;mkv;avi;mov;webm"},
+    {"All Files (*.*)", "*"}};
 
-static const char saveFilters[] =
-    "Ogg Vorbis (*.ogg)\0*.ogg\0"
-    "MP3 Audio (*.mp3)\0*.mp3\0"
-    "Waveform (*.wav)\0*.wav\0"
-    "All Files (*.*)\0*.*\0";
+#define SAVE_FILTERS_COUNT 4
+static SDL_DialogFileFilter saveFilters[] = {{"Ogg Vorbis (*.ogg)", "ogg"},
+                                             {"MP3 Audio (*.mp3)", "mp3"},
+                                             {"Waveform (*.wav)", "wav"},
+                                             {"All Files (*.*)", "*"}};
 
 // ================================================================================================
 // MusicImpl :: member data.
@@ -366,9 +366,9 @@ struct MusicImpl : public Music, public MixSource {
         }
 
         // Get source file.
-        std::string ldFilter(loadFilters, sizeof(loadFilters));
         fs::path source =
-            gSystem->openFileDlg("Select Source File", {}, ldFilter);
+            gSystem->openFileDlg("Select Source File", loadFilters,
+                                 LOAD_FILTERS_COUNT, std::string());
         if (source.empty()) {
             HudError("No source file given.");
             return;
@@ -389,10 +389,9 @@ struct MusicImpl : public Music, public MixSource {
         int filterIndex = 0;
         fs::path initial_path = fs::path(source);
         initial_path.replace_extension();
-        std::string svFilters(saveFilters, sizeof(saveFilters));
-        fs::path output =
-            gSystem->saveFileDlg("Save converted audio as...", initial_path,
-                                 svFilters, &filterIndex);
+        fs::path output = gSystem->saveFileDlg("Save converted audio as...",
+                                               saveFilters, SAVE_FILTERS_COUNT,
+                                               &filterIndex, initial_path);
         if (output.empty()) {
             HudError("No output file given.");
             return;
@@ -402,9 +401,9 @@ struct MusicImpl : public Music, public MixSource {
         Str::toLower(ext);
 
         // Figure out save format.
-        AudioFormat fmt = (ext == ".wav")   ? AudioFormat::WAV
-                          : (ext == ".mp3") ? AudioFormat::MP3
-                                            : AudioFormat::OGG;
+        AudioFormat fmt = filterIndex == 2 || ext == "wav"   ? AudioFormat::WAV
+                          : filterIndex == 1 || ext == "mp3" ? AudioFormat::MP3
+                                                             : AudioFormat::OGG;
 
         if (filterIndex == 2)
             fmt = AudioFormat::MP3;

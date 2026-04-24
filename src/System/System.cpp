@@ -73,6 +73,7 @@ static std::string outPath;
 std::mutex fileDialogMutex;
 std::condition_variable fileDialogCv;
 fs::path fileDialogPath;
+int file_extension_index = 0;
 bool isDialogClosed = false;
 
 // Mapping of windows virtual keys to vortex key codes.
@@ -154,6 +155,7 @@ static void SDLCALL FileDialogSaveCallback(void* userdata,
     if (filelist[0]) {
         fileDialogPath = utf8ToPath(filelist[0]);
     }
+    file_extension_index = filter;
     isDialogClosed = true;
     fileDialogCv.notify_all();
     return;
@@ -176,6 +178,7 @@ fs::path ShowFileDialog(std::string title, fs::path path,
     }
     fileDialogCv.wait(lock,
                       [] { return isDialogClosed || !fileDialogPath.empty(); });
+    if (save) *index = file_extension_index;
     return fileDialogPath;
 }
 

@@ -552,7 +552,7 @@ struct EditorImpl : public Editor, public InputHandler {
             };
 
             // Show the save file dialog.
-            save_path = gSystem->saveFileDlg("save file", saveFilters,
+            save_path = gSystem->saveFileDlg("Save file", saveFilters,
                                              SAVE_FILTERS_COUNT, &filterIndex,
                                              fs::path());
             dir = pathToUtf8(save_path.parent_path());
