@@ -729,7 +729,11 @@ struct EditorImpl : public Editor, public InputHandler {
     void onFileDrop(FileDrop& evt) override {
         if (evt.count >= 1) {
             fs::path path(evt.files[0]);
-            openSimfile(findSimfile(path, false));
+            if (!openSimfile(findSimfile(path, false))) {
+                if (canConvertAudio(pathToUtf8(path).c_str())) {
+                    gMusic->startAudioConversion(path, true);
+                }
+            }
         }
     }
 
@@ -859,8 +863,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
         gSelection->handleInputs(events);
 
+        gMusic->tick();
+
         if (gSimfile->isOpen()) {
-            gMusic->tick();
             gMinimap->tick();
             gTempoBoxes->tick();
             gWaveform->tick();
