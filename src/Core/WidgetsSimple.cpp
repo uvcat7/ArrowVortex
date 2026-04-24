@@ -5,6 +5,8 @@
 #include <Core/GuiDraw.h>
 #include <System/System.h>
 
+#define CHECK_SIZE static_cast<int>(8 * gSystem->getScaleFactor())
+
 namespace Vortex {
 
 // ================================================================================================
@@ -121,7 +123,9 @@ void WgCheckbox::onDraw() {
     bool checked = value.get();
     textbox.base.draw(box);
     if (checked)
-        Draw::sprite(icons.check, {box.x + box.w / 2, box.y + box.h / 2});
+        Draw::sprite(icons.check, {box.x + box.w / 2 - CHECK_SIZE / 2,
+                                   box.y + box.h / 2 - CHECK_SIZE / 2,
+                                   CHECK_SIZE, CHECK_SIZE});
 
     // Draw the description text.
     recti r = rect_;

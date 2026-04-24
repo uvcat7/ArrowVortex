@@ -17,8 +17,8 @@ static const int WAVEOUT_BLOCK_SIZE =
 // MixerImpl :: member data.
 SDL_AudioStream* myAudioStream = nullptr;
 MixSource* mySource;
-void SDLCALL audio_callback(void* userdata, SDL_AudioStream* stream,
-                            int additional_amount, int total_amount) {
+static void SDLCALL audio_callback(void* userdata, SDL_AudioStream* stream,
+                                   int additional_amount, int total_amount) {
     int remaining = additional_amount;
     short samples[WAVEOUT_BLOCK_SIZE];
 
@@ -55,7 +55,7 @@ struct MixerImpl : public Mixer {
     }
 
     void close() override {
-        SDL_PauseAudioStreamDevice(myAudioStream);
+        if (myPauseThread) SDL_PauseAudioStreamDevice(myAudioStream);
         SDL_DestroyAudioStream(myAudioStream);
         if (myDeviceId) {
             SDL_CloseAudioDevice(myDeviceId);

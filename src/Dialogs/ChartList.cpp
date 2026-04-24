@@ -114,7 +114,7 @@ static int GetChartListH() {
             style = chart->style;
             h += TEXT_H + 4;
         }
-        h += TEXT_H - 3;
+        h += TEXT_H + 1;
     }
     return max(TEXT_H, h);
 }

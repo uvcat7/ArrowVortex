@@ -797,8 +797,11 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void drawLogo() {
         vec2i size = gSystem->getWindowSize();
+        vec2i logo_size = myLogo.size();
         Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(38, 38, 38, 255));
-        Draw::sprite(myLogo, {size.x / 2, size.y / 2},
+        Draw::sprite(myLogo,
+                     {size.x / 2 - logo_size.x / 2,
+                      size.y / 2 - logo_size.y / 2, logo_size.x, logo_size.y},
                      RGBAtoColor32(255, 255, 255, 26));
     }
 

@@ -245,7 +245,8 @@ struct SelectionImpl : public Selection {
             if (keyFlags & (Keyflag::SHIFT | Keyflag::ALT)) {
                 Texture& tex =
                     (keyFlags & Keyflag::SHIFT) ? myAddIcon : mySubIcon;
-                Draw::sprite(tex, {start.x, start.y});
+                Draw::sprite(tex, {start.x, start.y, mpos.x - start.x,
+                                   mpos.y - start.y});
             }
         }
     }

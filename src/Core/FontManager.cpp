@@ -178,7 +178,7 @@ void FontManager::cache(FontData* font) {
 }
 
 bool FontManager::loadGlyph(const std::string& name, const Texture& texture,
-                            int dx, int dy, int advance) {
+                            int dx, int dy, int advance, int sizex, int sizey) {
     auto tex = static_cast<Texture::Data*>(texture.data());
     if (tex) {
         texture.cache();
@@ -188,10 +188,10 @@ bool FontManager::loadGlyph(const std::string& name, const Texture& texture,
         glyph.hasAlphaTex = (tex->fmt == Texture::ALPHA);
         glyph.hasPixels = 1;
         glyph.uvs = {0, 0, 1, 1};
-        glyph.box = {0, 0, tex->w, tex->h};
-        glyph.ofs = {dx, dy - tex->h, dx + tex->w, dy};
+        glyph.box = {0, 0, sizex, sizey};
+        glyph.ofs = {dx, dy - sizey, dx + sizex, dy};
         glyph.tex = tex;
-        glyph.advance = advance ? advance : (tex->w + 1);
+        glyph.advance = advance ? advance : (sizex + 1);
 
         FM->specialGlyphs.insert({name, glyph});
 
@@ -239,8 +239,8 @@ void Font::cache() const { FontManager::cache(static_cast<FontData*>(data_)); }
 void Font::LogInfo() { FontManager::log(); }
 
 bool Text::createGlyph(const char* id, const Texture& texture, int dx, int dy,
-                       int advance) {
-    return FontManager::loadGlyph(id, texture, dx, dy, advance);
+                       int advance, int sizex, int sizey) {
+    return FontManager::loadGlyph(id, texture, dx, dy, advance, sizex, sizey);
 }
 
 };  // namespace Vortex

@@ -79,10 +79,12 @@ struct TextOverlayImpl : public TextOverlay {
         textOverlayPageSize_ = 0;
 
         Texture icons[NUM_ICONS];
-        Texture::createTiles("assets/icons text.png", 16, 16, NUM_ICONS, icons,
+        Texture::createTiles("assets/icons text.png", 64, 64, NUM_ICONS, icons,
                              false, Texture::ALPHA);
+        int tex_size = static_cast<int>(16 * gSystem->getScaleFactor());
         for (int i = 0; i < NUM_ICONS; ++i) {
-            Text::createGlyph(iconNames[i], icons[i], 0, 3);
+            Text::createGlyph(iconNames[i], icons[i], 0, tex_size / 4 - 1, 0,
+                              tex_size, tex_size);
         }
     }
 

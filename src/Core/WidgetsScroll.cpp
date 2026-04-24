@@ -67,16 +67,14 @@ static void DrawScrollbar(recti bar, ScrollButtonData button, bool vertical,
         buttonRect = {bar.x, bar.y + button.pos, bar.w, button.size};
         scrollbar.base.draw(buttonRect);
         if (buttonRect.h >= 16) {
-            vec2i grabPos = {bar.x + bar.w / 2,
-                             buttonRect.y + buttonRect.h / 2};
+            recti grabPos = {bar.x, buttonRect.y, bar.w, buttonRect.h};
             Draw::sprite(scrollbar.grab, grabPos, Draw::ROT_90);
         }
     } else {
         buttonRect = {bar.x + button.pos, bar.y, button.size, bar.h};
         scrollbar.base.draw(buttonRect);
         if (buttonRect.w >= 16) {
-            vec2i grabPos = {buttonRect.x + buttonRect.w / 2,
-                             bar.y + bar.h / 2};
+            recti grabPos = {bar.x, buttonRect.y, bar.w, buttonRect.h};
             Draw::sprite(scrollbar.grab, grabPos, 0);
         }
     }

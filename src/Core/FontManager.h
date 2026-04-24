@@ -13,7 +13,7 @@ struct FontManager {
     static void cache(FontData* font);
 
     static bool loadGlyph(const std::string& name, const Texture& texture,
-                          int dx, int dy, int advance);
+                          int dx, int dy, int advance, int sizex, int sizey);
     static Glyph* getGlyph(const std::string& name);
     static void release(FontData* font);
 

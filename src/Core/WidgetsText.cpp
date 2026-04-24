@@ -8,8 +8,12 @@
 #include <Core/StringUtils.h>
 #include <Core/GuiDraw.h>
 #include <Core/Shader.h>
+#include <System/System.h>
 
 #include <algorithm>
+
+#define ICON_W static_cast<int>(8 * gSystem->getScaleFactor())
+#define SPINNER_W static_cast<int>(8 * gSystem->getScaleFactor())
 
 constexpr int MaximumPastedTextLength = 200;
 constexpr int MaximumTextBoxLength = 255;
@@ -242,12 +246,12 @@ void WgLineEdit::onTick() {
     // Update text offset
 
     float dt = gui_->getDeltaTime();
-    float barW = static_cast<float>(rect_.w - 12);
+    float barW = static_cast<float>(rect_.w - SPINNER_W);
     float textW = static_cast<float>(Text::getSize().x);
     float cursorX = static_cast<float>(
         Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x);
-    float target =
-        min(max(lineedit_scroll_offset_, cursorX - barW + 12), cursorX - 12);
+    float target = min(max(lineedit_scroll_offset_, cursorX - barW + SPINNER_W),
+                       cursorX - SPINNER_W);
     target = max(0.f, min(target, textW - barW));
 
     float delta =
@@ -428,7 +432,7 @@ void WgSpinner::onDraw() {
     auto& textbox = GuiDraw::getTextBox();
 
     // Draw the background box graphic.
-    recti rtext = SideL(rect_, rect_.w - 12);
+    recti rtext = SideL(rect_, rect_.w - SPINNER_W);
     textbox.base.draw(rtext, TileRect2::L);
     if (spinner_lineedit_->isCapturingText()) {
         rtext.w -= 2;
@@ -463,10 +467,14 @@ void WgSpinner::onDraw() {
 
     uint32_t col = Color32(isEnabled() ? 255 : 128);
 
-    Draw::sprite(icons.arrow, {r.x + r.w / 2, r.y + r.h * 1 / 4}, col,
-                 Draw::ROT_90 | Draw::FLIP_H);
-    Draw::sprite(icons.arrow, {r.x + r.w / 2, r.y + r.h * 3 / 4}, col,
-                 Draw::ROT_90);
+    Draw::sprite(icons.arrow,
+                 {r.x + r.w / 2 - ICON_W / 2, r.y + r.h * 1 / 4 - ICON_W / 2,
+                  ICON_W, ICON_W},
+                 col, Draw::ROT_90 | Draw::FLIP_H);
+    Draw::sprite(icons.arrow,
+                 {r.x + r.w / 2 - ICON_W / 2, r.y + r.h * 3 / 4 - ICON_W / 2,
+                  ICON_W, ICON_W},
+                 col, Draw::ROT_90);
 }
 
 void WgSpinner::setRange(double min, double max) {
