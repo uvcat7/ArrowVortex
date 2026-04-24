@@ -291,7 +291,6 @@ void DialogChartProperties::GraphWidget::updateGraph() {
     endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     scale = endMeasure / width_;
-    HudError("scale is %d", scale);
     if (scale < 1) scale = 1;
     int buckets = endMeasure;
     peak = 0;
