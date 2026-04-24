@@ -41,17 +41,25 @@ Note { col=2;   src=0,0; rot=270 }
 Mine { size=64,64; src=192,0 }
 
 Hold-body { size=64,64 }
-Hold-body { col=3;   src=0,64 }
-Hold-body { col=4;   src=64,64 }
+Hold-body { col=2,3; src=0,64; y=-6 }
+Hold-body { col=1,4; src=64,64; y=+10 }
 Hold-body { col=0,5; src=128,64 }
-Hold-body { col=1;   src=64,64 }
-Hold-body { col=2;   src=0,64 }
-Hold-tail { size=64,64; src=192,64 }
 
-Roll-head { size=64,64 }
-Roll-head { col=3;   src=0,64 }
-Roll-head { col=4;   src=64,64 }
-Roll-head { col=0,5; src=128,64 }
-Roll-head { col=1;   src=64,64 }
-Roll-head { col=2;   src=0,64 }
-Roll-tail { size=64,64; src=192,64 }
+Hold-tail { size=64,64 }
+Hold-tail { col=3;   src=0,128 }
+Hold-tail { col=4;   src=64,128 }
+Hold-tail { col=0,5; src=128,128 }
+Hold-tail { col=1;   src=64,128; mirror=h }
+Hold-tail { col=2;   src=0,128; mirror=h }
+
+Roll-body { size=64,64 }
+Roll-body { col=2,3; src=0,64; y=-6 }
+Roll-body { col=1,4; src=64,64; y=+10 }
+Roll-body { col=0,5; src=128,64 }
+
+Roll-tail { size=64,64 }
+Roll-tail { col=3;   src=0,128 }
+Roll-tail { col=4;   src=64,128 }
+Roll-tail { col=0,5; src=128,128 }
+Roll-tail { col=1;   src=64,128; mirror=h }
+Roll-tail { col=2;   src=0,128; mirror=h }

@@ -8,67 +8,64 @@
 namespace Vortex {
 
 /// Formats from which the simfile can be loaded/saved.
-enum SimFormat
-{
-	SIM_NONE,
+enum SimFormat {
+    SIM_NONE,
 
-	SIM_SM,
-	SIM_SSC,
-	SIM_OSU,
-	SIM_OSZ,
-	SIM_DWI,
+    SIM_SM,
+    SIM_SSC,
+    SIM_OSU,
+    SIM_OSZ,
+    SIM_DWI,
 
-	NUM_SIMFILE_FORMATS
+    NUM_SIMFILE_FORMATS
 };
 
 /// Hold data for a foreground/background change.
-struct BgChange
-{
-	String effect;
-	String file, file2;
-	String color, color2;
-	String transition;
-	double startBeat;
-	double rate;
+struct BgChange {
+    std::string effect;
+    std::string file, file2;
+    std::string color, color2;
+    std::string transition;
+    double startBeat;
+    double rate;
 };
 
 /// Holds the simfile metadata.
-struct Simfile : NonCopyable
-{
-	Simfile();
-	~Simfile();
+struct Simfile : NonCopyable {
+    Simfile();
+    ~Simfile();
 
-	void sanitize();
+    void sanitize();
 
-	Vector<Chart*> charts;
-	Tempo* tempo;
+    Vector<Chart*> charts;
+    Tempo* tempo;
 
-	String dir;
-	String file;
-	SimFormat format;
+    std::string dir;
+    std::string file;
+    SimFormat format;
 
-	String title, titleTr;
-	String subtitle, subtitleTr;
-	String artist, artistTr;
-	String genre;
-	String credit;
+    std::string title, titleTr;
+    std::string subtitle, subtitleTr;
+    std::string artist, artistTr;
+    std::string genre;
+    std::string credit;
 
-	String music;
-	String banner;
-	String background;
-	String cdTitle;
-	String lyricsPath;
+    std::string music;
+    std::string banner;
+    std::string background;
+    std::string cdTitle;
+    std::string lyricsPath;
 
-	Vector<BgChange> fgChanges;
-	Vector<BgChange> bgChanges[2];
+    Vector<BgChange> fgChanges;
+    Vector<BgChange> bgChanges[2];
 
-	double previewStart;
-	double previewLength;
+    double previewStart;
+    double previewLength;
 
-	bool isSelectable;
+    bool isSelectable;
 };
 
 // Returns the abbreviation of the given simfile format.
 const char* GetFormatAbbreviation(SimFormat format);
 
-}; // namespace Vortex
+};  // namespace Vortex

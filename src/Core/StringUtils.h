@@ -1,271 +1,252 @@
 #pragma once
 
-#include <Core/String.h>
 #include <Core/Vector.h>
 
 namespace Vortex {
 
-struct Str
-{
-	/// Creates a string from a range of characters.
-	static String create(const char* begin, const char* end);
+struct Str {
+    /// Appends character c at the end of the string.
+    static void append(std::string& s, char c);
 
-	/// Sets the string to character c repeated n times.
-	static void assign(String& s, int n, char c);
+    /// Appends str at the end of the string.
+    static void append(std::string& s, const std::string& str);
 
-	/// Sets the string to a copy of str.
-	static void assign(String& s, String&& str);
+    /// Appends str at the end of the string.
+    static void append(std::string& s, const char* str);
 
-	/// Sets the string to a copy of str.
-	static void assign(String& s, StringRef str);
+    /// Appends the first n characters from str at the end of the string.
+    static void append(std::string& s, const char* str, size_t n);
 
-	/// Sets the string to a copy of str.
-	static void assign(String& s, const char* str);
+    /// Inserts character c into the string at position pos.
+    static void insert(std::string& s, size_t pos, char c);
 
-	/// Sets the string to the first n characters of str.
-	static void assign(String& s, const char* str, int n);
+    /// Inserts str into the string at position pos.
+    static void insert(std::string& s, size_t pos, const std::string& str);
 
-	/// Appends character c at the end of the string.
-	static void append(String& s, char c);
+    /// Inserts str into the string at position pos.
+    static void insert(std::string& s, size_t pos, const char* str);
 
-	/// Appends str at the end of the string.
-	static void append(String& s, StringRef str);
+    /// Inserts the first n characters from str into the string at position pos.
+    static void insert(std::string& s, size_t pos, const char* str, size_t n);
 
-	/// Appends str at the end of the string.
-	static void append(String& s, const char* str);
+    /// Makes sure the string is at most length n, removing characters at the
+    /// end if necessary.
+    static void truncate(std::string& s, size_t n);
 
-	/// Appends the first n characters from str at the end of the string.
-	static void append(String& s, const char* str, int n);
+    /// Makes sure the string is at least length n, appending c at the end if
+    /// necessary.
+    static void extend(std::string& s, size_t n, char c);
 
-	/// Inserts character c into the string at position pos.
-	static void insert(String& s, int pos, char c);
+    /// Makes sure the string is exactly length n, truncating or extending with
+    /// c if necessary.
+    static void resize(std::string& s, size_t n, char c);
 
-	/// Inserts str into the string at position pos.
-	static void insert(String& s, int pos, StringRef str);
+    /// Converts the string to an integer; returns alt on failure.
+    static int readInt(const std::string& s, int alt = 0);
 
-	/// Inserts str into the string at position pos.
-	static void insert(String& s, int pos, const char* str);
+    /// Converts the string to an uinteger; returns alt on failure.
+    static uint32_t readUint(const std::string& s, uint32_t alt = 0);
 
-	/// Inserts the first n characters from str into the string at position pos.
-	static void insert(String& s, int pos, const char* str, int n);
+    /// Converts the string to a float; returns alt on failure.
+    static float readFloat(const std::string& s, float alt = 0);
 
-	/// Makes sure the string is at most length n, removing characters at the end if necessary.
-	static void truncate(String& s, int n);
+    /// Converts the string to a double; returns alt on failure.
+    static double readDouble(const std::string& s, double alt = 0);
 
-	/// Makes sure the string is at least length n, appending c at the end if necessary.
-	static void extend(String& s, int n, char c);
+    /// Converts the string to a boolean; returns alt on failure.
+    static bool readBool(const std::string& s, bool alt = false);
 
-	/// Makes sure the string is exactly length n, truncating or extending with c if necessary.
-	static void resize(String& s, int n, char c);
+    /// Converts the string to a timestamp double; returns alt on failure.
+    static double readTime(const std::string& s, double alt = 0);
 
-	/// Converts the string to an integer; returns alt on failure.
-	static int readInt(StringRef s, int alt = 0);
+    /// Converts the string to a boolean; returns alt on failure.
+    static bool read(const std::string& s, bool alt = false);
 
-	/// Converts the string to an uinteger; returns alt on failure.
-	static uint readUint(StringRef s, uint alt = 0);
+    /// Converts the string to an integer; returns true on success.
+    /// On failure, out remains unchanged.
+    static bool read(const std::string& s, int* out);
 
-	/// Converts the string to a float; returns alt on failure.
-	static float readFloat(StringRef s, float alt = 0);
+    /// Converts the string to an uinteger; returns true on success.
+    /// On failure, out remains unchanged.
+    static bool read(const std::string& s, uint32_t* out);
 
-	/// Converts the string to a double; returns alt on failure.
-	static double readDouble(StringRef s, double alt = 0);
+    /// Converts the string to a float; returns true on success.
+    /// On failure, out remains unchanged.
+    static bool read(const std::string& s, float* out);
 
-	/// Converts the string to a boolean; returns alt on failure.
-	static bool readBool(StringRef s, bool alt = false);
+    /// Converts the string to a double; returns true on success.
+    /// On failure, out remains unchanged.
+    static bool read(const std::string& s, double* out);
 
-	/// Converts the string to a timestamp double; returns alt on failure.
-	static double readTime(StringRef s, double alt = 0);
+    /// Converts the string to a boolean; returns true on success.
+    /// On failure, out remains unchanged.
+    static bool read(const std::string& s, bool* out);
 
-	/// Converts the string to a boolean; returns alt on failure.
-	static bool read(StringRef s, bool alt = false);
+    /// Returns the result of parsing the given algebraic expression.
+    static bool parse(const char* expression, double& out);
 
-	/// Converts the string to an integer; returns true on success.
-	/// On failure, out remains unchanged.
-	static bool read(StringRef s, int* out);
+    /// Removes whitespace at the start and end of the string.
+    static void trim(std::string& s);
 
-	/// Converts the string to an uinteger; returns true on success.
-	/// On failure, out remains unchanged.
-	static bool read(StringRef s, uint* out);
+    /// Removes whitespace at the start and end of the string,
+    /// and collapses internal whitespace to a single space.
+    static void simplify(std::string& s);
 
-	/// Converts the string to a float; returns true on success.
-	/// On failure, out remains unchanged.
-	static bool read(StringRef s, float* out);
+    /// Erases a sequence of n characters starting at position pos.
+    static void erase(std::string& s, size_t pos = 0,
+                      size_t n = std::string::npos);
 
-	/// Converts the string to a double; returns true on success.
-	/// On failure, out remains unchanged.
-	static bool read(StringRef s, double* out);
+    /// Removes the last character from the string.
+    static void pop_back(std::string& s);
 
-	/// Converts the string to a boolean; returns true on success.
-	/// On failure, out remains unchanged.
-	static bool read(StringRef s, bool* out);
+    /// Replaces every occurence of the find character with the replace
+    /// character.
+    static void replace(std::string& s, char find, char replace);
 
-	/// Returns the result of parsing the given algebraic expression.
-	static bool parse(const char* expression, double& out);
+    /// Replaces every occurence of the find String with the replace string.
+    static void replace(std::string& s, const char* find, const char* replace);
 
-	/// Removes whitespace at the start and end of the string.
-	static void trim(String& s);
+    /// Converts the alphabetic characters in the string String to upper case.
+    static void toUpper(std::string& s);
 
-	/// Removes whitespace at the start and end of the string,
-	/// and collapses internal whitespace to a single space.
-	static void simplify(String& s);
+    /// Converts the alphabetic characters in the string String to lower case.
+    static void toLower(std::string& s);
 
-	/// Erases a sequence of n characters starting at position pos.
-	static void erase(String& s, int pos = 0, int n = String::npos);
+    /// Returns a substring of the string starting at position pos.
+    /// The substring spans n characters (or until the end of the string,
+    /// whichever comes first).
+    static std::string substr(const std::string& s, size_t pos = 0,
+                              size_t n = std::string::npos);
 
-	/// Removes the last character from the string.
-	static void pop_back(String& s);
+    /// Interprets the string as UTF-8 and returns the position of the next
+    /// character after pos, which may be an offset of more than one when
+    /// dealing with multibyte UTF-8 characters. If the next character is past
+    /// the end of the string, npos is returned.
+    static size_t nextChar(const std::string& s, size_t pos = 0);
 
-	/// Replaces every occurence of the find character with the replace character.
-	static void replace(String& s, char find, char replace);
+    /// Interprets the string as UTF-8 and returns the position of the previous
+    /// character before pos, which may be an offset of more than one when
+    /// dealing with multibyte UTF-8 characters. If the previous character is
+    /// before the start of the string, -1 is returend.
+    static size_t prevChar(const std::string& s,
+                           size_t pos = std::string::npos);
 
-	/// Replaces every occurence of the find String with the replace string.
-	static void replace(String& s, const char* find, const char* replace);
+    /// Returns true if the string contains non-ascii characters.
+    static bool isUnicode(const std::string& s);
 
-	/// Converts the alphabetic characters in the string String to upper case.
-	static void toUpper(String& s);
+    /// Searches the string for character c.
+    /// Returns the position of the first occurence on or after pos, or npos if
+    /// no match is found.
+    static size_t find(const std::string& s, char c, size_t pos = 0);
 
-	/// Converts the alphabetic characters in the string String to lower case.
-	static void toLower(String& s);
+    /// Searches the string for substring s.
+    /// Returns the position of the first occurence on or after pos, or npos if
+    /// no match is found.
+    static size_t find(const std::string& s, const char* str, size_t pos = 0);
 
-	/// Returns a substring of the string starting at position pos.
-	/// The substring spans n characters (or until the end of the string, whichever comes first).
-	static String substr(StringRef s, int pos = 0, int n = String::npos);
+    /// Searches the string for character c.
+    /// Returns the position of the last occurence on or before pos, or -1 if no
+    /// match is found.
+    static size_t findLast(const std::string& s, char c,
+                           size_t pos = std::string::npos);
 
-	/// Interprets the string as UTF-8 and returns the position of the next character after pos,
-	/// which may be an offset of more than one when dealing with multibyte UTF-8 characters.
-	/// If the next character is past the end of the string, npos is returned.
-	static int nextChar(StringRef s, int pos = 0);
-	
-	/// Interprets the string as UTF-8 and returns the position of the previous character before
-	/// pos, which may be an offset of more than one when dealing with multibyte UTF-8 characters.
-	/// If the previous character is before the start of the string, -1 is returend.
-	static int prevChar(StringRef s, int pos = String::npos);
+    /// Searches the string for any of the characters in c.
+    /// Returns the position of the first occurence on or after pos, or npos if
+    /// no match is found.
+    static size_t findAnyOf(const std::string& s, const char* c,
+                            size_t pos = 0);
 
-	/// Returns true if the string contains non-ascii characters.
-	static bool isUnicode(StringRef s);
+    /// Searches the string for any of the characters in c.
+    /// Returns the position of the last occurence on or before pos, or -1 if no
+    /// match is found.
+    static size_t findLastOf(const std::string& s, const char* c,
+                             size_t pos = std::string::npos);
 
-	/// Searches the string for character c.
-	/// Returns the position of the first occurence on or after pos, or npos if no match is found.
-	static int find(StringRef s, char c, int pos = 0);
+    // Returns true if the end of the string matches suffix.
+    static bool endsWith(const std::string& s, const char* suffix,
+                         bool caseSensitive = true);
 
-	/// Searches the string for substring s.
-	/// Returns the position of the first occurence on or after pos, or npos if no match is found.
-	static int find(StringRef s, const char* str, int pos = 0);
+    // Returns true if the start of the string matches prefix.
+    static bool startsWith(const std::string& s, const char* prefix,
+                           bool caseSensitive = true);
 
-	/// Searches the string for character c.
-	/// Returns the position of the last occurence on or before pos, or -1 if no match is found.
-	static int findLast(StringRef s, char c, int pos = String::npos);
+    // Comparison using strcmp, case-sensitive.
+    static int compare(const std::string& a, const std::string& b);
+    static int compare(const std::string& a, const char* b);
+    static int compare(const char* a, const char* b);
 
-	/// Searches the string for any of the characters in c.
-	/// Returns the position of the first occurence on or after pos, or npos if no match is found.
-	static int findAnyOf(StringRef s, const char* c, int pos = 0);
+    // Comparison using fastnocasecmp, not case-sensitive.
+    static int icompare(const std::string& a, const std::string& b);
+    static int icompare(const std::string& a, const char* b);
+    static int icompare(const char* a, const char* b);
 
-	/// Searches the string for any of the characters in c.
-	/// Returns the position of the last occurence on or before pos, or -1 if no match is found.
-	static int findLastOf(StringRef s, const char* c, int pos = String::npos);
+    // Equivalence check using strcmp, case-sensitive.
+    static bool equal(const std::string& a, const std::string& b);
+    static bool equal(const std::string& a, const char* b);
+    static bool equal(const char* a, const char* b);
 
-	// Returns true if the end of the string matches suffix.
-	static bool endsWith(StringRef s, const char* suffix, bool caseSensitive = true);
+    // Equivalence check using fastnocasecmp, not case-sensitive.
+    static bool iequal(const std::string& a, const std::string& b);
+    static bool iequal(const std::string& a, const char* b);
+    static bool iequal(const char* a, const char* b);
 
-	// Returns true if the start of the string matches prefix.
-	static bool startsWith(StringRef s, const char* prefix, bool caseSensitive = true);
+    /// Converts the given value to a string.
+    static std::string val(int v, int minDigits = 0, bool hex = false);
+    static std::string val(uint32_t v, int minDigits = 0, bool hex = false);
+    static std::string val(float v, int minDecimalPlaces = 0,
+                           int maxDecimalPlaces = 6);
+    static std::string val(double v, int minDecimalPlaces = 0,
+                           int maxDecimalPlaces = 6);
 
-	// Comparison using strcmp, case-sensitive.
-	static int compare(StringRef a, StringRef b);
-	static int compare(StringRef a, const char* b);
-	static int compare(const char* a, const char* b);
+    /// Converts the given value and appends it to the string.
+    static void appendVal(std::string& s, int v, int minDigits = 0,
+                          bool hex = false);
+    static void appendVal(std::string& s, uint32_t v, int minDigits = 0,
+                          bool hex = false);
+    static void appendVal(std::string& s, float v, int minDecimalPlaces = 0,
+                          int maxDecimalPlaces = 6);
+    static void appendVal(std::string& s, double v, int minDecimalPlaces = 0,
+                          int maxDecimalPlaces = 6);
 
-	// Comparison using stricmp, not case-sensitive.
-	static int icompare(StringRef a, StringRef b);
-	static int icompare(StringRef a, const char* b);
-	static int icompare(const char* a, const char* b);
+    /// Helper struct used in string formatting.
+    struct fmt {
+        fmt(const std::string& format);
+        fmt(const char* format);
 
-	// Equivalence check using strcmp, case-sensitive.
-	static bool equal(StringRef a, StringRef b);
-	static bool equal(StringRef a, const char* b);
-	static bool equal(const char* a, const char* b);
+        fmt& arg(char c);
+        fmt& arg(const std::string& s);
+        fmt& arg(const char* s);
+        fmt& arg(const char* s, size_t n);
+        fmt& arg(int v, int minDigits = 0, bool hex = false);
+        fmt& arg(uint32_t v, int minDigits = 0, bool hex = false);
+        fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);
+        fmt& arg(double v, int minDecimals = 0, int maxDecimals = 6);
 
-	// Equivalence check using stricmp, not case-sensitive.
-	static bool iequal(StringRef a, StringRef b);
-	static bool iequal(StringRef a, const char* b);
-	static bool iequal(const char* a, const char* b);
+        inline operator const char*() { return str.data(); }
+        inline operator std::string&() { return str; }
 
-	/// Converts the given value to a string.
-	static String val(int v, int minDigits = 0, bool hex = false);
-	static String val(uint v, int minDigits = 0, bool hex = false);
-	static String val(float v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
-	static String val(double v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
+        std::string str;
+    };
 
-	/// Converts the given value and appends it to the string.
-	static void appendVal(String& s, int v, int minDigits = 0, bool hex = false);
-	static void appendVal(String& s, uint v, int minDigits = 0, bool hex = false);
-	static void appendVal(String& s, float v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
-	static void appendVal(String& s, double v, int minDecimalPlaces = 0, int maxDecimalPlaces = 6);
+    /// Returns a formatted string of the given time.
+    static std::string formatTime(double seconds, bool showMilliseconds = true);
 
-	/// Helper struct used in string formatting.
-	struct fmt
-	{
-		fmt(StringRef format);
-		fmt(const char* format);
+    /// Splits a string into a string list based on word boundaries.
+    /// For example, SplitString("Hello World") returns {"Hello", "World"}.
+    static Vector<std::string> split(const std::string& s);
 
-		fmt& arg(char c);
-		fmt& arg(StringRef s);
-		fmt& arg(const char* s);
-		fmt& arg(const char* s, int n);
-		fmt& arg(int v, int minDigits = 0, bool hex = false);
-		fmt& arg(uint v, int minDigits = 0, bool hex = false);
-		fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);
-		fmt& arg(double v, int minDecimals = 0, int maxDecimals = 6);
+    /// Splits a string into a string list based on a delimiter.
+    /// For example, SplitString("Hello ~ World", "~") returns {"Hello",
+    /// "World"}. If trim is true, whitespace surrounding each element is
+    /// removed. If skipEmpty is true, empty elements are not added to the list.
+    static Vector<std::string> split(const std::string& s,
+                                     const char* delimiter, bool trim = true,
+                                     bool skipEmpty = true);
 
-		inline operator const char*() { return str.str(); }
-		inline operator String&() { return str; }
-
-		String str;
-	};
-
-	/// Returns a formatted string of the given time.
-	static String formatTime(double seconds, bool showMilliseconds = true);
-
-	/// Splits a string into a string list based on word boundaries.
-	/// For example, SplitString("Hello World") returns {"Hello", "World"}.
-	static Vector<String> split(StringRef s);
-
-	/// Splits a string into a string list based on a delimiter.
-	/// For example, SplitString("Hello ~ World", "~") returns {"Hello", "World"}.
-	/// If trim is true, whitespace surrounding each element is removed.
-	/// If skipEmpty is true, empty elements are not added to the list.
-	static Vector<String> split(StringRef s, const char* delimiter, bool trim = true, bool skipEmpty = true);
-
-	/// Returns the concatenation of the list of strings, seperated by the given delimiter.
-	static String join(const Vector<String>& list, const char* delimiter);
+    /// Returns the concatenation of the list of strings, seperated by the given
+    /// delimiter.
+    static std::string join(const Vector<std::string>& list,
+                            const char* delimiter);
 };
 
-// Concatenation operators.
-
-String operator + (StringRef a, char b);
-String operator + (char a, StringRef b);
-String operator + (StringRef a, const char* b);
-String operator + (const char* a, StringRef b);
-String operator + (StringRef a, StringRef b);
-
-String& operator += (String& a, char b);
-String& operator += (String& a, const char* b);
-String& operator += (String& a, StringRef b);
-
-// Alternative lexographical comparison operators.
-
-bool operator < (StringRef a, const char* b);
-bool operator < (const char* a, StringRef b);
-
-bool operator > (StringRef a, const char* b);
-bool operator > (const char* a, StringRef b);
-bool operator > (StringRef a, StringRef b);
-
-bool operator == (StringRef a, const char* b);
-bool operator == (const char* a, StringRef b);
-
-bool operator != (StringRef a, const char* b);
-bool operator != (const char* a, StringRef b);
-bool operator != (StringRef a, StringRef b);
-
-}; // namespace Vortex
+};  // namespace Vortex

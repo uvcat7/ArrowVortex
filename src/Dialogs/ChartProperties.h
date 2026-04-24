@@ -8,42 +8,41 @@
 
 namespace Vortex {
 
-class DialogChartProperties : public EditorDialog
-{
-public:
-	typedef DialogChartProperties DCP;
+class DialogChartProperties : public EditorDialog {
+   public:
+    typedef DialogChartProperties DCP;
 
-	~DialogChartProperties();
-	DialogChartProperties();
+    ~DialogChartProperties();
+    DialogChartProperties();
 
-	void onChanges(int changes) override;
+    void onChanges(int changes) override;
 
-private:
-	void myCreateChartProperties();
-	void mySetStepArtist();
-	void mySetDifficulty();
-	void mySetRating();
-	void myCalcRating();
+   private:
+    void myCreateChartProperties();
+    void mySetStepArtist();
+    void mySetDifficulty();
+    void mySetRating();
+    void myCalcRating();
 
-	void myCreateNoteInfo();
-	void myUpdateNoteInfo();
-	void myCopyNoteInfo();
-	void mySelectNotes(int type);
+    void myCreateNoteInfo();
+    void myUpdateNoteInfo();
+    void myCopyNoteInfo();
+    void mySelectNotes(int type);
 
-	void myCreateBreakdown();
-	void myUpdateBreakdown();
-	void myCopyBreakdown();
+    void myCreateBreakdown();
+    void myUpdateBreakdown();
+    void myCopyBreakdown();
 
-	class BreakdownWidget;
-	BreakdownWidget* myBreakdown;
+    class BreakdownWidget;
+    BreakdownWidget* myBreakdown;
 
-	WgButton* myNoteInfo[6];
-	WgLabel* myNoteDensity;
-	WgLabel* myStreamMeasureCount;
-	WgDroplist* myStyleList;
-	String myStepArtist;
+    WgButton* myNoteInfo[6];
+    WgLabel* myNoteDensity;
+    WgLabel* myStreamMeasureCount;
+    WgDroplist* myStyleList;
+    std::string myStepArtist;
 
-	int myRating, myDifficulty, myStyle;
+    int myRating, myDifficulty, myStyle;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex
