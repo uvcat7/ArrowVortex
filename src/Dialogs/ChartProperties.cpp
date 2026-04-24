@@ -338,7 +338,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
             i++;
         }
         h /= std::min(scale, max_scale);
-        if (scale > 4) i += scale - max_scale;
+        if (scale > max_scale) i += scale - max_scale;
         int y = rect_.y + height_ - h;
         Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
     }
