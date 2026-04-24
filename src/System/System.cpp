@@ -593,6 +593,10 @@ static void ApplicationEnd() {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
+#ifdef WIN32
+    std::wstring exe_folder = Widen(SDL_GetBasePath());
+    SetCurrentDirectoryW(exe_folder.c_str());
+#endif
     ApplicationStart();
 #ifndef NDEBUG
     Debug::openConsole();
