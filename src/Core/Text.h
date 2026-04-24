@@ -41,12 +41,15 @@ enum Flags {
     /// Put all text on a single line; newline characters are ignored.
     SINGLE_LINE = 1 << 2,
 
+    /// Wrap text to fit within a given width, adding new lines where needed.
+    WRAP_LINE = 1 << 3,
+
     /// Kerning is applied to character spacing, when available.
-    KERNING = 1 << 3,
+    KERNING = 1 << 4,
 
     /// Disables line wrap; text at the end of long lines is omitted and
     /// replaced with ellipses.
-    ELLIPSES = 1 << 4,
+    ELLIPSES = 1 << 5,
 
     /// Enables reading, removing, and application of markup.
     MARKUP = MARKUP_READ | MARKUP_APPLY,

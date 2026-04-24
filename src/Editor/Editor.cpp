@@ -215,7 +215,7 @@ struct EditorImpl : public Editor, public InputHandler {
         Selection::create();
         Editing::create(settings);
         View::create(settings);
-        Notefield::create();
+        Notefield::create(settings);
         NotefieldPreview::create(settings);
         TempoBoxes::create(settings);
         Waveform::create(settings);
@@ -242,6 +242,7 @@ struct EditorImpl : public Editor, public InputHandler {
         gStatusbar->saveSettings(settings);
         gEditing->saveSettings(settings);
         gWaveform->saveSettings(settings);
+        gNotefield->saveSettings(settings);
         gNotefieldPreview->saveSettings(settings);
         gTempoBoxes->saveSettings(settings);
         gView->saveSettings(settings);

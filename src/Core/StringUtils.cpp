@@ -265,7 +265,7 @@ void Str::replace(std::string& s, const char* fnd, const char* rep) {
     while (pos != std::string::npos) {
         s.erase(s.begin() + pos, s.begin() + pos + fndlen);
         insert(s, pos, rep);
-        pos = find(s, fnd);
+        pos = find(s, fnd, pos + replen);
     }
 }
 

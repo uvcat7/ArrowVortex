@@ -34,6 +34,7 @@ struct StatusbarImpl : public Statusbar {
     bool myShowRow;
     bool myShowBeat;
     bool myShowMeasure;
+    bool myShowHover;
     bool myShowTime;
     bool myShowTimingMode;
     bool myShowScroll;
@@ -48,6 +49,7 @@ struct StatusbarImpl : public Statusbar {
         myShowChart = true;
         myShowSnap = true;
         myShowBpm = true;
+        myShowHover = false;
         myShowRow = false;
         myShowBeat = false;
         myShowMeasure = true;
@@ -69,6 +71,7 @@ struct StatusbarImpl : public Statusbar {
             statusbar->get("showRow", &myShowRow);
             statusbar->get("showBeat", &myShowBeat);
             statusbar->get("showMeasure", &myShowMeasure);
+            statusbar->get("showHover", &myShowHover);
             statusbar->get("showTime", &myShowTime);
             statusbar->get("showTimingMode", &myShowTimingMode);
             statusbar->get("myShowScroll", &myShowScroll);
@@ -85,6 +88,7 @@ struct StatusbarImpl : public Statusbar {
         statusbar->addAttrib("showRow", myShowRow);
         statusbar->addAttrib("showBeat", myShowBeat);
         statusbar->addAttrib("showMeasure", myShowMeasure);
+        statusbar->addAttrib("showHover", myShowHover);
         statusbar->addAttrib("showTime", myShowTime);
         statusbar->addAttrib("showTimingMode", myShowTimingMode);
         statusbar->addAttrib("myShowScroll", myShowScroll);
@@ -116,23 +120,59 @@ struct StatusbarImpl : public Statusbar {
 
         if (myShowRow) {
             int row = gView->getCursorRow();
-            info.push_back(Str::fmt("{tc:888}Row:{tc} %1").arg(row));
+            int hrow = gView->getHoveredRow();
+
+            if (myShowHover && hrow >= 0) {
+                info.push_back(Str::fmt("{tc:888}Row:{tc} %1 {tc:CCC}(%2){tc}")
+                                   .arg(row)
+                                   .arg(hrow));
+            } else {
+                info.push_back(Str::fmt("{tc:888}Row:{tc} %1").arg(row));
+            }
         }
 
         if (myShowBeat) {
             double beat = gView->getCursorBeat();
-            info.push_back(Str::fmt("{tc:888}Beat:{tc} %1").arg(beat, 3, 3));
+            double hbeat = gView->getHoveredBeat();
+
+            if (myShowHover && hbeat >= 0) {
+                info.push_back(Str::fmt("{tc:888}Beat:{tc} %1 {tc:CCC}(%2){tc}")
+                                   .arg(beat, 3, 3)
+                                   .arg(hbeat, 3, 3));
+            } else {
+                info.push_back(
+                    Str::fmt("{tc:888}Beat:{tc} %1").arg(beat, 3, 3));
+            }
         }
 
         if (myShowMeasure) {
             double measure = gTempo->beatToMeasure(gView->getCursorBeat());
-            info.push_back(
-                Str::fmt("{tc:888}Measure:{tc} %1").arg(measure, 2, 2));
+            double hmeasure = gTempo->beatToMeasure(gView->getHoveredBeat());
+
+            if (myShowHover && hmeasure >= 0) {
+                info.push_back(
+                    Str::fmt("{tc:888}Measure:{tc} %1 {tc:CCC}(%2){tc}")
+                        .arg(measure, 2, 2)
+                        .arg(hmeasure, 2, 2));
+            } else {
+                info.push_back(
+                    Str::fmt("{tc:888}Measure:{tc} %1").arg(measure, 2, 2));
+            }
         }
 
         if (myShowTime) {
             std::string time = Str::formatTime(gView->getCursorTime());
-            info.push_back(Str::fmt("{tc:888}Time:{tc} %1").arg(time));
+
+            double htiimeval = gView->getHoveredTime();
+
+            if (myShowHover && htiimeval >= 0) {
+                std::string htime = Str::formatTime(htiimeval);
+                info.push_back(Str::fmt("{tc:888}Time:{tc} %1 {tc:CCC}(%2){tc}")
+                                   .arg(time)
+                                   .arg(htime));
+            } else {
+                info.push_back(Str::fmt("{tc:888}Time:{tc} %1").arg(time));
+            }
         }
         if (myShowTimingMode) {
             switch (gTempo->getTimingMode()) {
@@ -209,6 +249,11 @@ struct StatusbarImpl : public Statusbar {
         gMenubar->update(Menubar::STATUSBAR_MEASURE);
     }
 
+    void toggleHover() override {
+        myShowHover = !myShowHover;
+        gMenubar->update(Menubar::STATUSBAR_HOVER);
+    }
+
     void toggleTime() override {
         myShowTime = !myShowTime;
         gMenubar->update(Menubar::STATUSBAR_TIME);
@@ -240,6 +285,8 @@ struct StatusbarImpl : public Statusbar {
     bool hasBeat() override { return myShowBeat; }
 
     bool hasMeasure() override { return myShowMeasure; }
+
+    bool hasHover() override { return myShowHover; }
 
     bool hasTime() override { return myShowTime; }
 

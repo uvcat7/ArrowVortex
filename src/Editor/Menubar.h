@@ -17,7 +17,6 @@ struct Menubar {
         RECENT_FILES,
 
         SHOW_WAVEFORM,
-        SHOW_BEATLINES,
         SHOW_NOTES,
         SHOW_TEMPO_BOXES,
         SHOW_TEMPO_HELP,
@@ -29,6 +28,13 @@ struct Menubar {
         USE_CHART_PREVIEW,
 
         VISUAL_SYNC_ANCHOR,
+
+        SELECT_DENSITY,
+
+        BEATLINE_ENABLED,
+        BEATLINE_SNAP,
+        BEATLINE_COLOR,
+        BEATLINE_HOVER,
 
         VIEW_MINIMAP,
         VIEW_MODE,
@@ -46,6 +52,7 @@ struct Menubar {
         STATUSBAR_ROW,
         STATUSBAR_BEAT,
         STATUSBAR_MEASURE,
+        STATUSBAR_HOVER,
         STATUSBAR_TIME,
         STATUSBAR_TIMING_MODE,
         STATUSBAR_SCROLL,

@@ -4,6 +4,8 @@
 
 #include <Simfile/Common.h>
 
+#include <Core/Draw.h>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -91,6 +93,18 @@ enum RowType {
     NUM_ROW_TYPES,
 };
 
+const uint32_t ROW_TYPE_COLOR[9] = {
+    RGBAtoColor32(255, 0, 0, 255),      // Red.
+    RGBAtoColor32(41, 118, 245, 255),   // Blue.
+    RGBAtoColor32(145, 12, 206, 255),   // Purple.
+    RGBAtoColor32(255, 255, 0, 255),    // Yellow.
+    RGBAtoColor32(206, 12, 113, 255),   // Pink.
+    RGBAtoColor32(247, 148, 29, 255),   // Orange.
+    RGBAtoColor32(105, 231, 245, 255),  // Teal.
+    RGBAtoColor32(0, 198, 0, 255),      // Green.
+    RGBAtoColor32(132, 132, 132, 255),  // Gray.
+};
+
 /// Snap types supported by the editor.
 enum SnapType {
     ST_NONE,
@@ -117,15 +131,6 @@ enum BackgroundStyle {
     BG_STYLE_CROP        ///< Scale uniformly and crop.
 };
 
-// Returns true if the tag of the clipboard data matches the given tag.
-bool HasClipboardData(const std::string& tag);
-
-// Encodes the given data to an ascii85 string and sends it to the clipboard.
-void SetClipboardData(const std::string& tag, const uint8_t* data, int size);
-
-// Reads a string from the clipboard and decodes it using ascii85.
-Vector<uint8_t> GetClipboardData(const std::string& tag);
-
 // Returns a text representation of the given snap type.
 const char* ToString(SnapType st);
 
@@ -137,5 +142,9 @@ uint32_t ToColor(Difficulty dt);
 
 // Translates a row index to a row type.
 RowType ToRowType(int rowIndex);
+
+// Translates a row type to a color.
+uint32_t ToRowTypeColor(RowType type);
+uint32_t ToRowTypeColor(int type);
 
 };  // namespace Vortex

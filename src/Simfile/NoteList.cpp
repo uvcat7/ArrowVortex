@@ -354,7 +354,7 @@ void NoteList::prepareEdit(const NoteEdit& in, NoteEditResult& out,
         }
 
         // Check if the note is inside the modified region.
-        if (clearRegion && row >= regionBegin && row < regionEnd) {
+        if (clearRegion && row >= regionBegin && row <= regionEnd) {
             removeNote = true;
         }
 
@@ -507,10 +507,14 @@ static void DecodeNote(ReadStream& in, Note& out, TempoRowTracker& tracker,
 }
 
 void NoteList::encode(WriteStream& out, bool removeOffset) const {
+    encode(out, removeOffset, INT_MAX);
+}
+
+void NoteList::encode(WriteStream& out, bool removeOffset, int rowStart) const {
     int offsetRows = 0;
     out.writeNum(myNum);
     if (removeOffset && myNum > 0) {
-        offsetRows = -myNotes[0].row;
+        offsetRows = -min(myNotes[0].row, rowStart);
     }
     for (int i = 0; i < myNum; ++i) {
         EncodeNote(out, myNotes[i], offsetRows);

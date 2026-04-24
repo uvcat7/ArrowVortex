@@ -38,7 +38,9 @@ struct MenuBarImpl : public Menubar {
 
     Item* myFileMenu;
     Item* myVisualSyncMenu;
+    Item* myNotesSelectMenu;
     Item* myViewMenu;
+    Item* myBeatlineMenu;
     Item* myPreviewMenu;
     Item* myMinimapMenu;
     Item* myBgStyleMenu;
@@ -158,8 +160,9 @@ struct MenuBarImpl : public Menubar {
         add(hSelectQuant, SELECT_QUANT_192, "192nd");
 
         // Notes > Select menu.
-        Item* hSelection = newMenu();
+        Item* hSelection = myNotesSelectMenu = newMenu();
         sub(hSelection, hSelectQuant, "Quantization");
+        add(hSelection, 0 /*dummy*/, "Density");
         sep(hSelection);
         add(hSelection, SELECT_ALL_STEPS, "Steps");
         add(hSelection, SELECT_ALL_MINES, "Mines");
@@ -277,6 +280,14 @@ struct MenuBarImpl : public Menubar {
         sep(hAudio);
         add(hAudio, CONVERT_MUSIC_TO_OGG, "Convert to ogg");
 
+        // View > Beatlines menu.
+        myBeatlineMenu = newMenu();
+        add(myBeatlineMenu, BEATLINE_TOGGLE_ENABLED, "Enabled");
+        sep(myBeatlineMenu);
+        add(myBeatlineMenu, BEATLINE_TOGGLE_SNAP, "Use current snap");
+        add(myBeatlineMenu, BEATLINE_TOGGLE_COLOR, "Use snap colors");
+        add(myBeatlineMenu, BEATLINE_TOGGLE_HOVER, "Highlight mouse position");
+
         // View > Preview menu.
         myPreviewMenu = newMenu();
         add(myPreviewMenu, OPEN_DIALOG_PREVIEW_SETTINGS, "Options");
@@ -351,6 +362,7 @@ struct MenuBarImpl : public Menubar {
         add(myStatusMenu, TOGGLE_STATUS_ROW, "Show row");
         add(myStatusMenu, TOGGLE_STATUS_BEAT, "Show beat");
         add(myStatusMenu, TOGGLE_STATUS_MEASURE, "Show measure");
+        add(myStatusMenu, TOGGLE_STATUS_HOVER, "Show hover position");
         add(myStatusMenu, TOGGLE_STATUS_TIME, "Show time");
         add(myStatusMenu, TOGGLE_STATUS_TIMING_MODE, "Show timing mode");
         add(myStatusMenu, TOGGLE_STATUS_SCROLL, "Show scroll mod");
@@ -359,7 +371,6 @@ struct MenuBarImpl : public Menubar {
         // View menu.
         myViewMenu = newMenu();
         add(myViewMenu, TOGGLE_SHOW_WAVEFORM, "Show waveform");
-        add(myViewMenu, TOGGLE_SHOW_BEAT_LINES, "Show beat lines");
         add(myViewMenu, TOGGLE_SHOW_TEMPO_BOXES, "Show tempo boxes");
         add(myViewMenu, TOGGLE_SHOW_TEMPO_HELP, "Show tempo help");
         add(myViewMenu, TOGGLE_SHOW_NOTES, "Show notes");
@@ -372,6 +383,7 @@ struct MenuBarImpl : public Menubar {
         sep(myViewMenu);
         add(myViewMenu, OPEN_DIALOG_WAVEFORM_SETTINGS, "Waveform...");
         add(myViewMenu, 0 /*dummy*/, "Noteskins");
+        sub(myViewMenu, myBeatlineMenu, "Beatlines");
         sub(myViewMenu, myPreviewMenu, "Preview");
         sub(myViewMenu, myMinimapMenu, "Minimap");
         sub(myViewMenu, myBgStyleMenu, "Background");
@@ -431,9 +443,21 @@ struct MenuBarImpl : public Menubar {
             MENU->myViewMenu->setChecked(TOGGLE_SHOW_WAVEFORM,
                                          gNotefield->hasShowWaveform());
         };
-        myUpdateFunctions[SHOW_BEATLINES] = [] {
-            MENU->myViewMenu->setChecked(TOGGLE_SHOW_BEAT_LINES,
-                                         gNotefield->hasShowBeatLines());
+        myUpdateFunctions[BEATLINE_ENABLED] = [] {
+            MENU->myBeatlineMenu->setChecked(BEATLINE_TOGGLE_ENABLED,
+                                             gNotefield->hasShowBeatLines());
+        };
+        myUpdateFunctions[BEATLINE_SNAP] = [] {
+            MENU->myBeatlineMenu->setChecked(
+                BEATLINE_TOGGLE_SNAP, gNotefield->hasShowBeatLinesSnap());
+        };
+        myUpdateFunctions[BEATLINE_COLOR] = [] {
+            MENU->myBeatlineMenu->setChecked(
+                BEATLINE_TOGGLE_COLOR, gNotefield->hasShowBeatLinesColor());
+        };
+        myUpdateFunctions[BEATLINE_HOVER] = [] {
+            MENU->myBeatlineMenu->setChecked(
+                BEATLINE_TOGGLE_HOVER, gNotefield->hasShowBeatLinesHover());
         };
         myUpdateFunctions[SHOW_NOTES] = [] {
             MENU->myViewMenu->setChecked(TOGGLE_SHOW_NOTES,
@@ -476,6 +500,18 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[USE_CHART_PREVIEW] = [] {
             MENU->myViewMenu->setChecked(TOGGLE_CHART_PREVIEW,
                                          gView->hasChartPreview());
+        };
+        myUpdateFunctions[SELECT_DENSITY] = [] {
+            Item* density = newMenu();
+            int numCol = gStyle->getNumCols();
+            if (numCol > 0) {
+                for (int i = 0; i < numCol; ++i) {
+                    add(density, static_cast<Type>(SELECT_DENSITY_BEGIN + i),
+                        Str::val(i + 1).c_str());
+                }
+            }
+            MENU->myNotesSelectMenu->replaceSubmenu(1, density, "Density",
+                                                    (numCol == 0));
         };
         myUpdateFunctions[VIEW_MODE] = [] {
             MENU->myViewMenu->setChecked(USE_ROW_BASED_VIEW,
@@ -544,7 +580,7 @@ struct MenuBarImpl : public Menubar {
             if (!activeType) {
                 hSkins->setChecked((SET_NOTESKIN_BEGIN), true);
             }
-            MENU->myViewMenu->replaceSubmenu(13, hSkins, "Noteskins",
+            MENU->myViewMenu->replaceSubmenu(12, hSkins, "Noteskins",
                                              (numValid == 0));
         };
         myUpdateFunctions[STATUSBAR_CHART] = [] {
@@ -570,6 +606,10 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[STATUSBAR_MEASURE] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_MEASURE,
                                            gStatusbar->hasMeasure());
+        };
+        myUpdateFunctions[STATUSBAR_HOVER] = [] {
+            MENU->myStatusMenu->setChecked(TOGGLE_STATUS_HOVER,
+                                           gStatusbar->hasHover());
         };
         myUpdateFunctions[STATUSBAR_TIME] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_TIME,

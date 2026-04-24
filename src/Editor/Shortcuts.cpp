@@ -299,12 +299,16 @@ static ActionEntry actionMap[] = {
     E(TOGGLE_NOTE_TICK),
 
     E(TOGGLE_SHOW_WAVEFORM),
-    E(TOGGLE_SHOW_BEAT_LINES),
     E(TOGGLE_SHOW_NOTES),
     E(TOGGLE_SHOW_TEMPO_BOXES),
     E(TOGGLE_SHOW_TEMPO_HELP),
     E(TOGGLE_REVERSE_SCROLL),
     E(TOGGLE_CHART_PREVIEW),
+
+    E(BEATLINE_TOGGLE_ENABLED),
+    E(BEATLINE_TOGGLE_SNAP),
+    E(BEATLINE_TOGGLE_COLOR),
+    E(BEATLINE_TOGGLE_HOVER),
 
     E(MINIMAP_SET_NOTES),
     E(MINIMAP_SET_DENSITY),
@@ -348,6 +352,7 @@ static ActionEntry actionMap[] = {
     E(TOGGLE_STATUS_ROW),
     E(TOGGLE_STATUS_BEAT),
     E(TOGGLE_STATUS_MEASURE),
+    E(TOGGLE_STATUS_HOVER),
     E(TOGGLE_STATUS_TIME),
     E(TOGGLE_STATUS_TIMING_MODE),
     E(TOGGLE_STATUS_SCROLL),
@@ -363,9 +368,26 @@ static ActionEntry actionMap[] = {
     E(SHOW_SHORTCUTS),
     E(SHOW_MESSAGE_LOG),
     E(SHOW_DEBUG_LOG),
-    E(SHOW_ABOUT)
+    E(SHOW_ABOUT),
 
 #undef E
+
+#define E_DENSITY(n)       \
+    {"SELECT_DENSITY_" #n, \
+     static_cast<Action::Type>(SELECT_DENSITY_BEGIN + (n - 1))}
+
+    E_DENSITY(1),
+    E_DENSITY(2),
+    E_DENSITY(3),
+    E_DENSITY(4),
+    E_DENSITY(5),
+    E_DENSITY(6),
+    E_DENSITY(7),
+    E_DENSITY(8),
+    E_DENSITY(9),
+    E_DENSITY(10)
+
+#undef E_DENSITY
 
 };
 

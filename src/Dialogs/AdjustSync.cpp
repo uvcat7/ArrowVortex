@@ -164,7 +164,15 @@ void DialogAdjustSync::onTick() {
                 fmt.arg(i + 1).arg(t.bpm, 2, 2).arg(t.fitness * 100, 0, 0);
                 myBPMList->addItem(fmt);
             }
-            myApplyBPM->setEnabled(true);
+            if (myDetectionResults.size() == 0) {
+                myBPMList->addItem("- no results found -");
+                myBPMList->setEnabled(false);
+                mySelectedResult = -1;
+                myApplyBPM->setEnabled(false);
+            } else {
+                myBPMList->setEnabled(true);
+                myApplyBPM->setEnabled(true);
+            }
             delete myTempoDetector;
             myTempoDetector = nullptr;
         }

@@ -386,7 +386,7 @@ static double TimeToBeat(const Event* it, double time) {
 static int TimeToRow(const Event* it, double time) {
     int row = it->row;
     if (time > it->endTime && it->spr > 0.0) {
-        row += static_cast<int>((time - it->endTime) / it->spr);
+        row += static_cast<int>(round((time - it->endTime) / it->spr));
     }
     return row;
 }
