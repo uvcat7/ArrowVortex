@@ -37,9 +37,11 @@ namespace {};  // anonymous namespace
 struct ViewImpl : public View, public InputHandler {
     recti rect_;
     double myChartTopY = 0.0;
-    double myCursorTime = 0.0, myCursorBeat = 0.0;
     double myPixPerSec = 32, myPixPerRow;
     int myCursorRow = 0;
+    double myCursorTime = 0.0, myCursorBeat = 0.0;
+    int myHoveredRow = 0;
+    double myHoveredTime = 0.0, myHoveredBeat = 0.0;
 
     int myReceptorY = 192, myReceptorX = 0, myPreviewOffset = 640;
     double myZoomLevel = 8, myScaleLevel = 4;
@@ -228,6 +230,12 @@ struct ViewImpl : public View, public InputHandler {
         return myUseTimeBasedView ? myCursorTime : myCursorRow;
     }
 
+    int getHoveredRow() const override { return myHoveredRow; }
+
+    double getHoveredTime() const override { return myHoveredTime; }
+
+    double getHoveredBeat() const override { return myHoveredBeat; }
+
     void onChanges(int changes) override {
         if (changes & VCM_TEMPO_CHANGED) {
             myCursorTime = gTempo->rowToTime(myCursorRow);
@@ -235,25 +243,26 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     void tick() override {
+        vec2i mpos = gSystem->getMousePos();
         vec2i windowSize = gSystem->getWindowSize();
+        Coords notefieldCoords = getNotefieldCoords();
         rect_ = {0, 0, windowSize.x, windowSize.y};
 
         handleInputs(gSystem->getEvents());
 
         // handle receptor dragging.
         if (myIsDraggingReceptors) {
-            myReceptorX = gSystem->getMousePos().x - CenterX(rect_);
-            myReceptorY = gSystem->getMousePos().y - rect_.y;
+            myReceptorX = mpos.x - CenterX(rect_);
+            myReceptorY = mpos.y - rect_.y;
         }
         // handle preview receptor dragging.
         else if (myIsDraggingReceptorsPreview) {
-            auto mx = gSystem->getMousePos().x - CenterX(rect_) - myReceptorX;
+            auto mx = mpos.x - CenterX(rect_) - myReceptorX;
             auto ofs = (mx << 8) / static_cast<int>(64 * myScaleLevel);
             myPreviewOffset = ofs;
         }
 
         // Set cursor to arrows when hovering over/dragging the receptors.
-        vec2i mpos = gSystem->getMousePos();
         if (myIsDraggingReceptors || isMouseOverReceptors(mpos.x, mpos.y) ||
             myIsDraggingReceptorsPreview ||
             isMouseOverReceptorsPreview(mpos.x, mpos.y)) {
@@ -276,6 +285,19 @@ struct ViewImpl : public View, public InputHandler {
                 myCursorBeat = gTempo->timeToBeat(myCursorTime);
                 myCursorRow = static_cast<int>(myCursorBeat * ROWS_PER_BEAT);
             }
+        }
+
+        // Update the cursor row.
+        if (mpos.x >= notefieldCoords.xl && mpos.x <= notefieldCoords.xr) {
+            auto offsetrow = gView->offsetToRow(gView->yToOffset(mpos.y));
+            int row = gView->snapRow(offsetrow, SNAP_CLOSEST);
+            if (myHoveredRow != row) {
+                myHoveredRow = row;
+                myHoveredBeat = static_cast<double>(row) / ROWS_PER_BEAT;
+                myHoveredTime = gTempo->rowToTime(row);
+            }
+        } else {
+            myHoveredRow = myHoveredBeat = myHoveredTime = -1;
         }
 
         // Clamp the receptor X and Y to the view region.

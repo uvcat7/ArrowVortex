@@ -229,19 +229,25 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
     // Load the noteskin file.
     bool loadFallback = true;
     if (type.name.length()) {
-        std::string filename =
-            type.supportsAll ? "all-styles.txt" : skin->style->id + ".txt";
-        path = fs::path("noteskins/" + type.name + "/");
-        path.append(stringToUtf8(filename));
-        if (doc.loadFile(path) == XMR_SUCCESS) {
-            loadFallback = false;
-        } else {
-            HudError("Unable to load noteskin: %s", pathToUtf8(path).c_str());
+        const std::vector<std::string> paths = {
+            skin->style->id, skin->style->alias, "all-styles"};
+
+        for (const auto& filename : paths) {
+            if (filename.empty()) continue;
+            path = fs::path("noteskins/" + type.name + "/");
+            path.append(stringToUtf8(filename + ".txt"));
+            if (doc.loadFile(path) == XMR_SUCCESS) {
+                loadFallback = false;
+                break;
+            }
         }
     }
 
     // If necessary, load the fallback noteskin.
     if (loadFallback) {
+        HudError("Unable to load noteskin for style: %s",
+                 skin->style->id.c_str());
+
         path = fs::path("noteskins/fallback.txt");
         if (doc.loadFile(path) != XMR_SUCCESS) {
             HudError("Unable to load noteskin: %s", pathToUtf8(path).c_str());
@@ -385,6 +391,9 @@ struct NoteskinManImpl : public NoteskinMan {
                             "Could not find style '%s' used in noteskin: %s",
                             id.c_str(), type.name.c_str());
                         continue;
+                    }
+                    for (const Style* alt : gStyle->getAliases(id)) {
+                        type.supportedStyles.push_back(alt);
                     }
                     type.supportedStyles.push_back(style);
                 }

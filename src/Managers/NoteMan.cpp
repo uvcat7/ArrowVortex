@@ -1,31 +1,33 @@
 #include <Managers/NoteMan.h>
 
 #include <algorithm>
-
-#include <Core/StringUtils.h>
-#include <Core/Utils.h>
-
-#include <Managers/SimfileMan.h>
-#include <Managers/StyleMan.h>
-#include <Managers/TempoMan.h>
-#include <Simfile/TimingData.h>
+#include <cstdint>
+#include <string>
 
 #include <Core/ByteStream.h>
 #include <Core/Core.h>
+#include <Core/StringUtils.h>
+#include <Core/Utils.h>
 #include <Core/Vector.h>
-#include <cstdint>
+
+#include <Editor/Clipboard.h>
 #include <Editor/Common.h>
 #include <Editor/Editing.h>
 #include <Editor/Editor.h>
 #include <Editor/History.h>
 #include <Editor/Selection.h>
 #include <Editor/View.h>
+
+#include <Managers/SimfileMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
+
 #include <Simfile/Chart.h>
 #include <Simfile/Common.h>
 #include <Simfile/NoteList.h>
 #include <Simfile/Notes.h>
 #include <Simfile/Simfile.h>
-#include <string>
+#include <Simfile/TimingData.h>
 
 namespace Vortex {
 
@@ -42,6 +44,7 @@ struct NotesManImpl : public NotesMan {
     int myNumSteps = 0, myNumJumps = 0;
     int myNumHolds = 0, myNumRolls = 0;
     int myNumMines = 0, myNumWarps = 0;
+    int myNumFakes = 0, myNumJudge = 0;
 
     Simfile* mySimfile;
     Chart* myChart;
@@ -159,6 +162,7 @@ struct NotesManImpl : public NotesMan {
         myNumSteps = 0, myNumJumps = 0;
         myNumHolds = 0, myNumRolls = 0;
         myNumMines = 0, myNumWarps = 0;
+        myNumFakes = 0, myNumJudge = 0;
 
         int lastRow = -1;
         for (auto& note : myNotes) {
@@ -172,7 +176,9 @@ struct NotesManImpl : public NotesMan {
             } else {
                 ++myNumMines;
             }
+            myNumJudge += !(note.isMine | note.isFake | note.isWarped);
             myNumWarps += note.isWarped;
+            myNumFakes += note.isFake;
         }
     }
 
@@ -194,6 +200,7 @@ struct NotesManImpl : public NotesMan {
         myUpdateNoteTimes();
         myUpdateWarpedNotes();
         myUpdateFakedNotes();
+        myUpdateNoteStats();
     }
 
     // ================================================================================================
@@ -359,8 +366,10 @@ struct NotesManImpl : public NotesMan {
 
             if (undo) {
                 NOTE_MAN->myApplyNotes(bound.chart, rem, add, false);
+                NOTE_MAN->select(SELECT_SET, rem.begin(), rem.size(), true);
             } else {
                 NOTE_MAN->myApplyNotes(bound.chart, add, rem, !redo);
+                NOTE_MAN->select(SELECT_SET, add.begin(), add.size(), redo);
             }
         }
         return msg;
@@ -524,6 +533,35 @@ struct NotesManImpl : public NotesMan {
         return numSelected;
     }
 
+    int selectDensity(SelectModifier mod, int density,
+                      bool ignoreRegion) override {
+        auto first = myNotes.begin();
+        auto last = myNotes.end() - 1;
+
+        return performSelection(
+            mod, ignoreRegion, [&](const ExpandedNote* note) {
+                if (note->isMine) {
+                    return false;
+                }
+
+                int count = 1;
+                for (const ExpandedNote* it = note - 1;
+                     it >= first && it->row == note->row; --it) {
+                    if (!it->isMine) {
+                        count++;
+                    }
+                }
+                for (const ExpandedNote* it = note + 1;
+                     it <= last && it->row == note->row; ++it) {
+                    if (!it->isMine) {
+                        count++;
+                    }
+                }
+
+                return count == density;
+            });
+    }
+
     int selectRows(SelectModifier mod, int firstCol, int lastCol, int firstRow,
                    int lastRow, bool ignoreRegion) override {
         auto region = gSelection->getSelectedRegion();
@@ -682,7 +720,34 @@ struct NotesManImpl : public NotesMan {
     // ================================================================================================
     // NotesManImpl :: clipboard functions.
 
-    void copyToClipboard(bool timeBased) override {
+    int minSelectionRow() const override {
+        int minRow = INT_MAX;
+
+        // Region
+        auto region = gSelection->getSelectedRegion();
+        if (!region.isEmpty()) {
+            for (auto& note : myNotes) {
+                if (note.row < region.beginRow) continue;
+                if (note.row > region.endRow) break;
+
+                minRow = min(minRow, note.row);
+                break;
+            }
+        }
+
+        // Notes
+        for (auto& note : myNotes) {
+            if (note.isSelected) {
+                minRow = min(minRow, note.row);
+                break;
+            }
+        }
+
+        return minRow;
+    }
+
+    void copyToClipboard(std::string& out, int minRow,
+                         bool timeBased) override {
         // Get the note selection.
         NoteList notes;
         int numNotes = gSelection->getSelectedNotes(notes);
@@ -695,15 +760,18 @@ struct NotesManImpl : public NotesMan {
             if (timeBased) {
                 notes.encode(stream, gTempo->getTimingData(), true);
             } else {
-                notes.encode(stream, true);
+                notes.encode(stream, true, minRow);
             }
-            SetClipboardData(clipboardTag, stream.data(), stream.size());
+            out.append(clipboardTag);
+            Base64Encode(out, stream.data(), stream.size());
             HudInfo("Copied %i notes", numNotes);
         }
     }
 
-    void pasteFromClipboard(bool insert) override {
-        Vector<uint8_t> buffer = GetClipboardData(clipboardTag);
+    void pasteFromClipboard(ClipboardData clipboard, bool insert) override {
+        Vector<uint8_t> buffer = clipboard.notes;
+        if (buffer.size() == 0) return;
+
         ReadStream stream(buffer.data(), buffer.size());
 
         // Check if the note data is time-based.
@@ -749,6 +817,10 @@ struct NotesManImpl : public NotesMan {
     int getNumRolls() const override { return myNumRolls; }
 
     int getNumWarps() const override { return myNumWarps; }
+
+    int getNumFakes() const override { return myNumFakes; }
+
+    int getNumJudge() const override { return myNumJudge; }
 
     const ExpandedNote* begin() const override { return myNotes.begin(); }
 

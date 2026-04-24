@@ -207,10 +207,10 @@ static void ParseTimingPoints(OsuFile& out, Parser& parser) {
     while (ReadProperty(parser)) {
         auto tp = Str::split(parser.prop, ",");
         if (tp.size() >= 2) {
-            double time = Str::readDouble(tp[0]) * 0.001;
-            double spb = Str::readDouble(tp[1]) * 0.001;
+            double time = Str::readDouble(tp[0]) / 1000;
+            double spb = Str::readDouble(tp[1]) / 1000;
             if (spb > 0) {
-                double bpm = 60.0 / spb;
+                double bpm = 60.0 * 1000 / Str::readDouble(tp[1]);
                 double roundBPM = round(bpm);
                 if (abs(bpm - roundBPM) < 0.001) bpm = roundBPM;
                 out.timingPoints[time] = {bpm, 1.0};
@@ -238,6 +238,9 @@ static void ParseHitObjects(OsuFile& out, Parser& parser) {
         int type = NoteVal(p);
         switch (type) {
             case 1:  // Regular step.
+            case 4:  // Color combo update steps
+            case 5:
+            case 6:
                 out.hitObjects.push_back({x, time, time});
                 break;
             case 128:  // Hold note.
@@ -377,24 +380,24 @@ static void ConvertTimingPoints(Simfile* sim, OsuFile& osu) {
     tempo->segments->append(initialBpm);
     tempo->offset = -it->first;
 
-    // Make sure the offset is positive, to prevent notes before the first row.
-    if (tempo->offset < 0) {
-        double spm = 4.0 * 60.0 / it->second.bpm;
-        tempo->offset = spm - fmod(-tempo->offset, spm);
-    }
-
     // Calculate the rows of the other BPM values relative to the previous BPM.
     double spb = 60.0 / it->second.bpm;
+    double last_bpm = it->second.bpm;
     double prevTime = -tempo->offset, prevRow = 0.0;
     for (++it; it != end; ++it) {
+        if (it->second.bpm <= 0.1 || it->second.bpm >= 10000) continue;
+
         // Determine the row of the BPM change.
         double deltaTime = it->first - prevTime;
         double deltaRows = 48.0 * deltaTime / spb;
         double curRow = prevRow + deltaRows;
 
         // Round the row.
-        int row = static_cast<int>(curRow + 0.5);
-        tempo->segments->append(BpmChange(row, it->second.bpm));
+        int row = round(curRow);
+        if (last_bpm != it->second.bpm) {
+            tempo->segments->append(BpmChange(row, it->second.bpm));
+            last_bpm = it->second.bpm;
+        }
 
         // Advance to the next BPM change
         spb = 60.0 / it->second.bpm;

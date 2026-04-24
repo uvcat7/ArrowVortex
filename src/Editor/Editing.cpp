@@ -1,17 +1,19 @@
 #include <Editor/Editing.h>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <set>
+#include <string>
 
+#include <Core/Core.h>
+#include <Core/Input.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
+#include <Core/Vector.h>
 #include <Core/Xmr.h>
 
-#include <System/Debug.h>
-#include <System/System.h>
-
-#include <Simfile/SegmentGroup.h>
-
+#include <Editor/Clipboard.h>
 #include <Editor/Common.h>
 #include <Editor/History.h>
 #include <Editor/Menubar.h>
@@ -21,24 +23,22 @@
 #include <Editor/TempoBoxes.h>
 #include <Editor/View.h>
 
+#include <Managers/ChartMan.h>
+#include <Managers/NoteMan.h>
 #include <Managers/SimfileMan.h>
 #include <Managers/StyleMan.h>
 #include <Managers/TempoMan.h>
 
-#include <cmath>
-#include <Core/Core.h>
-#include <Core/Input.h>
-#include <Core/Vector.h>
-#include <cstdint>
-#include <Managers/ChartMan.h>
-#include <Managers/NoteMan.h>
 #include <Simfile/Chart.h>
 #include <Simfile/Common.h>
 #include <Simfile/NoteList.h>
 #include <Simfile/Notes.h>
+#include <Simfile/SegmentGroup.h>
 #include <Simfile/Segments.h>
 #include <Simfile/Tempo.h>
-#include <string>
+
+#include <System/Debug.h>
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -565,25 +565,43 @@ struct EditingImpl : public Editing {
     }
 
     void changeNoteSide() override {
-        Style* style = gStyle->get();
-
-        if (!style) {
-            HudNote("No style is currently active.");
-            return;
-        }
-
-        if (!style->id.ends_with("double")) {
-            HudNote("Switch side is only available in a double style.");
-            return;
-        }
+        if (gChart->isClosed()) return;
 
         NoteEdit edit;
         gSelection->getSelectedNotes(edit.add);
 
+        if (edit.add.empty()) {
+            HudNote("There are no notes selected.");
+            return;
+        }
+        edit.rem = edit.add;
+
+        // Move the selected notes.
+        auto style = gStyle->get();
         int halfpoint = style->numCols / 2;
 
-        // Copied from mirrorNotes to sort per row first (to stop an error
-        // message).
+        // Even Column Count
+        if (style->numCols % 2 == 0) {
+            for (auto& n : edit.add) {
+                if (n.col <= (halfpoint - 1)) {
+                    n.col += halfpoint;
+                } else {
+                    n.col -= halfpoint;
+                }
+            }
+        }
+        // Odd Column Count
+        else {
+            for (auto& n : edit.add) {
+                if (n.col < halfpoint) {
+                    n.col += halfpoint + 1;
+                } else if (n.col > halfpoint) {
+                    n.col -= halfpoint + 1;
+                }
+            }
+        }
+
+        // Resort the notes per row.
         auto ptr = edit.add.begin();
         for (int i = 0, size = edit.add.size(); i < size;) {
             int row = (ptr + i)->row, begin = i;
@@ -591,17 +609,13 @@ struct EditingImpl : public Editing {
             std::sort(ptr + begin, ptr + i, LessThanRowCol<Note, Note>);
         }
 
-        for (auto& n : edit.add) {
-            if (n.col <= (halfpoint - 1)) {
-                n.col += halfpoint;
-            } else {
-                n.col -= halfpoint;
-            }
-        }
-
+        // Perform the move operation.
         static const NotesMan::EditDescription desc = {
             "Switched side for %1 note.", "Switched side for %1 notes."};
-        gNotes->modify(edit, true, &desc);
+        gNotes->modify(edit, false, &desc);
+
+        // Reselect the moved notes.
+        gNotes->select(SELECT_SET, edit.add.begin(), edit.rem.size(), true);
     }
 
     template <typename T>
@@ -655,8 +669,8 @@ struct EditingImpl : public Editing {
         %1 notes"}; gNotes->add(out, NotesMan::OVERWRITE_ROWS, &tag);*/
     }
 
-    static void switchColumns(NoteList& notes, const int* table) {
-        if (table) {
+    static void switchColumns(NoteList& notes, const std::vector<int>& table) {
+        if (!table.empty()) {
             for (auto& note : notes) {
                 note.col = table[note.col];
             }
@@ -1019,17 +1033,36 @@ struct EditingImpl : public Editing {
                                 !(gSelection->getSelectedRegion()).isEmpty();
         bool hasSelectedSegments = !gTempoBoxes->noneSelected();
 
-        if (hasSelectedNotes && hasSelectedSegments) {
-            HudWarning(
-                "Both timing segments and notes selected, copying notes only.");
-            gNotes->copyToClipboard(myUseTimeBasedCopy);
-            if (remove) gNotes->removeSelectedNotes();
-        } else if (hasSelectedNotes && !hasSelectedSegments) {
-            gNotes->copyToClipboard(myUseTimeBasedCopy);
-            if (remove) gNotes->removeSelectedNotes();
-        } else if (!hasSelectedNotes && hasSelectedSegments) {
-            gTempo->copyToClipboard();
-            if (remove) gTempo->removeSelectedSegments();
+        if (hasSelectedNotes || hasSelectedSegments) {
+            std::string out;
+            auto useTimeCopy = myUseTimeBasedCopy && !hasSelectedSegments;
+
+            // Time-Based Warning for Tempo
+            if (hasSelectedNotes && hasSelectedSegments && myUseTimeBasedCopy)
+                HudWarning(
+                    "Time-based copy does not work for tempo segments, using "
+                    "Row-based copy for both.");
+
+            // Find starting row.
+            int minRow = INT_MAX;
+            if (hasSelectedSegments)
+                minRow = min(minRow, gTempo->minSelectionRow());
+            if (hasSelectedNotes)
+                minRow = min(minRow, gNotes->minSelectionRow());
+
+            // Notes
+            if (hasSelectedNotes) {
+                gNotes->copyToClipboard(out, minRow, useTimeCopy);
+                if (remove) gNotes->removeSelectedNotes();
+            }
+            // Tempo
+            if (hasSelectedSegments) {
+                gTempo->copyToClipboard(out, minRow);
+                if (remove) gTempo->removeSelectedSegments();
+            }
+
+            if (out.length() > 0) SetClipboardData(out);
+
         } else {
             std::string time = Str::formatTime(gView->getCursorTime());
             gSystem->setClipboardText(Str::fmt("%1").arg(time));
@@ -1038,10 +1071,16 @@ struct EditingImpl : public Editing {
     }
 
     void pasteFromClipboard(bool insert) {
-        if (gChart->isOpen() && HasClipboardData(NotesMan::clipboardTag)) {
-            gNotes->pasteFromClipboard(insert);
-        } else if (HasClipboardData(TempoMan::clipboardTag)) {
-            gTempo->pasteFromClipboard(insert);
+        if (HasClipboardData()) {
+            auto clipboard = GetClipboardData();
+
+            if (clipboard.count > 1) gHistory->startChain();
+
+            if (gChart->isOpen()) gNotes->pasteFromClipboard(clipboard, insert);
+            gTempo->pasteFromClipboard(clipboard, insert);
+
+            if (clipboard.count > 1)
+                gHistory->finishChain("Pasted from clipboard.");
         } else {
             std::string text = gSystem->getClipboardText();
             double target = Str::readTime(text);

@@ -12,6 +12,7 @@
 #include <Editor/View.h>
 
 #include <cmath>
+#include <algorithm>
 #include <Core/Core.h>
 #include <Core/Input.h>
 #include <Core/Texture.h>
@@ -117,10 +118,14 @@ struct SelectionImpl : public Selection {
     void onKeyPress(KeyPress& evt) override {
         if (evt.key == Key::A && (evt.keyflags & Keyflag::CTRL) &&
             !evt.handled) {
-            if (gChart->isOpen()) {
-                gNotes->selectAll();
-            } else {
+            if ((evt.keyflags & Keyflag::SHIFT)) {
                 gTempoBoxes->selectAll();
+                if (gChart->isOpen())
+                    showSelectionResult(SELECT_SET, gNotes->selectAll());
+            } else if (!gChart->isOpen() || (evt.keyflags & Keyflag::ALT)) {
+                gTempoBoxes->selectAll();
+            } else {
+                showSelectionResult(SELECT_SET, gNotes->selectAll());
             }
             evt.handled = true;
         }
@@ -152,8 +157,7 @@ struct SelectionImpl : public Selection {
         bool timeBased = gView->isTimeBased();
 
         // For this particular case, since this is done via mouse selection, we
-        // allow notes to be selected
-        //   outside the region
+        // allow notes to be selected outside the region.
         if (xl == xr && torT == torB) {
             double clickY = gView->offsetToY(torT);
             const ExpandedNote* closest = nullptr;
@@ -271,6 +275,7 @@ struct SelectionImpl : public Selection {
                 HudNote("%s %i %ss.", typeName, numSelected, noteName);
             }
         }
+        gEditor->reportChanges(VCM_SELECTION_CHANGED);
     }
 
     void selectAllNotes() override {
@@ -288,6 +293,13 @@ struct SelectionImpl : public Selection {
     int selectNotes(RowType rowType, bool ignoreRegion) override {
         int numSelected = gNotes->selectQuant(rowType, ignoreRegion);
         showSelectionResult(SELECT_SET, numSelected);
+        return numSelected;
+    }
+
+    int selectNotes(SelectModifier mod, int density,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->selectDensity(mod, density, ignoreRegion);
+        showSelectionResult(mod, numSelected);
         return numSelected;
     }
 
@@ -319,6 +331,10 @@ struct SelectionImpl : public Selection {
         for (auto& note : *gNotes) {
             if (note.isSelected) out.append(CompressNote(note));
         }
+        if (!std::is_sorted(out.begin(), out.end(),
+                            LessThanRowCol<Note, Note>)) {
+            std::sort(out.begin(), out.end(), LessThanRowCol<Note, Note>);
+        }
         return out.size();
     }
 
@@ -339,8 +355,8 @@ struct SelectionImpl : public Selection {
     void selectRegion(int row, int endRow) override {
         setRegion(row, endRow);
 
-        auto firstRow = std::min(row, endRow);
-        auto lastRow = std::max(row, endRow);
+        auto firstRow = min(row, endRow);
+        auto lastRow = max(row, endRow);
         if (row != endRow) {
             double m1 = gTempo->beatToMeasure(firstRow * BEATS_PER_ROW);
             double m2 = gTempo->beatToMeasure(lastRow * BEATS_PER_ROW);

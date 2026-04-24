@@ -10,18 +10,19 @@ struct Style {
 
     std::string id;
     std::string name;
+    std::string alias;
 
     int numCols;
     int numPlayers;
 
-    int* mirrorTableH;  // [numCols]
-    int* mirrorTableV;  // [numCols]
+    std::vector<int> mirrorTableH;  // [numCols]
+    std::vector<int> mirrorTableV;  // [numCols]
 
     int padWidth;
     int padHeight;
 
-    vec2i* padColPositions;     // [numCols]
-    vec2i* padInitialFeetCols;  // [numPlayers]
+    std::vector<vec2i> padColPositions;     // [numCols]
+    std::vector<vec2i> padInitialFeetCols;  // [numPlayers]
 };
 
 /// Manages the style of the active simfile.
@@ -47,6 +48,10 @@ struct StyleMan {
     /// created.
     virtual const Style* findStyle(const std::string& chartName, int numCols,
                                    int numPlayers, const std::string& id) = 0;
+
+    // Returns all styles that are aliases of the style with the given id.
+    virtual std::vector<const Style*> getAliases(
+        const std::string& id) const = 0;
 
     // Returns the number of available styles.
     virtual int getNumStyles() const = 0;

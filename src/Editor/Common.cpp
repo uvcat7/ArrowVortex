@@ -6,88 +6,11 @@
 #include <Core/StringUtils.h>
 #include <Core/Draw.h>
 
-#include <System/Debug.h>
 #include <System/System.h>
 
 #include <Editor/TextOverlay.h>
 
 namespace Vortex {
-
-// ================================================================================================
-// Clipboard functions.
-
-static const int a85shift[4] = {24, 16, 8, 0};
-static const uint32_t a85div[5] = {85 * 85 * 85 * 85, 85 * 85 * 85, 85 * 85, 85,
-                                   1};
-
-static void Ascii85enc(std::string& out, const uint8_t* in, int size) {
-    // Convert to 32-bit integers (big endian) and pad with zeroes.
-    Vector<uint32_t> blocks((size + 3) / 4, 0);
-    for (int i = 0; i < size; ++i) {
-        blocks[i / 4] += in[i] << a85shift[i & 3];
-    }
-
-    // Encode 32-bit integers to base 85.
-    for (int i = 0; i != blocks.size(); ++i) {
-        if (blocks[i] == 0 && i != blocks.size() - 1) {
-            Str::append(out, 'z');
-        } else
-            for (unsigned int j : a85div) {
-                Str::append(out, 33 + (blocks[i] / j) % 85);
-            }
-    }
-
-    // Remove padded bytes from output.
-    int padding = blocks.size() * 4 - size;
-    Str::truncate(out, out.length() - padding);
-}
-
-static void Ascii85dec(Vector<uint8_t>& out, const char* in) {
-    // Convert from base 85 to 32-bit integers.
-    int padding = 0;
-    while (*in) {
-        if (*in == 'z') {
-            out.resize(out.size() + 4, 0);
-            ++in;
-        } else {
-            int v = 0, i = 0;
-            for (; i != 5 && *in; ++i) {
-                v = v * 85 + (*in++) - 33;
-            }
-            for (; i != 5; ++i, ++padding) {
-                v = v * 85 + 'u' - 33;
-            }
-            for (i = 0; i != 4; ++i) {
-                out.push_back((v >> a85shift[i]) & 0xFF);
-            }
-        }
-    }
-
-    // Remove padded bytes from output.
-    out.resize(out.size() - padding);
-}
-
-bool HasClipboardData(const std::string& tag) {
-    std::string text = gSystem->getClipboardText();
-    std::string prefix = "ArrowVortex:" + tag + ":";
-    return Str::startsWith(text, prefix.c_str());
-}
-
-void SetClipboardData(const std::string& tag, const uint8_t* data, int size) {
-    std::string text = "ArrowVortex:" + tag + ":";
-    Ascii85enc(text, data, size);
-    gSystem->setClipboardText(text);
-}
-
-Vector<uint8_t> GetClipboardData(const std::string& tag) {
-    Vector<uint8_t> buffer;
-    std::string text = gSystem->getClipboardText();
-    std::string prefix = "ArrowVortex:" + tag + ":";
-    if (Str::startsWith(text, prefix.c_str())) {
-        Ascii85dec(buffer, text.data() + prefix.length());
-    }
-    return buffer;
-}
 
 // ================================================================================================
 // Utility functions.
@@ -147,6 +70,9 @@ RowType ToRowType(int rowIndex) {
     }
     return map[rowIndex % 192];
 }
+
+uint32_t ToRowTypeColor(RowType type) { return ROW_TYPE_COLOR[type]; }
+uint32_t ToRowTypeColor(int type) { return ROW_TYPE_COLOR[type]; }
 
 // ================================================================================================
 // Hud message functions.

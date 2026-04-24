@@ -329,7 +329,6 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets) {
 
     // In order to determine the BPM, we need at least two onsets.
     if (numOnsets < 2) {
-        tempo.push_back({SIM_DEFAULT_BPM, 0.0, 1.0});
         return;
     }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Editor/Clipboard.h>
+
 #include <Simfile/Notes.h>
 
 namespace Vortex {
@@ -40,6 +42,8 @@ struct NotesMan {
     virtual void deselectAll() = 0;
     virtual int selectAll() = 0;
     virtual int selectQuant(int rowType, bool ignoreRegion) = 0;
+    virtual int selectDensity(SelectModifier mod, int rowType,
+                              bool ignoreRegion) = 0;
     virtual int selectRows(SelectModifier mod, int beginCol, int endCol,
                            int beginRow, int endRow, bool ignoreRegion) = 0;
     virtual int selectTime(SelectModifier mod, int beginCol, int endCol,
@@ -61,8 +65,10 @@ struct NotesMan {
     virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;
 
     // Clipboard functions.
-    virtual void copyToClipboard(bool timeBased) = 0;
-    virtual void pasteFromClipboard(bool insert) = 0;
+    virtual int minSelectionRow() const = 0;
+    virtual void copyToClipboard(std::string& out, int minRow,
+                                 bool timeBased) = 0;
+    virtual void pasteFromClipboard(ClipboardData clipboard, bool insert) = 0;
 
     // Statistics functions.
     virtual int getNumSteps() const = 0;  ///< Includes jumps/holds/rolls.
@@ -71,6 +77,8 @@ struct NotesMan {
     virtual int getNumHolds() const = 0;
     virtual int getNumRolls() const = 0;
     virtual int getNumWarps() const = 0;
+    virtual int getNumFakes() const = 0;
+    virtual int getNumJudge() const = 0;  ///< only counts hittable steps.
 
     /// Returns a pointer to the first note.
     virtual const ExpandedNote* begin() const = 0;

@@ -499,10 +499,39 @@ static void ClearLayout() {
     LD->textH = 0;
 }
 
+static void FindWrapIndex(const char* str, int& index) {
+    int startIndex = LD->charIndex;
+    int startNextIndex = LD->nextCharIndex;
+    int startWidth = LD->lineW;
+
+    while (true) {
+        auto glyph = ReadGlyph(reinterpret_cast<const uint8_t*>(str));
+        if (!glyph || glyph->isNewline) {
+            index = INT_MAX;
+            break;
+        }
+        startWidth += glyph->advance;
+
+        // Only wrap on whitespace.
+        if (glyph->isWhitespace) index = LD->charIndex;
+        if (startWidth > LD->maxLineW) break;
+    }
+
+    LD->charIndex = startIndex;
+    LD->nextCharIndex = startNextIndex;
+}
+
 static void CreateLayout(const char* str) {
     // Make a list of every line of glyphs.
     bool isMultiline = !(LD->flags & Text::SINGLE_LINE);
+
+    bool isWordWrap =
+        (LD->flags & Text::WRAP_LINE) && LD->maxLineW != NO_MAX_LINE_WIDTH;
+    int wrapIndex = -1;
+
     while (true) {
+        if (isWordWrap && wrapIndex == -1) FindWrapIndex(str, wrapIndex);
+
         auto glyph = ReadGlyph(reinterpret_cast<const uint8_t*>(str));
         if (!glyph) break;
 
@@ -514,6 +543,13 @@ static void CreateLayout(const char* str) {
             }
         }
 
+        // Check if we should new line due to word wrapping.
+        if (LD->charIndex == wrapIndex) {
+            FinishCurrentLine(false);
+            wrapIndex = -1;
+            continue;
+        }
+
         // Insert the glyph in the list.
         auto& item = LD->glyphs.append();
         item.glyph = glyph;
@@ -523,6 +559,7 @@ static void CreateLayout(const char* str) {
         // Check if we are forced to break the line and continue on a new line.
         if (glyph->isNewline && isMultiline) {
             FinishCurrentLine(false);
+            wrapIndex = -1;
         } else {
             LD->previousGlyph = glyph;
             LD->lineW += glyph->advance;
