@@ -401,13 +401,13 @@ struct MusicImpl : public Music, public MixSource {
         Str::toLower(ext);
 
         // Figure out save format.
-        AudioFormat fmt = filterIndex == 2 || ext == "wav"   ? AudioFormat::WAV
-                          : filterIndex == 1 || ext == "mp3" ? AudioFormat::MP3
-                                                             : AudioFormat::OGG;
+        AudioFormat fmt = ext == "wav"   ? AudioFormat::WAV
+                          : ext == "mp3" ? AudioFormat::MP3
+                                         : AudioFormat::OGG;
 
-        if (filterIndex == 2)
+        if (filterIndex == 1)
             fmt = AudioFormat::MP3;
-        else if (filterIndex == 3)
+        else if (filterIndex == 2)
             fmt = AudioFormat::WAV;
 
         startAudioConversion(fmt, source, output, isSimfile);
