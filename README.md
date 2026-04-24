@@ -105,6 +105,10 @@ The project uses CMake for building and vcpkg for package management. Currently 
 
 See the [build details](BUILDING.md) for more information.
 
+## Nightly Builds
+
+Nightly builds with the latest beta features are hosted here: https://psycast.github.io/ArrowVortex-nightly/
+
 ## License
 
 ArrowVortex is provided under the GPLv3 license, or at your option, any later version.
