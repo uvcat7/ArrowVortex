@@ -256,8 +256,14 @@ void Action::perform(Type action) {
         CASE(VOLUME_MUTE)
         gMusic->setMuted(!gMusic->isMuted());
 
+        CASE(CONVERT_MUSIC)
+        gMusic->startAudioConversion();
         CASE(CONVERT_MUSIC_TO_OGG)
-        gMusic->startOggConversion();
+        gMusic->startAudioConversion(AudioFormat::OGG);
+        CASE(CONVERT_MUSIC_TO_MP3)
+        gMusic->startAudioConversion(AudioFormat::MP3);
+        CASE(CONVERT_MUSIC_TO_WAV)
+        gMusic->startAudioConversion(AudioFormat::WAV);
 
         CASE(SPEED_RESET)
         gMusic->setSpeed(100);
