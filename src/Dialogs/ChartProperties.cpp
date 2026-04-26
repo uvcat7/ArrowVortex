@@ -301,48 +301,66 @@ void DialogChartProperties::GraphWidget::updateGraph() {
         if (note.isMine || note.isWarped || note.isFake) continue;
         data[measure]++;
     }
-    // The peak calculation isn't always accurate if there is scaling,
-    // but it should be good enough.
-    for (int i = 0; i < buckets; i++) {
-        peak = max(peak, static_cast<double>(data[i] /
-                                             (gTempo->rowToTime((i + 1) * 192) -
-                                              gTempo->rowToTime(i * 192))));
+    int slices = 1;
+    auto measure_time = [&](int measure) {
+        return gTempo->rowToTime(measure * 192);
+    };
+    int notes = 0;
+    for (int i = 0; i < buckets; i += slices) {
+        slices = 1;
+        notes = data[i];
+        // Check 1 second to get good NPS estimates
+        while (measure_time(i + slices) - measure_time(i) < 1.0f &&
+               i + slices < buckets) {
+            notes += data[i + slices];
+            slices++;
+        }
+        peak = max(peak, static_cast<double>(notes / (measure_time(i + slices) -
+                                                      measure_time(i))));
     }
 }
 void DialogChartProperties::GraphWidget::onDraw() {
+    auto measure_time = [&](int measure) {
+        return gTempo->rowToTime(measure * 192);
+    };
+    auto delta_measure_time = [&](int measure, int offset) {
+        return measure_time(measure + offset) - measure_time(measure);
+    };
+
     if (gNotes->empty()) {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
-    int count = data.size();
-    double barWidth = (static_cast<double>(width_) / count);
+    endTime = gTempo->rowToTime(gSimfile->getEndRow());
+    int buckets = data.size();
+    double barWidth = (static_cast<double>(width_) / buckets);
     int w = barWidth + 1;
     auto batch = Renderer::batchC();
     Draw::fill(rect_, Color32(20, 20, 20, 255));
-    for (int i = 0; i < count;) {
+    int slices = 1;
+
+    for (int i = 0; i < buckets; i += slices) {
         int h = 0;
-        // If charts are too big (> 1hr), the averaging will look very strange.
-        // Capping the averaging to 10 measures will help maintain the expected
-        // shape.
-        int max_scale = 10;
-        int scale_iters = std::min(scale, max_scale);
-        int x = rect_.x +
-                static_cast<int>(gTempo->rowToTime(i * 192) / endTime * width_);
-        while (scale_iters > 0 && i < count) {
-            h += static_cast<int>(round(data[i] /
-                                        (gTempo->rowToTime((i + 1) * 192) -
-                                         gTempo->rowToTime(i * 192)) /
-                                        peak * height_));
-            scale_iters--;
-            i++;
+        slices = 1;
+        int x = rect_.x + static_cast<int>(measure_time(i) / endTime * width_);
+        int notes = data[i];
+        while (delta_measure_time(i, slices + 1) <= endTime / width_ &&
+               // Averaging looks bad beyond 30 seconds
+               delta_measure_time(i, slices + 1) <= 30.f &&
+               i + slices < buckets) {
+            notes += data[i + slices];
+            slices++;
         }
-        h /= std::min(scale, max_scale);
-        if (scale > max_scale) i += scale - max_scale;
+        h = std::min(height_, static_cast<int>(
+                                  round(notes / delta_measure_time(i, slices) /
+                                        peak * height_)));
+        w = rect_.x +
+            static_cast<int>(measure_time(i + slices) / endTime * width_) - x;
         int y = rect_.y + height_ - h;
         Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
     }
     double time = min(endTime, gView->getCursorTime());
-    int x = (time / endTime) * width_;
+    int x = static_cast<int>(time / endTime * width_);
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
     batch.flush();
