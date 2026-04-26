@@ -222,6 +222,7 @@ struct MenuBarImpl : public Menubar {
         sub(hNotes, hNoteMirror, "Mirror");
         sub(hNotes, hNoteExpand, "Expand");
         sub(hNotes, hNoteCompress, "Compress");
+        add(hNotes, REQUANTIZE_NOTES, "Requantize");
         add(hNotes, OPEN_DIALOG_GENERATE_NOTES, "Generate...");
 
         // Tempo > Select menu.
