@@ -108,6 +108,8 @@ struct MenuBarImpl : public Menubar {
         sep(hFile);
         add(hFile, OPEN_DIALOG_SONG_PROPERTIES, "Properties...");
         sep(hFile);
+        add(hFile, CONVERT_MUSIC, "Convert audio...");
+        sep(hFile);
         add(hFile, EXIT_PROGRAM, "Exit");
 
         // Edit menu.
@@ -222,6 +224,7 @@ struct MenuBarImpl : public Menubar {
         sub(hNotes, hNoteMirror, "Mirror");
         sub(hNotes, hNoteExpand, "Expand");
         sub(hNotes, hNoteCompress, "Compress");
+        add(hNotes, REQUANTIZE_NOTES, "Requantize");
         add(hNotes, OPEN_DIALOG_GENERATE_NOTES, "Generate...");
 
         // Tempo > Select menu.
@@ -289,7 +292,9 @@ struct MenuBarImpl : public Menubar {
         add(hAudio, TOGGLE_BEAT_TICK, "Beat tick");
         add(hAudio, TOGGLE_NOTE_TICK, "Note tick");
         sep(hAudio);
-        add(hAudio, CONVERT_MUSIC_TO_OGG, "Convert to ogg");
+        add(hAudio, CONVERT_MUSIC_TO_OGG, "Convert simfile to ogg");
+        add(hAudio, CONVERT_MUSIC_TO_MP3, "Convert simfile to mp3");
+        add(hAudio, CONVERT_MUSIC_TO_WAV, "Convert simfile to wav");
 
         // View > Beatlines menu.
         myBeatlineMenu = newMenu();

@@ -844,6 +844,208 @@ struct EditingImpl : public Editing {
         }
     }
 
+    void requantizeNotes() override {
+        if (gSimfile->isClosed()) return;
+
+        // Get RowType from SnapType
+        const RowType snapToRowType[NUM_SNAP_TYPES] = {
+            RT_192TH, RT_4TH,  RT_8TH,  RT_12TH,  RT_16TH,  RT_24TH,
+            RT_32ND,  RT_48TH, RT_64TH, RT_192TH, RT_192TH, RT_192TH};
+        auto currentType = snapToRowType[gView->getSnapType()];
+
+        // Get all Notes by Row
+        NoteEdit selection;
+        gSelection->getSelectedNotes(selection.rem);
+
+        if (selection.rem.empty()) {
+            HudNote("There are no notes selected.");
+            return;
+        }
+
+        auto select = selection.rem.begin();
+        auto notes = gNotes->begin();
+
+        while (select != selection.rem.end() && notes != gNotes->end()) {
+            if (notes->isWarped || ToRowType(notes->row) == currentType) {
+                ++notes;
+            } else if (notes->row < select->row) {
+                ++notes;
+            } else if (notes->row > select->row) {
+                ++select;
+            } else {
+                selection.add.append(CompressNote(*notes));
+                ++notes;
+            }
+        }
+
+        if (selection.add.empty()) {
+            HudNote("There are no notes selected.");
+            return;
+        }
+
+        // Begin Editing
+        auto findSnapRow = [](int start, int mid, int end, RowType snap) {
+            int row = -1;
+            int snapDistance = INT_MAX;
+            for (int r = start; r <= end; r++) {
+                if (ToRowType(r) == snap) {
+                    auto dist = abs(r - mid);
+                    if (dist < snapDistance) {
+                        row = r;
+                        snapDistance = dist;
+                    } else if (dist > snapDistance) {
+                        break;
+                    }
+                }
+            }
+            return row;
+        };
+
+        auto calculateBPM = [](int prev_row, double prev_time, int target_row,
+                               double target_time) {
+            return 60 * ((target_row - prev_row) / 48.0) /
+                   (target_time - prev_time);
+        };
+
+        gHistory->startChain();
+
+        // Start Per-Note Edits, from end to beginning.
+        auto segs = gTempo->getSegments();
+        auto lastRow = -1;
+        auto lastRowPosition = -1;
+        auto lastSnap = -1;
+
+        auto note = selection.add.end();
+        while (note != selection.add.begin()) {
+            --note;
+
+            NoteEdit notesEdit;
+            SegmentEdit tempoEdit;
+
+            // Quick Edit chords.
+            if (note->row == lastRow) {
+                note->row = lastRowPosition;
+                notesEdit.rem.append(*note);
+                notesEdit.add.append({lastSnap, lastSnap, note->col,
+                                      note->player, note->type, 192});
+                gNotes->modify(notesEdit, false);
+                gHistory->updateChain();
+                continue;
+            }
+
+            // Find Note Bounds
+            int before = 0, after = INT_MAX;
+            auto it = gNotes->begin();
+            while (it != gNotes->end()) {
+                if (it->row < note->row) {
+                    before = it->row;
+                } else if (it->row > note->row) {
+                    after = it->row;
+                    break;
+                }
+                ++it;
+            }
+
+            // Find Tempo Bounds
+            auto segments = gTempo->getSegments();
+            for (const auto& segment : *segments) {
+                for (auto seg = segment.begin(), segEnd = segment.end();
+                     seg != segEnd; ++seg) {
+                    if (seg->row < note->row) {
+                        before = max(before, seg->row);
+                    } else if (seg->row > note->row) {
+                        after = min(after, seg->row);
+                        break;
+                    }
+                }
+            }
+
+            // Store previous values.
+            auto boundStart = max(before, note->row - ROWS_PER_BEAT);
+            auto boundMid = note->row;
+            auto boundEnd = min(after, note->row + ROWS_PER_BEAT);
+
+            int range[] = {boundStart, boundMid, boundEnd};
+            double time[] = {gTempo->rowToTime(boundStart),
+                             gTempo->rowToTime(boundMid),
+                             gTempo->rowToTime(boundEnd)};
+
+            double bpms[] = {segs->getRecent<BpmChange>(boundStart).bpm,
+                             segs->getRecent<BpmChange>(boundMid).bpm,
+                             segs->getRecent<BpmChange>(boundEnd).bpm};
+
+            double scrolls[] = {segs->getRecent<Scroll>(boundStart).ratio,
+                                segs->getRecent<Scroll>(boundMid).ratio,
+                                segs->getRecent<Scroll>(boundEnd).ratio};
+
+            // Prevent Infinite BPMs.
+            if (time[0] == time[1] || time[1] == time[2]) {
+                lastRow = -1;
+                continue;
+            }
+
+            // Find Nearest Valid Snap Point
+            int snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
+                                   currentType);
+
+            // No Snap Point, Insert beat and try again.
+            if (snap == -1) {
+                gNotes->insertRows(boundMid, ROWS_PER_BEAT, true);
+                gTempo->insertRows(boundMid, ROWS_PER_BEAT, true);
+                gHistory->updateChain();
+
+                note->row += ROWS_PER_BEAT;
+                boundEnd += ROWS_PER_BEAT;
+
+                // Find Snap
+                snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
+                                   currentType);
+
+                notesEdit.rem.append(*note);
+                notesEdit.add.append(
+                    {snap, snap, note->col, note->player, note->type, 192});
+
+                tempoEdit.rem.append(
+                    BpmChange(boundMid + ROWS_PER_BEAT, bpms[1]));
+                tempoEdit.rem.append(
+                    Scroll(boundMid + ROWS_PER_BEAT, scrolls[1]));
+            }
+
+            // It fits, move note.
+            else {
+                notesEdit.rem.append(*note);
+                notesEdit.add.append(
+                    {snap, snap, note->col, note->player, note->type, 192});
+            }
+
+            // Tempo Changes
+            double newbpms[] = {
+                calculateBPM(boundStart, time[0], snap, time[1]),
+                calculateBPM(snap, time[1], boundEnd, time[2])};
+
+            tempoEdit.add.append(BpmChange(boundStart, newbpms[0]));
+            tempoEdit.add.append(BpmChange(snap, newbpms[1]));
+            tempoEdit.add.append(BpmChange(boundEnd, bpms[2]));
+            tempoEdit.rem.append(BpmChange(boundMid, bpms[1]));
+
+            tempoEdit.add.append(
+                Scroll(boundStart, bpms[0] / newbpms[0] * scrolls[0]));
+            tempoEdit.add.append(
+                Scroll(snap, bpms[1] / newbpms[1] * scrolls[1]));
+            tempoEdit.add.append(Scroll(boundEnd, scrolls[2]));
+            tempoEdit.rem.append(Scroll(boundMid, scrolls[1]));
+
+            gNotes->modify(notesEdit, false);
+            gTempo->modify(tempoEdit, false);
+            gHistory->updateChain();
+
+            lastRow = boundMid;
+            lastRowPosition = note->row;
+            lastSnap = snap;
+        }
+        gHistory->finishChain("Recolorized Selected Notes");
+    }
+
     void openTempoEdit(Segment::Type type) override {
         if (gSimfile->isClosed()) return;
         int anchorRow = getAnchorRow(myTempoEditAnchor);

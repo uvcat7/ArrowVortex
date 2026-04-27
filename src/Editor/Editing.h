@@ -69,6 +69,8 @@ struct Editing : public InputHandler {
     virtual EditingAnchor getVisualSyncAnchor() = 0;
     virtual void injectBoundingBpmChange() = 0;
     virtual void shiftAnchorRowToMousePosition(bool destructive) = 0;
+
+    virtual void requantizeNotes() = 0;
 };
 
 extern Editing* gEditing;
