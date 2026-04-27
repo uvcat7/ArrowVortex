@@ -332,10 +332,21 @@ struct EditorImpl : public Editor, public InputHandler {
             interface->get("fontSize", &myFontSize);
 
             fs::path path = fs::path(interface->get("fontPath"));
-            if (path.empty()) return;
-
-            if (std::ifstream testPath(path.c_str()); testPath.good())
+            if (std::ifstream testPath(path.c_str());
+                !path.empty() && testPath.good())
                 myFontPath = pathToUtf8(path);
+
+            bool winMax = false;
+            interface->get("windowMaximized", &winMax);
+            if (winMax)
+                gSystem->setWindowState(true);
+            else {
+                int winSize[2] = {0, 0};
+                if (interface->get("windowSize", winSize, 2)) {
+                    vec2i size = {winSize[0], winSize[1]};
+                    gSystem->setWindowSize(size);
+                }
+            }
         }
     }
 
@@ -354,6 +365,15 @@ struct EditorImpl : public Editor, public InputHandler {
 
         interface->addAttrib("fontPath", myFontPath.c_str());
         interface->addAttrib("fontSize", static_cast<long>(myFontSize));
+
+        bool windowState = gSystem->getWindowState();
+        if (windowState) {
+            interface->addAttrib("windowMaximized", true);
+        } else {
+            vec2i ws = gSystem->getWindowSize();
+            long windowSize[] = {ws.x, ws.y};
+            interface->addAttrib("windowSize", windowSize, 2);
+        }
     }
 
     void saveDialogSettings(XmrNode& settings) {
