@@ -88,6 +88,8 @@ void GuiWidget::arrange(recti r) { onArrange(r); }
 
 void GuiWidget::onArrange(recti r) { rect_ = r; }
 
+void GuiWidget::setFocus() {}
+
 void GuiWidget::tick() {
     if (!isCapturingFocus()) {
         onTick();

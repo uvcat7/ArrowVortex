@@ -1,17 +1,13 @@
 #pragma once
 
 #include <Dialogs/Dialog.h>
-#include <Core/Widgets.h>
-#include <Core/WidgetsLayout.h>
 
-#include <Core/Vector.h>
+#include <Core/WidgetsLayout.h>
 
 namespace Vortex {
 
 class DialogChartProperties : public EditorDialog {
    public:
-    typedef DialogChartProperties DCP;
-
     ~DialogChartProperties();
     DialogChartProperties();
 
@@ -29,9 +25,15 @@ class DialogChartProperties : public EditorDialog {
     void myCopyNoteInfo();
     void mySelectNotes(int type);
 
+    void myCreateGraph();
+    void myUpdateGraph();
+
     void myCreateBreakdown();
     void myUpdateBreakdown();
     void myCopyBreakdown();
+
+    class GraphWidget;
+    GraphWidget* myGraph;
 
     class BreakdownWidget;
     BreakdownWidget* myBreakdown;
