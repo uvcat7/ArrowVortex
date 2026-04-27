@@ -305,10 +305,10 @@ void DialogChartProperties::GraphWidget::updateGraph() {
     auto measure_time = [&](int measure) {
         return gTempo->rowToTime(measure * 192);
     };
-    int notes = 0;
+
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
-        notes = data[i];
+        int notes = data[i];
         // Check 1 second to get good NPS estimates
         while (measure_time(i + slices) - measure_time(i) < 1.0f &&
                i + slices < buckets) {
@@ -340,7 +340,6 @@ void DialogChartProperties::GraphWidget::onDraw() {
     int slices = 1;
 
     for (int i = 0; i < buckets; i += slices) {
-        int h = 0;
         slices = 1;
         int x = rect_.x + static_cast<int>(measure_time(i) / endTime * width_);
         int notes = data[i];
@@ -351,9 +350,10 @@ void DialogChartProperties::GraphWidget::onDraw() {
             notes += data[i + slices];
             slices++;
         }
-        h = std::min(height_, static_cast<int>(
-                                  round(notes / delta_measure_time(i, slices) /
-                                        peak * height_)));
+        int h = std::min(
+            height_,
+            static_cast<int>(
+                round(notes / delta_measure_time(i, slices) / peak * height_)));
         w = rect_.x +
             static_cast<int>(measure_time(i + slices) / endTime * width_) - x;
         int y = rect_.y + height_ - h;
