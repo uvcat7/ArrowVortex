@@ -17,6 +17,7 @@ class GuiContext {
     virtual void draw() = 0;
 
     // Functions used by widgets.
+    virtual void closeDialogs() = 0;
     virtual recti getView() = 0;
     virtual vec2i getMousePos() = 0;
     virtual float getDeltaTime() = 0;
@@ -119,6 +120,7 @@ class GuiWidget : public InputHandler {
     void setSize(int w, int h);
     void setEnabled(bool enabled);
     void setTooltip(const std::string& text);
+    virtual void setFocus();
 
     // Get functions.
     bool isEnabled() const;
@@ -177,6 +179,8 @@ class GuiDialog {
 
     void setCloseable(bool enable);
     void setMinimizable(bool enable);
+    void setPinnable(bool enable);
+    void setDraggable(bool enable);
     void setResizeable(bool horizontal, bool vertical);
 
     GuiContext* getGui() const;

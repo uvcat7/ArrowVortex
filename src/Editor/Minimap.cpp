@@ -58,12 +58,13 @@ static void SetPixels(const SetPixelData& spd, int x, double tor,
 
 static void SetPixels(const SetPixelData& spd, int x, double tor, double end,
                       uint32_t color) {
+    int cx = clamp(x, 0, MAP_WIDTH);
     int yt = clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs), 0,
                    MAP_HEIGHT - 1);
     int yb = clamp(static_cast<int>((end - spd.startOfs) * spd.pixPerOfs), 0,
                    MAP_HEIGHT - 1);
     for (int y = yt; y <= yb; ++y) {
-        uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
+        uint32_t* dst = spd.pixels + y * MAP_WIDTH + cx;
         for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
     }
 }

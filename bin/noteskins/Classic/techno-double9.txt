@@ -1,0 +1,82 @@
+Texture-notes     = "tex notes.png"
+Texture-receptors = "tex receptors.png"
+Texture-glow      = "tex glow.png"
+
+Receptor { col=0; x=-578 }
+Receptor { col=1; x=-510 }
+Receptor { col=2; x=-442 }
+Receptor { col=3; x=-374 }
+Receptor { col=4; x=-306 }
+Receptor { col=5; x=-238 }
+Receptor { col=6; x=-170 }
+Receptor { col=7; x=-102 }
+Receptor { col=8; x=-34 }
+Receptor { col=9; x=34 }
+Receptor { col=10; x=102 }
+Receptor { col=11; x=170 }
+Receptor { col=12; x=238 }
+Receptor { col=13; x=306 }
+Receptor { col=14; x=374 }
+Receptor { col=15; x=442 }
+Receptor { col=16; x=510 }
+Receptor { col=17; x=578 }
+
+Receptor-on { size=64,64; src=0,0 }
+Receptor-on { col=0,2,6,8,9,11,15,17; src=0,64 }
+Receptor-on { col=0,9; rot=270 }
+Receptor-on { col=1,10; rot=90 }
+Receptor-on { col=2,11; rot=0 }
+Receptor-on { col=3,12; rot=0 }
+Receptor-on { col=4,13; rot=0; src=0,128 }
+Receptor-on { col=5,14; rot=180 }
+Receptor-on { col=6,15; rot=90 }
+Receptor-on { col=7,16; rot=270 }
+Receptor-on { col=8,17; rot=180 }
+
+Receptor-off { size=64,64; src=64,0 }
+Receptor-off { col=0,2,6,8,9,11,15,17; src=64,64 }
+Receptor-off { col=0,9; rot=270 }
+Receptor-off { col=1,10; rot=90 }
+Receptor-off { col=2,11; rot=0 }
+Receptor-off { col=3,12; rot=0 }
+Receptor-off { col=4,13; rot=0; src=64,128 }
+Receptor-off { col=5,14; rot=180 }
+Receptor-off { col=6,15; rot=90 }
+Receptor-off { col=7,16; rot=270 }
+Receptor-off { col=8,17; rot=180 }
+
+Receptor-glow { size=96,96; src=0,0 }
+Receptor-glow { col=0,2,6,8,9,11,15,17; src=96,0 }
+Receptor-glow { col=0,9; rot=270 }
+Receptor-glow { col=1,10; rot=90 }
+Receptor-glow { col=2,11; rot=0 }
+Receptor-glow { col=3,12; rot=0 }
+Receptor-glow { col=4,13; rot=0; src=192,0 }
+Receptor-glow { col=5,14; rot=180 }
+Receptor-glow { col=6,15; rot=90 }
+Receptor-glow { col=7,16; rot=270 }
+Receptor-glow { col=8,17; rot=180 }
+
+Note { size=64,64 }
+
+Note { col=0,9; src=320,0; rot=270 }
+Note { col=1,10; src=192,0; rot=90 }
+Note { col=2,11; src=256,0; rot=0 }
+Note { col=3,12; src=192,64; rot=0 }
+Note { col=4,13; src=640,0; rot=0 }
+Note { col=5,14; src=192,64; rot=180 }
+Note { col=6,15; src=256,0; rot=90 }
+Note { col=7,16; src=192,0; rot=270 }
+Note { col=8,17; src=320,0; rot=180 }
+
+Mine { size=64,64; src=320,128 }
+
+Hold-body { size=64,0;  src=128,160 }
+Hold-body { col=0,2,4,6,8,9,11,15,17; y=-8; src=384,160 }
+Hold-tail { size=64,64; src=128,192 }
+Hold-tail { col=0,2,4,6,8,9,11,15,17; src=384,192 }
+
+Roll-body { size=64,0;  src=192,160 }
+Roll-body { col=0,2,4,6,8,9,11,15,17; y=-8; src=448,160 }
+Roll-tail { size=64,64; src=192,192 }
+Roll-tail { col=0,2,4,6,8,9,11,15,17; src=448,192 }

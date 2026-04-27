@@ -75,7 +75,7 @@ void DialogChartProperties::onChanges(int changes) {
     }
 
     // Update the chart breakdown and note counts if notes change.
-    if (changes & VCM_NOTES_CHANGED) {
+    if (changes & (VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED)) {
         myUpdateNoteInfo();
         myUpdateGraph();
         myUpdateBreakdown();
@@ -209,7 +209,7 @@ void DialogChartProperties::myUpdateNoteInfo() {
 
     double density = 0.0;
     if (gNotes->begin() < gNotes->end()) {
-        density = static_cast<double>(count[0]) /
+        density = static_cast<double>(gNotes->getNumJudge()) /
                   max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
     }
 
