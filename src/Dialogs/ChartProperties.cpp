@@ -267,9 +267,7 @@ class DialogChartProperties::GraphWidget : public GuiWidget {
    public:
     ~GraphWidget() override;
     explicit GraphWidget(GuiContext* gui);
-
     void updateGraph();
-
     void onDraw() override;
 
    private:
@@ -277,76 +275,100 @@ class DialogChartProperties::GraphWidget : public GuiWidget {
     std::vector<int> data;
     double peak = 0.0;
     int scale = 1;
+    int endMeasure = 0;
     double endTime = 0.0;
 };
-
 DialogChartProperties::GraphWidget::~GraphWidget() = default;
-
 DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
     : GuiWidget(gui) {
     width_ = 340;
     height_ = 100;
 }
-
 void DialogChartProperties::GraphWidget::updateGraph() {
     if (gNotes->empty()) {
         return;
     }
-
+    endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
-
-    int buckets = max(0, static_cast<int>(endTime)) + 1;
-    scale = max(1, static_cast<int>(ceil(buckets / 300)));
-    if (scale > 1) buckets = static_cast<int>(buckets / scale) + 1;
-
+    scale = endMeasure / width_;
+    if (scale < 1) scale = 1;
+    int buckets = endMeasure;
     peak = 0;
     data.resize(buckets);
     for (int i = 0; i < buckets; i++) data[i] = 0;
-
     for (auto& note : *gNotes) {
+        int measure = note.row / (ROWS_PER_BEAT * 4);
         if (note.isMine || note.isWarped || note.isFake) continue;
-        int bucket = static_cast<int>((note.time + 0.5) / scale);
-        data[bucket]++;
+        data[measure]++;
     }
+    int slices = 1;
+    auto measure_time = [&](int measure) {
+        return gTempo->rowToTime(measure * 192);
+    };
 
-    for (int i = 0; i < buckets; i++) {
-        peak = max(peak, static_cast<double>(data[i]));
+    for (int i = 0; i < buckets; i += slices) {
+        slices = 1;
+        int notes = data[i];
+        // Check 1 second to get good NPS estimates
+        while (measure_time(i + slices) - measure_time(i) < 1.0f &&
+               i + slices < buckets) {
+            notes += data[i + slices];
+            slices++;
+        }
+        peak = max(peak, static_cast<double>(notes / (measure_time(i + slices) -
+                                                      measure_time(i))));
     }
 }
-
 void DialogChartProperties::GraphWidget::onDraw() {
+    auto measure_time = [&](int measure) {
+        return gTempo->rowToTime(measure * 192);
+    };
+    auto delta_measure_time = [&](int measure, int offset) {
+        return measure_time(measure + offset) - measure_time(measure);
+    };
+
     if (gNotes->empty()) {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
-
-    int count = data.size();
-    double barWidth = (static_cast<double>(width_) / count);
+    endTime = gTempo->rowToTime(gSimfile->getEndRow());
+    int buckets = data.size();
+    double barWidth = (static_cast<double>(width_) / buckets);
     int w = barWidth + 1;
-
     auto batch = Renderer::batchC();
     Draw::fill(rect_, Color32(20, 20, 20, 255));
+    int slices = 1;
 
-    for (int i = 0; i < count; ++i) {
-        int h = data[i] / peak * height_;
-        int x = rect_.x + static_cast<int>(i * barWidth);
+    for (int i = 0; i < buckets; i += slices) {
+        slices = 1;
+        int x = rect_.x + static_cast<int>(measure_time(i) / endTime * width_);
+        int notes = data[i];
+        while (delta_measure_time(i, slices + 1) <= endTime / width_ &&
+               // Averaging looks bad beyond 30 seconds
+               delta_measure_time(i, slices + 1) <= 30.f &&
+               i + slices < buckets) {
+            notes += data[i + slices];
+            slices++;
+        }
+        int h = std::min(
+            height_,
+            static_cast<int>(
+                round(notes / delta_measure_time(i, slices) / peak * height_)));
+        w = rect_.x +
+            static_cast<int>(measure_time(i + slices) / endTime * width_) - x;
         int y = rect_.y + height_ - h;
-
         Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
     }
-
     double time = min(endTime, gView->getCursorTime());
-    int x = (time / endTime) * width_;
+    int x = static_cast<int>(time / endTime * width_);
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
-
     batch.flush();
-
     TextStyle textStyle;
-    std::string info = Str::fmt("Peak: %1 NPS").arg(peak / scale, 0, 0).str;
+    std::string info = Str::fmt("Peak: %1 NPS").arg(peak, 1, 1).str;
     Text::arrange(Text::TL, textStyle, info.c_str());
     Text::draw(vec2i{rect_.x + 4, rect_.y + 2});
-}
+};
 
 void DialogChartProperties::myCreateGraph() {
     myLayout.row().col(340);
