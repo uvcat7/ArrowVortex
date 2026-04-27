@@ -164,7 +164,7 @@ class LabelEditor : public SegmentEditor {
 
 // ================================================================================================
 
-class DialogEditSegment : public EditorDialog {
+class DialogEditSegment : public EditorDialog, public InputHandler {
    public:
     ~DialogEditSegment();
     DialogEditSegment();
@@ -173,6 +173,7 @@ class DialogEditSegment : public EditorDialog {
     int getFixedWidth();
     int getFixedHeight();
 
+    void onKeyPress(KeyPress& evt);
     void onChanges(int changes) override;
     void onTick() override;
 

@@ -12,6 +12,8 @@
 #include <Editor/View.h>
 #include <Editor/Common.h>
 
+#include <memory>
+
 namespace Vortex {
 
 // Height needs to be hardcoded due to flicker from the first tick of it
@@ -767,6 +769,15 @@ void DialogEditSegment::onTick() {
     if (myEditor && gSimfile->isOpen()) {
         myEditor->onTick();
     }
+    handleInputs(getGui()->getEvents());
     EditorDialog::onTick();
+}
+
+void DialogEditSegment::onKeyPress(KeyPress& evt) {
+    if (evt.handled) return;
+    if (evt.key == Key::ESCAPE) {
+        requestClose();
+        evt.handled = true;
+    }
 }
 };  // namespace Vortex
