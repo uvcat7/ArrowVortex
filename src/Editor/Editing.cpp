@@ -15,6 +15,7 @@
 
 #include <Editor/Clipboard.h>
 #include <Editor/Common.h>
+#include <Editor/Editor.h>
 #include <Editor/History.h>
 #include <Editor/Menubar.h>
 #include <Editor/Music.h>
@@ -84,7 +85,8 @@ struct EditingImpl : public Editing {
     bool myUseJumpToNextNote;
     bool myUseUndoRedoJump;
     bool myUseTimeBasedCopy;
-    VisualSyncAnchor myVisualSyncAnchor;
+    EditingAnchor myVisualSyncAnchor;
+    EditingAnchor myTempoEditAnchor;
 
     // ================================================================================================
     // EditingImpl :: constructor and destructor.
@@ -100,11 +102,22 @@ struct EditingImpl : public Editing {
         myUseJumpToNextNote = false;
         myUseUndoRedoJump = true;
         myUseTimeBasedCopy = false;
-        myVisualSyncAnchor = VisualSyncAnchor::CURSOR;
+        myVisualSyncAnchor = EditingAnchor::CURSOR;
+        myTempoEditAnchor = EditingAnchor::CURSOR;
     }
 
     // ================================================================================================
     // StatusbarImpl :: load / save settings.
+
+    static const char* ToString(EditingAnchor anchor) {
+        if (anchor == EditingAnchor::RECEPTORS) return "receptor";
+        return "cursor";
+    }
+
+    static EditingAnchor ToEditingAnchor(const std::string& str) {
+        if (str == "receptor") return EditingAnchor::RECEPTORS;
+        return EditingAnchor::CURSOR;
+    }
 
     void loadSettings(XmrNode& settings) {
         XmrNode* editing = settings.child("editing");
@@ -112,6 +125,11 @@ struct EditingImpl : public Editing {
             editing->get("useJumpToNextNote", &myUseJumpToNextNote);
             editing->get("useUndoRedoJumps", &myUseUndoRedoJump);
             editing->get("useTimeBasedCopy", &myUseTimeBasedCopy);
+
+            const char* vs = editing->get("anchorVisualSync");
+            if (vs) myVisualSyncAnchor = ToEditingAnchor(vs);
+            const char* te = editing->get("anchorTempoEdit");
+            if (te) myTempoEditAnchor = ToEditingAnchor(te);
         }
     }
 
@@ -121,6 +139,8 @@ struct EditingImpl : public Editing {
         editing->addAttrib("useJumpToNextNote", myUseJumpToNextNote);
         editing->addAttrib("useUndoRedoJumps", myUseUndoRedoJump);
         editing->addAttrib("useTimeBasedCopy", myUseTimeBasedCopy);
+        editing->addAttrib("anchorVisualSync", ToString(myVisualSyncAnchor));
+        editing->addAttrib("anchorTempoEdit", ToString(myTempoEditAnchor));
     }
 
     // ================================================================================================
@@ -784,16 +804,16 @@ struct EditingImpl : public Editing {
         }
     }
 
-    int getAnchorRow() {
-        Vortex::vec2i mouse_pos = gSystem->getMousePos();
-        Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+    int getAnchorRow(EditingAnchor anchor) {
+        vec2i mouse_pos = gSystem->getMousePos();
+        ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
 
-        switch (this->myVisualSyncAnchor) {
-            case VisualSyncAnchor::RECEPTORS:
+        switch (anchor) {
+            case EditingAnchor::RECEPTORS:
                 return gView->getCursorRow();
-            case VisualSyncAnchor::CURSOR:
+            case EditingAnchor::CURSOR:
                 return gView->snapRow(gView->offsetToRow(chart_offset),
-                                      Vortex::View::SnapDir::SNAP_CLOSEST);
+                                      View::SnapDir::SNAP_CLOSEST);
             default:
                 HudError("Unknown anchor row type");
                 return -1;
@@ -801,29 +821,26 @@ struct EditingImpl : public Editing {
     }
 
     void injectBoundingBpmChange() override {
-        if (gSimfile->isClosed() || !gView->isTimeBased()) {
-            return;
-        }
+        if (gSimfile->isClosed() || !gView->isTimeBased()) return;
 
-        int anchor_row = this->getAnchorRow();
+        int anchorRow = getAnchorRow(myVisualSyncAnchor);
 
-        gTempo->injectBoundingBpmChange(anchor_row);
+        gTempo->injectBoundingBpmChange(anchorRow);
     }
 
-    void shiftAnchorRowToMousePosition(bool is_destructive) override {
-        if (gSimfile->isClosed() || !gView->isTimeBased()) {
-            return;
-        }
-        Vortex::vec2i mouse_pos = gSystem->getMousePos();
-        Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+    void shiftAnchorRowToMousePosition(bool destructive) override {
+        if (gSimfile->isClosed() || !gView->isTimeBased()) return;
 
-        double target_time = gView->offsetToTime(chart_offset);
-        int anchor_row = this->getAnchorRow();
+        vec2i mpos = gSystem->getMousePos();
+        ChartOffset offset = gView->yToOffset(mpos.y);
 
-        if (is_destructive) {
-            gTempo->destructiveShiftRowToTime(anchor_row, target_time);
+        double targetTime = gView->offsetToTime(offset);
+        int anchorRow = getAnchorRow(myVisualSyncAnchor);
+
+        if (destructive) {
+            gTempo->destructiveShiftRowToTime(anchorRow, targetTime);
         } else {
-            gTempo->nonDestructiveShiftRowToTime(anchor_row, target_time);
+            gTempo->nonDestructiveShiftRowToTime(anchorRow, targetTime);
         }
     }
 
@@ -1027,6 +1044,12 @@ struct EditingImpl : public Editing {
             lastSnap = snap;
         }
         gHistory->finishChain("Recolorized Selected Notes");
+    }
+
+    void openTempoEdit(Segment::Type type) override {
+        if (gSimfile->isClosed()) return;
+        int anchorRow = getAnchorRow(myTempoEditAnchor);
+        gEditor->openSegmentDialog(type, anchorRow);
     }
 
     /*
@@ -1324,13 +1347,13 @@ struct EditingImpl : public Editing {
 
     bool hasTimeBasedCopy() override { return myUseTimeBasedCopy; }
 
-    void setVisualSyncAnchor(VisualSyncAnchor anchor) override {
+    void setVisualSyncAnchor(EditingAnchor anchor) override {
         myVisualSyncAnchor = anchor;
         switch (myVisualSyncAnchor) {
-            case VisualSyncAnchor::RECEPTORS:
+            case EditingAnchor::RECEPTORS:
                 HudInfo("Visual sync will use current row");
                 break;
-            case VisualSyncAnchor::CURSOR:
+            case EditingAnchor::CURSOR:
                 HudInfo(
                     "Visual sync will use mouse cursor's closest row of "
                     "selected snap");
@@ -1339,7 +1362,24 @@ struct EditingImpl : public Editing {
         gMenubar->update(Menubar::VISUAL_SYNC_ANCHOR);
     }
 
-    VisualSyncAnchor getVisualSyncMode() override { return myVisualSyncAnchor; }
+    EditingAnchor getVisualSyncAnchor() override { return myVisualSyncAnchor; }
+
+    void setTempoEditAnchor(EditingAnchor anchor) override {
+        myTempoEditAnchor = anchor;
+        switch (myTempoEditAnchor) {
+            case EditingAnchor::RECEPTORS:
+                HudInfo("Tempo editing will use current row");
+                break;
+            case EditingAnchor::CURSOR:
+                HudInfo(
+                    "Tempo editing will use mouse cursor's closest row of "
+                    "selected snap");
+                break;
+        }
+        gMenubar->update(Menubar::TEMPO_EDIT_ANCHOR);
+    }
+
+    EditingAnchor getTempoEditAnchor() override { return myTempoEditAnchor; }
 
 };  // EditingImpl
 

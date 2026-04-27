@@ -325,6 +325,18 @@ void WgLineEdit::setNumerical(bool numerical) { is_numerical_ = numerical; }
 
 void WgLineEdit::setEditable(bool editable) { is_editable_ = editable; }
 
+void WgLineEdit::setFocus() {
+    if (isEnabled()) {
+        if (!isCapturingText()) {
+            lineedit_text_ = text.get();
+            startCapturingText();
+        }
+        lineedit_drag_ = DT_NOT_DRAGGING;
+        lineedit_cursor_.x = 0;
+        lineedit_cursor_.y = static_cast<int>(lineedit_text_.length());
+    }
+}
+
 void WgLineEdit::DeleteSection() {
     if (is_editable_ && lineedit_cursor_.x != lineedit_cursor_.y) {
         if (lineedit_cursor_.x > lineedit_cursor_.y)
@@ -479,6 +491,11 @@ void WgSpinner::setPrecision(int minDecimalPlaces, int maxDecimalPlaces) {
     spinner_min_decimal_places_ = minDecimalPlaces;
     spinner_max_decimal_places_ = maxDecimalPlaces;
     SpinnerUpdateText();
+}
+void WgSpinner::setFocus() {
+    if (isEnabled()) {
+        spinner_lineedit_->setFocus();
+    }
 }
 
 void WgSpinner::SpinnerUpdateValue(double v) {

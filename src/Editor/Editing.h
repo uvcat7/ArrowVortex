@@ -3,6 +3,7 @@
 #include <Core/Input.h>
 
 #include <Managers/ChartMan.h>
+#include <Simfile/Segments.h>
 
 namespace Vortex {
 
@@ -13,10 +14,10 @@ struct Editing : public InputHandler {
         MIRROR_HV,
     };
 
-    enum class VisualSyncAnchor {
-        /// Visual sync shifts receptor's row
+    enum class EditingAnchor {
+        /// Target receptor's row
         RECEPTORS,
-        /// Visual sync shifts closest snapping row at mouse cursor
+        /// Target closest snapping row at mouse cursor
         CURSOR,
     };
 
@@ -60,10 +61,14 @@ struct Editing : public InputHandler {
     virtual void toggleTimeBasedCopy() = 0;
     virtual bool hasTimeBasedCopy() = 0;
 
-    virtual void setVisualSyncAnchor(VisualSyncAnchor anchor) = 0;
-    virtual VisualSyncAnchor getVisualSyncMode() = 0;
+    virtual void setTempoEditAnchor(EditingAnchor anchor) = 0;
+    virtual EditingAnchor getTempoEditAnchor() = 0;
+    virtual void openTempoEdit(Segment::Type type) = 0;
+
+    virtual void setVisualSyncAnchor(EditingAnchor anchor) = 0;
+    virtual EditingAnchor getVisualSyncAnchor() = 0;
     virtual void injectBoundingBpmChange() = 0;
-    virtual void shiftAnchorRowToMousePosition(bool is_destructive) = 0;
+    virtual void shiftAnchorRowToMousePosition(bool destructive) = 0;
 
     virtual void requantizeNotes() = 0;
 };

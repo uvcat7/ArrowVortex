@@ -23,7 +23,9 @@ struct SelectionRegion {
 struct Selection : public InputHandler {
     enum Type { NONE, REGION, NOTES, TEMPO };
 
-    static void create();
+    virtual void saveSettings(XmrNode& settings) = 0;
+
+    static void create(XmrNode& settings);
     static void destroy();
 
     virtual void drawRegionSelection() = 0;
@@ -46,6 +48,10 @@ struct Selection : public InputHandler {
     virtual void selectRegion() = 0;
     virtual void selectRegion(int row, int endrow) = 0;
     virtual SelectionRegion getSelectedRegion() = 0;
+
+    // Setting toggles
+    virtual void toggleTempoEditor() = 0;
+    virtual bool getTempoEditor() = 0;
 };
 
 extern Selection* gSelection;
