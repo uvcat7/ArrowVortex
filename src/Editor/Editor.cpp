@@ -605,6 +605,13 @@ struct EditorImpl : public Editor, public InputHandler {
         if (fmt == SIM_NONE || fmt == SIM_DWI) {
             bool needSSC = gTempo->getSegments()->count(SIM_SSC) > 0;
             fmt = needSSC ? SIM_SSC : SIM_SM;
+
+            bool isSaveSSC =
+                std::find(save.begin(), save.end(), SIM_SSC) != save.end();
+            bool isSaveSM =
+                std::find(save.begin(), save.end(), SIM_SM) != save.end();
+
+            if (isSaveSSC && !isSaveSM) fmt = SIM_SSC;
         }
         save.erase(std::remove(save.begin(), save.end(), fmt), save.end());
         save.insert(save.begin(), fmt);  // Give priority to the load format.
