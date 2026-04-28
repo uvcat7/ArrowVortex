@@ -55,6 +55,14 @@ static void GiveUnicodeWarning(const std::string& path,
             name.c_str());
     }
 }
+static void GiveSM5DataLossWarning(ExportData& data) {
+    if (!data.sscWarning) {
+        HudWarning(
+            "This file contains SM5 tempo data that will be lost on save, "
+            "consider saving the file as a .ssc to prevent data loss.");
+        data.sscWarning = true;
+    }
+}
 
 static std::string Escape(const char* name, const char* str) {
     std::string s(str);
@@ -314,11 +322,9 @@ static void WriteDisplayBpm(ExportData& data, const Tempo* tempo) {
 }
 
 static void WriteTempo(ExportData& data, const Tempo* tempo) {
-    if (!data.ssc && !data.sscWarning && tempo->segments->count(SIM_SSC) > 0) {
-        HudWarning(
-            "This file contains SM5 tempo data that will be lost on save, "
-            "consider saving the file as a .ssc to prevent data loss.");
-        data.sscWarning = true;
+    // Warn for SM5 tempo segments.
+    if (!data.ssc && tempo->segments->count(SIM_SSC) > 0) {
+        GiveSM5DataLossWarning(data);
     }
 
     WriteOffset(data, tempo);
@@ -567,6 +573,11 @@ static void WriteChart(ExportData& data) {
                    oldDesc.c_str(), newDesc.c_str());
     } else if (chart->difficulty != DIFF_EDIT) {
         data.diffs.push_back(sd);
+    }
+
+    // Warn for split tempo data loss.
+    if (!data.ssc && chart->tempo && data.sim->tempo != chart->tempo) {
+        GiveSM5DataLossWarning(data);
     }
 
     // Write the output chart data.
