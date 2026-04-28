@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <Simfile/Simfile.h>
 #include <Simfile/Segments.h>
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -89,7 +90,7 @@ struct Editor {
     virtual int getBackgroundStyle() const = 0;
 
     /// Returns the tags export mode set in the editor settings.
-    virtual int getDefaultSaveFormat() const = 0;
+    virtual std::vector<SimFormat> getDefaultSaveFormats() const = 0;
 };
 
 extern Editor* gEditor;

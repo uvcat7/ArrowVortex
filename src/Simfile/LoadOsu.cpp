@@ -120,10 +120,11 @@ static bool IsProp(const std::string& prop, const char* name) {
 }
 
 static std::string PropVal(const std::string& prop) {
-    auto it = prop.cbegin();
-    while (*it != ':') ++it;
-    while (*it == ':' || *it == ' ') ++it;
-    return std::string(it, prop.end());
+    auto it = std::find(prop.cbegin(), prop.cend(), ':');
+    if (it == prop.cend()) return "";
+    ++it;
+    while (it != prop.cend() && *it == ' ') ++it;
+    return std::string(it, prop.cend());
 }
 
 static int NoteVal(const char*& p) {
@@ -599,7 +600,7 @@ bool LoadOsu(fs::path path, Simfile* sim) {
         }
     }
 
-    sim->format = isZip ? SIM_OSZ : SIM_OSU;
+    sim->format = SIM_OSU;
 
     DestroyFiles(files);
     return result;

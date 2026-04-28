@@ -118,15 +118,17 @@ static BackgroundStyle ToBackgroundStyle(const std::string& str) {
 }
 
 static const char* ToString(SimFormat format) {
+    if (format == SIM_SM) return "sm";
     if (format == SIM_SSC) return "ssc";
     if (format == SIM_OSU) return "osu";
-    return "sm";
+    return "none";
 }
 
 static SimFormat ToSimFormat(const std::string& str) {
+    if (str == "sm") return SIM_SM;
     if (str == "ssc") return SIM_SSC;
     if (str == "osu") return SIM_OSU;
-    return SIM_SM;
+    return SIM_NONE;
 }
 
 // ================================================================================================
@@ -148,7 +150,7 @@ struct EditorImpl : public Editor, public InputHandler {
     bool myUseVerticalSync;
 
     BackgroundStyle myBackgroundStyle;
-    SimFormat myDefaultSaveFormat;
+    std::vector<SimFormat> myDefaultSaveFormat;
 
     // ================================================================================================
     // EditorImpl :: constructor and destructor.
@@ -172,7 +174,7 @@ struct EditorImpl : public Editor, public InputHandler {
         myUseVerticalSync = true;
 
         myBackgroundStyle = BG_STYLE_STRETCH;
-        myDefaultSaveFormat = SIM_SM;
+        myDefaultSaveFormat = {SIM_SM};
 
         myFontPath = "assets/NotoSansJP-Medium.ttf";
         myFontSize = 13;
@@ -317,8 +319,18 @@ struct EditorImpl : public Editor, public InputHandler {
             general->get("useMultithreading", &myUseMultithreading);
             general->get("useVerticalSync", &myUseVerticalSync);
 
-            const char* saveFormat = general->get("defaultSaveFormat");
-            if (saveFormat) myDefaultSaveFormat = ToSimFormat(saveFormat);
+            std::vector<SimFormat> saveFormats;
+            auto saveFormat = general->attrib("defaultSaveFormat");
+            if (saveFormat) {
+                for (int i = 0; i < saveFormat->numValues; ++i) {
+                    auto toFormat = ToSimFormat(saveFormat->values[i]);
+                    if (toFormat != SIM_NONE) {
+                        saveFormats.push_back(toFormat);
+                    }
+                }
+            }
+            if (saveFormats.empty()) saveFormats.push_back(SIM_SM);
+            myDefaultSaveFormat = saveFormats;
         }
 
         XmrNode* view = settings.child("view");
@@ -355,7 +367,10 @@ struct EditorImpl : public Editor, public InputHandler {
 
         general->addAttrib("useMultithreading", myUseMultithreading);
         general->addAttrib("useVerticalSync", myUseVerticalSync);
-        general->addAttrib("defaultSaveFormat", ToString(myDefaultSaveFormat));
+
+        std::vector<const char*> formats;
+        for (SimFormat f : myDefaultSaveFormat) formats.push_back(ToString(f));
+        general->addAttrib("defaultSaveFormat", formats.data(), formats.size());
 
         XmrNode* view = settings.addChild("view");
 
@@ -557,21 +572,11 @@ struct EditorImpl : public Editor, public InputHandler {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return true;
 
-        SimFormat saveFmt = myDefaultSaveFormat;
-
         std::string dir = gSimfile->getDir();
         std::string file = gSimfile->getFile();
 
-        // Give priority to the load format.
-        SimFormat fmt = gSimfile->get()->format;
-        if (fmt == SIM_SM || fmt == SIM_DWI) {
-            saveFmt = (myDefaultSaveFormat == SIM_SSC) ? SIM_SSC : SIM_SM;
-        } else if (fmt == SIM_SSC) {
-            saveFmt = SIM_SSC;
-        } else if (fmt == SIM_OSU || fmt == SIM_OSZ) {
-            saveFmt = SIM_OSU;
-        }
-
+        // Save As is single file.
+        SimFormat saveFmt = myDefaultSaveFormat[0];
         fs::path save_path = utf8ToPath(dir);
         save_path.append(stringToUtf8(file));
 
@@ -622,11 +627,28 @@ struct EditorImpl : public Editor, public InputHandler {
                     }
                     break;
             };
+
+            // Save the simfile.
+            if (!gSimfile->save(dir, file, saveFmt)) {
+                HudError("Could not save %s", file.c_str());
+            }
+
+            return true;
         }
 
-        // Save the simfile.
-        if (!gSimfile->save(dir, file, saveFmt)) {
-            HudError("Could not save %s", file.c_str());
+        // Saving multiple formats.
+        std::vector<SimFormat> save = myDefaultSaveFormat;
+        SimFormat fmt = gSimfile->get()->format;
+        if (fmt == SIM_NONE || fmt == SIM_DWI) {
+            fmt = save[0];
+        }
+        save.erase(std::remove(save.begin(), save.end(), fmt), save.end());
+        save.insert(save.begin(), fmt);  // Give priority to the load format.
+
+        for (auto saveFmt : save) {
+            if (!gSimfile->save(dir, file, saveFmt)) {
+                HudError("Could not save %s", file.c_str());
+            }
         }
 
         // Signal to the edit history that the current state is the saved state.
@@ -1003,7 +1025,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
     int getBackgroundStyle() const override { return myBackgroundStyle; }
 
-    int getDefaultSaveFormat() const override { return myDefaultSaveFormat; }
+    std::vector<SimFormat> getDefaultSaveFormats() const override {
+        return myDefaultSaveFormat;
+    }
 
     GuiContext* getGui() const override { return gui_; }
 

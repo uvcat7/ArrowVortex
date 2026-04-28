@@ -58,6 +58,17 @@ class SegmentGroup {
         return myLists[T::TYPE];
     }
 
+    // Returns the total number of segments supported by the given format.
+    int count(SimFormat format) const {
+        int total = 0;
+        for (int i = 0; i < Segment::NUM_TYPES; ++i) {
+            if (Segment::meta[i]->supports(format)) {
+                total += myLists[i].size();
+            }
+        }
+        return total;
+    }
+
     // Removes all segments.
     void clear();
 
