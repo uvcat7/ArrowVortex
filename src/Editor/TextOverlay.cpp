@@ -103,7 +103,10 @@ struct TextOverlayImpl : public TextOverlay {
 
     void addShortcut(Action::Type action, const char* name) {
         std::string notation = gShortcuts->getNotation(action, true);
-        if (notation.length()) addShortcut(name, notation.c_str());
+        if (!notation.length())
+            addShortcut(name, "{tc:666}-- unassigned --");
+        else
+            addShortcut(name, notation.c_str());
     }
 
     void LoadShortcuts() {
@@ -179,6 +182,19 @@ struct TextOverlayImpl : public TextOverlay {
         addShortcut(Action::CURSOR_SELECTION_END, "End of selection");
         addShortcut(Action::CURSOR_CHART_START, "Start of chart");
         addShortcut(Action::CURSOR_CHART_END, "End of chart");
+
+        addShortcutHeader("Quick Editing");
+        addShortcut(Action::EDIT_TEMPO_BPM, "Edit BPM");
+        addShortcut(Action::EDIT_TEMPO_STOP, "Edit Stop");
+        addShortcut(Action::EDIT_TEMPO_DELAY, "Edit Delay");
+        addShortcut(Action::EDIT_TEMPO_WARP, "Edit Warp");
+        addShortcut(Action::EDIT_TEMPO_TIME_SIG, "Edit Time Signature");
+        addShortcut(Action::EDIT_TEMPO_TICK_COUNT, "Edit Tick Count");
+        addShortcut(Action::EDIT_TEMPO_COMBO, "Edit Combo");
+        addShortcut(Action::EDIT_TEMPO_SPEED, "Edit Speed");
+        addShortcut(Action::EDIT_TEMPO_SCROLL, "Edit Scroll");
+        addShortcut(Action::EDIT_TEMPO_FAKE, "Edit Fake");
+        addShortcut(Action::EDIT_TEMPO_LABEL, "Edit Label");
     }
 
     // ================================================================================================
@@ -193,7 +209,7 @@ struct TextOverlayImpl : public TextOverlay {
                 max(0, logEntries_.size() - textOverlayPageSize_);
         } else if (textOverlayMode_ == SHORTCUTS) {
             textOverlayPageSize_ = size.y;
-            textOverlayScrollEnd_ = 32;
+            textOverlayScrollEnd_ = 64;
             for (const Shortcut& e : displayShortcuts_) {
                 textOverlayScrollEnd_ += e.isHeader ? 24 : 18;
             }
@@ -466,6 +482,8 @@ struct TextOverlayImpl : public TextOverlay {
     void drawShortcuts() {
         int x = gSystem->getWindowSize().x / 2 - 325, w = 650;
         int y = 32 - textOverlayScrollPos_;
+        TextStyle textStyle;
+        textStyle.textFlags = Text::MARKUP;
         for (const Shortcut& e : displayShortcuts_) {
             if (e.isHeader) {
                 Text::arrange(Text::TL, e.a.c_str());
@@ -473,9 +491,9 @@ struct TextOverlayImpl : public TextOverlay {
                 Draw::fill({x, y + 18, w, 1}, Colors::white);
                 y += 24;
             } else {
-                Text::arrange(Text::TR, e.a.c_str());
+                Text::arrange(Text::TR, textStyle, e.a.c_str());
                 Text::draw(vec2i{x + w / 2 - 10, y});
-                Text::arrange(Text::TL, e.b.c_str());
+                Text::arrange(Text::TL, textStyle, e.b.c_str());
                 Text::draw(vec2i{x + w / 2 + 10, y});
 
                 y += 18;

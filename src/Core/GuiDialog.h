@@ -46,9 +46,10 @@ class DialogData : public GuiWidget {
     GuiDialog* dialog_ptr_;
     GuiContext* gui_;
 
-    bool is_pinnable_ : 1;
     bool is_closeable_ : 1;
     bool is_minimizable_ : 1;
+    bool is_pinnable_ : 1;
+    bool is_draggable_ : 1;
     bool is_horizontally_resizable_ : 1;
     bool is_vertically_resizable_ : 1;
 

@@ -1,6 +1,6 @@
-Texture-notes     = "tex solo notes.png"
-Texture-receptors = "tex solo receptors.png"
-Texture-glow      = "tex solo glow.png"
+Texture-notes     = "tex notes.png"
+Texture-receptors = "tex receptors.png"
+Texture-glow      = "tex glow.png"
 
 Receptor { col=0; x=-170 }
 Receptor { col=1; x=-102 }
@@ -65,14 +65,14 @@ Note { col=1,4; row=48;  src=384,64 }
 Note { col=1,4; row=64;  src=448,64 }
 Note { col=1,4; row=192; src=256,128 }
 
-Mine { size=64,64; src=64,128 }
+Mine { size=64,64; src=320,128 }
 
 Hold-body { size=64,0;  src=128,160 }
-Hold-body { col=1,4; y=-8; src=320,160 }
+Hold-body { col=1,4; y=-8; src=384,160 }
 Hold-tail { size=64,64; src=128,192 }
-Hold-tail { col=1,4; src=320,192 }
+Hold-tail { col=1,4; src=384,192 }
 
 Roll-body { size=64,0;  src=192,160 }
-Roll-body { col=1,4; y=-8; src=384,160 }
+Roll-body { col=1,4; y=-8; src=448,160 }
 Roll-tail { size=64,64; src=192,192 }
-Roll-tail { col=1,4; src=384,192 }
+Roll-tail { col=1,4; src=448,192 }

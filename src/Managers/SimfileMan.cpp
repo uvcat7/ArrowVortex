@@ -171,11 +171,17 @@ struct SimfileManImpl : public SimfileMan {
             }
             sortCharts();
             myBackupOnSave = true;
-        } else  // If not, assume it's an audio file.
-        {
+        }
+        // Check if we are loading an audio file.
+        else if (ext == ".ogg" || ext == ".mp3" || ext == ".wav") {
             mySimfile->music = filename;
             mySimfile->tempo->segments->append(BpmChange(0, SIM_DEFAULT_BPM));
             loadedFromAudio = true;
+        }
+        // Unknown file format.
+        else {
+            close();
+            return false;
         }
 
         // Select the last non-edit chart.

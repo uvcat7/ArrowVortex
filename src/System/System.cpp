@@ -353,16 +353,7 @@ struct SystemImpl : public System {
         Debug::logBlankLine();
 
         // Make sure the window is centered on the desktop.
-        mySize = {1200, 900};
-        RECT wr;
-        wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
-        wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
-        wr.right = wr.left + max(mySize.x, 0);
-        wr.bottom = wr.top + max(mySize.y, 0);
-        AdjustWindowRectEx(&wr, myStyle, FALSE, myExStyle);
-        int flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
-        SetWindowPos(myHWND, nullptr, wr.left, wr.top, wr.right - wr.left,
-                     wr.bottom - wr.top, flags);
+        setWindowSize({1200, 900});
 
         // Show the window.
         ShowWindow(myHWND, SW_SHOW);
@@ -977,6 +968,8 @@ struct SystemImpl : public System {
 
     vec2i getMousePos() const override { return myMousePos; }
 
+    const std::string& getWindowTitle() const override { return myTitle; }
+
     void setWindowTitle(const std::string& text) override {
         if (!(myTitle == text)) {
             SetWindowTextW(myHWND, Widen(text).c_str());
@@ -986,7 +979,34 @@ struct SystemImpl : public System {
 
     vec2i getWindowSize() const override { return mySize; }
 
-    const std::string& getWindowTitle() const override { return myTitle; }
+    void setWindowSize(vec2i size) override {
+        mySize = {std::clamp(size.x, 100, 32768),
+                  std::clamp(size.y, 100, 32768)};
+        RECT wr;
+        wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
+        wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
+        wr.right = wr.left + max(mySize.x, 0);
+        wr.bottom = wr.top + max(mySize.y, 0);
+        AdjustWindowRectEx(&wr, myStyle, FALSE, myExStyle);
+        int flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
+        SetWindowPos(myHWND, nullptr, wr.left, wr.top, wr.right - wr.left,
+                     wr.bottom - wr.top, flags);
+    }
+
+    bool getWindowState() const override {
+        WINDOWPLACEMENT placement = {};
+        placement.length = sizeof(WINDOWPLACEMENT);
+        if (GetWindowPlacement(myHWND, &placement)) {
+            return placement.showCmd == SW_MAXIMIZE ||
+                   (placement.showCmd == SW_SHOWMINIMIZED &&
+                    placement.flags & WPF_RESTORETOMAXIMIZED);
+        }
+        return false;
+    }
+
+    void setWindowState(bool isMaximized) const override {
+        ShowWindow(myHWND, isMaximized ? SW_MAXIMIZE : SW_NORMAL);
+    }
 
     InputEvents& getEvents() override { return myEvents; }
 
