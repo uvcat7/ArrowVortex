@@ -781,7 +781,7 @@ struct SystemImpl : public System {
                         std::wstring wstr(pathLen, 0);
                         DragQueryFileW(reinterpret_cast<HDROP>(wp), i,
                                        wstr.data(), pathLen + 1);
-                        files[i] = Narrow(wstr);
+                        files[i] = pathToUtf8(fs::path(wstr));
                     }
 
                     DragFinish(reinterpret_cast<HDROP>(wp));

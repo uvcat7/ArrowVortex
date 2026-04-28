@@ -24,7 +24,6 @@ void DialogCustomSnap::myCreateWidgets() {
     scol->onChange.bind(this, &DialogCustomSnap::onChange);
     scol->setRange(4.0, 192.0);
     scol->setPrecision(0, 0);
-    scol->startCapturingText();
 }
 
 void DialogCustomSnap::onChange() {

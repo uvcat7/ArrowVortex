@@ -422,8 +422,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Make a list of loadable extensions, from high priority to low
         // priority.
-        static const char* extList[] = {"ssc", "sm",  "dwi", "osu",
-                                        "ogg", "mp3", "wav"};
+        static const char* extList[] = {".ssc", ".sm",  ".dwi", ".osu",
+                                        ".ogg", ".mp3", ".wav"};
         const char** extEnd = extList + (ignoreAudio ? 4 : 7);
 
         // Check if the path is a directory.
@@ -431,8 +431,7 @@ struct EditorImpl : public Editor, public InputHandler {
             // If so, look for loadable files in the given directory.
             auto curPriority = extEnd;
             for (auto& file : File::findFiles(path, false)) {
-                std::string ext(reinterpret_cast<const char*>(
-                    file.extension().u8string().c_str()));
+                std::string ext(pathToUtf8(file.extension()));
                 Str::toLower(ext);
                 auto priority = std::find(extList, extEnd, ext);
                 if (priority != extEnd && priority < curPriority) {
@@ -738,7 +737,10 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void handleDialogOpening(DialogId id, recti rect) {
         auto& entry = myDialogs[id];
-        if (entry.ptr) return;
+        if (entry.ptr) {
+            entry.requestOpen = false;
+            return;
+        }
 
         EditorDialog* dlg = nullptr;
         switch (id) {
@@ -792,6 +794,8 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
         };
 
+        if (!dlg) return;
+
         dlg->setId(id);
 
         if (rect.w > 0 && rect.h > 0) {
@@ -827,7 +831,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void onFileDrop(FileDrop& evt) override {
         if (evt.count >= 1) {
-            fs::path path(evt.files[0]);
+            fs::path path = utf8ToPath(evt.files[0]);
             if (!openSimfile(findSimfile(path, false))) {
                 if (canConvertAudio(pathToUtf8(path).c_str())) {
                     gMusic->startAudioConversion(path, true);
