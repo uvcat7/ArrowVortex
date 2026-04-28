@@ -11,9 +11,9 @@
 namespace Vortex {
 namespace {
 
-static Vector<vec2i> ReadColumnPairs(const XmrNode* node, const char* attrib,
-                                     int numCols) {
-    Vector<vec2i> out;
+static std::vector<vec2i> ReadColumnPairs(const XmrNode* node,
+                                          const char* attrib, int numCols) {
+    std::vector<vec2i> out;
     XmrAttrib* pairs = node->attrib(attrib);
     if (pairs) {
         for (int i = 0; i < pairs->numValues; ++i) {
@@ -30,7 +30,8 @@ static Vector<vec2i> ReadColumnPairs(const XmrNode* node, const char* attrib,
     return out;
 }
 
-static void ApplyMirror(Vector<int>& cols, const Vector<vec2i>& mirrors) {
+static void ApplyMirror(std::vector<int>& cols,
+                        const std::vector<vec2i>& mirrors) {
     for (auto& mirror : mirrors) {
         for (auto& col : cols) {
             if (col == mirror.x) {
@@ -42,12 +43,12 @@ static void ApplyMirror(Vector<int>& cols, const Vector<vec2i>& mirrors) {
     }
 }
 
-static int* CreateMirrorTable(const XmrNode* node, const char* attrib,
-                              int numCols) {
-    int* out = nullptr;
-    Vector<vec2i> pairs = ReadColumnPairs(node, attrib, numCols);
-    if (pairs.size()) {
-        out = new int[numCols];
+static std::vector<int> CreateMirrorTable(const XmrNode* node,
+                                          const char* attrib, int numCols) {
+    std::vector<int> out;
+    std::vector<vec2i> pairs = ReadColumnPairs(node, attrib, numCols);
+    if (!pairs.empty()) {
+        out.resize(numCols);
         for (int col = 0; col < numCols; ++col) {
             out[col] = col;
         }
@@ -80,13 +81,6 @@ static std::string IdToName(const std::string& id) {
 
 void DeleteStyle(Style* style) {
     if (!style) return;
-
-    delete[] style->mirrorTableH;
-    delete[] style->mirrorTableV;
-
-    delete[] style->padColPositions;
-    delete[] style->padInitialFeetCols;
-
     delete style;
 }
 
@@ -94,17 +88,11 @@ Style* NewStyle() {
     Style* out = new Style;
 
     out->index = 0;
+    out->alias = "";
     out->numCols = 0;
     out->numPlayers = 0;
-
-    out->mirrorTableH = nullptr;
-    out->mirrorTableV = nullptr;
-
     out->padWidth = 0;
     out->padHeight = 0;
-
-    out->padColPositions = nullptr;
-    out->padInitialFeetCols = nullptr;
 
     return out;
 }
@@ -181,7 +169,7 @@ Style* CreateStyle(const XmrNode* node) {
     if (padNode) {
         int width = 0;
         int height = 0;
-        Vector<vec2i> pos(numCols, {0, 0});
+        std::vector<vec2i> pos(numCols, {0, 0});
         ForXmrAttribsNamed(row, padNode, "row") {
             const char* buttons = row->values[0];
             for (int x = 0; buttons[x]; ++x) {
@@ -196,8 +184,7 @@ Style* CreateStyle(const XmrNode* node) {
         if (width > 0 && height > 0) {
             out->padWidth = width;
             out->padHeight = height;
-            out->padColPositions = new vec2i[numCols];
-            memcpy(out->padColPositions, pos.data(), sizeof(vec2i) * numCols);
+            out->padColPositions = pos;
         }
     }
 
@@ -205,14 +192,33 @@ Style* CreateStyle(const XmrNode* node) {
     if (out->padWidth > 0) {
         auto cols = ReadColumnPairs(node, "feetPos", numCols);
         cols.resize(numPlayers, {0, 0});
-        out->padInitialFeetCols = new vec2i[numPlayers];
-        memcpy(out->padInitialFeetCols, cols.data(),
-               sizeof(vec2i) * numPlayers);
+        out->padInitialFeetCols = cols;
     }
 
     // Read column/row pairs for mirror operations.
     out->mirrorTableH = CreateMirrorTable(node, "mirrorH", numCols);
     out->mirrorTableV = CreateMirrorTable(node, "mirrorV", numCols);
+
+    return out;
+}
+
+Style* CloneStyle(const Style* base, const XmrNode* node) {
+    std::string id = node->get("id", "");
+
+    if (id.empty()) {
+        HudError("One of the styles is missing an id field, ignoring style.");
+        return nullptr;
+    } else if (!base) {
+        HudError("Style %s has an invalid source style.", id.c_str());
+        return nullptr;
+    }
+
+    // At this point returning a style is guaranteed.
+    Style* out = new Style(*base);
+    out->id = id;
+    out->alias = base->id;
+    out->name = node->get("name", "");
+    if (out->name.empty()) out->name = IdToName(id);
 
     return out;
 }
@@ -223,7 +229,7 @@ Style* CreateStyle(const XmrNode* node) {
 #define STYLE_MAN ((StyleManImpl*)gStyle)
 
 struct StyleManImpl : public StyleMan {
-    Vector<Style*> myStyles;
+    std::vector<Style*> myStyles;
     int myNumDefaultStyles;
     Style* myActiveStyle;
 
@@ -236,6 +242,15 @@ struct StyleManImpl : public StyleMan {
             HudError("Could not load styles file.");
         }
         ForXmrNodesNamed(node, &doc, "style") {
+            const std::string sourceId = node->get("source", "");
+            if (!sourceId.empty()) {
+                Style* proxy = CloneStyle(findStyle(sourceId), node);
+                if (proxy) {
+                    proxy->index = myStyles.size();
+                    myStyles.push_back(proxy);
+                }
+                continue;
+            }
             Style* style = CreateStyle(node);
             if (style) {
                 style->index = myStyles.size();
@@ -339,6 +354,16 @@ struct StyleManImpl : public StyleMan {
         HudWarning("%s has an unknown style %s, %s.", chartName.c_str(),
                    id.c_str(), text.c_str());
         return createFallbackStyle(id, numCols, numPlayers);
+    }
+
+    std::vector<const Style*> getAliases(const std::string& id) const override {
+        std::vector<const Style*> out;
+        for (auto style : myStyles) {
+            if (style->alias == id) {
+                out.push_back(style);
+            }
+        }
+        return out;
     }
 
     void update(Chart* chart) override {

@@ -513,8 +513,7 @@ static bool ParseDir(Vector<OsuFile*>& out, fs::path dir, std::string& err) {
 
         out.push_back(new OsuFile);
         ParseFile(*out.back(), str);
-        out.back()->filename = std::string(
-            reinterpret_cast<const char*>(file.filename().u8string().c_str()));
+        out.back()->filename = pathToUtf8(file.filename());
     }
     return true;
 }

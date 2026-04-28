@@ -80,6 +80,16 @@ void GuiContextImpl::draw() {
     }
 }
 
+void GuiContextImpl::closeDialogs() {
+    FOR_VECTOR_REVERSE(dialogs_, i) {
+        auto dialog = dialogs_[i];
+        if (dialog->request_close_) {
+            dialogs_.erase_values(dialog);
+            delete dialog;
+        }
+    }
+}
+
 void GuiContextImpl::removeWidget(GuiWidget* w) {
     focus_widgets_.erase_values(w);
 }

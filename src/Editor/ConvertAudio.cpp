@@ -20,7 +20,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-#include <Editor/ConvertToOgg.h>
+#include <Editor/ConvertAudio.h>
 #include <Editor/Music.h>
 
 #include <Core/Utils.h>
@@ -38,6 +38,55 @@ namespace Vortex {
 /* The number of output channels */
 #define OUTPUT_CHANNELS 2
 
+bool canConvertAudio(const char *filename) {
+    AVFormatContext *fmt_ctx = nullptr;
+
+    if (avformat_open_input(&fmt_ctx, filename, nullptr, nullptr) < 0)
+        return false;
+
+    if (avformat_find_stream_info(fmt_ctx, nullptr) < 0) {
+        avformat_close_input(&fmt_ctx);
+        return false;
+    }
+
+    for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
+        if (fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO &&
+            avcodec_find_decoder(fmt_ctx->streams[i]->codecpar->codec_id)) {
+            avformat_close_input(&fmt_ctx);
+            return true;
+        }
+    }
+
+    avformat_close_input(&fmt_ctx);
+    return false;
+}
+
+/**
+ * Default params for each supported audio format.
+ */
+static void format_codec_info(AudioFormat format, AVCodecID *codec_id,
+                              int *default_frame_size,
+                              AVSampleFormat *default_fmt) {
+    switch (format) {
+        case AudioFormat::MP3:
+            *codec_id = AV_CODEC_ID_MP3;
+            *default_frame_size = 1152;
+            *default_fmt = AV_SAMPLE_FMT_S16P;
+            break;
+        case AudioFormat::WAV:
+            *codec_id = AV_CODEC_ID_PCM_S16LE;
+            *default_frame_size = 4096;
+            *default_fmt = AV_SAMPLE_FMT_S16;
+            break;
+        case AudioFormat::OGG:
+        default:
+            *codec_id = AV_CODEC_ID_VORBIS;
+            *default_frame_size = 1024;
+            *default_fmt = AV_SAMPLE_FMT_FLTP;
+            break;
+    }
+}
+
 /**
  * Open an input file and the required decoder.
  * @param      filename             File to be opened
@@ -47,10 +96,11 @@ namespace Vortex {
  */
 static int open_input_file(const char *filename,
                            AVFormatContext **input_format_context,
-                           AVCodecContext **input_codec_context, int *samples) {
-    AVCodecContext *avctx;
-    const AVCodec *input_codec;
-    const AVStream *stream;
+                           AVCodecContext **input_codec_context, int *samples,
+                           int *audio_stream_index) {
+    AVCodecContext *avctx = nullptr;
+    const AVCodec *input_codec = nullptr;
+    const AVStream *stream = nullptr;
     int error;
     char errbuf[AV_ERROR_MAX_STRING_SIZE];
 
@@ -74,19 +124,21 @@ static int open_input_file(const char *filename,
         return error;
     }
 
-    /* Make sure that there is only one stream in the input file. */
-    if ((*input_format_context)->nb_streams != 1) {
-        fprintf(stderr, "Expected one audio input stream, but found %d\n",
-                (*input_format_context)->nb_streams);
-        avformat_close_input(input_format_context);
-        return AVERROR_EXIT;
+    /* Find valid audio stream. */
+    for (unsigned int i = 0; i < (*input_format_context)->nb_streams; i++) {
+        AVStream *s = (*input_format_context)->streams[i];
+        if (s->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            input_codec = avcodec_find_decoder(s->codecpar->codec_id);
+            if (input_codec) {
+                *audio_stream_index = static_cast<int>(i);
+                stream = s;
+                break;
+            }
+        }
     }
 
-    stream = (*input_format_context)->streams[0];
-
-    /* Find a decoder for the audio stream. */
-    if (!(input_codec = avcodec_find_decoder(stream->codecpar->codec_id))) {
-        fprintf(stderr, "Could not find input codec\n");
+    if (*audio_stream_index < 0) {
+        fprintf(stderr, "Could not find a decodable audio stream\n");
         avformat_close_input(input_format_context);
         return AVERROR_EXIT;
     }
@@ -123,9 +175,13 @@ static int open_input_file(const char *filename,
     *input_codec_context = avctx;
 
     /* Calculate the samples for the progress bar later. */
-    *samples = stream->duration * avctx->sample_rate * stream->time_base.num /
-               stream->time_base.den;
-
+    if (stream->duration != AV_NOPTS_VALUE) {
+        *samples = stream->duration * avctx->sample_rate *
+                   stream->time_base.num / stream->time_base.den;
+    } else if ((*input_format_context)->duration != AV_NOPTS_VALUE) {
+        *samples = (*input_format_context)->duration * avctx->sample_rate /
+                   AV_TIME_BASE;
+    }
     return 0;
 }
 
@@ -142,13 +198,19 @@ static int open_input_file(const char *filename,
 static int open_output_file(const char *filename,
                             AVCodecContext *input_codec_context,
                             AVFormatContext **output_format_context,
-                            AVCodecContext **output_codec_context) {
+                            AVCodecContext **output_codec_context,
+                            AudioFormat format) {
     AVCodecContext *avctx = nullptr;
     AVIOContext *output_io_context = nullptr;
     AVStream *stream = nullptr;
     const AVCodec *output_codec = nullptr;
     int error;
     char errbuf[AV_ERROR_MAX_STRING_SIZE];
+
+    AVCodecID codec_id;
+    int default_frame_size;
+    AVSampleFormat default_fmt;
+    format_codec_info(format, &codec_id, &default_frame_size, &default_fmt);
 
     /* Open the output file to write to it. */
     if ((error = avio_open(&output_io_context, filename, AVIO_FLAG_WRITE)) <
@@ -182,8 +244,8 @@ static int open_output_file(const char *filename,
     }
 
     /* Find the encoder to be used by its name. */
-    if (!(output_codec = avcodec_find_encoder(AV_CODEC_ID_VORBIS))) {
-        fprintf(stderr, "Could not find a Vorbis encoder.\n");
+    if (!(output_codec = avcodec_find_encoder(codec_id))) {
+        fprintf(stderr, "Could not find a valid encoder.\n");
         goto cleanup;
     }
 
@@ -206,8 +268,13 @@ static int open_output_file(const char *filename,
      */
     av_channel_layout_default(&avctx->ch_layout, OUTPUT_CHANNELS);
     avctx->sample_rate = input_codec_context->sample_rate;
-    avctx->sample_fmt = output_codec->sample_fmts[0];
     avctx->bit_rate = OUTPUT_BIT_RATE;
+
+    if (!output_codec->sample_fmts ||
+        output_codec->sample_fmts[0] == AV_SAMPLE_FMT_NONE)
+        avctx->sample_fmt = default_fmt;
+    else
+        avctx->sample_fmt = output_codec->sample_fmts[0];
 
     /* Set the sample rate for the container. */
     stream->time_base.den = input_codec_context->sample_rate;
@@ -224,6 +291,8 @@ static int open_output_file(const char *filename,
         fprintf(stderr, "Could not open output codec (error '%s')\n", errbuf);
         goto cleanup;
     }
+
+    if (avctx->frame_size == 0) avctx->frame_size = default_frame_size;
 
     error = avcodec_parameters_from_context(stream->codecpar, avctx);
     if (error < 0) {
@@ -364,7 +433,8 @@ static int write_output_file_header(AVFormatContext *output_format_context) {
 static int decode_audio_frame(AVFrame *frame,
                               AVFormatContext *input_format_context,
                               AVCodecContext *input_codec_context,
-                              int *data_present, int *finished) {
+                              int audio_stream_index, int *data_present,
+                              int *finished) {
     /* Packet used for temporary storage. */
     AVPacket *input_packet;
     int error;
@@ -385,6 +455,11 @@ static int decode_audio_frame(AVFrame *frame,
             fprintf(stderr, "Could not read frame (error '%s')\n", errbuf);
             goto cleanup;
         }
+    }
+    /* Packet doesn't belong to desired audio stream. */
+    else if (input_packet->stream_index != audio_stream_index) {
+        av_packet_unref(input_packet);
+        goto cleanup;
     }
 
     /* Send the audio frame stored in the temporary packet to the decoder.
@@ -535,12 +610,10 @@ static int add_samples_to_fifo(AVAudioFifo *fifo,
  *                                  again.
  * @return Error code (0 if successful)
  */
-static int read_decode_convert_and_store(AVAudioFifo *fifo,
-                                         AVFormatContext *input_format_context,
-                                         AVCodecContext *input_codec_context,
-                                         AVCodecContext *output_codec_context,
-                                         SwrContext *resampler_context,
-                                         int *finished) {
+static int read_decode_convert_and_store(
+    AVAudioFifo *fifo, AVFormatContext *input_format_context,
+    AVCodecContext *input_codec_context, AVCodecContext *output_codec_context,
+    SwrContext *resampler_context, int audio_stream_index, int *finished) {
     /* Temporary storage of the input samples of the frame read from the file.
      */
     AVFrame *input_frame = nullptr;
@@ -553,7 +626,8 @@ static int read_decode_convert_and_store(AVAudioFifo *fifo,
     if (init_input_frame(&input_frame)) goto cleanup;
     /* Decode one frame worth of audio samples. */
     if (decode_audio_frame(input_frame, input_format_context,
-                           input_codec_context, &data_present, finished))
+                           input_codec_context, audio_stream_index,
+                           &data_present, finished))
         goto cleanup;
     /* If we are at the end of the file and there are no more samples
      * in the decoder which are delayed, we are actually finished.
@@ -810,10 +884,12 @@ void OggConversionThread::exec() {
     int samples = 0;
     int frames = 0;
     int i_frame = 0;
+    int audio_stream_index = -1;
+    pts = 0;
 
     /* Open the input file for reading. */
     if (open_input_file(inPath.c_str(), &input_format_context,
-                        &input_codec_context, &samples)) {
+                        &input_codec_context, &samples, &audio_stream_index)) {
         error = "Failed to open the input file.";
         cleanup(fifo, input_format_context, output_format_context,
                 input_codec_context, output_codec_context, resample_context);
@@ -821,7 +897,8 @@ void OggConversionThread::exec() {
     }
     /* Open the output file for writing. */
     if (open_output_file(outPath.c_str(), input_codec_context,
-                         &output_format_context, &output_codec_context)) {
+                         &output_format_context, &output_codec_context,
+                         format)) {
         error = "Failed to open the output file.";
         cleanup(fifo, input_format_context, output_format_context,
                 input_codec_context, output_codec_context, resample_context);
@@ -872,7 +949,8 @@ void OggConversionThread::exec() {
              * output sample format and put it into the FIFO buffer. */
             if (read_decode_convert_and_store(
                     fifo, input_format_context, input_codec_context,
-                    output_codec_context, resample_context, &finished)) {
+                    output_codec_context, resample_context, audio_stream_index,
+                    &finished)) {
                 error = "Failed to decode a frame into the FIFO buffer.";
                 cleanup(fifo, input_format_context, output_format_context,
                         input_codec_context, output_codec_context,

@@ -19,7 +19,7 @@
 
 #include <Simfile/TimingData.h>
 
-#include <Editor/ConvertToOgg.h>
+#include <Editor/ConvertAudio.h>
 #include <Editor/Editor.h>
 #include <Editor/Common.h>
 #include <Editor/TextOverlay.h>
@@ -46,6 +46,19 @@ enum LoadState {
     LOADING_DONE
 };
 
+static const char loadFilters[] =
+    "Audio (*.ogg, *.mp3, *.wav, *.wma, *.flac)\0"
+    "*.ogg;*.mp3;*.wav;*.wma;*.flac\0"
+    "Video (*.mp4, *.mkv, *.avi, *.mov, *.webm, *.flv)\0"
+    "*.mp4;*.mkv;*.avi;*.mov;*.webm\0"
+    "All Files (*.*)\0*.*\0";
+
+static const char saveFilters[] =
+    "Ogg Vorbis (*.ogg)\0*.ogg\0"
+    "MP3 Audio (*.mp3)\0*.mp3\0"
+    "Waveform (*.wav)\0*.wav\0"
+    "All Files (*.*)\0*.*\0";
+
 // ================================================================================================
 // MusicImpl :: member data.
 
@@ -66,7 +79,7 @@ struct MusicImpl : public Music, public MixSource {
 
     Vector<short> myMixBuffer;
 
-    OggConversionThread* myOggConversionThread;
+    OggConversionThread* myAudioConversionThread;
 
     // ================================================================================================
     // MusicImpl :: constructor and destructor.
@@ -91,7 +104,7 @@ struct MusicImpl : public Music, public MixSource {
         myBeatTick.enabled = false;
         myNoteTick.enabled = false;
 
-        myOggConversionThread = nullptr;
+        myAudioConversionThread = nullptr;
 
         bool success;
 
@@ -131,12 +144,13 @@ struct MusicImpl : public Music, public MixSource {
     // MusicImpl :: loading and unloading music.
 
     void unload() override {
-        terminateOggConversion();
+        terminateAudioConversion();
 
         myMixer->close();
 
         mySamples.clear();
         myTitle.clear();
+        myArtist.clear();
 
         myLoadState = LOADING_DONE;
     }
@@ -346,62 +360,155 @@ struct MusicImpl : public Music, public MixSource {
     // ================================================================================================
     // MusicImpl :: OggVorbis conversion.
 
-    void startOggConversion() override {
-        if (gSimfile->isClosed()) return;
+    void startAudioConversion() override {
+        if (myAudioConversionThread) {
+            HudNote("Conversion is currently in progress.");
+            return;
+        }
 
-        std::string dir = gSimfile->getDir();
-        std::string file = gSimfile->get()->music;
+        // Get source file.
+        std::string ldFilter(loadFilters, sizeof(loadFilters));
+        fs::path source =
+            gSystem->openFileDlg("Select Source File", {}, ldFilter);
+        if (source.empty()) {
+            HudError("No source file given.");
+            return;
+        }
+        auto src_ext = pathToUtf8(source.extension());
+        Str::toLower(src_ext);
 
-        fs::path path = utf8ToPath(dir);
-        path.append(stringToUtf8(file));
-        auto ext = pathToUtf8(path.extension());
+        startAudioConversion(source, false);
+    }
+
+    void startAudioConversion(fs::path source, bool isSimfile) override {
+        if (myAudioConversionThread) {
+            HudNote("Conversion is currently in progress.");
+            return;
+        }
+
+        // Get Output File
+        int filterIndex = 0;
+        fs::path initial_path = fs::path(source);
+        initial_path.replace_extension();
+        std::string svFilters(saveFilters, sizeof(saveFilters));
+        fs::path output =
+            gSystem->saveFileDlg("Save converted audio as...", initial_path,
+                                 svFilters, &filterIndex);
+        if (output.empty()) {
+            HudError("No output file given.");
+            return;
+        }
+
+        auto ext = pathToUtf8(output.extension());
         Str::toLower(ext);
 
-        if (ext == ".ogg") {
-            HudNote("Music is already in Ogg Vorbis format.");
+        // Figure out save format.
+        AudioFormat fmt = (ext == ".wav")   ? AudioFormat::WAV
+                          : (ext == ".mp3") ? AudioFormat::MP3
+                                            : AudioFormat::OGG;
+
+        if (filterIndex == 2)
+            fmt = AudioFormat::MP3;
+        else if (filterIndex == 3)
+            fmt = AudioFormat::WAV;
+
+        startAudioConversion(fmt, source, output, isSimfile);
+    }
+
+    void startAudioConversion(AudioFormat fmt) override {
+        if (gSimfile->isClosed()) {
+            return;
         } else if (!mySamples.isCompleted()) {
             HudNote("Wait for the music to finish loading.");
         } else if (mySamples.getNumFrames() == 0) {
-            HudNote("There is no music loaded.");
-        } else if (myOggConversionThread) {
+            HudError("There is no music loaded.");
+        } else if (myAudioConversionThread) {
             HudNote("Conversion is currently in progress.");
         } else {
-            myOggConversionThread = new OggConversionThread;
-            myOggConversionThread->inPath = pathToUtf8(path);
-            fs::path ogg_path = fs::path(path);
-            ogg_path.replace_extension(".ogg");
-            myOggConversionThread->outPath = pathToUtf8(ogg_path);
+            std::string dir = gSimfile->getDir();
+            std::string file = gSimfile->get()->music;
 
-            if (gEditor->hasMultithreading()) {
-                auto box = myInfoBox.create();
-                box->left = "Converting music to Ogg Vorbis...";
-                myOggConversionThread->start();
-            } else {
-                myOggConversionThread->exec();
-                finishOggConversion();
-            }
+            fs::path source = utf8ToPath(dir);
+            source.append(stringToUtf8(file));
+
+            startAudioConversion(fmt, source, source, true);
         }
     }
 
-    void terminateOggConversion() {
-        if (myOggConversionThread) {
-            myOggConversionThread->terminate();
-            delete myOggConversionThread;
-            myOggConversionThread = nullptr;
+    void startAudioConversion(AudioFormat fmt, fs::path source, fs::path output,
+                              bool isSimfile) override {
+        // Get final file extension and encoder name.
+        std::string out_ext = ".ogg";
+        std::string encoder = "Ogg Vorbis";
+        switch (fmt) {
+            case AudioFormat::MP3:
+                out_ext = ".mp3";
+                encoder = "MP3 Audio";
+                break;
+            case AudioFormat::WAV:
+                out_ext = ".wav";
+                encoder = "Waveform";
+                break;
+        }
+
+        auto src_ext = pathToUtf8(source.extension());
+        Str::toLower(src_ext);
+
+        output.replace_extension(out_ext);
+
+        if (src_ext == out_ext) {
+            HudError("Music is already in %s format.", encoder.c_str());
+            return;
+        }
+
+        // Convert source file.
+        // We have the entire ffmpeg, use the entire ffmpeg.
+        myAudioConversionThread = new OggConversionThread;
+        myAudioConversionThread->inPath = pathToUtf8(source);
+        myAudioConversionThread->outPath = pathToUtf8(output);
+        myAudioConversionThread->format = fmt;
+        myAudioConversionThread->isSimfile = isSimfile;
+
+        if (gEditor->hasMultithreading()) {
+            auto box = myInfoBox.create();
+            box->left = Str::fmt("Converting music to %1...").arg(encoder).str;
+            myAudioConversionThread->start();
+        } else {
+            myAudioConversionThread->exec();
+            finishAudioConversion();
         }
     }
 
-    void finishOggConversion() {
-        if (myOggConversionThread) {
-            if (myOggConversionThread->error.empty()) {
-                gMetadata->setMusicPath(
-                    pathToUtf8(gMetadata->findMusicFile().filename()));
+    /* Only called when unloading simfile music, and shouldn't effect a
+     * external conversion. */
+    void terminateAudioConversion() {
+        if (myAudioConversionThread && myAudioConversionThread->isSimfile) {
+            myAudioConversionThread->terminate();
+            delete myAudioConversionThread;
+            myAudioConversionThread = nullptr;
+        }
+    }
+
+    void finishAudioConversion() {
+        if (myAudioConversionThread) {
+            if (myAudioConversionThread->error.empty()) {
+                HudInfo("Conversion finished.");
+                if (myAudioConversionThread->isSimfile) {
+                    fs::path out = utf8ToPath(myAudioConversionThread->outPath);
+                    if (gSimfile->isOpen()) {
+                        fs::path path = fs::relative(
+                            out, fs::path(gSimfile->getDir().c_str()));
+                        gMetadata->setMusicPath(pathToUtf8(path));
+                    } else {
+                        gEditor->openSimfile(out);
+                    }
+                }
             } else {
                 HudError("Conversion failed: %s.",
-                         myOggConversionThread->error.c_str());
+                         myAudioConversionThread->error.c_str());
             }
-            delete myOggConversionThread;
-            myOggConversionThread = nullptr;
+            delete myAudioConversionThread;
+            myAudioConversionThread = nullptr;
         }
     }
 
@@ -425,6 +532,19 @@ struct MusicImpl : public Music, public MixSource {
     }
 
     void tick() override {
+        if (myAudioConversionThread) {
+            if (myInfoBox) {
+                myInfoBox->setProgress(myAudioConversionThread->progress *
+                                       0.01f);
+            }
+            if (myAudioConversionThread->isDone()) {
+                myInfoBox.destroy();
+                finishAudioConversion();
+            }
+        }
+
+        if (!gSimfile->isOpen()) return;
+
         if (myLoadState != LOADING_DONE && myInfoBox) {
             if (mySamples.getLoadingProgress() > 0) {
                 myInfoBox->setProgress(mySamples.getLoadingProgress() * 0.01f);
@@ -443,16 +563,6 @@ struct MusicImpl : public Music, public MixSource {
                 myInfoBox.destroy();
                 myLoadState = LOADING_DONE;
                 gEditor->reportChanges(VCM_MUSIC_IS_LOADED);
-            }
-        }
-
-        if (myOggConversionThread) {
-            if (myInfoBox) {
-                myInfoBox->setProgress(myOggConversionThread->progress * 0.01f);
-            }
-            if (myOggConversionThread->isDone()) {
-                myInfoBox.destroy();
-                finishOggConversion();
             }
         }
     }

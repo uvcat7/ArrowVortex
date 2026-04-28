@@ -8,7 +8,8 @@ static const char* IdStrings[NUM_DIALOG_IDS] = {
     "chartList",      "chartProperties", "dancingBot",
     "generateNotes",  "newChart",        "songProperties",
     "tempoBreakdown", "labelBreakdown",  "waveformSettings",
-    "zoom",           "customSnap",      "previewSettings"};
+    "zoom",           "customSnap",      "previewSettings",
+    "editSegment"};
 
 EditorDialog::~EditorDialog() { gEditor->onDialogClosed(myId); }
 
@@ -30,6 +31,19 @@ void EditorDialog::onTick() {
 void EditorDialog::onDraw() { myLayout.onDraw(); }
 
 void EditorDialog::setId(DialogId id) { myId = id; }
+
+void EditorDialog::setWidgetId(GuiWidget* widget, const char* name) {
+    myWidgetMap.push_back({widget, name});
+}
+
+void EditorDialog::setFocus(const char* name) {
+    for (WidgetMapping w : myWidgetMap) {
+        if (strcmp(w.name, name) == 0) {
+            w.widget->setFocus();
+            break;
+        }
+    }
+}
 
 DialogId EditorDialog::getId(const char* name) {
     for (int i = 0; i < NUM_DIALOG_IDS; ++i) {
