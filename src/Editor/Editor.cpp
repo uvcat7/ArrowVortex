@@ -85,11 +85,14 @@ static SDL_DialogFileFilter loadFilters[] = {
     {"All Files (*.*)", "*"},
 };
 
-#define SAVE_FILTERS_COUNT 4
-static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG (*.sm)", "sm"},
-                                             {"Stepmania 5 (*.ssc)", "ssc"},
-                                             {"Osu!mania (*.osu)", "osu"},
-                                             {"All Files (*.*)", "*"}};
+#define SAVE_FILTERS_COUNT 5
+static SDL_DialogFileFilter saveFilters[] = {
+    {"Stepmania/ITG (*.sm)", "sm"},
+    {"Stepmania 5 (*.ssc)", "ssc"},
+    {"Osu!mania (*.osu)", "osu"},
+    {"Dance With Intensity (*.dwi)", "dwi"},
+    {"All Files (*.*)", "*"},
+};
 struct DialogSegment {
     Segment::Type type;
     int row;
@@ -591,6 +594,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 case SIM_OSU:
                     filterIndex = 3;
                     break;
+                case SIM_DWI:
+                    filterIndex = 4;
+                    break;
             };
 
             // Show the save file dialog.
@@ -614,11 +620,16 @@ struct EditorImpl : public Editor, public InputHandler {
                 case 3:
                     saveFmt = SIM_OSU;
                     break;
+                case 4:
+                    saveFmt = SIM_DWI;
+                    break;
                 default:
                     if (ext == ".ssc") {
                         saveFmt = SIM_SSC;
                     } else if (ext == ".osu") {
                         saveFmt = SIM_OSU;
+                    } else if (ext == ".dwi") {
+                        saveFmt = SIM_DWI;
                     } else {
                         saveFmt = SIM_SM;
                     }
@@ -636,7 +647,7 @@ struct EditorImpl : public Editor, public InputHandler {
         // Saving multiple formats.
         std::vector<SimFormat> save = myDefaultSaveFormat;
         SimFormat fmt = gSimfile->get()->format;
-        if (fmt == SIM_NONE || fmt == SIM_DWI) {
+        if (fmt == SIM_NONE) {
             fmt = save[0];
         }
         save.erase(std::remove(save.begin(), save.end(), fmt), save.end());
