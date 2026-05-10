@@ -204,7 +204,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols, const ch
 			case  ')':
 			case  ']':
 			case  '}':
-			case '\'': quantization = 32; ++n; break;
+			case '\'': quantization = 24; ++n; break;
 			default:
 				n = ReadNoteRow(n, chart->notes, row, map, holds, quantization);
 				row += quantization;
@@ -348,6 +348,16 @@ static void ParseTag(Simfile* sim, String tag, char* val)
 	else if(tag == "DISPLAYBPM")
 	{
 		ParseDisplayBpm(sim->tempo, val);
+	}
+	else if(tag == "SAMPLESTART")
+	{
+		double v;
+		if(ParseVal(val, v)) sim->previewStart = v;
+	}
+	else if(tag == "SAMPLELENGTH")
+	{
+		double v;
+		if(ParseVal(val, v)) sim->previewLength = v;
 	}
 }
 

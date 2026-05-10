@@ -37,7 +37,8 @@ namespace Osu
 };
 namespace Dwi
 {
-	bool LoadDwi(LOAD_ARGS); // Defined in LoadDwi.cpp
+	bool LoadDwi(LOAD_ARGS);  // Defined in LoadDwi.cpp
+	bool SaveDwi(SAVE_ARGS);  // Defined in SaveDwi.cpp
 };
 
 // ================================================================================================
@@ -238,6 +239,7 @@ bool SaveSimfile(const Simfile& sim, SimFormat format, bool backup)
 		case SIM_SM:  return Sm::SaveSm(&sim, backup);
 		case SIM_SSC: return Sm::SaveSsc(&sim, backup);
 		case SIM_OSU: return Osu::SaveOsu(&sim, backup);
+		case SIM_DWI: return Dwi::SaveDwi(&sim, backup);
 	};
 	return false;
 }

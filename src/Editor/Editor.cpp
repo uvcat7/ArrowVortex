@@ -78,6 +78,7 @@ static const char saveFilters[] =
 	"Stepmania/ITG (*.sm)\0*.sm\0"
 	"Stepmania 5 (*.ssc)\0*.ssc\0"
 	"Osu!mania (*.osu)\0*.osu\0"
+	"Dance With Intensity (*.dwi)\0*.dwi\0"
 	"All Files (*.*)\0*.*\0";
 
 static const int MAX_RECENT_FILES = 10;
@@ -596,6 +597,8 @@ bool saveSimfile(bool showSaveAsDialog)
 			filterIndex = 2; break;
 		case SIM_OSU:
 			filterIndex = 3; break;
+		case SIM_DWI:
+			filterIndex = 4; break;
 		};
 
 		// Show the save file dialog.
@@ -621,6 +624,9 @@ bool saveSimfile(bool showSaveAsDialog)
 		case 3:
 			saveFmt = SIM_OSU;
 			break;
+		case 4:
+			saveFmt = SIM_DWI;
+			break;
 		default:
 			if(tmp.hasExt("ssc"))
 			{
@@ -629,6 +635,10 @@ bool saveSimfile(bool showSaveAsDialog)
 			else if(tmp.hasExt("osu"))
 			{
 				saveFmt = SIM_OSU;
+			}
+			else if(tmp.hasExt("dwi"))
+			{
+				saveFmt = SIM_DWI;
 			}
 			else
 			{

@@ -398,6 +398,7 @@
     <ClCompile Include="..\..\src\Simfile\Parsing.cpp" />
     <ClCompile Include="..\..\src\Simfile\LoadOsu.cpp" />
     <ClCompile Include="..\..\src\Simfile\LoadSm.cpp" />
+    <ClCompile Include="..\..\src\Simfile\SaveDwi.cpp" />
     <ClCompile Include="..\..\src\Simfile\SaveOsu.cpp" />
     <ClCompile Include="..\..\src\Simfile\SaveSm.cpp" />
     <ClCompile Include="..\..\src\Simfile\SegmentGroup.cpp" />
