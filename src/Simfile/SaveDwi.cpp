@@ -179,15 +179,15 @@ static void EmitNoteSlot(FileWriter& file, DwiNote* others, int nOthers, DwiNote
 	}
 	else
 	{
-		// Mixed tap + hold-start on same row: use corner pair char when possible.
-		file.printf("<");
 		if(nOthers == 1 && nStarts == 1)
 		{
-			// Encode tap+hold-start as a single corner pair char (e.g., UP+LEFT -> 7).
-			file.printf("%c", DwiPairToChar(others[0], starts[0]));
+			// 2 total notes: encode as PairChar!HoldChar, no brackets needed.
+			file.printf("%c!%c", DwiPairToChar(others[0], starts[0]), DwiNoteToChar(starts[0]));
 		}
 		else
 		{
+			// 3+ total notes: use <> brackets.
+			file.printf("<");
 			if(nOthers == 1)
 				file.printf("%c", DwiNoteToChar(others[0]));
 			else if(nOthers == 2)
@@ -202,16 +202,16 @@ static void EmitNoteSlot(FileWriter& file, DwiNote* others, int nOthers, DwiNote
 			else
 				for(int i = 0; i < nStarts; ++i)
 					file.printf("%c", DwiNoteToChar(starts[i]));
+			file.printf("!");
+			if(nStarts == 1)
+				file.printf("%c", DwiNoteToChar(starts[0]));
+			else if(nStarts == 2)
+				file.printf("%c", DwiPairToChar(starts[0], starts[1]));
+			else
+				for(int i = 0; i < nStarts; ++i)
+					file.printf("%c", DwiNoteToChar(starts[i]));
+			file.printf(">");
 		}
-		file.printf("!");
-		if(nStarts == 1)
-			file.printf("%c", DwiNoteToChar(starts[0]));
-		else if(nStarts == 2)
-			file.printf("%c", DwiPairToChar(starts[0], starts[1]));
-		else
-			for(int i = 0; i < nStarts; ++i)
-				file.printf("%c", DwiNoteToChar(starts[i]));
-		file.printf(">");
 	}
 }
 
