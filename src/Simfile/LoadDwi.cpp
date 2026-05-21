@@ -199,7 +199,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols, const ch
 			case '\r': ++n; break;
 			case  '(': quantization = 12; ++n; break;
 			case  '[': quantization = 8; ++n; break;
-			case  '{': quantization = 4; ++n; break;
+			case  '{': quantization = 3; ++n; break;
 			case  '`': quantization = 1; ++n; break;
 			case  ')':
 			case  ']':
