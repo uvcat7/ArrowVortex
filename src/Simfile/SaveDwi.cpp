@@ -8,7 +8,6 @@
 #include <Simfile/Tempo.h>
 #include <Simfile/Notes.h>
 #include <Simfile/SegmentGroup.h>
-
 #include <Managers/StyleMan.h>
 
 namespace Vortex {
@@ -234,8 +233,8 @@ namespace Vortex {
 
 	// Writes all note data for one pad of a chart.
 	//
-	// ArrowVortex uses 192 rows per measure (48 rows/beat * 4 beats). Each measure
-	// is written as one line to stay within the 4096-byte line buffers in DMX loaders.
+	// ArrowVortex uses 192 rows per measure (48 rows/beat * 4 beats). 
+	// Each measure is written as one line.
 	//
 	// Five quantization modes, chosen per-measure based on where the notes fall:
 	//   mode 0 (default)  -> bare chars,      8th-note grid,  24 rows/slot,  8 slots/measure
