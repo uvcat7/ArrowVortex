@@ -237,12 +237,14 @@ namespace Vortex {
 	// ArrowVortex uses 192 rows per measure (48 rows/beat * 4 beats). Each measure
 	// is written as one line to stay within the 4096-byte line buffers in DMX loaders.
 	//
-	// Three quantization modes, chosen per-measure based on where the notes fall:
-	//   mode 0 (default)  -> bare chars,     8th-note grid,   24 rows/slot, 8 slots/measure
-	//   mode 1 ( )        -> 16th-note grid, 12 rows/slot,   16 slots/measure
-	//   mode 2 ` '        -> 192nd-note grid, 1 row/slot,   192 slots/measure
-	// The { } 64th-note bracket is intentionally omitted: its beat division
-	// differs between ArrowVortex and DMX-family loaders.
+	// Five quantization modes, chosen per-measure based on where the notes fall:
+	//   mode 0 (default)  -> bare chars,      8th-note grid,  24 rows/slot,  8 slots/measure
+	//   mode 1 ( )        -> 16th-note grid,  12 rows/slot,  16 slots/measure
+	//   mode 2 [ ]        -> 24th-note grid,   8 rows/slot,  24 slots/measure (triplets)
+	//   mode 3 { }        -> 64th-note grid,   3 rows/slot,  64 slots/measure
+	//   mode 4 ` '        -> 192nd-note grid,  1 row/slot,  192 slots/measure
+	// Note: [ ] and { } cover disjoint note sets (multiples of 8 vs multiples of 3),
+	// so a measure mixing 24th and 64th notes falls back to 192nd.
 	static void WriteNoteDataForPad(FileWriter& file, const NoteList& notes, int numCols, int pad)
 	{
 		// const int ROWS_PER_BEAT    = 48;
@@ -293,18 +295,32 @@ namespace Vortex {
 			int measureStart = measure * ROWS_PER_MEASURE;
 			int measureEnd   = measureStart + ROWS_PER_MEASURE;
 
-			// Scan ahead (without consuming) to pick the quantization mode for this measure.
-			int mode = 0;
+			// Scan ahead (without consuming) to pick the most compact grid for this measure.
+			// Track each grid independently since [] (div-by-8) and {} (div-by-3) are disjoint.
+			bool canUse24 = true, canUse12 = true, canUse8 = true, canUse3 = true;
 			for(int scanIdx = evIdx; scanIdx < eventCount && noteEvents[scanIdx].row < measureEnd; scanIdx++)
 			{
-				if(noteEvents[scanIdx].row % 12 != 0) { mode = 2; break; }
-				if(noteEvents[scanIdx].row % 24 != 0)   mode = 1;
+				int row = noteEvents[scanIdx].row;
+				if(row % 24 != 0) canUse24 = false;
+				if(row % 12 != 0) canUse12 = false;
+				if(row % 8  != 0) canUse8  = false;
+				if(row % 3  != 0) canUse3  = false;
+				if(!canUse8 && !canUse3) break; // 192nd is inevitable
 			}
 
-			int rowStep = (mode == 0) ? 24 : (mode == 1) ? 12 : 1;
+			int mode;
+			if(canUse24)      mode = 0;
+			else if(canUse12) mode = 1;
+			else if(canUse8)  mode = 2;
+			else if(canUse3)  mode = 3;
+			else              mode = 4;
+
+			int rowStep = (mode == 0) ? 24 : (mode == 1) ? 12 : (mode == 2) ? 8 : (mode == 3) ? 3 : 1;
 
 			if(mode == 1)      file.printf("(");
-			else if(mode == 2) file.printf("`");
+			else if(mode == 2) file.printf("[");
+			else if(mode == 3) file.printf("{");
+			else if(mode == 4) file.printf("`");
 
 			for(int row = measureStart; row < measureEnd; row += rowStep)
 			{
@@ -327,7 +343,9 @@ namespace Vortex {
 			}
 
 			if(mode == 1)      file.printf(")\n");
-			else if(mode == 2) file.printf("'\n");
+			else if(mode == 2) file.printf("]\n");
+			else if(mode == 3) file.printf("}\n");
+			else if(mode == 4) file.printf("'\n");
 			else               file.printf("\n");
 		}
 	}
