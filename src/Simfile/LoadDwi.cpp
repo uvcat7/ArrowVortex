@@ -258,7 +258,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols,
                     ++n;
                     break;
                 case '{':
-                    quantization = 4;
+                    quantization = 3;
                     ++n;
                     break;
                 case '`':
@@ -278,7 +278,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols,
                     ++n;
                     break;
                 case '\'':
-                    quantization = 32;
+                    quantization = 24;
                     ++n;
                     break;
                 default:
