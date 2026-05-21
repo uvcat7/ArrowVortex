@@ -19,6 +19,14 @@ namespace Dwi {
 
 // ========================================================================================
 // Note encoding.
+//
+// DWI represents notes using a numpad layout:
+//   7 8 9
+//   4 5 6
+//   1 2 3
+// Single-direction notes use their numpad digit (4=Left, 2=Down, 8=Up, 6=Right).
+// Two simultaneous notes use the corner digit between them (e.g. Up+Left = 7).
+// Six-panel solo adds diagonal directions: C=UpLeft, D=UpRight, and letter combos E-M.
 
 enum DwiNote
 {
@@ -27,12 +35,14 @@ enum DwiNote
 	NOTE_COUNT
 };
 
+// Converts an ArrowVortex column index to a DWI note enum for the given pad.
+// For double (8-col) charts, each pad owns 4 columns starting at pad*4.
 static DwiNote ColToDwiNote(int col, int numCols, int pad)
 {
-	int localCol = col - (numCols == 8 ? pad * 4 : 0);
-	int panelCols = (numCols == 8) ? 4 : numCols;
-	if(localCol < 0 || localCol >= panelCols) return NO_NOTE;
-	switch(panelCols)
+	int localCol  = col - (numCols == 8 ? pad * 4 : 0);
+	int padColCount = (numCols == 8) ? 4 : numCols;
+	if(localCol < 0 || localCol >= padColCount) return NO_NOTE;
+	switch(padColCount)
 	{
 	case 4:
 		switch(localCol)
@@ -58,9 +68,10 @@ static DwiNote ColToDwiNote(int col, int numCols, int pad)
 	return NO_NOTE;
 }
 
-static char DwiNoteToChar(DwiNote a)
+// Returns the single DWI character for one note direction.
+static char DwiNoteToChar(DwiNote note)
 {
-	switch(a)
+	switch(note)
 	{
 	case NOTE_L:  return '4';
 	case NOTE_UL: return 'C';
@@ -72,7 +83,9 @@ static char DwiNoteToChar(DwiNote a)
 	}
 }
 
-// Returns a single DWI character encoding both notes (or just one if b == NO_NOTE).
+// Returns a single DWI character encoding both notes simultaneously.
+// Two notes that share a corner on the numpad map to that corner digit
+// (e.g. Up+Left -> '7', Down+Right -> '3'). Returns '0' for unknown pairs.
 static char DwiPairToChar(DwiNote a, DwiNote b)
 {
 	if(a == NO_NOTE && b == NO_NOTE) return '0';
@@ -127,176 +140,193 @@ static double RowToDwiBeat(int row)
 // ========================================================================================
 // Note data writing.
 
+// One note event at a specific row — either a tap, a hold head, or a hold tail.
+// Hold tails (isHoldHead=false at endrow) are emitted as plain note chars,
+// which the DWI loader uses to close the in-progress hold on that column.
 struct NoteEvent
 {
-	int row;
-	int col;
-	bool isHoldStart;
+	int  row;
+	int  col;
+	bool isHoldHead; // true = hold starts here; false = tap or hold tail
 };
 
-static void EmitNoteSlot(FileWriter& file, DwiNote* others, int nOthers, DwiNote* starts, int nStarts)
+// Emits 1-or-2 note characters for the given array of DWI notes (no surrounding brackets).
+// 1 note  -> single-direction character (e.g. '8' for Up)
+// 2 notes -> corner pair character      (e.g. '7' for Up+Left)
+// 3+ notes -> individual characters in sequence; caller must wrap in <> if needed
+static void EmitNoteChars(FileWriter& file, const DwiNote* notes, int count)
 {
-	if(nOthers == 0 && nStarts == 0)
+	if(count == 1)
+		file.printf("%c", DwiNoteToChar(notes[0]));
+	else if(count == 2)
+		file.printf("%c", DwiPairToChar(notes[0], notes[1]));
+	else
+		for(int i = 0; i < count; ++i)
+			file.printf("%c", DwiNoteToChar(notes[i]));
+}
+
+// Emits one DWI note slot (one position on the quantization grid).
+//
+// taps:      notes firing as plain taps or hold tails at this row
+// holdHeads: notes starting a hold at this row (marked with ! in DWI)
+//
+// Output format by case:
+//   empty                       -> "0"
+//   1-2 taps, no holds          -> single/pair char,  e.g. "7"
+//   3+ taps, no holds           -> <ABC>
+//   1-2 hold heads, no taps     -> X!X or PairChar!PairChar
+//   3+ hold heads, no taps      -> <ABC!ABC>
+//   1 tap + 1 hold head         -> CornerChar!HoldChar, e.g. "7!4" (Up tap, Left hold)
+//   3+ total (mixed)            -> <(taps)(holdHeads)!(holdHeads)>
+static void EmitNoteSlot(FileWriter& file,
+	DwiNote* taps,      int nTaps,
+	DwiNote* holdHeads, int nHoldHeads)
+{
+	if(nTaps == 0 && nHoldHeads == 0)
 	{
 		file.printf("0");
 	}
-	else if(nStarts == 0)
+	else if(nHoldHeads == 0)
 	{
-		if(nOthers == 1)
-			file.printf("%c", DwiNoteToChar(others[0]));
-		else if(nOthers == 2)
-			file.printf("%c", DwiPairToChar(others[0], others[1]));
+		// Taps only: 1-2 as a single/pair char, 3+ wrapped in <>.
+		if(nTaps <= 2)
+			EmitNoteChars(file, taps, nTaps);
 		else
 		{
 			file.printf("<");
-			for(int i = 0; i < nOthers; ++i)
-				file.printf("%c", DwiNoteToChar(others[i]));
+			EmitNoteChars(file, taps, nTaps);
 			file.printf(">");
 		}
 	}
-	else if(nOthers == 0)
+	else if(nTaps == 0)
 	{
-		if(nStarts == 1)
+		// Hold heads only: X!X or PairChar!PairChar for 1-2, <ABC!ABC> for 3+.
+		if(nHoldHeads <= 2)
 		{
-			char c = DwiNoteToChar(starts[0]);
-			file.printf("%c!%c", c, c);
-		}
-		else if(nStarts == 2)
-		{
-			char c = DwiPairToChar(starts[0], starts[1]);
-			file.printf("%c!%c", c, c);
+			EmitNoteChars(file, holdHeads, nHoldHeads);
+			file.printf("!");
+			EmitNoteChars(file, holdHeads, nHoldHeads);
 		}
 		else
 		{
 			file.printf("<");
-			for(int i = 0; i < nStarts; ++i)
-				file.printf("%c", DwiNoteToChar(starts[i]));
+			EmitNoteChars(file, holdHeads, nHoldHeads);
 			file.printf("!");
-			for(int i = 0; i < nStarts; ++i)
-				file.printf("%c", DwiNoteToChar(starts[i]));
+			EmitNoteChars(file, holdHeads, nHoldHeads);
 			file.printf(">");
 		}
+	}
+	else if(nTaps == 1 && nHoldHeads == 1)
+	{
+		// One tap + one hold head: corner pair char encodes both, ! marks the hold.
+		// e.g. Up tap + Left hold head -> "7!4"
+		file.printf("%c!%c", DwiPairToChar(taps[0], holdHeads[0]), DwiNoteToChar(holdHeads[0]));
 	}
 	else
 	{
-		if(nOthers == 1 && nStarts == 1)
-		{
-			// 2 total notes: encode as PairChar!HoldChar, no brackets needed.
-			file.printf("%c!%c", DwiPairToChar(others[0], starts[0]), DwiNoteToChar(starts[0]));
-		}
-		else
-		{
-			// 3+ total notes: use <> brackets.
-			file.printf("<");
-			if(nOthers == 1)
-				file.printf("%c", DwiNoteToChar(others[0]));
-			else if(nOthers == 2)
-				file.printf("%c", DwiPairToChar(others[0], others[1]));
-			else
-				for(int i = 0; i < nOthers; ++i)
-					file.printf("%c", DwiNoteToChar(others[i]));
-			if(nStarts == 1)
-				file.printf("%c", DwiNoteToChar(starts[0]));
-			else if(nStarts == 2)
-				file.printf("%c", DwiPairToChar(starts[0], starts[1]));
-			else
-				for(int i = 0; i < nStarts; ++i)
-					file.printf("%c", DwiNoteToChar(starts[i]));
-			file.printf("!");
-			if(nStarts == 1)
-				file.printf("%c", DwiNoteToChar(starts[0]));
-			else if(nStarts == 2)
-				file.printf("%c", DwiPairToChar(starts[0], starts[1]));
-			else
-				for(int i = 0; i < nStarts; ++i)
-					file.printf("%c", DwiNoteToChar(starts[i]));
-			file.printf(">");
-		}
+		// 3+ total notes (mixed taps and hold heads): use <> brackets.
+		// Before !: taps followed by hold heads. After !: hold heads repeated.
+		file.printf("<");
+		EmitNoteChars(file, taps, nTaps);
+		EmitNoteChars(file, holdHeads, nHoldHeads);
+		file.printf("!");
+		EmitNoteChars(file, holdHeads, nHoldHeads);
+		file.printf(">");
 	}
 }
 
+// Writes all note data for one pad of a chart.
+//
+// ArrowVortex uses 192 rows per measure (48 rows/beat * 4 beats). Each measure
+// is written as one line to stay within the 4096-byte line buffers in DMX loaders.
+//
+// Three quantization modes, chosen per-measure based on where the notes fall:
+//   mode 0 (default)  -> bare chars,     8th-note grid,   24 rows/slot, 8 slots/measure
+//   mode 1 ( )        -> 16th-note grid, 12 rows/slot,   16 slots/measure
+//   mode 2 ` '        -> 192nd-note grid, 1 row/slot,   192 slots/measure
+// The { } 64th-note bracket is intentionally omitted: its beat division
+// differs between ArrowVortex and DMX-family loaders.
 static void WriteNoteDataForPad(FileWriter& file, const NoteList& notes, int numCols, int pad)
 {
-	// Each measure is written as one line to stay well under the 4096-byte
-	// tagLeftSide/tagRightSide buffers in DMX-family DWI loaders.
-	// mode 0: notes on 24-row grid -> bare 8th-note chars, 8 slots/measure
-	// mode 1: notes on 12-row grid -> ( ) 16th-note, 16 slots/measure
-	// mode 2: notes off 12-row grid -> backtick/apostrophe 192nd-note, 192 slots/measure
-	// The { } bracket is never used: its beatDivision differs between AV and DMX.
-	const int ROWS_PER_BEAT2 = 48;
-	const int ROWS_PER_MEASURE = ROWS_PER_BEAT2 * 4; // 192 rows; assumes 4/4
+	// const int ROWS_PER_BEAT    = 48;
+	const int ROWS_PER_MEASURE = ROWS_PER_BEAT * 4; // 192 rows; assumes 4/4 time
 
-	int padStart = (numCols == 8) ? pad * 4 : 0;
-	int padCols  = (numCols == 8) ? 4 : numCols;
+	// Column range owned by this pad.
+	int padStart    = (numCols == 8) ? pad * 4 : 0;
+	int padColCount = (numCols == 8) ? 4 : numCols;
 
-	Vector<NoteEvent> events;
+	// Flatten hold notes into (row, col, isHoldHead) events so we can process
+	// the chart one row at a time. Each hold produces two events: one at the
+	// head row (isHoldHead=true) and one at the tail row (isHoldHead=false).
+	// Taps produce a single event with isHoldHead=false.
+	Vector<NoteEvent> noteEvents;
 	for(const Note& note : notes)
 	{
 		int col = (int)note.col;
-		if(col < padStart || col >= padStart + padCols) continue;
+		if(col < padStart || col >= padStart + padColCount) continue;
 		if(note.type != NOTE_STEP_OR_HOLD) continue;
 		if(note.endrow > note.row)
 		{
-			events.push_back({note.row, col, true});
-			events.push_back({note.endrow, col, false});
+			noteEvents.push_back({note.row,    col, true});
+			noteEvents.push_back({note.endrow, col, false});
 		}
 		else
 		{
-			events.push_back({note.row, col, false});
+			noteEvents.push_back({note.row, col, false});
 		}
 	}
-	if(events.empty())
+	if(noteEvents.empty())
 	{
 		file.printf("0");
 		return;
 	}
 
-	std::sort(events.begin(), events.end(), [](const NoteEvent& a, const NoteEvent& b)
+	std::sort(noteEvents.begin(), noteEvents.end(), [](const NoteEvent& a, const NoteEvent& b)
 	{
 		return (a.row != b.row) ? (a.row < b.row) : (a.col < b.col);
 	});
 
-	int lastRow     = events.back().row;
+	int lastRow     = noteEvents.back().row;
 	int lastMeasure = lastRow / ROWS_PER_MEASURE;
-
-	int ei        = 0;
-	int numEvents = (int)events.size();
+	int eventCount  = (int)noteEvents.size();
+	int evIdx       = 0; // advances forward as we consume events measure by measure
 
 	for(int measure = 0; measure <= lastMeasure; measure++)
 	{
-		int mStart = measure * ROWS_PER_MEASURE;
-		int mEnd   = mStart + ROWS_PER_MEASURE;
+		int measureStart = measure * ROWS_PER_MEASURE;
+		int measureEnd   = measureStart + ROWS_PER_MEASURE;
 
-		// Determine mode for this measure.
+		// Scan ahead (without consuming) to pick the quantization mode for this measure.
 		int mode = 0;
-		for(int ti = ei; ti < numEvents && events[ti].row < mEnd; ti++)
+		for(int scanIdx = evIdx; scanIdx < eventCount && noteEvents[scanIdx].row < measureEnd; scanIdx++)
 		{
-			if(events[ti].row % 12 != 0) { mode = 2; break; }
-			if(events[ti].row % 24 != 0)   mode = 1;
+			if(noteEvents[scanIdx].row % 12 != 0) { mode = 2; break; }
+			if(noteEvents[scanIdx].row % 24 != 0)   mode = 1;
 		}
 
-		int step = (mode == 0) ? 24 : (mode == 1) ? 12 : 1;
+		int rowStep = (mode == 0) ? 24 : (mode == 1) ? 12 : 1;
 
 		if(mode == 1)      file.printf("(");
 		else if(mode == 2) file.printf("`");
 
-		for(int row = mStart; row < mEnd; row += step)
+		for(int row = measureStart; row < measureEnd; row += rowStep)
 		{
-			DwiNote starts[8]; int nStarts = 0;
-			DwiNote others[8]; int nOthers = 0;
+			// Collect all events at this row, split into taps/tails and hold heads.
+			DwiNote taps[8];      int nTaps      = 0;
+			DwiNote holdHeads[8]; int nHoldHeads = 0;
 
-			while(ei < numEvents && events[ei].row == row)
+			while(evIdx < eventCount && noteEvents[evIdx].row == row)
 			{
-				const NoteEvent& ev = events[ei++];
-				DwiNote dn = ColToDwiNote(ev.col, numCols, pad);
-				if(dn == NO_NOTE) continue;
-				if(ev.isHoldStart)
-					starts[nStarts++] = dn;
+				const NoteEvent& event = noteEvents[evIdx++];
+				DwiNote dwiNote = ColToDwiNote(event.col, numCols, pad);
+				if(dwiNote == NO_NOTE) continue;
+				if(event.isHoldHead)
+					holdHeads[nHoldHeads++] = dwiNote;
 				else
-					others[nOthers++] = dn;
+					taps[nTaps++] = dwiNote;
 			}
 
-			EmitNoteSlot(file, others, nOthers, starts, nStarts);
+			EmitNoteSlot(file, taps, nTaps, holdHeads, nHoldHeads);
 		}
 
 		if(mode == 1)      file.printf(")\n");
@@ -308,6 +338,8 @@ static void WriteNoteDataForPad(FileWriter& file, const NoteList& notes, int num
 // ========================================================================================
 // Style resolution.
 
+// Maps an ArrowVortex chart style to the corresponding DWI tag name and pad count.
+// Returns false if the style has no DWI equivalent.
 static bool GetDwiStyle(const Chart* chart, const char*& outTag, int& outNumPads)
 {
 	StringRef id = chart->style->id;
@@ -346,7 +378,7 @@ bool SaveDwi(const Simfile* sim, bool backup)
 		file.printf("#GENRE:%s;\n", sim->genre.str());
 	file.printf("#FILE:%s;\n", sim->music.str());
 
-	// Timing offset: GAP is offset negated, in milliseconds.
+	// Timing offset: GAP is the offset negated, in milliseconds.
 	file.printf("#GAP:%.6f;\n", -tempo->offset * 1000.0);
 
 	// Music preview.
@@ -356,7 +388,7 @@ bool SaveDwi(const Simfile* sim, bool backup)
 		file.printf("#SAMPLELENGTH:%.3f;\n", sim->previewLength);
 	}
 
-	// Initial BPM from the first BPM change (at row 0).
+	// Initial BPM comes from the first BPM change segment (always at row 0).
 	double initialBpm = SIM_DEFAULT_BPM;
 	auto bpmBegin = tempo->segments->begin<BpmChange>();
 	auto bpmEnd   = tempo->segments->end<BpmChange>();
@@ -364,7 +396,7 @@ bool SaveDwi(const Simfile* sim, bool backup)
 		initialBpm = bpmBegin->bpm;
 	file.printf("#BPM:%.6f;\n", initialBpm);
 
-	// BPM changes after row 0 go into CHANGEBPM.
+	// BPM changes after row 0 go into CHANGEBPM as a comma-separated beat=bpm list.
 	{
 		bool first = true;
 		for(auto it = bpmBegin; it != bpmEnd; ++it)
@@ -377,7 +409,7 @@ bool SaveDwi(const Simfile* sim, bool backup)
 		if(!first) file.printf(";\n");
 	}
 
-	// Stops go into FREEZE (duration in milliseconds).
+	// Stops go into FREEZE as a comma-separated beat=milliseconds list.
 	{
 		auto stopBegin = tempo->segments->begin<Stop>();
 		auto stopEnd   = tempo->segments->end<Stop>();
