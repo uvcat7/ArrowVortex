@@ -34,7 +34,7 @@ Code from the following projects is included in this repository:
     GPLv3. See lib/libvorbis/license or https://gitlab.xiph.org/xiph for more info.
 
  3. libmad, using the GPL license (libmad allows for GPLv2 or any later version)
-    See lib/freetype/ or https://www.underbit.com/products/mad/ for more info.
+    See lib/libmad/ or https://www.underbit.com/products/mad/ for more info.
 
  4. lua, using its GPLv3-compatible permissive license
     See lib/lua/ or https://www.lua.org/license.html for more info.
