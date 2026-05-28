@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.28)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -19,7 +19,9 @@ set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags};-extra-arg=/EHsc;-p=build")
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
-find_package(aubio CONFIG REQUIRED)
+# Sometimes caching will cause CMAKE_TOOLCHAIN_FILE to be ignored
+include($ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+find_package(Aubio CONFIG NAMES aubio Aubio)
 find_package(FFMPEG REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(iir CONFIG REQUIRED)
