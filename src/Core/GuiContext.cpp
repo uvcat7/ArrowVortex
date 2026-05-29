@@ -4,6 +4,8 @@
 #include <Core/MapUtils.h>
 #include <Core/VectorUtils.h>
 
+#include <System/System.h>
+
 namespace Vortex {
 
 GuiContext::~GuiContext() = default;
@@ -28,8 +30,8 @@ InputEvents& GuiContextImpl::getEvents() { return *input_events_; }
 void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events) {
     view_rect_ = view;
 
-    view_rect_.w = max(view_rect_.w, 0);
-    view_rect_.h = max(view_rect_.h, 0);
+    view_rect_.w = std::max(view_rect_.w, 0);
+    view_rect_.h = std::max(view_rect_.h, 0);
 
     delta_time_ = deltaTime;
     input_events_ = &events;
@@ -43,11 +45,11 @@ void GuiContextImpl::tick(recti view, float deltaTime, InputEvents& events) {
     FOR_VECTOR_REVERSE(dialogs_, i) {
         auto dialog = dialogs_[i];
         if (dialog->request_close_) {
-            dialogs_.erase_values(dialog);
+            dialogs_.erase(dialogs_.begin() + i);
             delete dialog;
         } else if (dialog->request_move_to_top_) {
-            dialogs_.erase(i);
-            dialogs_.push_back(dialog);
+            dialogs_.erase(dialogs_.begin() + i);
+            dialogs_.emplace_back(dialog);
             dialog->request_move_to_top_ = false;
         }
     }
@@ -81,22 +83,22 @@ void GuiContextImpl::draw() {
 }
 
 void GuiContextImpl::removeWidget(GuiWidget* w) {
-    focus_widgets_.erase_values(w);
+    std::erase(focus_widgets_, w);
 }
 
-void GuiContextImpl::addDialog(DialogData* f) { dialogs_.push_back(f); }
+void GuiContextImpl::addDialog(DialogData* f) { dialogs_.emplace_back(f); }
 
-void GuiContextImpl::removeDialog(DialogData* f) { dialogs_.erase_values(f); }
+void GuiContextImpl::removeDialog(DialogData* f) { std::erase(dialogs_, f); }
 
 void GuiContextImpl::grabFocus(GuiWidget* w) {
     for (GuiWidget* focus_widget : focus_widgets_) {
         if (focus_widget == w) return;
     }
-    focus_widgets_.push_back(w);
+    focus_widgets_.emplace_back(w);
 }
 
 void GuiContextImpl::releaseFocus(GuiWidget* w) {
-    focus_widgets_.erase_values(w);
+    std::erase(focus_widgets_, w);
 }
 
 // ================================================================================================

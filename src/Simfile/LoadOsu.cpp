@@ -1,9 +1,10 @@
 ﻿#include <Core/Core.h>
 
+#include <cmath>
 #include <map>
 #include <algorithm>
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
 
@@ -54,7 +55,7 @@ struct OsuFile {
     std::string filename;
 
     std::map<double, TimingPoint> timingPoints;
-    Vector<HitObject> hitObjects;
+    std::vector<HitObject> hitObjects;
 };
 
 // ================================================================================================
@@ -211,7 +212,7 @@ static void ParseTimingPoints(OsuFile& out, Parser& parser) {
             double spb = Str::readDouble(tp[1]) / 1000;
             if (spb > 0) {
                 double bpm = 60.0 * 1000 / Str::readDouble(tp[1]);
-                double roundBPM = round(bpm);
+                double roundBPM = std::round(bpm);
                 if (abs(bpm - roundBPM) < 0.001) bpm = roundBPM;
                 out.timingPoints[time] = {bpm, 1.0};
                 parser.bpm = bpm;
@@ -233,7 +234,7 @@ static TimingPoint* GetTimingPoint(OsuFile& osu, double time) {
 static void ParseHitObjects(OsuFile& out, Parser& parser) {
     while (ReadProperty(parser)) {
         const char* p = parser.prop.c_str();
-        int x = max(0, NoteVal(p)), y = NoteVal(p);
+        int x = std::max(0, NoteVal(p)), y = NoteVal(p);
         double time = NoteVal(p) * 0.001;
         int type = NoteVal(p);
         switch (type) {
@@ -241,12 +242,12 @@ static void ParseHitObjects(OsuFile& out, Parser& parser) {
             case 4:  // Color combo update steps
             case 5:
             case 6:
-                out.hitObjects.push_back({x, time, time});
+                out.hitObjects.emplace_back(x, time, time);
                 break;
             case 128:  // Hold note.
                 int hitSound = NoteVal(p);
-                double endTime = max(time, NoteVal(p) * 0.001);
-                out.hitObjects.push_back({x, time, endTime});
+                double endTime = std::max(time, NoteVal(p) * 0.001);
+                out.hitObjects.emplace_back(x, time, endTime);
                 break;
         };
     }
@@ -309,7 +310,7 @@ static const char* difficultyStrings[][5] = {
 };
 
 static void AssignDifficulties(Simfile* sim,
-                               const Vector<std::string>& versions) {
+                               const std::vector<std::string>& versions) {
     if (sim->charts.empty()) return;
 
     auto& charts = sim->charts;
@@ -354,7 +355,8 @@ static void AssignDifficulties(Simfile* sim,
                   [](const Chart* a, const Chart* b) {
                       return a->notes.size() < b->notes.size();
                   });
-        int offset = max(0, min(charts[0]->meter / 2, 5 - charts.size()));
+        int offset = std::clamp(charts[0]->meter / 2, 0,
+                                static_cast<int>(5 - charts.size()));
         for (int i = 0; i < charts.size(); ++i) {
             charts[i]->difficulty = static_cast<Difficulty>(
                 std::min(offset + i, static_cast<int>(NUM_DIFFICULTIES - 1)));
@@ -393,7 +395,7 @@ static void ConvertTimingPoints(Simfile* sim, OsuFile& osu) {
         double curRow = prevRow + deltaRows;
 
         // Round the row.
-        int row = round(curRow);
+        int row = std::round(curRow);
         if (last_bpm != it->second.bpm) {
             tempo->segments->append(BpmChange(row, it->second.bpm));
             last_bpm = it->second.bpm;
@@ -428,8 +430,8 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart) {
     for (auto& hitObject : osu.hitObjects) {
         // x ranges from 0 to 512 (inclusive), y ranges from 0 to 384
         // (inclusive).
-        int colWidth = 512 / max(osu.numCols, 1);
-        int col = min(max(0, hitObject.x / colWidth), osu.numCols);
+        int colWidth = 512 / std::max(osu.numCols, 1);
+        int col = std::clamp(hitObject.x / colWidth, 0, osu.numCols);
 
         // Convert time and endtime to rows.
         int row = tracker.advance(hitObject.time);
@@ -444,7 +446,7 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart) {
     }
 }
 
-static void DestroyFiles(Vector<OsuFile*>& files) {
+static void DestroyFiles(std::vector<OsuFile*>& files) {
     for (auto file : files) {
         delete file;
     }
@@ -453,7 +455,7 @@ static void DestroyFiles(Vector<OsuFile*>& files) {
 };  // anonymous namespace.
 
 /*
-static bool ParseOsz(Vector<OsuFile*>& out, const std::string& path,
+static bool ParseOsz(std::vector<OsuFile*>& out, const std::string& path,
 std::string& err)
 {
         unzFile zip = unzOpen(path.str());
@@ -486,7 +488,7 @@ buffer, 512); if(read <= 0) break; Str::append(str, buffer, read);
                                 }
                                 if(str.len())
                                 {
-                                        out.push_back(new OsuFile);
+                                        out.emplace_back(new OsuFile);
                                         ParseFile(*out.back(), str);
                                         out.back()->filename = filename.name();
                                 }
@@ -504,13 +506,14 @@ buffer, 512); if(read <= 0) break; Str::append(str, buffer, read);
 }
 */
 
-static bool ParseDir(Vector<OsuFile*>& out, fs::path dir, std::string& err) {
+static bool ParseDir(std::vector<OsuFile*>& out, fs::path dir,
+                     std::string& err) {
     for (auto& file : File::findFiles(dir, false, ".osu")) {
         bool success;
         std::string str = File::getText(file, &success);
         if (str.empty() || !success) continue;
 
-        out.push_back(new OsuFile);
+        out.emplace_back(new OsuFile);
         ParseFile(*out.back(), str);
         out.back()->filename = std::string(
             reinterpret_cast<const char*>(file.filename().u8string().c_str()));
@@ -524,7 +527,7 @@ bool LoadOsu(fs::path path, Simfile* sim) {
 
     // Parse all osu files in the current directory.
     std::string err;
-    Vector<OsuFile*> files;
+    std::vector<OsuFile*> files;
     if (isZip) {
         // ParseOsz(files, path, err);
     } else {
@@ -568,10 +571,10 @@ bool LoadOsu(fs::path path, Simfile* sim) {
     ConvertTimingPoints(sim, *mainFile);
 
     // Convert the hit objects to DDR/ITG charts.
-    Vector<std::string> versions;
+    std::vector<std::string> versions;
     for (auto file : files) {
         if (file->gameMode == OSUMANIA && file->hitObjects.size()) {
-            versions.push_back(file->chartVersion);
+            versions.emplace_back(file->chartVersion);
 
             Chart* chart = new Chart;
 
@@ -581,7 +584,7 @@ bool LoadOsu(fs::path path, Simfile* sim) {
             chart->meter = file->overallDifficulty;
             ConvertNotes(sim, *file, *chart);
 
-            sim->charts.push_back(chart);
+            sim->charts.emplace_back(chart);
         }
     }
 

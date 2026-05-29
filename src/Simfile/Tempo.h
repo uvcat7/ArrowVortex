@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/NonCopyable.h>
 
 #include <Simfile/Common.h>
@@ -57,9 +57,9 @@ struct Tempo : NonCopyable {
     void sanitize(const Chart* owner = nullptr);
 
     double offset;
-    Vector<Attack> attacks;
-    Vector<std::string> keysounds;
-    Vector<Property> misc;
+    std::vector<Attack> attacks;
+    std::vector<std::string> keysounds;
+    std::vector<Property> misc;
     SegmentGroup* segments;
 
     DisplayBpm displayBpmType;

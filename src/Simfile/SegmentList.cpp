@@ -4,6 +4,7 @@
 #include <Core/StringUtils.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <Simfile/Chart.h>
 
@@ -512,7 +513,7 @@ const Segment* SegmentList::find(int row) const {
 void SegmentList::myReserve(int num) {
     int numBytes = num * myStride;
     if (myCap < numBytes) {
-        myCap = max(numBytes, myCap << 1);
+        myCap = std::max(numBytes, myCap << 1);
         mySegs = static_cast<uint8_t*>(realloc(mySegs, myCap));
     }
 }

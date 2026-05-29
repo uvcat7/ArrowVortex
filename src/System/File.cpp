@@ -4,6 +4,7 @@
 #include <Core/StringUtils.h>
 
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <filesystem>
 
@@ -28,7 +29,7 @@ namespace File {
 std::string getText(fs::path path, bool* success) {
     std::ifstream in(path.c_str());
     if (in.fail()) {
-        HudError("Failed to open file: %s", strerror(errno));
+        HudError("Failed to open file: %s", std::strerror(errno));
         if (success != nullptr) *success = false;
         return {};
     }
@@ -38,24 +39,25 @@ std::string getText(fs::path path, bool* success) {
     return str;
 }
 
-Vector<std::string> getLines(fs::path path, bool* success) {
+std::vector<std::string> getLines(fs::path path, bool* success) {
     std::ifstream in(path.c_str());
     if (in.fail()) {
-        HudError("Failed to open file: %s", strerror(errno));
+        HudError("Failed to open file: %s", std::strerror(errno));
         if (success != nullptr) *success = false;
         return {};
     }
 
-    Vector<std::string> v;
+    std::vector<std::string> v;
     std::string line;
 
-    while (std::getline(in, line)) v.push_back(line);
+    while (std::getline(in, line)) v.emplace_back(line);
 
     if (success != nullptr) *success = true;
     return v;
 }
 
-static bool HasValidExt(fs::path path, const Vector<std::string>& filters) {
+static bool HasValidExt(fs::path path,
+                        const std::vector<std::string>& filters) {
     auto ext = pathToUtf8(path.extension());
     for (auto& filter : filters) {
         if (Str::iequal(filter, ext)) {
@@ -66,18 +68,20 @@ static bool HasValidExt(fs::path path, const Vector<std::string>& filters) {
 }
 
 template <typename DirectoryIter>
-static void AddFilesInDir(Vector<fs::path>& out, const DirectoryIter& it,
-                          bool findDirs, const Vector<std::string>& filters) {
+static void AddFilesInDir(std::vector<fs::path>& out, const DirectoryIter& it,
+                          bool findDirs,
+                          const std::vector<std::string>& filters) {
     for (const auto& entry : it) {
         if (fs::is_regular_file(entry) && !findDirs) {
-            if (HasValidExt(entry, filters)) out.push_back(entry);
+            if (HasValidExt(entry, filters)) out.emplace_back(entry);
         }
-        if (fs::is_directory(entry) && findDirs) out.push_back(entry);
+        if (fs::is_directory(entry) && findDirs) out.emplace_back(entry);
     }
 }
 
-static void AddFilesInDir(Vector<fs::path>& out, fs::path path, bool recursive,
-                          bool findDirs, const Vector<std::string>& filters) {
+static void AddFilesInDir(std::vector<fs::path>& out, fs::path path,
+                          bool recursive, bool findDirs,
+                          const std::vector<std::string>& filters) {
     if (fs::is_regular_file(path)) return;
 
     if (recursive)
@@ -87,19 +91,22 @@ static void AddFilesInDir(Vector<fs::path>& out, fs::path path, bool recursive,
         AddFilesInDir(out, fs::directory_iterator(path), findDirs, filters);
 }
 
-Vector<fs::path> findFiles(fs::path path, bool recursive, const char* filters) {
-    Vector<fs::path> out;
+std::vector<fs::path> findFiles(fs::path path, bool recursive,
+                                const char* filters) {
+    std::vector<fs::path> out;
 
     if (path.empty()) return out;
 
     // Extract filters from the filter String.
-    Vector<std::string> filterlist;
+    std::vector<std::string> filterlist;
     if (filters) {
         for (const char *begin = filters, *end = begin; true; end = begin) {
             while (*end && *end != ';') ++end;
-            if (end != begin)
-                filterlist.push_back(
-                    std::string(begin, static_cast<int>(end - begin)));
+            if (end != begin) {
+                std::string substring =
+                    std::string(begin, static_cast<int>(end - begin));
+                filterlist.emplace_back(substring);
+            }
             if (*end == 0) break;
             begin = end + 1;
         }
@@ -107,7 +114,7 @@ Vector<fs::path> findFiles(fs::path path, bool recursive, const char* filters) {
 
     // If the given path is not a directory but a file, return it as-is.
     if (fs::is_regular_file(path) && HasValidExt(path, filterlist))
-        out.push_back(path);
+        out.emplace_back(path);
 
     if (fs::is_directory(path))
         AddFilesInDir(out, path, recursive, false, filterlist);
@@ -115,8 +122,8 @@ Vector<fs::path> findFiles(fs::path path, bool recursive, const char* filters) {
     return out;
 }
 
-Vector<fs::path> findDirs(fs::path path, bool recursive) {
-    Vector<fs::path> out;
+std::vector<fs::path> findDirs(fs::path path, bool recursive) {
+    std::vector<fs::path> out;
     AddFilesInDir(out, path, recursive, true, {});
     return out;
 }

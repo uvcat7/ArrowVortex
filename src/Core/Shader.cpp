@@ -6,6 +6,9 @@
 #include <System/File.h>
 #include <System/Debug.h>
 #include <System/OpenGL.h>
+#include <SDL3/SDL_video.h>
+
+#include <vector>
 
 namespace Vortex {
 
@@ -14,29 +17,29 @@ namespace Vortex {
 
 static bool sSupported = false;
 
-#define EXT(name, result) static result(APIENTRY* name)
-
-#define PROC(name)                                   \
-    name = (decltype(name))wglGetProcAddress(#name); \
-    if (!name) {                                     \
-        missing.push_back(#name);                    \
-        ++numMissing;                                \
-    }
-#define PROC_OPT(name)                               \
-    name = (decltype(name))wglGetProcAddress(#name); \
-    if (!name) {                                     \
-        missing.push_back(#name);                    \
-    }
-
-// #define PROC(name) name = nullptr; if(!name) { missing.push_back(#name);
-// ++numMissing; } #define PROC_OPT(name) name = nullptr; if(!name) {
-// missing.push_back(#name); }
-
 #define GL_FRAGMENT_SHADER 0x8B30
 #define GL_VERTEX_SHADER 0x8B31
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
 #define GL_INFO_LOG_LENGTH 0x8B84
+
+#define EXT(name, result) static result(APIENTRY* name)
+
+#define PROC(name)                                       \
+    name = (decltype(name))SDL_GL_GetProcAddress(#name); \
+    if (!name) {                                         \
+        missing.emplace_back(#name);                        \
+        ++numMissing;                                    \
+    }
+#define PROC_OPT(name)                                   \
+    name = (decltype(name))SDL_GL_GetProcAddress(#name); \
+    if (!name) {                                         \
+        missing.emplace_back(#name);                        \
+    }
+
+// #define PROC(name) name = nullptr; if(!name) { missing.emplace_back(#name);
+// ++numMissing; } #define PROC_OPT(name) name = nullptr; if(!name) {
+// missing.emplace_back(#name); }
 
 EXT(glCreateShader, GLint)(GLenum type);
 EXT(glDeleteShader, void)(GLuint shader);
@@ -54,7 +57,7 @@ EXT(glUniform2f, void)(GLint loc, GLfloat v0, GLfloat v1);
 EXT(glUniform4f, void)(GLint loc, GLfloat v0, GLfloat v1, GLfloat v2,
                        GLfloat v3);
 
-EXT(glCreateProgram, GLuint)(void);
+EXT(glCreateProgram, GLuint)();
 EXT(glUseProgram, void)(GLuint program);
 EXT(glDeleteProgram, void)(GLuint program);
 EXT(glLinkProgram, void)(GLuint program);
@@ -64,7 +67,7 @@ EXT(glGetProgramInfoLog, void)(GLuint program, GLsizei bufSize, GLsizei* len,
                                char* str);
 
 void Shader::initExtension() {
-    Vector<std::string> missing;
+    std::vector<std::string> missing;
     int numMissing = 0;
 
     PROC(glCreateShader);

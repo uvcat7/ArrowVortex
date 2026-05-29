@@ -35,7 +35,7 @@ static double ToBeat(int row) {
 }
 
 struct ExportData {
-    Vector<int> diffs;
+    std::vector<int> diffs;
     std::ofstream file;
     const Simfile* sim;
     const Chart* chart;
@@ -340,7 +340,7 @@ static void WriteTempo(ExportData& data, const Tempo* tempo) {
 // Misc write functions.
 
 static void WriteBgChanges(ExportData& data, const char* tag,
-                           const Vector<BgChange>& bgs) {
+                           const std::vector<BgChange>& bgs) {
     WriteTag(data, tag, bgs, END_OF_LINE, ',', ALWAYS, false,
              [&](const BgChange& bg) {
                  if (bg.effect.empty() && bg.file2.empty() &&
@@ -382,7 +382,7 @@ static char GetHoldChar(uint32_t type) {
     return (type == NOTE_STEP_OR_HOLD) ? '2' : '4';
 }
 
-static std::string RadarToString(const Vector<double>& list) {
+static std::string RadarToString(const std::vector<double>& list) {
     std::string out;
     if (list.empty()) {
         out = "0,0,0,0,0";
@@ -451,7 +451,7 @@ static void WriteSections(ExportData& data) {
 
     // Allocate a buffer for one uncompressed section of notes.
     int sectionSize = ROWS_PER_NOTE_SECTION * numCols;
-    Vector<char> sectionVec;
+    std::vector<char> sectionVec;
     sectionVec.resize(sectionSize);
     char* section = sectionVec.data();
 
@@ -460,8 +460,7 @@ static void WriteSections(ExportData& data) {
         int startRow = 0;
         int remainingHolds = 0;
 
-        Vector<const Note*> holdVec(numCols, nullptr);
-        const Note** holds = holdVec.begin();
+        std::vector<const Note*> holdVec(numCols, nullptr);
 
         std::list<uint32_t> quantVec;
 
@@ -485,7 +484,7 @@ static void WriteSections(ExportData& data) {
                         section[pos] = GetNoteChar(it->type);
                     } else {
                         section[pos] = GetHoldChar(it->type);
-                        auto hold = holds[it->col];
+                        auto hold = holdVec[it->col];
                         if (hold) {
                             if (hold->endrow >= startRow &&
                                 hold->endrow < endRow) {
@@ -495,7 +494,7 @@ static void WriteSections(ExportData& data) {
                                 --remainingHolds;
                             }
                         }
-                        holds[it->col] = it;
+                        holdVec[it->col] = it;
                         ++remainingHolds;
                     }
                 }
@@ -504,13 +503,13 @@ static void WriteSections(ExportData& data) {
             // Write the remaining hold ends to the section data.
             if (remainingHolds > 0) {
                 for (int col = 0; col < numCols; ++col) {
-                    auto hold = holds[col];
+                    auto hold = holdVec[col];
                     if (hold) {
                         if (hold->endrow >= startRow && hold->endrow < endRow) {
                             int pos =
                                 (hold->endrow - startRow) * numCols + hold->col;
                             section[pos] = '3';
-                            holds[col] = nullptr;
+                            holdVec[col] = nullptr;
                             --remainingHolds;
                         }
                     }
@@ -549,7 +548,7 @@ static void WriteChart(ExportData& data) {
     // Make sure each difficulty type is only exported once.
     Difficulty diff = chart->difficulty;
     int sd = chart->style->index * NUM_DIFFICULTIES + chart->difficulty;
-    if (data.diffs.find(sd) != data.diffs.size()) {
+    if (std::find(data.diffs.begin(), data.diffs.end(), sd) != data.diffs.end()) {
         Difficulty oldDiff = diff;
         std::string oldDesc = chart->description();
         diff = DIFF_EDIT;
@@ -558,7 +557,7 @@ static void WriteChart(ExportData& data) {
         HudWarning("Duplicate difficulties, saving (%s) as (%s) instead",
                    oldDesc.c_str(), newDesc.c_str());
     } else if (chart->difficulty != DIFF_EDIT) {
-        data.diffs.push_back(sd);
+        data.diffs.emplace_back(sd);
     }
 
     // Write the output chart data.

@@ -47,7 +47,7 @@ struct ChartMan {
 
     /// Returns a text representation of the 16th stream breakdown of the
     /// current chart.
-    virtual Vector<BreakdownItem> getStreamBreakdown(
+    virtual std::vector<BreakdownItem> getStreamBreakdown(
         int* totalMeasures = nullptr) const = 0;
 
     /// Returns an estimate block rating based on analyzing the current chart.

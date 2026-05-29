@@ -100,8 +100,8 @@ static void TB_setUvs(float* vt, float a, float b, float c, float d, float u,
 static void TB_setVerts(const TileBar& bar, int* vp, float* vt, recti r,
                         areaf uvs, int flags) {
     if (flags & TileBar::VERTICAL) {
-        swapValues(r.x, r.y);
-        swapValues(r.w, r.h);
+        std::swap(r.x, r.y);
+        std::swap(r.w, r.h);
     }
 
     // Vertex positions: left-to-right [a,b,c,d] top-to-bottom [e,f].
@@ -118,17 +118,17 @@ static void TB_setVerts(const TileBar& bar, int* vp, float* vt, recti r,
     }
 
     // Texture coordinates: left-to-right [s,t,u,v] top-to-bottom [w,x].
-    float rw = 1.0f / max(bar.texture.width(), 1);
+    float rw = 1.0f / std::max(bar.texture.width(), 1);
     float s = uvs.l, t = uvs.l + (b - a) * rw, u = uvs.r - (d - c) * rw,
           v = uvs.r;
     float w = uvs.t, x = uvs.b;
 
     if (flags & TileBar::FLIP_H) {
-        swapValues(s, v);
-        swapValues(t, u);
+        std::swap(s, v);
+        std::swap(t, u);
     }
     if (flags & TileBar::FLIP_V) {
-        swapValues(w, x);
+        std::swap(w, x);
     }
 
     // Fill in the texture coordinates.
@@ -205,8 +205,8 @@ static void TR_setUvs(float* vt, float a, float b, float c, float d, float u,
 static void TR_setVerts(const TileRect& rect, int* vp, float* vt, recti r,
                         areaf uvs, int flags) {
     if (flags & TileRect::VERTICAL) {
-        swapValues(r.x, r.y);
-        swapValues(r.w, r.h);
+        std::swap(r.x, r.y);
+        std::swap(r.w, r.h);
     }
 
     // Vertex positions: left-to-right [a,b,c,d] top-to-bottom [e,f,g,h].
@@ -225,20 +225,20 @@ static void TR_setVerts(const TileRect& rect, int* vp, float* vt, recti r,
 
     // Texture coordinates: left-to-right [s,t,u,v] top-to-bottom [w,x,y,z].
     vec2i size = rect.texture.size();
-    float rw = 1.f / max(size.x, 1);
-    float rh = 1.f / max(size.y, 1);
+    float rw = 1.f / std::max(size.x, 1);
+    float rh = 1.f / std::max(size.y, 1);
     float s = uvs.l, t = uvs.l + (b - a) * rw, u = uvs.r - (d - c) * rw,
           v = uvs.r;
     float w = uvs.t, x = uvs.t + (f - e) * rh, y = uvs.b - (h - g) * rh,
           z = uvs.b;
 
     if (flags & Draw::FLIP_H) {
-        swapValues(s, v);
-        swapValues(t, u);
+        std::swap(s, v);
+        std::swap(t, u);
     }
     if (flags & Draw::FLIP_V) {
-        swapValues(w, z);
-        swapValues(x, y);
+        std::swap(w, z);
+        std::swap(x, y);
     }
 
     // Fill in the texture coordinates.
@@ -276,8 +276,8 @@ void TileRect::draw(QuadBatchTC* out, recti rect, uint32_t color,
 static void TR2_setVerts(const TileRect2& rect, int* vp, float* vt, recti r,
                          int rounding, int flags) {
     if (flags & TileRect2::VERTICAL) {
-        swapValues(r.x, r.y);
-        swapValues(r.w, r.h);
+        std::swap(r.x, r.y);
+        std::swap(r.w, r.h);
     }
 
     // Vertex positions: left-to-right [a,b,c,d] top-to-bottom [e,f,g,h].
@@ -296,18 +296,18 @@ static void TR2_setVerts(const TileRect2& rect, int* vp, float* vt, recti r,
 
     // Texture coordinates: left-to-right [s,t,u,v] top-to-bottom [w,x,y,z].
     vec2i size = rect.texture.size();
-    float rw = 1.f / max(size.x, 1);
-    float rh = 1.f / max(size.y, 1);
+    float rw = 1.f / std::max(size.x, 1);
+    float rh = 1.f / std::max(size.y, 1);
     float s = 0, t = (b - a) * rw, u = 0.5f - (d - c) * rw, v = 0.5f;
     float w = 0, x = (f - e) * rh, y = 1.0f - (h - g) * rh, z = 1.0f;
 
     if (flags & TileRect2::FLIP_H) {
-        swapValues(s, v);
-        swapValues(t, u);
+        std::swap(s, v);
+        std::swap(t, u);
     }
     if (flags & TileRect2::FLIP_V) {
-        swapValues(w, z);
-        swapValues(x, y);
+        std::swap(w, z);
+        std::swap(x, y);
     }
 
     // Texture coordinate offsets.
@@ -479,8 +479,8 @@ void Draw::sprite(const Texture& tex, recti r, uint32_t col, int flags) {
         vt[2] = vt[5] = vt[6] = vt[7] = 1;
     } else {
         float u = 0, v = 0, s = 1, w = 1;
-        if (flags & Draw::FLIP_H) swapValues(u, s);
-        if (flags & Draw::FLIP_V) swapValues(v, w);
+        if (flags & Draw::FLIP_H) std::swap(u, s);
+        if (flags & Draw::FLIP_V) std::swap(v, w);
         if (flags & Draw::ROT_90) {
             vt[2] = vt[0] = u;
             vt[3] = vt[7] = v;

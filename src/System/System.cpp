@@ -1,7 +1,9 @@
 #ifndef NDEBUG
-#define CRTDBG_MAP_ALLOC
 #include <stdlib.h>
+#ifdef _WIN32
+#define CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
+#endif
 #endif
 
 #include <System/System.h>
@@ -20,15 +22,12 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_video.h>
-#ifdef _WIN32
-#define _UNICODE
 #include <System/OpenGL.h>
-#include <gl/gl.h>
-#endif
-#undef ERROR
 
 #include <chrono>
 #include <thread>
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 #include <stdio.h>
 #include <ctime>
@@ -122,6 +121,7 @@ static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
                                 SDLK_LCTRL,        Key::CTRL_L,
                                 SDLK_RCTRL,        Key::CTRL_R};
 
+#ifdef _WIN32
 // Translates a dialog button type to a windows message box type.
 static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
                                             MB_YESNOCANCEL};
@@ -129,6 +129,7 @@ static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
 // Translates a dialog icon type to a windows message box icon.
 static int sDlgIcon[System::NUM_ICONS] = {0, MB_ICONASTERISK, MB_ICONWARNING,
                                           MB_ICONHAND};
+#endif
 
 static void SDLCALL FileDialogOpenCallback(void* userdata,
                                            const char* const* filelist,
@@ -176,6 +177,7 @@ fs::path ShowFileDialog(std::string title, fs::path path,
                                filters, num_filters, pathToUtf8(path).c_str(),
                                false);
     }
+    // Check for support on Linux in future
     fileDialogCv.wait(lock,
                       [] { return isDialogClosed || !fileDialogPath.empty(); });
     if (save) *index = file_extension_index;
@@ -204,39 +206,41 @@ static bool LogCheckpoint(bool result, const char* description) {
 typedef System::MenuItem MItem;
 
 MItem* MItem::create() {
-    return reinterpret_cast<MenuItem*>(CreatePopupMenu());
+    // return reinterpret_cast<MenuItem*>(CreatePopupMenu());
+    return nullptr;
 }
 
 void MItem::addSeperator() {
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
+    // AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
 }
 void MItem::addItem(int item, const std::string& text) {
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
-                Widen(text).c_str());
+    /* AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
+                Widen(text).c_str()); */
 }
 
 void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed) {
-    int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
+    /* int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
     AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
+                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str()); */
 }
 
 void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
                            bool grayed) {
-    int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
+    /* int flags =
+        MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
     DeleteMenu(reinterpret_cast<HMENU>(this), pos, MF_BYPOSITION);
     InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
+                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str()); */
 }
 
 void MItem::setChecked(int item, bool state) {
-    CheckMenuItem(reinterpret_cast<HMENU>(this), item,
-                  state ? MF_CHECKED : MF_UNCHECKED);
+    /* CheckMenuItem(reinterpret_cast<HMENU>(this), item,
+                  state ? MF_CHECKED : MF_UNCHECKED); */
 }
 
 void MItem::setEnabled(int item, bool state) {
-    EnableMenuItem(reinterpret_cast<HMENU>(this), item,
-                   state ? MF_ENABLED : MF_GRAYED);
+    /* EnableMenuItem(reinterpret_cast<HMENU>(this), item,
+                   state ? MF_ENABLED : MF_GRAYED); */
 }
 
 namespace {
@@ -313,7 +317,7 @@ struct SystemImpl : public System {
         myHRC = SDL_GL_CreateContext(window);
         if (LogCheckpoint(myHRC != nullptr, "creating OpenGL context")) return;
 
-        BOOL mc = SDL_GL_MakeCurrent(window, myHRC);
+        bool mc = SDL_GL_MakeCurrent(window, myHRC);
         if (LogCheckpoint(mc != 0, "activating OpenGL context")) return;
 
         VortexCheckGlError();
@@ -522,9 +526,13 @@ struct SystemImpl : public System {
         return Debug::getElapsedTime(myApplicationStartTime);
     }
 
-    std::string getExeDir() const override { return Narrow(sExeDir); }
+    std::string getExeDir() const override {  // return Narrow(sExeDir);
+        return "";
+    }
 
-    std::string getRunDir() const override { return Narrow(sRunDir); }
+    std::string getRunDir() const override {  // return Narrow(sRunDir);
+        return "";
+    }
 
     Cursor::Icon getCursor() const override { return myCursor; }
 
@@ -635,7 +643,6 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto frameTarget = duration<double>(1.0 / 960.0);
 
     // Enter the message loop.
-    MSG message;
     auto prevTime = Debug::getElapsedTime();
     // while (!myIsTerminated) {
     auto startTime = Debug::getElapsedTime();
@@ -677,8 +684,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     // End of frame
     auto curTime = Debug::getElapsedTime();
-    deltaTime = duration<double>(static_cast<float> min(
-        max(0, duration<double>(curTime - prevTime).count()), 0.25));
+    deltaTime = duration<double>(static_cast<float>(std::min(
+        std::max(0.0, duration<double>(curTime - prevTime).count()), 0.25)));
     prevTime = curTime;
 
 #ifndef NDEBUG
@@ -709,7 +716,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto varianceFunc = [&avg, &siz](double accumulator, double val) {
         return accumulator + (val - avg) * (val - avg);
     };
-    auto std = sqrt(
+    auto std = std::sqrt(
         std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) /
         siz);
     auto frameAvg = std::accumulate(frameList.begin(), frameList.end(), 0.0) /
@@ -844,7 +851,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         }
         case SDL_EVENT_DROP_FILE: {
             if (myIsInsideMessageLoop) {
-                droppedFiles.push_back(event->drop.data);
+                droppedFiles.emplace_back(event->drop.data);
             }
             break;
         }
@@ -852,7 +859,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (myIsInsideMessageLoop && !droppedFiles.empty()) {
                 std::vector<const char*> filePtrs;
                 for (const auto& file : droppedFiles) {
-                    filePtrs.push_back(file.c_str());
+                    filePtrs.emplace_back(file.c_str());
                 }
                 myEvents.addFileDrop(filePtrs.data(),
                                      static_cast<int>(filePtrs.size()),

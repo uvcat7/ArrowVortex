@@ -1,9 +1,8 @@
 #pragma once
 
-#include <Core/Vector.h>
-
-#include <stdlib.h>
-#include <new>
+#include <Core/Core.h>
+#include <algorithm>
+#include <cstring>
 
 namespace Vortex {
 
@@ -26,20 +25,6 @@ TT inline bool HasFlags(T bits, int flag) { return (bits & flag) == flag; }
 
 TT inline bool HasLength(const vec2t<T>& v) {
     return v.x * v.x + v.y * v.y > 0.001f;
-}
-
-TT inline const T& min(const T& a, const T& b) { return (a < b) ? a : b; }
-
-TT inline const T& max(const T& a, const T& b) { return (b < a) ? a : b; }
-
-TT inline const T& clamp(const T& x, const T& min, const T& max) {
-    return (x < min) ? min : ((max < x) ? max : x);
-}
-
-TT inline void swapValues(T& a, T& b) {
-    T c(a);
-    a = b;
-    b = c;
 }
 
 TT inline T lerp(T begin, T end, T t) { return begin + (end - begin) * t; }
@@ -217,10 +202,10 @@ inline uint32_t ToColor32(const colorf& c) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)min(max(0, (int)(c.r * 255.0f)), 255);
-    u8[1] = (uint8_t)min(max(0, (int)(c.g * 255.0f)), 255);
-    u8[2] = (uint8_t)min(max(0, (int)(c.b * 255.0f)), 255);
-    u8[3] = (uint8_t)min(max(0, (int)(c.a * 255.0f)), 255);
+    u8[0] = (uint8_t)std::min(std::max(0, (int)(c.r * 255.0f)), 255);
+    u8[1] = (uint8_t)std::min(std::max(0, (int)(c.g * 255.0f)), 255);
+    u8[2] = (uint8_t)std::min(std::max(0, (int)(c.b * 255.0f)), 255);
+    u8[3] = (uint8_t)std::min(std::max(0, (int)(c.a * 255.0f)), 255);
     return u32;
 }
 
@@ -229,25 +214,11 @@ inline uint32_t ToColor32(float r, float g, float b, float a) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)min(max(0, (int)(r * 255.0f)), 255);
-    u8[1] = (uint8_t)min(max(0, (int)(g * 255.0f)), 255);
-    u8[2] = (uint8_t)min(max(0, (int)(b * 255.0f)), 255);
-    u8[3] = (uint8_t)min(max(0, (int)(a * 255.0f)), 255);
+    u8[0] = (uint8_t)std::min(std::max(0, (int)(r * 255.0f)), 255);
+    u8[1] = (uint8_t)std::min(std::max(0, (int)(g * 255.0f)), 255);
+    u8[2] = (uint8_t)std::min(std::max(0, (int)(b * 255.0f)), 255);
+    u8[3] = (uint8_t)std::min(std::max(0, (int)(a * 255.0f)), 255);
     return u32;
-}
-
-static int gcd(int a, int b) {
-    if (a == 0) {
-        return b;
-    }
-    if (b == 0) {
-        return a;
-    }
-    if (a > b) {
-        return gcd(a - b, b);
-    } else {
-        return gcd(a, b - a);
-    }
 }
 };  // namespace Vortex
 

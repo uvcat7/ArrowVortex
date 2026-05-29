@@ -205,11 +205,13 @@ static int open_output_file(const char *filename,
     AVStream *stream = nullptr;
     const AVCodec *output_codec = nullptr;
     int error;
+    int ret = 0;
     char errbuf[AV_ERROR_MAX_STRING_SIZE];
 
     AVCodecID codec_id;
     int default_frame_size;
     AVSampleFormat default_fmt;
+    const AVSampleFormat *sample_fmts = nullptr;
     format_codec_info(format, &codec_id, &default_frame_size, &default_fmt);
 
     /* Open the output file to write to it. */
@@ -270,11 +272,19 @@ static int open_output_file(const char *filename,
     avctx->sample_rate = input_codec_context->sample_rate;
     avctx->bit_rate = OUTPUT_BIT_RATE;
 
-    if (!output_codec->sample_fmts ||
-        output_codec->sample_fmts[0] == AV_SAMPLE_FMT_NONE)
+    ret = avcodec_get_supported_config(
+        avctx, nullptr, AV_CODEC_CONFIG_SAMPLE_FORMAT, 0,
+        reinterpret_cast<const void **>(&sample_fmts), nullptr);
+    if (ret >= 0 && sample_fmts) {
+        avctx->sample_fmt = sample_fmts[0];
+    } else {
         avctx->sample_fmt = default_fmt;
-    else
-        avctx->sample_fmt = output_codec->sample_fmts[0];
+    }
+    // if (!output_codec->sample_fmts ||
+    //    output_codec->sample_fmts[0] == AV_SAMPLE_FMT_NONE)
+    //    avctx->sample_fmt = default_fmt;
+    // else
+    //    avctx->sample_fmt = output_codec->sample_fmts[0];
 
     /* Set the sample rate for the container. */
     stream->time_base.den = input_codec_context->sample_rate;

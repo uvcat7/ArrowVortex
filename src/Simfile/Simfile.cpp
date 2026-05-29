@@ -25,7 +25,7 @@ void Simfile::sanitize() {
         if (chart->style == nullptr) {
             std::string desc = chart->description();
             HudWarning("%s is missing a style, ignoring chart.", desc.c_str());
-            charts.erase(i--);
+            charts.erase(charts.begin() + i--);
             delete chart;
         } else {
             chart->sanitize();

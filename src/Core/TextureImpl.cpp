@@ -1,7 +1,6 @@
 #include <Core/TextureImpl.h>
 #include <Core/ImageLoader.h>
 
-#include <Core/Vector.h>
 #include <Core/StringUtils.h>
 #include <Core/MapUtils.h>
 #include <Core/Shader.h>
@@ -12,6 +11,8 @@
 
 #include <set>
 #include <map>
+#include <cstring>
+#include <vector>
 
 #include <System/OpenGL.h>
 
@@ -23,7 +24,7 @@ ImageLoader::Format TexLoadFormats[] = {ImageLoader::RGBA, ImageLoader::LUMA,
 
 struct TextureManagerInstance {
     typedef std::map<std::string, Texture::Data*> TexMap;
-    typedef Vector<Texture::Data*> TexList;
+    typedef std::vector<Texture::Data*> TexList;
 
     TexMap files;
     TexList textures;
@@ -74,7 +75,7 @@ Texture::Data* TextureManager::load(fs::path path, Texture::Format fmt,
     ImageLoader::Data img = ImageLoader::load(path, TexLoadFormats[fmt]);
     if (img.pixels) {
         out = new Texture::Data(img.width, img.height, fmt, img.pixels, mipmap);
-        TM->textures.push_back(out);
+        TM->textures.emplace_back(out);
         TM->files[key] = out;
         ImageLoader::release(img);
     }
@@ -88,7 +89,7 @@ Texture::Data* TextureManager::load(int w, int h, Texture::Format fmt,
 
     // Try to create the texture.
     Texture::Data* out = new Texture::Data(w, h, fmt, pixels, mipmap);
-    TM->textures.push_back(out);
+    TM->textures.emplace_back(out);
 
     return out;
 }
@@ -99,7 +100,7 @@ void TextureManager::release(Texture::Data* tex) {
         // Textures can still exist after shutdown, don't assume TM is valid.
         if (TM) {
             Map::eraseVals(TM->files, tex);
-            TM->textures.erase_values(tex);
+            std::erase(TM->textures, tex);
         }
         delete tex;
     }
@@ -119,17 +120,17 @@ static int NextPowerOfTwo(int v) {
     return v;
 }
 
-static const uint8_t* ConvertAlphaToLuma(Vector<uint8_t>& out,
+static const uint8_t* ConvertAlphaToLuma(std::vector<uint8_t>& out,
                                          const uint8_t* in, int width,
                                          int height) {
     int numPixels = width * height;
     out.resize(numPixels * 2);
-    uint8_t* dst = out.begin();
-    for (auto end = in + numPixels; in != end; ++in) {
+    auto dst = out.begin();
+    for (auto end = in + numPixels; &(*in) != end; ++in) {
         *dst++ = 255;
         *dst++ = *in;
     }
-    return out.begin();
+    return &(*out.begin());
 }
 
 // Maps a channel count to an OpenGL texture type.
@@ -231,7 +232,7 @@ static bool PowerOfTwoTexImage2D(Texture::Format fmt, int w, int h,
             int px = static_cast<int>(sx);
 
             const uint8_t* p1 =
-                pixels + clamp(py * w + px, 0, maxIndex) * channels;
+                pixels + std::clamp(py * w + px, 0, maxIndex) * channels;
             const uint8_t* p2 = p1 + channels;
             const uint8_t* p3 = p1 + w * channels;
             const uint8_t* p4 = p3 + channels;
@@ -275,7 +276,7 @@ Texture::Data::Data(int inW, int inH, Texture::Format inFmt,
     VortexCheckGlError();
 
     Format usedFmt = fmt;
-    Vector<uint8_t> tempPixels;
+    std::vector<uint8_t> tempPixels;
     if (fmt == Texture::ALPHA && !Shader::isSupported()) {
         pixels = ConvertAlphaToLuma(tempPixels, pixels, inW, inH);
         usedFmt = Texture::LUMA;
@@ -328,7 +329,7 @@ void Texture::Data::modify(int mx, int my, int mw, int mh,
                            const uint8_t* pixels) {
     if (handle && mx >= 0 && my >= 0 && mx + mw <= w && my + mh <= h) {
         Format usedFmt = fmt;
-        Vector<uint8_t> tempPixels;
+        std::vector<uint8_t> tempPixels;
         if (fmt == Texture::ALPHA && !Shader::isSupported()) {
             pixels = ConvertAlphaToLuma(tempPixels, pixels, mw, mh);
             usedFmt = Texture::LUMA;
@@ -357,7 +358,8 @@ void Texture::Data::increaseHeight(int newHeight) {
         int channels = sNumChannels[usedFmt];
         uint8_t* pixels =
             static_cast<uint8_t*>(malloc(w * newHeight * channels));
-        memset(pixels + w * h * channels, 0, w * (newHeight - h) * channels);
+        std::memset(pixels + w * h * channels, 0,
+                    w * (newHeight - h) * channels);
 
         glBindTexture(GL_TEXTURE_2D, handle);
         glGetTexImage(GL_TEXTURE_2D, 0, sFmtGL[usedFmt], GL_UNSIGNED_BYTE,
@@ -369,7 +371,7 @@ void Texture::Data::increaseHeight(int newHeight) {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         h = newHeight;
-        rh = 1.0f / static_cast<float> max(h, 1);
+        rh = 1.0f / static_cast<float>(std::max(h, 1));
         free(pixels);
     }
 }
@@ -411,11 +413,11 @@ Texture::~Texture() {
 Texture::Texture() : data_(nullptr) {}
 
 Texture::Texture(int w, int h, Format fmt) : data_(nullptr) {
-    w = max(w, 1);
-    h = max(h, 1);
-    Vector<uint8_t> pixels;
+    w = std::max(w, 1);
+    h = std::max(h, 1);
+    std::vector<uint8_t> pixels;
     pixels.resize(w * h * sNumChannels[fmt], 0);
-    data_ = TexMan::load(w, h, fmt, false, pixels.begin());
+    data_ = TexMan::load(w, h, fmt, false, &(*pixels.begin()));
 }
 
 Texture::Texture(fs::path path, bool mipmap, Format fmt) : data_(nullptr) {
@@ -499,9 +501,9 @@ int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
     ImageLoader::Data image = ImageLoader::load(path, TexLoadFormats[fmt]);
     int ch = sNumChannels[fmt];
 
-    Vector<uint8_t> pixelData;
+    std::vector<uint8_t> pixelData;
     pixelData.resize(tileW * tileH * ch, 0);
-    uint8_t* dst = pixelData.begin();
+    uint8_t* dst = &(*pixelData.begin());
     int tileIndex = 0;
 
     for (int y = 0; y + tileH <= image.height; y += tileH) {
@@ -509,7 +511,7 @@ int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
             if (tileIndex < numTiles) {
                 uint8_t* src = image.pixels + ((y * image.width) + x) * ch;
                 for (int line = 0; line < tileH; ++line) {
-                    memcpy(dst + line * tileW * ch,
+                    std::memcpy(dst + line * tileW * ch,
                            src + line * image.width * ch, tileW * ch);
                 }
                 outTiles[tileIndex++] = Texture(tileW, tileH, dst, mipmap, fmt);
@@ -527,9 +529,9 @@ int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
     ImageLoader::Data image = ImageLoader::load(path, TexLoadFormats[fmt]);
     int ch = sNumChannels[fmt];
 
-    Vector<uint8_t> pixelData;
+    std::vector<uint8_t> pixelData;
     pixelData.resize(tileW * tileH * ch, 0);
-    uint8_t* dst = pixelData.begin();
+    uint8_t* dst = &(*pixelData.begin());
     int tileIndex = 0;
 
     for (int y = 0; y + tileH <= image.height; y += tileH) {
@@ -537,7 +539,7 @@ int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
             if (tileIndex < numTiles) {
                 uint8_t* src = image.pixels + ((y * image.width) + x) * ch;
                 for (int line = 0; line < tileH; ++line) {
-                    memcpy(dst + line * tileW * ch,
+                    std::memcpy(dst + line * tileW * ch,
                            src + line * image.width * ch, tileW * ch);
                 }
                 outTiles.emplace_back(tileW, tileH, dst, mipmap, fmt);

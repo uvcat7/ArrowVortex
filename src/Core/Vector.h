@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <new>
+#include <vector>
 
 namespace Vortex {
 
@@ -236,6 +237,7 @@ void Vector<T>::swap(Vector& o) {
 
 template <typename T>
 void Vector<T>::clear() {
+
     for (int i = 0; i < size_; ++i) data_[i].~T();
     size_ = 0;
 }

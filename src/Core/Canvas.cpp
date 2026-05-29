@@ -3,6 +3,7 @@
 #include <Core/Utils.h>
 
 #include <math.h>
+#include <cstring>
 
 namespace Vortex {
 
@@ -82,7 +83,7 @@ struct GetCircleDist : public DistanceFunc {
 
     float Get(float px, float py) const override {
         float dx = px - x, dy = py - y;
-        return sqrt(dx * dx + dy * dy) - r;
+        return std::sqrt(dx * dx + dy * dy) - r;
     }
 };
 
@@ -94,15 +95,15 @@ struct GetRoundRectDist : public DistanceFunc {
         : x1(x1), y1(y1), x2(x2), y2(y2), r(r) {}
 
     float Get(float px, float py) const override {
-        float x = min(max(px, x1 + r), x2 - r);
-        float y = min(max(py, y1 + r), y2 - r);
+        float x = std::min(std::max(px, x1 + r), x2 - r);
+        float y = std::min(std::max(py, y1 + r), y2 - r);
         if (x == px && y == py) {
-            float dx = min(x - x1, x2 - x);
-            float dy = min(y - y1, y2 - y);
-            return -min(dx, dy);
+            float dx = std::min(x - x1, x2 - x);
+            float dy = std::min(y - y1, y2 - y);
+            return -std::min(dx, dy);
         } else {
             float dx = px - x, dy = py - y;
-            return sqrt(dx * dx + dy * dy) - r;
+            return std::sqrt(dx * dx + dy * dy) - r;
         }
     }
 };
@@ -128,7 +129,7 @@ struct GetPolyDist : public DistanceFunc {
         float d = 1e10;
         for (int i = 0, j = count - 1; i < count; j = i, ++i) {
             GetLineDist ld(x[i], y[i], x[j], y[j], 0);
-            d = min(d, ld.Get(px, py));
+            d = std::min(d, ld.Get(px, py));
         }
         return InsidePoly(px, py) ? -d : d;
     }
@@ -163,13 +164,13 @@ void Canvas::Data::draw(float* buf, int w, int h, const areaf& area,
     if (blendMode == Canvas::BM_ALPHA) blendfunc = BlendAlpha;
     if (blendMode == Canvas::BM_ADD) blendfunc = BlendAdd;
 
-    int x1 = max(mask.l, static_cast<int>(area.l - outerGlow - 1 + 0.5f));
-    int y1 = max(mask.t, static_cast<int>(area.t - outerGlow - 1 + 0.5f));
-    int x2 = min(mask.r, static_cast<int>(area.r + outerGlow + 1 + 0.5f));
-    int y2 = min(mask.b, static_cast<int>(area.b + outerGlow + 1 + 0.5f));
+    int x1 = std::max(mask.l, static_cast<int>(area.l - outerGlow - 1 + 0.5f));
+    int y1 = std::max(mask.t, static_cast<int>(area.t - outerGlow - 1 + 0.5f));
+    int x2 = std::min(mask.r, static_cast<int>(area.r + outerGlow + 1 + 0.5f));
+    int y2 = std::min(mask.b, static_cast<int>(area.b + outerGlow + 1 + 0.5f));
 
-    float rh = 1.f / max(1, y2 - y1);
-    float rw = 1.f / max(1, x2 - x1);
+    float rh = 1.f / std::max(1, y2 - y1);
+    float rw = 1.f / std::max(1, x2 - x1);
     float ig = 1.f / (innerGlow + 1);
     float og = 1.f / (outerGlow + 1);
 
@@ -189,10 +190,10 @@ void Canvas::Data::draw(float* buf, int w, int h, const areaf& area,
             BlendLinear(src, r, xf * rw);
             if (outline && dist < -0.5f) {
                 float a = 1 - ig * ((-dist - lineWidth) + 0.5f);
-                if (a > 0) blendfunc(*dst, src, min(a, 1.f));
+                if (a > 0) blendfunc(*dst, src, std::min(a, 1.f));
             } else {
                 float a = 1 - og * (dist + 0.5f);
-                if (a > 0) blendfunc(*dst, src, min(a, 1.f));
+                if (a > 0) blendfunc(*dst, src, std::min(a, 1.f));
             }
         }
     }
@@ -233,8 +234,8 @@ Canvas::Canvas(const Canvas& other)
 }
 
 void Canvas::setMask(int l, int t, int r, int b) {
-    data_->mask = {max(0, l), max(0, t), min(r, canvas_width_),
-                   min(r, canvas_height_)};
+    data_->mask = {std::max(0, l), std::max(0, t), std::min(r, canvas_width_),
+                   std::min(r, canvas_height_)};
 }
 
 void Canvas::setOutline(float size) { data_->lineWidth = size; }
@@ -280,8 +281,8 @@ void Canvas::clear(float l) {
 
 void Canvas::line(float x1, float y1, float x2, float y2, float width) {
     float r = width * 0.5f;
-    float xmin = min(x1, x2), xmax = max(x1, x2);
-    float ymin = min(y1, y2), ymax = max(y1, y2);
+    float xmin = std::min(x1, x2), xmax = std::max(x1, x2);
+    float ymin = std::min(y1, y2), ymax = std::max(y1, y2);
     GetLineDist func(x1, y1, x2, y2, r);
     data_->draw(canvas_data_, canvas_width_, canvas_height_,
                 {xmin - r, ymin - r, xmax + r, ymax + r}, &func);
@@ -294,9 +295,10 @@ void Canvas::circle(float x, float y, float r) {
 }
 
 void Canvas::box(float x1, float y1, float x2, float y2, float radius) {
-    float xl = min(x1, x2), xr = max(x1, x2);
-    float yt = min(y1, y2), yb = max(y1, y2);
-    float r = min(min(xr - xl, yb - yt) * 0.5f, max(0.f, radius));
+    float xl = std::min(x1, x2), xr = std::max(x1, x2);
+    float yt = std::min(y1, y2), yb = std::max(y1, y2);
+    float r =
+        std::min(std::min(xr - xl, yb - yt) * 0.5f, std::max(0.f, radius));
     GetRoundRectDist func(xl, yt, xr, yb, r);
     data_->draw(canvas_data_, canvas_width_, canvas_height_, {xl, yt, xr, yb},
                 &func);
@@ -321,7 +323,7 @@ Texture Canvas::createTexture(bool mipmap) const {
         malloc(canvas_width_ * canvas_height_ * 4 * sizeof(uint8_t)));
     for (int i = 0; i < canvas_width_ * canvas_height_ * 4; ++i) {
         int v = static_cast<int>(canvas_data_[i] * 255.f + 0.5f);
-        dst[i] = min(max(v, 0), 255);
+        dst[i] = std::min(std::max(v, 0), 255);
     }
     Texture result(canvas_width_, canvas_height_, dst, mipmap);
     free(dst);
@@ -336,7 +338,7 @@ Canvas& Canvas::operator=(const Canvas& other) {
     if (other.canvas_data_)
         canvas_data_ = static_cast<float*>(
             malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float)));
-    memcpy(canvas_data_, other.canvas_data_,
+    std::memcpy(canvas_data_, other.canvas_data_,
            canvas_width_ * canvas_height_ * 4 * sizeof(float));
     return *this;
 }

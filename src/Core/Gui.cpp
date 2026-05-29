@@ -15,6 +15,7 @@
 #include <Core/GuiDraw.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 namespace Vortex {
 namespace {
@@ -85,7 +86,8 @@ static void handleTooltip() {
         if (GUI->tooltipText.length() && GUI->tooltipTimer > 1.0f) {
             TextStyle style;
 
-            int alpha = clamp(static_cast<int>(GUI->tooltipTimer * 1000 - 1000),
+            int alpha = std::clamp(
+                static_cast<int>(GUI->tooltipTimer * 1000 - 1000),
                               0, 255);
 
             style.textColor = Color32(0, alpha);
@@ -105,8 +107,8 @@ static void handleTooltip() {
                 }
             }
 
-            pos.x = clamp(pos.x, 4, GUI->viewSize.x - textSize.x - 4);
-            pos.y = clamp(pos.y, 4, GUI->viewSize.y - textSize.y - 4);
+            pos.x = std::clamp(pos.x, 4, GUI->viewSize.x - textSize.x - 4);
+            pos.y = std::clamp(pos.y, 4, GUI->viewSize.y - textSize.y - 4);
 
             recti textBox = {pos.x, pos.y, textSize.x, textSize.y};
             recti box = Expand(textBox, 3);

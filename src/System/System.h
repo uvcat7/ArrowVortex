@@ -3,6 +3,13 @@
 #include <Core/Input.h>
 #include <filesystem>
 namespace fs = std::filesystem;
+
+#ifdef __linux__
+// Defines INT_MAX and INT_MIN
+#include <limits.h>
+#define MAX_PATH PATH_MAX
+#undef R_OK
+#endif
 #include <SDL3/SDL.h>
 
 namespace Vortex {

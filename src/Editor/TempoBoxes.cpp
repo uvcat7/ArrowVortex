@@ -7,7 +7,7 @@
 #include <Core/Text.h>
 #include <Core/Texture.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/Xmr.h>
 
 #include <Simfile/SegmentGroup.h>
@@ -36,7 +36,7 @@ static const int MAX_WIDTH = 400;
 
 struct TempoBoxesImpl : public TempoBoxes {
     TextStyle textStyle;
-    Vector<TempoBox> myBoxes;
+    std::vector<TempoBox> myBoxes;
     int myMouseOverBox;
     TileRect myBoxBar;
     TileRect myBoxHl;
@@ -95,7 +95,7 @@ struct TempoBoxesImpl : public TempoBoxes {
             for (auto seg = segment.begin(), segEnd = segment.end();
                  seg != segEnd; ++seg) {
                 std::string desc = meta->getDescription(seg.ptr);
-                myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
+                myBoxes.emplace_back(TempoBox{desc, seg->row, type, 0, 0, 0});
             }
         }
 
@@ -111,7 +111,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         for (TempoBox& box : myBoxes) {
             vec2i bounds =
                 Text::arrange(Text::MC, textStyle, MAX_WIDTH, box.str.c_str());
-            int width = max(32, bounds.x + 24);
+            int width = std::max(32, bounds.x + 24);
             box.width = width;
             box.height = bounds.y + 16;
 
@@ -204,19 +204,19 @@ struct TempoBoxesImpl : public TempoBoxes {
         auto end = myBoxes.end();
         if (mod == SELECT_SET) {
             for (; box != end; ++box) {
-                uint32_t set = pred(box);
+                uint32_t set = pred(&(*box));
                 numSelected += set;
                 box->isSelected = set;
             }
         } else if (mod == SELECT_ADD) {
             for (; box != end; ++box) {
-                uint32_t set = pred(box);
+                uint32_t set = pred(&(*box));
                 numSelected += set & (box->isSelected ^ 1);
                 box->isSelected |= set;
             }
         } else if (mod == SELECT_SUB) {
             for (; box != end; ++box) {
-                uint32_t set = pred(box);
+                uint32_t set = pred(&(*box));
                 numSelected += set & box->isSelected;
                 box->isSelected &= set ^ 1;
             }
@@ -375,7 +375,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         Text::arrange(Text::TC, style, meta->help);
         vec2i helpSize = Text::getSize();
 
-        int w = max(nameSize.x, helpSize.x) + 12;
+        int w = std::max(nameSize.x, helpSize.x) + 12;
         int h = nameSize.y + helpSize.y + 8;
         recti r = recti{x - w / 2, y, w, h};
 
@@ -391,7 +391,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         Text::draw(vec2i{x, y + 10});
     }
 
-    const Vector<TempoBox>& getBoxes() override { return myBoxes; }
+    const std::vector<TempoBox>& getBoxes() override { return myBoxes; }
 
 };  // TempoBoxesImpl
 

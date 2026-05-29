@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 
 #include <Core/Utils.h>
@@ -10,6 +11,7 @@
 
 #include <System/Debug.h>
 #include <System/File.h>
+#include <System/System.h>
 
 #include <Simfile/Simfile.h>
 #include <Simfile/Chart.h>
@@ -59,7 +61,7 @@ struct ExportTP {
 };
 
 template <typename T>
-static int FindNextRow(const Vector<T>& list, int row) {
+static int FindNextRow(const std::vector<T>& list, int row) {
     const T* it =
         std::lower_bound(list.begin(), list.end(), row,
                          [](const T& a, int row) { return a.row < row; });
@@ -74,7 +76,7 @@ static int FindNextNoteRow(const NoteList& list, int row) {
     return (it != list.end()) ? it->row : INT_MAX;
 }
 
-static void ConvertStop(Vector<ExportTP>& tps, const TimingData::Event* cur,
+static void ConvertStop(std::vector<ExportTP>& tps, const TimingData::Event* cur,
                         const TimingData::Event* next, const Chart* chart) {
     // Find the row on which the next BPM change, stop, or note occurs.
     int endRow = cur->row + 48;
@@ -96,15 +98,15 @@ static void ConvertStop(Vector<ExportTP>& tps, const TimingData::Event* cur,
     double timeDiff =
         (cur->endTime - cur->time) + (endRow - cur->row) * cur->spr;
     double rowDiff = endRow - cur->row;
-    tps.push_back({cur->time, timeDiff / rowDiff});
+    tps.emplace_back(cur->time, timeDiff / rowDiff);
 
     // Revert back to actual BPM after the change.
-    tps.push_back({cur->endTime, cur->spr});
+    tps.emplace_back(cur->endTime, cur->spr);
 }
 
 static void WriteTimingPoints(std::ofstream& out, const Chart* chart,
                               const TimingData& timing, const Tempo* tempo) {
-    Vector<ExportTP> tps;
+    std::vector<ExportTP> tps;
     tps.reserve(32);
 
     // Create a list of timing point from the tempo.
@@ -113,10 +115,9 @@ static void WriteTimingPoints(std::ofstream& out, const Chart* chart,
     for (; it != end; ++it) {
         if (it->endTime > it->time) {
             auto next = it + 1;
-            if (next == end) next = nullptr;
-            ConvertStop(tps, it, next, chart);
+            ConvertStop(tps, &(*it), (next == end) ? nullptr : &(*next), chart);
         } else {
-            tps.push_back({it->time, it->spr});
+            tps.emplace_back(it->time, it->spr);
         }
     }
 
@@ -126,7 +127,7 @@ static void WriteTimingPoints(std::ofstream& out, const Chart* chart,
         double time = tp.time;
         if (time < 0) {
             double secPerMeasure = (msPerBeat / 1000.0) * 4.0;
-            time = secPerMeasure - fmod(-time, secPerMeasure);
+            time = secPerMeasure - std::fmod(-time, secPerMeasure);
         }
         out << ToMilliseconds(time) << ',' << msPerBeat << ",4,1,0,100,1,0\n";
     }

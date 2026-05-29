@@ -1,7 +1,6 @@
 ﻿#include <Editor/Shortcuts.h>
 
 #include <Core/Xmr.h>
-#include <Core/Vector.h>
 #include <Core/StringUtils.h>
 
 #include <System/Debug.h>
@@ -9,6 +8,8 @@
 #include <Editor/Common.h>
 
 #include <algorithm>
+#include <vector>
+#include <cstring>
 
 namespace Vortex {
 namespace {
@@ -404,7 +405,7 @@ struct ShortcutsImpl : public Shortcuts {
         bool scrollUp;
     };
 
-    Vector<ShortcutEntry> shortcutMappings_;
+    std::vector<ShortcutEntry> shortcutMappings_;
 
     // ================================================================================================
     // ShortcutsImpl :: constructor and destructor.
@@ -455,7 +456,7 @@ struct ShortcutsImpl : public Shortcuts {
 
         // Store the shortcut if it has a key or scroll direction.
         if (entry.key || isScroll) {
-            shortcutMappings_.push_back(entry);
+            shortcutMappings_.emplace_back(entry);
         }
     }
 
@@ -480,7 +481,7 @@ struct ShortcutsImpl : public Shortcuts {
 
         // Create a list of shortcuts.
         ForXmrAttribs(attribute, &doc) {
-            if (strlen(attribute->name) > 0 && attribute->numValues > 0) {
+            if (std::strlen(attribute->name) > 0 && attribute->numValues > 0) {
                 if (*attribute->values[0] == 0) continue;
 
                 // Find the action that corresponds to the shortcut.

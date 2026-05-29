@@ -1,6 +1,8 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
+#include <string>
+#include <cstdint>
 
 namespace Vortex {
 
@@ -233,19 +235,19 @@ struct Str {
 
     /// Splits a string into a string list based on word boundaries.
     /// For example, SplitString("Hello World") returns {"Hello", "World"}.
-    static Vector<std::string> split(const std::string& s);
+    static std::vector<std::string> split(const std::string& s);
 
     /// Splits a string into a string list based on a delimiter.
     /// For example, SplitString("Hello ~ World", "~") returns {"Hello",
     /// "World"}. If trim is true, whitespace surrounding each element is
     /// removed. If skipEmpty is true, empty elements are not added to the list.
-    static Vector<std::string> split(const std::string& s,
+    static std::vector<std::string> split(const std::string& s,
                                      const char* delimiter, bool trim = true,
                                      bool skipEmpty = true);
 
     /// Returns the concatenation of the list of strings, seperated by the given
     /// delimiter.
-    static std::string join(const Vector<std::string>& list,
+    static std::string join(const std::vector<std::string>& list,
                             const char* delimiter);
 };
 

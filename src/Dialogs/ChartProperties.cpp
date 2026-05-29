@@ -201,7 +201,7 @@ void DialogChartProperties::myUpdateNoteInfo() {
     double density = 0.0;
     if (gNotes->begin() < gNotes->end()) {
         density = static_cast<double>(gNotes->getNumJudge()) /
-                  max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
+            std::max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
     }
 
     myNoteDensity->text.set(
@@ -269,7 +269,7 @@ class DialogChartProperties::BreakdownWidget : public GuiWidget {
 
    private:
     DialogChartProperties* myDialog;
-    Vector<WgButton*> myButtons;
+    std::vector<WgButton*> myButtons;
 };
 
 DialogChartProperties::BreakdownWidget::~BreakdownWidget() {
@@ -289,10 +289,10 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
         auto& item = breakdown[i];
 
         Text::arrange(Text::TL, TextStyle(), item.text.c_str());
-        int w = max(16, Text::getSize().x + 8);
+        int w = std::max(16, Text::getSize().x + 8);
 
         if (i >= myButtons.size()) {
-            myButtons.push_back(new WgButton(getGui()));
+            myButtons.emplace_back(new WgButton(getGui()));
         }
 
         WgButton* button = myButtons[i];

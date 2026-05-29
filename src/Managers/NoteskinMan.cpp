@@ -2,7 +2,6 @@
 
 #include <Core/QuadBatch.h>
 #include <Core/StringUtils.h>
-#include <Core/Vector.h>
 #include <Core/Utils.h>
 #include <Core/Xmr.h>
 
@@ -14,6 +13,8 @@
 #include <Editor/Menubar.h>
 
 #include <Managers/StyleMan.h>
+#include <algorithm>
+#include <vector>
 
 namespace Vortex {
 namespace {
@@ -21,7 +22,7 @@ namespace {
 struct SkinType {
     std::string name;
     bool supportsAll;
-    Vector<const Style*> supportedStyles;
+    std::vector<const Style*> supportedStyles;
 };
 
 struct NoteskinImpl : public Noteskin {
@@ -84,7 +85,7 @@ int GetMirrorType(const char* mirror) {
 }
 
 static void ParseSprite(XmrNode* node, int numCols, int players, bool hasRows,
-                        const char* name, Vector<SpriteTransform>& spr) {
+                        const char* name, std::vector<SpriteTransform>& spr) {
     ForXmrNodesNamed(n, node, name) {
         int uvs[2], size[2], rot;
 
@@ -271,15 +272,15 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
     // Read the XMR document.
     SpriteTransform st;
 
-    Vector<SpriteTransform> note(numCols * NUM_ROW_TYPES * numPlayers, st);
-    Vector<SpriteTransform> mine(numCols * numPlayers, st);
-    Vector<SpriteTransform> holdBody(numCols, st);
-    Vector<SpriteTransform> holdTail(numCols, st);
-    Vector<SpriteTransform> rollBody(numCols, st);
-    Vector<SpriteTransform> rollTail(numCols, st);
-    Vector<SpriteTransform> receptorOn(numCols, st);
-    Vector<SpriteTransform> receptorOff(numCols, st);
-    Vector<SpriteTransform> receptorGlow(numCols, st);
+    std::vector<SpriteTransform> note(numCols * NUM_ROW_TYPES * numPlayers, st);
+    std::vector<SpriteTransform> mine(numCols * numPlayers, st);
+    std::vector<SpriteTransform> holdBody(numCols, st);
+    std::vector<SpriteTransform> holdTail(numCols, st);
+    std::vector<SpriteTransform> rollBody(numCols, st);
+    std::vector<SpriteTransform> rollTail(numCols, st);
+    std::vector<SpriteTransform> receptorOn(numCols, st);
+    std::vector<SpriteTransform> receptorOff(numCols, st);
+    std::vector<SpriteTransform> receptorGlow(numCols, st);
 
     ParseSprite(node, numCols, numPlayers, true, "Note", note);
     ParseSprite(node, numCols, numPlayers, false, "Mine", mine);
@@ -356,9 +357,9 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
 #define NOTESKIN_MAN ((NoteskinManImpl*)gNoteskin)
 
 struct NoteskinManImpl : public NoteskinMan {
-    Vector<int> myPriorities;
-    Vector<SkinType> myTypes;
-    Vector<NoteskinImpl*> mySkins;
+    std::vector<int> myPriorities;
+    std::vector<SkinType> myTypes;
+    std::vector<NoteskinImpl*> mySkins;
     NoteskinImpl* myActiveSkin;
     const Style* myActiveStyle;
     SkinType myFallback;
@@ -393,9 +394,9 @@ struct NoteskinManImpl : public NoteskinMan {
                         continue;
                     }
                     for (const Style* alt : gStyle->getAliases(id)) {
-                        type.supportedStyles.push_back(alt);
+                        type.supportedStyles.emplace_back(alt);
                     }
-                    type.supportedStyles.push_back(style);
+                    type.supportedStyles.emplace_back(style);
                 }
             }
 
@@ -406,11 +407,11 @@ struct NoteskinManImpl : public NoteskinMan {
                 continue;
             }
 
-            myTypes.push_back(type);
+            myTypes.emplace_back(type);
         }
 
         for (int i = 1; i < myTypes.size(); ++i) {
-            myPriorities.push_back(i);
+            myPriorities.emplace_back(i);
         }
 
         myActiveStyle = nullptr;
@@ -428,23 +429,23 @@ struct NoteskinManImpl : public NoteskinMan {
 
     void loadSettings(XmrNode& settings) {
         // Read the noteskin preferences from the settings.
-        Vector<std::string> prefs;
+        std::vector<std::string> prefs;
         XmrNode* view = settings.child("view");
         if (view) {
             auto attrib = view->attrib("noteskinPrefs");
             if (attrib) {
                 for (int i = attrib->numValues - 1; i >= 0; --i) {
-                    prefs.push_back(attrib->values[i]);
+                    prefs.emplace_back(attrib->values[i]);
                 }
             }
         }
 
         // If there are no preferences, use the default preferences.
         if (prefs.empty()) {
-            prefs.push_back("Pump");
-            prefs.push_back("Simple");
-            prefs.push_back("Classic");
-            prefs.push_back("Metal");
+            prefs.emplace_back("Pump");
+            prefs.emplace_back("Simple");
+            prefs.emplace_back("Classic");
+            prefs.emplace_back("Metal");
         }
 
         // Translate the preferences to a priority list.
@@ -462,9 +463,10 @@ struct NoteskinManImpl : public NoteskinMan {
         if (!view) view = settings.addChild("view");
 
         // Save the noteskin preferences.
-        Vector<const char*> prefs;
-        for (int i : myPriorities) prefs.push_back(myTypes[i].name.c_str());
-        view->addAttrib("noteskinPrefs", prefs.data(), min(prefs.size(), 5));
+        std::vector<const char*> prefs;
+        for (int i : myPriorities) prefs.emplace_back(myTypes[i].name.c_str());
+        view->addAttrib("noteskinPrefs", prefs.data(),
+                        std::min(static_cast<int>(prefs.size()), 5));
     }
 
     // ================================================================================================
@@ -473,7 +475,9 @@ struct NoteskinManImpl : public NoteskinMan {
     static bool Supports(const SkinType& type, const Style* style) {
         if (type.supportsAll) return true;
 
-        return type.supportedStyles.find(style) != type.supportedStyles.size();
+        return std::find(type.supportedStyles.begin(),
+                         type.supportedStyles.end(),
+                         style) != type.supportedStyles.end();
     }
 
     void update(Chart* chart) override {
@@ -486,7 +490,7 @@ struct NoteskinManImpl : public NoteskinMan {
 
         // Find the noteskin for the style.
         if (style) {
-            mySkins.grow(style->index + 1, nullptr);
+            mySkins.resize(style->index + 1, nullptr);
             skin = mySkins[style->index];
 
             // Create a new noteskin if the style does not have one.
@@ -531,12 +535,12 @@ struct NoteskinManImpl : public NoteskinMan {
     }
 
     void giveTopPriority(int type) {
-        myPriorities.erase_values(type);
-        myPriorities.insert(0, type, 1);
+        std::erase(myPriorities, type);
+        myPriorities.insert(myPriorities.begin(), 1, type);
     }
 
     void setType(int type) override {
-        type = clamp(type, 0, myTypes.size());
+        type = std::clamp(type, 0, static_cast<int>(myTypes.size()));
         if (myActiveSkin && myActiveSkin->type != type) {
             LoadNoteskin(myActiveSkin, myTypes[type]);
             myActiveSkin->type = type;

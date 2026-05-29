@@ -31,7 +31,7 @@ static int GetTempoListH() {
             }
         }
     }
-    return max(h, ITEM_H);
+    return std::max(h, ITEM_H);
 }
 
 struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
@@ -157,8 +157,8 @@ DialogTempoBreakdown::DialogTempoBreakdown() {
 void DialogTempoBreakdown::onUpdateSize() {
     myList->updateSize();
     int h = myList->getScrollHeight();
-    setMinimumHeight(min(64, h));
-    setMaximumHeight(min(1024, h));
+    setMinimumHeight(std::min(64, h));
+    setMaximumHeight(std::min(1024, h));
 }
 
 void DialogTempoBreakdown::onTick() {

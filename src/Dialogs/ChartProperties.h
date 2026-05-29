@@ -4,7 +4,7 @@
 #include <Core/Widgets.h>
 #include <Core/WidgetsLayout.h>
 
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 

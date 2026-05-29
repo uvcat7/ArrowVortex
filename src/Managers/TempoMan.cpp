@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <math.h>
+#include <cfloat>
 
 #include <Core/ByteStream.h>
 #include <Core/StringUtils.h>
@@ -21,6 +22,8 @@
 #include <Simfile/SegmentGroup.h>
 #include <Simfile/SegmentList.h>
 #include <Simfile/TimingData.h>
+
+#include <System/System.h>
 
 #define TEMPO_MAN ((TempoManImpl*)gTempo)
 
@@ -405,7 +408,7 @@ struct TempoManImpl : public TempoMan {
     }
 
     static double ClampAndRound(double val, double min, double max) {
-        return round(clamp(val, min, max) * 1000000.0) / 1000000.0;
+        return std::round(std::clamp(val, min, max) * 1000000.0) / 1000000.0;
     }
 
     void modify(const SegmentEdit& edit) override { modify(edit, true); }
@@ -496,7 +499,7 @@ struct TempoManImpl : public TempoMan {
         if (row == INT_MAX) {
             for (auto& list : clipboard) {
                 if (list.size()) {
-                    row = min(row, list.begin()->row);
+                    row = std::min(row, list.begin()->row);
                 }
             }
         }
@@ -522,10 +525,10 @@ struct TempoManImpl : public TempoMan {
         SegmentEdit edit;
 
         // Decode the clipboard data.
-        Vector<uint8_t> buffer = clipboard.tempos;
+        std::vector<uint8_t> buffer = clipboard.tempos;
         if (buffer.size() == 0) return;
 
-        ReadStream stream(buffer.begin(), buffer.size());
+        ReadStream stream(&(*buffer.begin()), buffer.size());
         edit.add.decode(stream);
         if (stream.success() == false || stream.bytesleft() > 0) {
             HudError("Clipboard contains invalid tempo data.");
@@ -559,7 +562,7 @@ struct TempoManImpl : public TempoMan {
     }
 
     void startTweakingBpm(int row) override {
-        row = max(0, row);
+        row = std::max(0, row);
 
         if ((myTweakMode == TWEAK_BPM && myTweakRow == row) || !myTempo) return;
 
@@ -719,8 +722,8 @@ struct TempoManImpl : public TempoMan {
             auto end = myTempo->segments->end<BpmChange>();
             for (; it != end; ++it) {
                 if (it->bpm >= 0) {
-                    low = min(low, it->bpm);
-                    high = max(high, it->bpm);
+                    low = std::min(low, it->bpm);
+                    high = std::max(high, it->bpm);
                 }
             }
         }

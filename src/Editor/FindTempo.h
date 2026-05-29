@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -15,7 +15,7 @@ class TempoDetector {
 
     virtual const char* getProgress() const = 0;
     virtual bool hasResult() const = 0;
-    virtual const Vector<TempoResult>& getResult() const = 0;
+    virtual const std::vector<TempoResult>& getResult() const = 0;
 };
 
 };  // namespace Vortex

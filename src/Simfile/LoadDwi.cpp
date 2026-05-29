@@ -2,6 +2,7 @@
 #include <Core/StringUtils.h>
 
 #include <algorithm>
+#include <cstring>
 
 #include <System/File.h>
 
@@ -302,7 +303,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols,
     chart->difficulty = ConvertDifficulty(params[0]);
     chart->meter = atoi(params[1]);
 
-    sim->charts.push_back(chart);
+    sim->charts.emplace_back(chart);
 
     return true;
 }
@@ -332,11 +333,11 @@ static void ParseStops(Tempo* tempo, char* list) {
 }
 
 static void ParseDisplayBpm(Tempo* tempo, char* bpm) {
-    if (strcmp(bpm, "*") == 0) {
+    if (std::strcmp(bpm, "*") == 0) {
         tempo->displayBpmType = BPM_RANDOM;
         tempo->displayBpmRange = {0, 0};
     } else {
-        char* dots = strstr(bpm, "..");
+        char* dots = std::strstr(bpm, "..");
         double min, max;
         if (dots) {
             *dots = 0;

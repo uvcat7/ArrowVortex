@@ -66,7 +66,7 @@ void WgLineEdit::onKeyPress(KeyPress& evt) {
                 GuiMain::setClipboardText(std::string());
             } else {
                 int a = lineedit_cursor_.x, b = lineedit_cursor_.y;
-                if (a > b) swapValues(a, b);
+                if (a > b) std::swap(a, b);
                 std::string substring(lineedit_text_.data() + a, b - a);
                 GuiMain::setClipboardText(substring.c_str());
                 if (key == Key::X) DeleteSection();
@@ -94,8 +94,8 @@ void WgLineEdit::onKeyPress(KeyPress& evt) {
         if (key == Key::END)
             cx = cy = static_cast<int>(lineedit_text_.length());
         if (cx != cy) {
-            if (key == Key::LEFT) cx = cy = min(cx, cy);
-            if (key == Key::RIGHT) cx = cy = max(cx, cy);
+            if (key == Key::LEFT) cx = cy = std::min(cx, cy);
+            if (key == Key::RIGHT) cx = cy = std::max(cx, cy);
         } else {
             if (key == Key::LEFT) cx = cy = Str::prevChar(lineedit_text_, cy);
             if (key == Key::RIGHT) cx = cy = Str::nextChar(lineedit_text_, cy);
@@ -116,8 +116,8 @@ void WgLineEdit::onKeyPress(KeyPress& evt) {
     }
 
     int len = static_cast<int>(lineedit_text_.length());
-    lineedit_cursor_.x = clamp(lineedit_cursor_.x, 0, len);
-    lineedit_cursor_.y = clamp(lineedit_cursor_.y, 0, len);
+    lineedit_cursor_.x = std::clamp(lineedit_cursor_.x, 0, len);
+    lineedit_cursor_.y = std::clamp(lineedit_cursor_.y, 0, len);
 }
 
 void WgLineEdit::onKeyRelease(KeyRelease& evt) {
@@ -238,9 +238,9 @@ void WgLineEdit::onTick() {
             Text::getCharIndex(vec2i{tp.x, tp.y}, {mp.x, tp.y});
         lineedit_blink_time_ = 0.f;
     }
-    lineedit_cursor_.x = min(max(lineedit_cursor_.x, 0),
+    lineedit_cursor_.x = std::min(std::max(lineedit_cursor_.x, 0),
                              static_cast<int>(lineedit_text_.length()));
-    lineedit_cursor_.y = min(max(lineedit_cursor_.y, 0),
+    lineedit_cursor_.y = std::min(std::max(lineedit_cursor_.y, 0),
                              static_cast<int>(lineedit_text_.length()));
 
     // Update text offset
@@ -250,15 +250,16 @@ void WgLineEdit::onTick() {
     float textW = static_cast<float>(Text::getSize().x);
     float cursorX = static_cast<float>(
         Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x);
-    float target = min(max(lineedit_scroll_offset_, cursorX - barW + SPINNER_W),
+    float target =
+        std::min(std::max(lineedit_scroll_offset_, cursorX - barW + SPINNER_W),
                        cursorX - SPINNER_W);
-    target = max(0.f, min(target, textW - barW));
+    target = std::max(0.f, std::min(target, textW - barW));
 
-    float delta =
-        max(fabs(lineedit_scroll_offset_ - target) * 10.f * dt, dt * 256.f);
+    float delta = std::max(fabs(lineedit_scroll_offset_ - target) * 10.f * dt,
+                           dt * 256.f);
     float smooth = (lineedit_scroll_offset_ < target)
-                       ? min(lineedit_scroll_offset_ + delta, target)
-                       : max(lineedit_scroll_offset_ - delta, target);
+                       ? std::min(lineedit_scroll_offset_ + delta, target)
+                       : std::max(lineedit_scroll_offset_ - delta, target);
     lineedit_scroll_offset_ = force_scroll_update_ ? target : smooth;
     force_scroll_update_ = false;
 
@@ -292,7 +293,7 @@ void WgLineEdit::onDraw() {
 
         int cx = Text::getEscapedCharIndex(str, lineedit_cursor_.x);
         int cy = Text::getEscapedCharIndex(str, lineedit_cursor_.y);
-        if (cx > cy) swapValues(cx, cy);
+        if (cx > cy) std::swap(cx, cy);
 
         Str::insert(hlstr, cy, "{tc}{bc}{sc}");
         Str::insert(hlstr, cx, "{tc:000F}{bc:FFFF}{sc:0000}");
@@ -323,7 +324,7 @@ void WgLineEdit::onDraw() {
 
 void WgLineEdit::hideBackground() { lineedit_show_background_ = 0; }
 
-void WgLineEdit::setMaxLength(int n) { lineedit_max_length_ = max(0, n); }
+void WgLineEdit::setMaxLength(int n) { lineedit_max_length_ = std::max(0, n); }
 
 void WgLineEdit::setNumerical(bool numerical) { is_numerical_ = numerical; }
 
@@ -332,7 +333,7 @@ void WgLineEdit::setEditable(bool editable) { is_editable_ = editable; }
 void WgLineEdit::DeleteSection() {
     if (is_editable_ && lineedit_cursor_.x != lineedit_cursor_.y) {
         if (lineedit_cursor_.x > lineedit_cursor_.y)
-            swapValues(lineedit_cursor_.x, lineedit_cursor_.y);
+            std::swap(lineedit_cursor_.x, lineedit_cursor_.y);
         Str::erase(lineedit_text_, lineedit_cursor_.x,
                    lineedit_cursor_.y - lineedit_cursor_.x);
         lineedit_cursor_.y = lineedit_cursor_.x;
@@ -491,7 +492,7 @@ void WgSpinner::setPrecision(int minDecimalPlaces, int maxDecimalPlaces) {
 
 void WgSpinner::SpinnerUpdateValue(double v) {
     double prev = value.get();
-    value.set(max(spinner_min_, min(spinner_max_, v)));
+    value.set(std::max(spinner_min_, std::min(spinner_max_, v)));
     SpinnerUpdateText();
     if (value.get() != prev) onChange.call();
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/NonCopyable.h>
 
 #include <Simfile/Common.h>
@@ -37,7 +37,7 @@ struct Simfile : NonCopyable {
 
     void sanitize();
 
-    Vector<Chart*> charts;
+    std::vector<Chart*> charts;
     Tempo* tempo;
 
     std::string dir;
@@ -56,8 +56,8 @@ struct Simfile : NonCopyable {
     std::string cdTitle;
     std::string lyricsPath;
 
-    Vector<BgChange> fgChanges;
-    Vector<BgChange> bgChanges[2];
+    std::vector<BgChange> fgChanges;
+    std::vector<BgChange> bgChanges[2];
 
     double previewStart;
     double previewLength;

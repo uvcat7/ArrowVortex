@@ -127,7 +127,7 @@ struct EditorImpl : public Editor, public InputHandler {
     DialogEntry myDialogs[NUM_DIALOG_IDS];
     int myChanges;
     Texture myLogo;
-    Vector<std::string> myRecentFiles;
+    std::vector<std::string> myRecentFiles;
 
     int myFontSize;
     std::string myFontPath;
@@ -360,7 +360,7 @@ struct EditorImpl : public Editor, public InputHandler {
     void loadRecentFiles() {
         bool success;
         myRecentFiles = File::getLines("settings/recent files.txt", &success);
-        myRecentFiles.truncate(MAX_RECENT_FILES);
+        myRecentFiles.resize(MAX_RECENT_FILES);
     }
 
     void saveRecentFiles() {
@@ -589,9 +589,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void addToRecentfiles(fs::path path) {
         std::string spath = pathToUtf8(path);
-        myRecentFiles.erase_values(spath);
-        myRecentFiles.insert(0, spath, 1);
-        myRecentFiles.truncate(MAX_RECENT_FILES);
+        std::erase(myRecentFiles, spath);
+        myRecentFiles.insert(myRecentFiles.begin(),1 , spath);
+        myRecentFiles.resize(MAX_RECENT_FILES);
         gMenubar->update(Menubar::RECENT_FILES);
     }
 

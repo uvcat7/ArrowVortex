@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <Core/Core.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -57,11 +58,11 @@ struct TimingData {
     /// speed can use beats or time.
     double positionToSpeed(double beat, double time) const;
 
-    Vector<Event> events;
-    Vector<TimeSig> sigs;
-    Vector<ScrollRow> scrolls;
-    Vector<ScrollSpeed> speeds;
-    Vector<ScrollFake> fakes;
+    std::vector<Event> events;
+    std::vector<TimeSig> sigs;
+    std::vector<ScrollRow> scrolls;
+    std::vector<ScrollSpeed> speeds;
+    std::vector<ScrollFake> fakes;
 };
 
 // ================================================================================================

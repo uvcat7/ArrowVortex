@@ -1,6 +1,7 @@
 #include <Editor/View.h>
 
 #include <algorithm>
+#include <cmath>
 
 #include <Core/Draw.h>
 #include <Core/Gui.h>
@@ -79,9 +80,9 @@ struct ViewImpl : public View, public InputHandler {
             view->get("receptorY", &myReceptorY);
             view->get("previewOffset", &myPreviewOffset);
 
-            myCustomSnap = min(max(myCustomSnap, 5), 191);
-            myZoomLevel = min(max(myZoomLevel, -2.0), 16.0);
-            myScaleLevel = min(max(myScaleLevel, 1.0), 10.0);
+            myCustomSnap = std::clamp(myCustomSnap, 5, 191);
+            myZoomLevel = std::clamp(myZoomLevel, -2.0, 16.0);
+            myScaleLevel = std::clamp(myScaleLevel, 1.0, 10.0);
         }
 
         updateScrollValues();
@@ -281,7 +282,7 @@ struct ViewImpl : public View, public InputHandler {
                 gMusic->pause();
             } else {
                 double time = gMusic->getPlayTime();
-                myCursorTime = clamp(time, begintime, endtime);
+                myCursorTime = std::clamp(time, begintime, endtime);
                 myCursorBeat = gTempo->timeToBeat(myCursorTime);
                 myCursorRow = static_cast<int>(myCursorBeat * ROWS_PER_BEAT);
             }
@@ -303,22 +304,24 @@ struct ViewImpl : public View, public InputHandler {
         // Clamp the receptor X and Y to the view region.
         int minRecepX = rect_.x - rect_.w / 2;
         int maxRecepX = RightX(rect_) - rect_.w / 2;
-        myReceptorY = min(max(myReceptorY, rect_.y), BottomY(rect_));
-        myReceptorX = min(max(myReceptorX, minRecepX), maxRecepX);
+        myReceptorY = std::min(std::max(myReceptorY, rect_.y), BottomY(rect_));
+        myReceptorX = std::min(std::max(myReceptorX, minRecepX), maxRecepX);
 
         // Store the y-position of time zero.
         if (myUseTimeBasedView) {
-            myChartTopY = floor(static_cast<double>(myReceptorY) -
-                                myCursorTime * myPixPerSec);
+            myChartTopY = std::floor(static_cast<double>(myReceptorY) -
+                                     myCursorTime * myPixPerSec);
         } else {
-            myChartTopY = floor(static_cast<double>(myReceptorY) -
-                                myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
+            myChartTopY =
+                std::floor(static_cast<double>(myReceptorY) -
+                           myCursorBeat * ROWS_PER_BEAT * myPixPerRow);
         }
     }
 
     void updateScrollValues() {
-        myPixPerSec = round(21.077 * pow(1.518, myZoomLevel));
-        myPixPerRow = round(11.588 * pow(1.48, myZoomLevel)) * BEATS_PER_ROW;
+        myPixPerSec = std::round(21.077 * std::pow(1.518, myZoomLevel));
+        myPixPerRow =
+            std::round(11.588 * std::pow(1.48, myZoomLevel)) * BEATS_PER_ROW;
         if (myUseReverseScroll) {
             myPixPerSec = -myPixPerSec;
             myPixPerRow = -myPixPerRow;
@@ -328,7 +331,7 @@ struct ViewImpl : public View, public InputHandler {
     void updateCustomSnapSteps() {
         double inc = 192.0 / myCustomSnap;
         for (int i = 0; i <= myCustomSnap; ++i) {
-            myCustomSnapSteps[i] = static_cast<int>(round(inc * i));
+            myCustomSnapSteps[i] = static_cast<int>(std::round(inc * i));
         }
     }
 
@@ -353,7 +356,7 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     void setZoomLevel(double level) override {
-        level = min(max(level, -2.0), 16.0);
+        level = std::clamp(level, -2.0, 16.0);
         if (myZoomLevel != level) {
             myZoomLevel = level;
             updateScrollValues();
@@ -362,7 +365,7 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     void setScaleLevel(double level) override {
-        level = min(max(level, 1.0), 10.0);
+        level = std::clamp(level, 1.0, 10.0);
         if (myScaleLevel != level) {
             myScaleLevel = level;
             gEditor->reportChanges(VCM_ZOOM_CHANGED);
@@ -400,14 +403,14 @@ struct ViewImpl : public View, public InputHandler {
     void setCursorTime(double time) override {
         double begintime = gTempo->rowToTime(0);
         double endtime = gTempo->rowToTime(gSimfile->getEndRow());
-        myCursorTime = min(max(begintime, time), endtime);
+        myCursorTime = std::clamp(begintime, time, endtime);
         myCursorBeat = gTempo->timeToBeat(myCursorTime);
         myCursorRow = static_cast<int>(myCursorBeat * ROWS_PER_BEAT);
         gMusic->seek(myCursorTime);
     }
 
     void setCursorRow(int row) override {
-        myCursorRow = min(max(row, 0), gSimfile->getEndRow());
+        myCursorRow = std::clamp(row, 0, gSimfile->getEndRow());
         myCursorBeat = myCursorRow * BEATS_PER_ROW;
         myCursorTime = gTempo->rowToTime(myCursorRow);
         gMusic->seek(myCursorTime);
@@ -526,8 +529,8 @@ struct ViewImpl : public View, public InputHandler {
         out.xl -= ofs, out.xr += ofs;
         if (myUseTimeBasedView && gNotefield->hasShowWaveform()) {
             int w = gWaveform->getWidth() / 2;
-            out.xl = min(out.xl, out.xc - w - 4);
-            out.xr = max(out.xr, out.xc + w + 4);
+            out.xl = std::min(out.xl, out.xc - w - 4);
+            out.xr = std::max(out.xr, out.xc + w + 4);
         }
         return out;
     }

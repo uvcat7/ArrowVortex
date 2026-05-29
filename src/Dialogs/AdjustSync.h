@@ -34,7 +34,7 @@ class DialogAdjustSync : public EditorDialog {
     WgButton *myApplyBPM, *myFindBPM;
     WgSelectList* myBPMList;
     TempoDetector* myTempoDetector;
-    Vector<TempoResult> myDetectionResults;
+    std::vector<TempoResult> myDetectionResults;
     int myDetectionRow;
 };
 

@@ -40,7 +40,7 @@ static bool Check(const char* name, const std::string& a,
 }
 
 template <typename T, typename Equal>
-void VerifyVector(const Vector<T>& a, const Vector<T>& b, const char* name,
+void VerifyVector(const std::vector<T>& a, const std::vector<T>& b, const char* name,
                   const char* subname, Equal eq) {
     if (a.size() != b.size()) {
         HudError("%s :: %s mismatch in size: %i and %i", name, subname,

@@ -36,12 +36,12 @@ static ScrollButtonData GetButton(int size, int end, int page, int scroll) {
     if (end > page) {
         out.size = static_cast<int>(0.5 + size * static_cast<double>(page) /
                                               static_cast<double>(end));
-        out.size = max(16, out.size);
+        out.size = std::max(16, out.size);
 
         out.pos = static_cast<int>(
             0.5 + scroll * static_cast<double>(size - out.size) /
                       static_cast<double>(end - page));
-        out.pos = max(0, min(out.pos, size - out.size));
+        out.pos = std::max(0, std::min(out.pos, size - out.size));
     }
     return out;
 }
@@ -53,7 +53,7 @@ static int GetScroll(int size, int end, int page, int pos) {
         out =
             static_cast<int>(0.5 + pos * static_cast<double>(end - page) /
                                        static_cast<double>(size - button.size));
-        out = max(0, min(out, end - page));
+        out = std::max(0, std::min(out, end - page));
     }
     return out;
 }
@@ -86,9 +86,9 @@ static void DrawScrollbar(recti bar, ScrollButtonData button, bool vertical,
 }
 
 void ApplyScrollOffset(int& offset, int page, int scroll, bool up) {
-    int delta = max(1, page / 8);
+    int delta = std::max(1, page / 8);
     if (up) delta = -delta;
-    offset = max(0, min(offset + delta, scroll - page));
+    offset = std::max(0, std::min(offset + delta, scroll - page));
 }
 
 };  // anonymous namespace.
@@ -171,7 +171,7 @@ void WgScrollbar::onDraw() {
 
 void WgScrollbar::ScrollbarUpdateValue(int v) {
     double prev = value.get();
-    v = max(0, min(scrollbar_end_, v));
+    v = std::max(0, std::min(scrollbar_end_, v));
     value.set(v);
     if (value.get() != prev) onChange.call();
 }
@@ -304,9 +304,13 @@ void WgScrollRegion::setScrollType(ScrollType h, ScrollType v) {
     scroll_type_vertical_ = v;
 }
 
-void WgScrollRegion::setScrollW(int width) { scroll_width_ = max(0, width); }
+void WgScrollRegion::setScrollW(int width) {
+    scroll_width_ = std::max(0, width);
+}
 
-void WgScrollRegion::setScrollH(int height) { scroll_height_ = max(0, height); }
+void WgScrollRegion::setScrollH(int height) {
+    scroll_height_ = std::max(0, height);
+}
 
 int WgScrollRegion::getViewWidth() const {
     return rect_.w - is_vertical_scrollbar_active_ * SCROLLBAR_SIZE;
@@ -387,10 +391,10 @@ uint32_t WgScrollRegion::getScrollRegionActionAt_(int x, int y) {
 }
 
 void WgScrollRegion::ClampScrollPositions() {
-    scroll_position_x_ =
-        max(0, min(scroll_position_x_, scroll_width_ - getViewWidth()));
-    scroll_position_y_ =
-        max(0, min(scroll_position_y_, scroll_height_ - getViewHeight()));
+    scroll_position_x_ = std::max(
+        0, std::min(scroll_position_x_, scroll_width_ - getViewWidth()));
+    scroll_position_y_ = std::max(
+        0, std::min(scroll_position_y_, scroll_height_ - getViewHeight()));
 }
 
 };  // namespace Vortex

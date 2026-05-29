@@ -13,6 +13,8 @@
 
 #include <Simfile/SegmentGroup.h>
 
+#include <algorithm>
+
 #define ITEM_H static_cast<int>(20 * gSystem->getScaleFactor())
 #define ITEM_W static_cast<int>(74 * gSystem->getScaleFactor())
 
@@ -94,7 +96,7 @@ struct DialogLabelBreakdown::LabelButton : public GuiWidget {
 // LabelList
 
 struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
-    Vector<LabelButton*> myButtons;
+    std::vector<LabelButton*> myButtons;
     TileRect2 myButtonTex;
     int myDisplayType;
 
@@ -123,8 +125,9 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
     }
 
     void onUpdateSize() override {
-        scroll_height_ = max(static_cast<int>(24 * gSystem->getScaleFactor()),
-                             myButtons.size() * (ITEM_H + 1));
+        scroll_height_ =
+            std::max(static_cast<int>(24 * gSystem->getScaleFactor()),
+                     static_cast<int>(myButtons.size() * (ITEM_H + 1)));
         ClampScrollPositions();
     }
 
@@ -183,7 +186,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
         while (seg != segEnd) {
             std::string time = displayTime(seg->row);
             std::string text = segs->getRow<Label>(seg->row).str;
-            myButtons.push_back(
+            myButtons.emplace_back(
                 new LabelButton(getGui(), &myButtonTex, seg->row, time, text));
             ++seg;
         }

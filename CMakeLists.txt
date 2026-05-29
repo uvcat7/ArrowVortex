@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(ArrowVortex)
 
+# -extra-arg=/EHsc only on Windows
 set(CMAKE_CONFIGURATION_TYPES Debug;Release;MinSizeRel)
 if("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
     set(tidy_flags "--fix-errors;--fix-notes")
@@ -15,12 +16,13 @@ else()
     set(tidy_flags "--warnings-as-errors=*")
     set(format_flags "--dry-run")
 endif()
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags};-extra-arg=/EHsc;-p=build")
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags};-p=build")
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
+include_directories("${PROJECT_SOURCE_DIR}/out/build/linux-debug/vcpkg_installed/x64-linux/include")
 
 # Sometimes caching will cause CMAKE_TOOLCHAIN_FILE to be ignored
-include($ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+include(/opt/vcpkg/scripts/buildsystems/vcpkg.cmake)
 find_package(Aubio CONFIG NAMES aubio Aubio)
 find_package(FFMPEG REQUIRED)
 find_package(Freetype REQUIRED)
@@ -46,10 +48,10 @@ install(DIRECTORY bin/settings DESTINATION bin)
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
 add_custom_target(format ALL)
-add_custom_command(
-    TARGET format
-    POST_BUILD
-    COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
-    USES_TERMINAL
-)
+#add_custom_command(
+#    TARGET format
+#    POST_BUILD
+#    COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
+#    USES_TERMINAL
+#)
 add_dependencies(format ArrowVortex)

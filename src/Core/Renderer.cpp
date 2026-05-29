@@ -1,6 +1,5 @@
 #include <Core/Gui.h>
 
-#include <Core/Vector.h>
 #include <Core/Shader.h>
 #include <Core/Renderer.h>
 #include <Core/Draw.h>
@@ -9,6 +8,9 @@
 #include <System/Debug.h>
 #include <System/OpenGL.h>
 #include <System/System.h>
+
+#include <algorithm>
+#include <vector>
 
 namespace Vortex {
 
@@ -29,7 +31,7 @@ namespace {
 
 struct RendererInstance {
     Shader shaders[4];
-    Vector<recti> scissorStack;
+    std::vector<recti> scissorStack;
     uint32_t* quadIndices;
 
     uint8_t* batchPos;
@@ -201,19 +203,20 @@ void Renderer::pushScissorRect(const recti& r) {
 
 void Renderer::pushScissorRect(int x, int y, int w, int h) {
     auto& stack = RI->scissorStack;
-    w = max(w, 0), h = max(h, 0);
+    w = std::max(w, 0), h = std::max(h, 0);
+    recti newRect = {x, y, w, h};
     if (stack.empty()) {
         // The new scissor region is the first scissor region, use it as-is.
         glEnable(GL_SCISSOR_TEST);
-        stack.push_back({x, y, w, h});
+        stack.emplace_back(newRect);
     } else if (stack.size() < 256) {
         // Calculate the intersection of the current and new scissor region.
         recti last = stack.back();
-        int r = min(last.x + last.w, x + w);
-        int b = min(last.y + last.h, y + h);
-        x = max(last.x, x), w = max(0, r - x);
-        y = max(last.y, y), h = max(0, b - y);
-        stack.push_back({x, y, w, h});
+        int r = std::min(last.x + last.w, x + w);
+        int b = std::min(last.y + last.h, y + h);
+        x = std::max(last.x, x), w = std::max(0, r - x);
+        y = std::max(last.y, y), h = std::max(0, b - y);
+        stack.emplace_back(newRect);
     }
 
     // Apply the new scissor region.

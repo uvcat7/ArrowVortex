@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/GuiContext.h>
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -51,8 +51,8 @@ class RowLayout : public GuiWidget {
     struct Row;
     struct Col;
 
-    Vector<Row> row_list_;
-    Vector<GuiWidget*> widget_list_;
+    std::vector<Row> row_list_;
+    std::vector<GuiWidget*> widget_list_;
     int row_spacing_;
 };
 

@@ -49,7 +49,7 @@ struct NotesMan {
     virtual int selectTime(SelectModifier mod, int beginCol, int endCol,
                            double beginTime, double endTime,
                            bool ignoreRegion) = 0;
-    virtual int select(SelectModifier mod, const Vector<RowCol>& indice,
+    virtual int select(SelectModifier mod, const std::vector<RowCol>& indice,
                        bool ignoreRegions) = 0;
     virtual int select(SelectModifier mod, const Note* notes, int numNotes,
                        bool ignoreRegion) = 0;
@@ -99,7 +99,7 @@ struct NotesMan {
 
     /// Returns the indices of all notes preceding the given time for each
     /// column.
-    virtual Vector<const ExpandedNote*> getNotesBeforeTime(
+    virtual std::vector<const ExpandedNote*> getNotesBeforeTime(
         double time) const = 0;
 };
 

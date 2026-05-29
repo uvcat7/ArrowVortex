@@ -75,14 +75,6 @@ struct MenuBarImpl : public Menubar {
         }
     }
 
-    static void add(Item* menu, Action::Type action, const wchar_t* str) {
-        add(menu, action, Narrow(str).c_str());
-    }
-
-    static void add(Item* menu, int item, const wchar_t* str) {
-        menu->addItem(item, Narrow(str).c_str());
-    }
-
     static void add(Item* menu, int item, const char* str) {
         menu->addItem(item, str);
     }
@@ -130,9 +122,9 @@ struct MenuBarImpl : public Menubar {
         // Chart > Convert menu.
         Item* hChartConvert = newMenu();
         add(hChartConvert, CHART_CONVERT_ROUTINE_TO_COUPLES,
-            L"Routine \x2192 ITG Couple");
+            "Routine → ITG Couple");
         add(hChartConvert, CHART_CONVERT_COUPLES_TO_ROUTINE,
-            L"ITG Couple \x2192 Routine");
+            "ITG Couple → Routine");
 
         // Chart menu.
         Item* hChart = newMenu();
@@ -178,30 +170,29 @@ struct MenuBarImpl : public Menubar {
 
         // Notes > Convert menu.
         Item* hNoteConvert = newMenu();
-        add(hNoteConvert, CHANGE_NOTES_TO_MINES, L"Notes \x2192 Mines");
-        add(hNoteConvert, CHANGE_NOTES_TO_FAKES, L"Notes \x2192 Fakes");
-        add(hNoteConvert, CHANGE_NOTES_TO_LIFTS, L"Notes \x2192 Lifts");
+        add(hNoteConvert, CHANGE_NOTES_TO_MINES, "Notes → Mines");
+        add(hNoteConvert, CHANGE_NOTES_TO_FAKES, "Notes → Fakes");
+        add(hNoteConvert, CHANGE_NOTES_TO_LIFTS, "Notes → Lifts");
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_MINES_TO_NOTES, L"Mines \x2192 Notes");
-        add(hNoteConvert, CHANGE_MINES_TO_FAKES, L"Mines \x2192 Fakes");
-        add(hNoteConvert, CHANGE_MINES_TO_LIFTS, L"Mines \x2192 Lifts");
+        add(hNoteConvert, CHANGE_MINES_TO_NOTES, "Mines → Notes");
+        add(hNoteConvert, CHANGE_MINES_TO_FAKES, "Mines → Fakes");
+        add(hNoteConvert, CHANGE_MINES_TO_LIFTS, "Mines → Lifts");
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_FAKES_TO_NOTES, L"Fakes \x2192 Notes");
-        add(hNoteConvert, CHANGE_LIFTS_TO_NOTES, L"Lifts \x2192 Notes");
+        add(hNoteConvert, CHANGE_FAKES_TO_NOTES, "Fakes → Notes");
+        add(hNoteConvert, CHANGE_LIFTS_TO_NOTES, "Lifts → Notes");
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS,
-            L"Holds \x2194 Rolls");
-        add(hNoteConvert, CHANGE_HOLDS_TO_STEPS, L"Holds \x2192 Steps");
-        add(hNoteConvert, CHANGE_HOLDS_TO_MINES, L"Holds \x2192 Mines");
+        add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS, "Holds → Rolls");
+        add(hNoteConvert, CHANGE_HOLDS_TO_STEPS, "Holds → Steps");
+        add(hNoteConvert, CHANGE_HOLDS_TO_MINES, "Holds → Mines");
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, L"Switch Player");
-        add(hNoteConvert, CHANGE_NOTE_SIDE, L"Switch Sides");
+        add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, "Switch Player");
+        add(hNoteConvert, CHANGE_NOTE_SIDE, "Switch Sides");
 
         // Notes > Mirror menu.
         Item* hNoteMirror = newMenu();
-        add(hNoteMirror, MIRROR_NOTES_HORIZONTALLY, L"Horizontally");
-        add(hNoteMirror, MIRROR_NOTES_VERTICALLY, L"Vertically");
-        add(hNoteMirror, MIRROR_NOTES_FULL, L"Both");
+        add(hNoteMirror, MIRROR_NOTES_HORIZONTALLY, "Horizontally");
+        add(hNoteMirror, MIRROR_NOTES_VERTICALLY, "Vertically");
+        add(hNoteMirror, MIRROR_NOTES_FULL, "Both");
 
         // Notes > Expand menu.
         Item* hNoteExpand = newMenu();
@@ -430,7 +421,7 @@ struct MenuBarImpl : public Menubar {
         };
         myUpdateFunctions[RECENT_FILES] = [] {
             Item* recent = newMenu();
-            int numFiles = min(gEditor->getNumRecentFiles(),
+            int numFiles = std::min(gEditor->getNumRecentFiles(),
                                static_cast<int>(Action::MAX_RECENT_FILES));
             if (numFiles > 0) {
                 recent->addItem(FILE_CLEAR_RECENT_FILES, "Clear list");
@@ -565,7 +556,7 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[VIEW_NOTESKIN] = [] {
             Item* hSkins = System::MenuItem::create();
             int numValid = 0;
-            int numTypes = min(gNoteskin->getNumTypes(),
+            int numTypes = std::min(gNoteskin->getNumTypes(),
                                static_cast<int>(Action::MAX_NOTESKINS));
             int activeType = gNoteskin->getType();
             for (int type = 0; type < numTypes; ++type) {

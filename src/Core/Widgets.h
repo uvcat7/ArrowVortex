@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Core/Slot.h>
-#include <Core/Vector.h>
 #include <Core/Draw.h>
 #include <Core/Text.h>
 #include <Core/Gui.h>
+
+#include <vector>
 
 namespace Vortex {
 
@@ -200,7 +201,7 @@ class WgSelectList : public GuiWidget {
     recti ItemRect() const;
 
     WgScrollbarV* scrollbar_;
-    Vector<std::string> selectlist_items_;
+    std::vector<std::string> selectlist_items_;
     int scroll_position_;
     uint32_t is_interacted_ : 1;
     uint32_t show_background_ : 1;
@@ -229,7 +230,7 @@ class WgDroplist : public GuiWidget {
     void CloseDroplist();
 
     WgSelectList* selectlist_widget_;
-    Vector<std::string> droplist_items_;
+    std::vector<std::string> droplist_items_;
     int selected_index_;
 };
 
@@ -250,7 +251,7 @@ class WgCycleButton : public GuiWidget {
     CallSlot onChange;
 
    protected:
-    Vector<std::string> cycle_items_;
+    std::vector<std::string> cycle_items_;
 };
 
 /// Single Line Text Editor GuiWidget.

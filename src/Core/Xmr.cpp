@@ -46,13 +46,13 @@ class xstring {
     void append(const char* str) { append(str, strlen(str)); }
     void append(long v) {
         char buf[32];
-        int n = sprintf_s(buf, 32, "%i", v);
+        int n = std::snprintf(buf, 32, "%i", v);
         if (n < 0) n = 32;
         append(buf, n);
     }
     void append(double v) {
         char buf[32];
-        int n = sprintf_s(buf, 32, "%f", v);
+        int n = std::snprintf(buf, 32, "%f", v);
         if (n < 0) n = 32;
         if (memchr(buf, '.', n)) {
             while (n > 0 && buf[n - 1] == '0') --n;

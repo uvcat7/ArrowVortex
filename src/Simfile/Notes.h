@@ -2,7 +2,7 @@
 
 #include <Simfile/Common.h>
 
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 

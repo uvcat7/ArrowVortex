@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/NonCopyable.h>
 
 #include <Simfile/NoteList.h>
@@ -38,7 +38,7 @@ struct Chart : NonCopyable {
     const Style* style;
     std::string artist;
     Difficulty difficulty;
-    Vector<double> radar;
+    std::vector<double> radar;
     int meter;
 
     NoteList notes;
