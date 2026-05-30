@@ -199,8 +199,8 @@ struct MusicImpl : public Music, public MixSource {
         if (rate == 100) {
             int n = std::min(numFrames, tick.sound.getNumFrames() - startFrame);
             for (int i = 0; i < n; ++i) {
-                *dst++ = std::min(std::max(*dst + *srcL++, SHRT_MIN), SHRT_MAX);
-                *dst++ = std::min(std::max(*dst + *srcR++, SHRT_MIN), SHRT_MAX);
+                *dst++ = std::clamp(*dst + *srcL++, SHRT_MIN, SHRT_MAX);
+                *dst++ = std::clamp(*dst + *srcR++, SHRT_MIN, SHRT_MAX);
             }
         } else {
             int idx = 0;
@@ -277,9 +277,9 @@ struct MusicImpl : public Music, public MixSource {
         // Fill the remaining buffer with music samples.
         if (framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 &&
             !myIsMuted) {
-            int n = static_cast<int>(std::min(std::max(mySamples.getNumFrames() - srcPos,
-                                  static_cast<int64_t>(0)),
-                static_cast<int64_t>(framesLeft)));
+            int n = static_cast<int>(
+                std::clamp(mySamples.getNumFrames() - srcPos, 0,
+                           static_cast<int64_t>(framesLeft)));
             const short* srcL = mySamples.samplesL() + srcPos;
             const short* srcR = mySamples.samplesR() + srcPos;
             if (musicVolume == 100) {

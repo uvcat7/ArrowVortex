@@ -481,8 +481,8 @@ static int PrintUint(char* buf, uint32_t v, int minDig, bool hex) {
 }
 
 static int PrintDouble(char* buf, double v, int minDec, int maxDec) {
-    minDec = std::min(std::max(minDec, 0), 16);
-    maxDec = std::min(std::max(minDec, maxDec), 16);
+    minDec = std::clamp(minDec, 0, 16);
+    maxDec = std::clamp(maxDec, minDec, 16);
 
     // Print the value.
     int len = std::snprintf(buf, DBL_BUFLEN, "%.*f", maxDec, v);

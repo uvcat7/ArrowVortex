@@ -95,8 +95,8 @@ struct GetRoundRectDist : public DistanceFunc {
         : x1(x1), y1(y1), x2(x2), y2(y2), r(r) {}
 
     float Get(float px, float py) const override {
-        float x = std::min(std::max(px, x1 + r), x2 - r);
-        float y = std::min(std::max(py, y1 + r), y2 - r);
+        float x = std::clamp(px, x1 + r, x2 - r);
+        float y = std::clamp(py, y1 + r, y2 - r);
         if (x == px && y == py) {
             float dx = std::min(x - x1, x2 - x);
             float dy = std::min(y - y1, y2 - y);
@@ -323,7 +323,7 @@ Texture Canvas::createTexture(bool mipmap) const {
         malloc(canvas_width_ * canvas_height_ * 4 * sizeof(uint8_t)));
     for (int i = 0; i < canvas_width_ * canvas_height_ * 4; ++i) {
         int v = static_cast<int>(canvas_data_[i] * 255.f + 0.5f);
-        dst[i] = std::min(std::max(v, 0), 255);
+        dst[i] = std::clamp(v, 0, 255);
     }
     Texture result(canvas_width_, canvas_height_, dst, mipmap);
     free(dst);

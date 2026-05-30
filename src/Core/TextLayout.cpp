@@ -170,7 +170,7 @@ static void ReadFontSize(const uint8_t* param, int len) {
     } else {
         fontSize = static_cast<int>(ReadNumber(param, len) + 0.5);
     }
-    LD->fontSize = std::min(std::max(1, fontSize), 256);
+    LD->fontSize = std::clamp(fontSize, 1, 256);
     SetLineMetrics();
 }
 

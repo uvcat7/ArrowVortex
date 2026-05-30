@@ -376,7 +376,7 @@ void DialogDancingBot::onDraw() {
             float rotation = 0.f;
             if (abs(l.x - r.x) + abs(l.y - r.y) > 0.1f) {
                 rotation = atan2(r.y - l.y, r.x - l.x);
-                rotation = std::min(std::max(rotation, -0.8f), 0.8f);
+                rotation = std::clamp(rotation, -0.8f, 0.8f);
             }
 
             // Draw the feet.
@@ -510,7 +510,7 @@ void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn) {
             double startTime = std::max(curTime, endtime - 0.5);
             double delta = LerpDelta(startTime, endtime, time);
             curPos = SmoothStep(curPos, endPos,
-                static_cast<float>(std::min(std::max(delta, 0.0), 1.0)));
+                static_cast<float>(std::clamp(delta, 0.0, 1.0)));
         }
 
         // Determine feet scale.

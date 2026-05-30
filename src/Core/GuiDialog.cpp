@@ -189,10 +189,8 @@ void DialogData::ClampRect() {
             rect_.h = std::min(rect_.h, bounds.y + bounds.h - a->anchor.y);
     }
 
-    rect_.w = std::max(min_size_.x,
-                       std::min(max_size_.x, std::min(bounds.w, rect_.w)));
-    rect_.h = std::max(min_size_.y,
-                       std::min(max_size_.y, std::min(bounds.h, rect_.h)));
+    rect_.w = std::clamp(std::min(bounds.w, rect_.w), min_size_.x, max_size.x);
+    rect_.h = std::clamp(std::min(bounds.h, rect_.h), min_size_.y, max_size.y);
 
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
         auto a = static_cast<ResizeAction*>(current_action_);
@@ -201,10 +199,8 @@ void DialogData::ClampRect() {
     }
 
     int marginH = minimized_state_ ? (FRAME_PADDING * -2) : rect_.h;
-    rect_.x =
-        std::max(std::min(rect_.x, bounds.x + bounds.w - rect_.w), bounds.x);
-    rect_.y =
-        std::max(std::min(rect_.y, bounds.y + bounds.h - marginH), bounds.y);
+    rect_.x = std::clamp(rect_.x, bounds.x, bounds.x + bounds.w - rect_.w);
+    rect_.y = std::clamp(rect_.y, bounds.y, bounds.y + bounds.h - marginH);
 }
 
 void DialogData::arrange() {

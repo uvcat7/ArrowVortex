@@ -238,10 +238,10 @@ void WgLineEdit::onTick() {
             Text::getCharIndex(vec2i{tp.x, tp.y}, {mp.x, tp.y});
         lineedit_blink_time_ = 0.f;
     }
-    lineedit_cursor_.x = std::min(std::max(lineedit_cursor_.x, 0),
-                             static_cast<int>(lineedit_text_.length()));
-    lineedit_cursor_.y = std::min(std::max(lineedit_cursor_.y, 0),
-                             static_cast<int>(lineedit_text_.length()));
+    lineedit_cursor_.x = std::clamp(lineedit_cursor_.x, 0,
+                                    static_cast<int>(lineedit_text_.length()));
+    lineedit_cursor_.y = std::clamp(lineedit_cursor_.y, 0,
+                                    static_cast<int>(lineedit_text_.length()));
 
     // Update text offset
 
@@ -250,10 +250,9 @@ void WgLineEdit::onTick() {
     float textW = static_cast<float>(Text::getSize().x);
     float cursorX = static_cast<float>(
         Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x);
-    float target =
-        std::min(std::max(lineedit_scroll_offset_, cursorX - barW + SPINNER_W),
-                       cursorX - SPINNER_W);
-    target = std::max(0.f, std::min(target, textW - barW));
+    float target = std::clamp(lineedit_scroll_offset_,
+                              cursorX - barW + SPINNER_W, cursorX - SPINNER_W);
+    target = std::clamp(target, 0.f, textW - barW);
 
     float delta = std::max(fabs(lineedit_scroll_offset_ - target) * 10.f * dt,
                            dt * 256.f);

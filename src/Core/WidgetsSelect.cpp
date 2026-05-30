@@ -74,7 +74,7 @@ void WgSelectList::scroll(bool up) {
     if (HasScrollBar()) {
         int end = selectlist_items_.size() * ITEM_H - ItemRect().h;
         int delta = up ? -ITEM_H : ITEM_H;
-        scroll_position_ = std::min(std::max(scroll_position_ + delta, 0), end);
+        scroll_position_ = std::clamp(scroll_position_ + delta, 0, end);
     }
 }
 

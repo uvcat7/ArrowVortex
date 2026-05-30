@@ -81,7 +81,7 @@ static std::vector<double> CalcDensities() {
 
 inline int getDensityBin(double density) {
     int bin = static_cast<int>(density);
-    return std::min(std::max(0, bin), HM_VALS_PER_SLICE - 2);
+    return std::clamp(bin, 0, HM_VALS_PER_SLICE - 2);
 }
 
 double RatingEstimator::estimateRating() {

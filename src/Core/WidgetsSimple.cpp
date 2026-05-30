@@ -204,7 +204,7 @@ void WgSlider::onDraw() {
         int boxX = static_cast<int>(static_cast<double>(bar.w) *
                                     (value.get() - slider_begin_) /
                                     (slider_end_ - slider_begin_));
-        recti box = {bar.x + std::min(std::max(boxX, 0), bar.w) - 4,
+        recti box = {bar.x + std::clamp(boxX, 0, bar.w) - 4,
                      bar.y - bar_size / 2,
                      bar_size / 2, bar_size};
 

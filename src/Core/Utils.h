@@ -202,10 +202,10 @@ inline uint32_t ToColor32(const colorf& c) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)std::min(std::max(0, (int)(c.r * 255.0f)), 255);
-    u8[1] = (uint8_t)std::min(std::max(0, (int)(c.g * 255.0f)), 255);
-    u8[2] = (uint8_t)std::min(std::max(0, (int)(c.b * 255.0f)), 255);
-    u8[3] = (uint8_t)std::min(std::max(0, (int)(c.a * 255.0f)), 255);
+    u8[0] = (uint8_t)std::clamp((int)(c.r * 255.0f), 0, 255);
+    u8[1] = (uint8_t)std::clamp((int)(c.g * 255.0f), 0, 255);
+    u8[2] = (uint8_t)std::clamp((int)(c.b * 255.0f), 0, 255);
+    u8[3] = (uint8_t)std::clamp((int)(c.a * 255.0f), 0, 255);
     return u32;
 }
 
@@ -214,10 +214,10 @@ inline uint32_t ToColor32(float r, float g, float b, float a) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)std::min(std::max(0, (int)(r * 255.0f)), 255);
-    u8[1] = (uint8_t)std::min(std::max(0, (int)(g * 255.0f)), 255);
-    u8[2] = (uint8_t)std::min(std::max(0, (int)(b * 255.0f)), 255);
-    u8[3] = (uint8_t)std::min(std::max(0, (int)(a * 255.0f)), 255);
+    u8[0] = (uint8_t)std::clamp((int)(r * 255.0f), 0, 255);
+    u8[1] = (uint8_t)std::clamp((int)(g * 255.0f), 0, 255);
+    u8[2] = (uint8_t)std::clamp((int)(b * 255.0f), 0, 255);
+    u8[3] = (uint8_t)std::clamp((int)(a * 255.0f), 0, 255);
     return u32;
 }
 };  // namespace Vortex
