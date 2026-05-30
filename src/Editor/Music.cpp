@@ -150,6 +150,7 @@ struct MusicImpl : public Music, public MixSource {
 
         mySamples.clear();
         myTitle.clear();
+        myArtist.clear();
 
         myLoadState = LOADING_DONE;
     }

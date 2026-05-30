@@ -28,9 +28,10 @@ DialogData::DialogData(GuiContext* gui, GuiDialog* dialog)
     : GuiWidget(gui),
       dialog_ptr_(dialog),
       gui_(gui),
-      is_pinnable_(true),
       is_closeable_(true),
       is_minimizable_(true),
+      is_pinnable_(true),
+      is_draggable_(true),
       is_horizontally_resizable_(false),
       is_vertically_resizable_(false),
       request_close_(false),
@@ -377,7 +378,7 @@ DialogData::ActionType DialogData::GetAction(int x, int y) const {
                     if (dx >= 0) return ACT_PIN;
                     dx += FRAME_BUTTON_W * 2;
                 }
-                return pinned_state_ ? ACT_NONE : ACT_DRAG;
+                return pinned_state_ || !is_draggable_ ? ACT_NONE : ACT_DRAG;
             }
         }
 
@@ -451,9 +452,13 @@ void GuiDialog::setMaximumWidth(int w) { DATA->max_size_.x = max(0, w); }
 
 void GuiDialog::setMaximumHeight(int h) { DATA->max_size_.y = max(0, h); }
 
-void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = true; }
+void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = enable; }
 
-void GuiDialog::setMinimizable(bool enable) { DATA->is_minimizable_ = true; }
+void GuiDialog::setMinimizable(bool enable) { DATA->is_minimizable_ = enable; }
+
+void GuiDialog::setPinnable(bool enable) { DATA->is_pinnable_ = enable; }
+
+void GuiDialog::setDraggable(bool enable) { DATA->is_draggable_ = enable; }
 
 void GuiDialog::setResizeable(bool horizontal, bool vertical) {
     DATA->is_horizontally_resizable_ = horizontal;

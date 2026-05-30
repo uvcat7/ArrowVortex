@@ -224,6 +224,20 @@ struct TempoBoxesImpl : public TempoBoxes {
         return numSelected;
     }
 
+    int select(SelectModifier mod, double begin, double end, int xl,
+               int xr) override {
+        if (begin == end && xl == xr && myMouseOverBox >= 0) {
+            auto target = &myBoxes[myMouseOverBox];
+            return performSelection(
+                mod, [&](const TempoBox* box) { return box == target; });
+        } else if (gView->isTimeBased()) {
+            return selectTime(mod, begin, end, xl, xr);
+        } else {
+            return selectRows(mod, static_cast<int>(begin + 0.5),
+                              static_cast<int>(end + 0.5), xl, xr);
+        }
+    }
+
     int selectRows(SelectModifier mod, int begin, int end, int xl,
                    int xr) override {
         auto coords = gView->getNotefieldCoords();
@@ -392,6 +406,16 @@ struct TempoBoxesImpl : public TempoBoxes {
     }
 
     const Vector<TempoBox>& getBoxes() override { return myBoxes; }
+
+    int getStackWidth(int side, int row) override {
+        int width = 0;
+        for (const TempoBox& box : myBoxes) {
+            if (box.row > row) break;
+            if (box.row == row && side == Segment::meta[box.type]->side)
+                width = max(width, side == 0 ? abs(box.x) : box.x + box.width);
+        }
+        return width;
+    }
 
 };  // TempoBoxesImpl
 

@@ -223,6 +223,9 @@ struct SimfileManImpl : public SimfileMan {
         mySimfile->dir = dir;
         mySimfile->file = name;
 
+        // Update song format, if missing.
+        if (mySimfile->format == SIM_NONE) mySimfile->format = format;
+
         // Save the simfile.
         bool result = SaveSimfile(*mySimfile, format, myBackupOnSave);
         myBackupOnSave = false;

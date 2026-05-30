@@ -100,6 +100,9 @@ struct System {
     /// Returns the state of several system keys as a combination of KeyFlags.
     virtual int getKeyFlags() const = 0;
 
+    /// Returns the current window title.
+    virtual const std::string& getWindowTitle() const = 0;
+
     /// Sets the window title text.
     virtual void setWindowTitle(const std::string& text) = 0;
 
@@ -111,6 +114,15 @@ struct System {
 
     /// Returns the current window title.
     virtual const std::string& getWindowTitle() const = 0;
+  
+    /// Sets the window size and centers window.
+    virtual void setWindowSize(vec2i size) = 0;
+
+    /// Returns the window state, either normal or maximized.
+    virtual bool getWindowState() const = 0;
+
+    /// Set window state, either normal or maximized.
+    virtual void setWindowState(bool isMaximized) const = 0;
 
     /// Returns the list of input events for the current frame.
     virtual InputEvents& getEvents() = 0;

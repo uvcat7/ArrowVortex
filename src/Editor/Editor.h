@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <Simfile/Simfile.h>
+#include <Simfile/Segments.h>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -54,6 +56,13 @@ struct Editor {
     /// Opens the dialog window with the given id, if it's currently closed.
     virtual void openDialog(int dialogId) = 0;
 
+    /// Open the dialog window for directly editing a single segment type.
+    /// Sets it to be open, and sets the active type and row position.
+    virtual void openSegmentDialog(Segment::Type type, int row) = 0;
+
+    /// Sets the input focus to the widget for a given dialog window.
+    virtual void setDialogFocus(int dialogId, const char* name) = 0;
+
     /// Closes the dialog window with the given id, if it's currently open.
     virtual void onDialogClosed(int dialogId) = 0;
 
@@ -81,7 +90,7 @@ struct Editor {
     virtual int getBackgroundStyle() const = 0;
 
     /// Returns the tags export mode set in the editor settings.
-    virtual int getDefaultSaveFormat() const = 0;
+    virtual std::vector<SimFormat> getDefaultSaveFormats() const = 0;
 };
 
 extern Editor* gEditor;

@@ -538,6 +538,8 @@ struct SystemImpl : public System {
 
     vec2i getMousePos() const override { return myMousePos; }
 
+    const std::string& getWindowTitle() const override { return myTitle; }
+
     void setWindowTitle(const std::string& text) override {
         SDL_SetWindowTitle(window, text.c_str());
     }
@@ -547,6 +549,19 @@ struct SystemImpl : public System {
     float getScaleFactor() const override { return myScale; }
 
     const std::string& getWindowTitle() const override { return myTitle; }
+    void setWindowSize(vec2i size) override {
+        mySize = {std::clamp(size.x, 100, 32768),
+                  std::clamp(size.y, 100, 32768)};
+        SDL_SetWindowSize(window, mySize.w, mySize.h);
+    }
+
+    bool getWindowState() const override {
+        return (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN);
+    }
+
+    void setWindowState(bool isMaximized) const override {
+        SDL_SetWindowFullscreen(window, isMaximized);
+    }
 
     InputEvents& getEvents() override { return myEvents; }
 

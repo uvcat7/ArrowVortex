@@ -10,6 +10,7 @@
 
 #include <Editor/Action.h>
 #include <Editor/Shortcuts.h>
+#include <Editor/Selection.h>
 #include <Editor/Editor.h>
 #include <Editor/Statusbar.h>
 #include <Editor/Notefield.h>
@@ -37,15 +38,17 @@ struct MenuBarImpl : public Menubar {
     typedef System::MenuItem Item;
 
     Item* myFileMenu;
+    Item* myEditMenu;
     Item* myVisualSyncMenu;
+    Item* myTempoEditMenu;
     Item* myNotesSelectMenu;
+    Item* myTempoMenu;
     Item* myViewMenu;
     Item* myBeatlineMenu;
     Item* myPreviewMenu;
     Item* myMinimapMenu;
     Item* myBgStyleMenu;
     Item* myStatusMenu;
-    Item* myEditMenu;
 
     UpdateFunction myUpdateFunctions[NUM_PROPERTIES];
 
@@ -95,7 +98,7 @@ struct MenuBarImpl : public Menubar {
         using namespace Action;
 
         // File menu.
-        Item* hFile = newMenu();
+        Item* hFile = myFileMenu = newMenu();
         add(hFile, FILE_OPEN, "Open...");
         add(hFile, 0 /*dummy*/, "Recent files");
         add(hFile, FILE_CLOSE, "Close");
@@ -108,7 +111,6 @@ struct MenuBarImpl : public Menubar {
         add(hFile, CONVERT_MUSIC, "Convert audio...");
         sep(hFile);
         add(hFile, EXIT_PROGRAM, "Exit");
-        myFileMenu = hFile;
 
         // Edit menu.
         Item* hEdit = myEditMenu = newMenu();
@@ -222,6 +224,7 @@ struct MenuBarImpl : public Menubar {
         sub(hNotes, hNoteMirror, "Mirror");
         sub(hNotes, hNoteExpand, "Expand");
         sub(hNotes, hNoteCompress, "Compress");
+        add(hNotes, REQUANTIZE_NOTES, "Requantize");
         add(hNotes, OPEN_DIALOG_GENERATE_NOTES, "Generate...");
 
         // Tempo > Select menu.
@@ -243,8 +246,13 @@ struct MenuBarImpl : public Menubar {
         add(myVisualSyncMenu, SET_VISUAL_SYNC_CURSOR_ANCHOR, "Cursor row");
         add(myVisualSyncMenu, SET_VISUAL_SYNC_RECEPTOR_ANCHOR, "Receptors row");
 
+        // Tempo > Tempo Edit menu
+        myTempoEditMenu = newMenu();
+        add(myTempoEditMenu, SET_TEMPO_EDIT_CURSOR_ANCHOR, "Cursor row");
+        add(myTempoEditMenu, SET_TEMPO_EDIT_RECEPTOR_ANCHOR, "Receptors row");
+
         // Tempo menu.
-        Item* hTempo = newMenu();
+        Item* hTempo = myTempoMenu = newMenu();
         sub(hTempo, hSelectTempo, "Select");
         sep(hTempo);
         add(hTempo, OPEN_DIALOG_ADJUST_SYNC, "Adjust sync...");
@@ -252,8 +260,12 @@ struct MenuBarImpl : public Menubar {
         add(hTempo, OPEN_DIALOG_ADJUST_TEMPO_SM5, "Adjust tempo SM5...");
         sep(hTempo);
         add(hTempo, SWITCH_TO_SYNC_MODE, "Sync mode");
+        sep(hTempo);
         add(hTempo, OPEN_DIALOG_LABEL_BREAKDOWN, "Labels...");
         add(hTempo, OPEN_DIALOG_TEMPO_BREAKDOWN, "Breakdown...");
+        sep(hTempo);
+        add(hTempo, SELECTION_TOGGLE_TEMPO_EDITOR, "Selection Tempo Editor");
+        sub(hTempo, myTempoEditMenu, "Tempo edit anchor");
         sub(hTempo, myVisualSyncMenu, "Visual sync anchor");
 
         // Audio > Volume menu.
@@ -487,15 +499,29 @@ struct MenuBarImpl : public Menubar {
             MENU->myEditMenu->setChecked(TOGGLE_TIME_BASED_COPY,
                                          gEditing->hasTimeBasedCopy());
         };
+        myUpdateFunctions[SELECTION_TEMPO_EDITOR] = [] {
+            MENU->myTempoMenu->setChecked(SELECTION_TOGGLE_TEMPO_EDITOR,
+                                          gSelection->getTempoEditor());
+        };
         myUpdateFunctions[VISUAL_SYNC_ANCHOR] = [] {
             MENU->myVisualSyncMenu->setChecked(
                 SET_VISUAL_SYNC_CURSOR_ANCHOR,
-                gEditing->getVisualSyncMode() ==
-                    Editing::VisualSyncAnchor::CURSOR);
+                gEditing->getVisualSyncAnchor() ==
+                    Editing::EditingAnchor::CURSOR);
             MENU->myVisualSyncMenu->setChecked(
                 SET_VISUAL_SYNC_RECEPTOR_ANCHOR,
-                gEditing->getVisualSyncMode() ==
-                    Editing::VisualSyncAnchor::RECEPTORS);
+                gEditing->getVisualSyncAnchor() ==
+                    Editing::EditingAnchor::RECEPTORS);
+        };
+        myUpdateFunctions[TEMPO_EDIT_ANCHOR] = [] {
+            MENU->myTempoEditMenu->setChecked(
+                SET_TEMPO_EDIT_CURSOR_ANCHOR,
+                gEditing->getTempoEditAnchor() ==
+                    Editing::EditingAnchor::CURSOR);
+            MENU->myTempoEditMenu->setChecked(
+                SET_TEMPO_EDIT_RECEPTOR_ANCHOR,
+                gEditing->getTempoEditAnchor() ==
+                    Editing::EditingAnchor::RECEPTORS);
         };
         myUpdateFunctions[USE_REVERSE_SCROLL] = [] {
             MENU->myViewMenu->setChecked(TOGGLE_REVERSE_SCROLL,

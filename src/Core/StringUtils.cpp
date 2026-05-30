@@ -116,6 +116,7 @@ bool Str::readBool(const std::string& s, bool alt) {
 }
 
 double Str::readTime(const std::string& s, double alt) {
+    if (s.empty()) return alt;
     auto time = Str::split(s, ":", false, false);
     double v = 0.0;
 
@@ -132,7 +133,7 @@ double Str::readTime(const std::string& s, double alt) {
             break;
     }
 
-    if (v == 0 && s.empty()) return alt;
+    if (v == 0) return alt;
     alt = v;
     return alt;
 }
@@ -670,7 +671,7 @@ static const uint8_t* ParseOperandWithSign(const uint8_t* p, double& out) {
     if (*p == '(') {
         p = ParseNestedExpression(SkipWs(++p), out);
         if (*p == ')') p = SkipWs(++p);
-    } else if (*p >= '0' && *p <= '9') {
+    } else if (*p == '.' || (*p >= '0' && *p <= '9')) {
         p = ParseNumber(p, out);
     }
     if (sign == '-') out = -out;
@@ -682,7 +683,7 @@ static const uint8_t* ParseMultiplicationOperand(const uint8_t* p,
     if (*p == '(') {
         p = ParseNestedExpression(SkipWs(++p), out);
         if (*p == ')') p = SkipWs(++p);
-    } else if (*p >= '0' && *p <= '9') {
+    } else if (*p == '.' || (*p >= '0' && *p <= '9')) {
         p = ParseNumber(p, out);
     } else if (*p == '+' || *p == '-') {
         p = ParseOperandWithSign(p, out);
@@ -722,6 +723,7 @@ bool Str::parse(const char* expr, double& out) {
     double tmp = 0.0;
     const uint8_t* begin = SkipWs(reinterpret_cast<const uint8_t*>(expr));
     const uint8_t* p = ParseNestedExpression(begin, tmp);
+    if (!isfinite(tmp)) tmp = 0.0;
     if (p > begin) out = tmp;
     return (p > begin);
 }

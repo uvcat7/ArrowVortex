@@ -15,6 +15,7 @@
 
 #include <Editor/Clipboard.h>
 #include <Editor/Common.h>
+#include <Editor/Editor.h>
 #include <Editor/History.h>
 #include <Editor/Menubar.h>
 #include <Editor/Music.h>
@@ -84,7 +85,8 @@ struct EditingImpl : public Editing {
     bool myUseJumpToNextNote;
     bool myUseUndoRedoJump;
     bool myUseTimeBasedCopy;
-    VisualSyncAnchor myVisualSyncAnchor;
+    EditingAnchor myVisualSyncAnchor;
+    EditingAnchor myTempoEditAnchor;
 
     // ================================================================================================
     // EditingImpl :: constructor and destructor.
@@ -100,11 +102,22 @@ struct EditingImpl : public Editing {
         myUseJumpToNextNote = false;
         myUseUndoRedoJump = true;
         myUseTimeBasedCopy = false;
-        myVisualSyncAnchor = VisualSyncAnchor::CURSOR;
+        myVisualSyncAnchor = EditingAnchor::CURSOR;
+        myTempoEditAnchor = EditingAnchor::CURSOR;
     }
 
     // ================================================================================================
     // StatusbarImpl :: load / save settings.
+
+    static const char* ToString(EditingAnchor anchor) {
+        if (anchor == EditingAnchor::RECEPTORS) return "receptor";
+        return "cursor";
+    }
+
+    static EditingAnchor ToEditingAnchor(const std::string& str) {
+        if (str == "receptor") return EditingAnchor::RECEPTORS;
+        return EditingAnchor::CURSOR;
+    }
 
     void loadSettings(XmrNode& settings) {
         XmrNode* editing = settings.child("editing");
@@ -112,6 +125,11 @@ struct EditingImpl : public Editing {
             editing->get("useJumpToNextNote", &myUseJumpToNextNote);
             editing->get("useUndoRedoJumps", &myUseUndoRedoJump);
             editing->get("useTimeBasedCopy", &myUseTimeBasedCopy);
+
+            const char* vs = editing->get("anchorVisualSync");
+            if (vs) myVisualSyncAnchor = ToEditingAnchor(vs);
+            const char* te = editing->get("anchorTempoEdit");
+            if (te) myTempoEditAnchor = ToEditingAnchor(te);
         }
     }
 
@@ -121,6 +139,8 @@ struct EditingImpl : public Editing {
         editing->addAttrib("useJumpToNextNote", myUseJumpToNextNote);
         editing->addAttrib("useUndoRedoJumps", myUseUndoRedoJump);
         editing->addAttrib("useTimeBasedCopy", myUseTimeBasedCopy);
+        editing->addAttrib("anchorVisualSync", ToString(myVisualSyncAnchor));
+        editing->addAttrib("anchorTempoEdit", ToString(myTempoEditAnchor));
     }
 
     // ================================================================================================
@@ -784,16 +804,16 @@ struct EditingImpl : public Editing {
         }
     }
 
-    int getAnchorRow() {
-        Vortex::vec2i mouse_pos = gSystem->getMousePos();
-        Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
+    int getAnchorRow(EditingAnchor anchor) {
+        vec2i mouse_pos = gSystem->getMousePos();
+        ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
 
-        switch (this->myVisualSyncAnchor) {
-            case VisualSyncAnchor::RECEPTORS:
+        switch (anchor) {
+            case EditingAnchor::RECEPTORS:
                 return gView->getCursorRow();
-            case VisualSyncAnchor::CURSOR:
+            case EditingAnchor::CURSOR:
                 return gView->snapRow(gView->offsetToRow(chart_offset),
-                                      Vortex::View::SnapDir::SNAP_CLOSEST);
+                                      View::SnapDir::SNAP_CLOSEST);
             default:
                 HudError("Unknown anchor row type");
                 return -1;
@@ -801,30 +821,235 @@ struct EditingImpl : public Editing {
     }
 
     void injectBoundingBpmChange() override {
-        if (gSimfile->isClosed() || !gView->isTimeBased()) {
-            return;
-        }
+        if (gSimfile->isClosed() || !gView->isTimeBased()) return;
 
-        int anchor_row = this->getAnchorRow();
+        int anchorRow = getAnchorRow(myVisualSyncAnchor);
 
-        gTempo->injectBoundingBpmChange(anchor_row);
+        gTempo->injectBoundingBpmChange(anchorRow);
     }
 
-    void shiftAnchorRowToMousePosition(bool is_destructive) override {
-        if (gSimfile->isClosed() || !gView->isTimeBased()) {
+    void shiftAnchorRowToMousePosition(bool destructive) override {
+        if (gSimfile->isClosed() || !gView->isTimeBased()) return;
+
+        vec2i mpos = gSystem->getMousePos();
+        ChartOffset offset = gView->yToOffset(mpos.y);
+
+        double targetTime = gView->offsetToTime(offset);
+        int anchorRow = getAnchorRow(myVisualSyncAnchor);
+
+        if (destructive) {
+            gTempo->destructiveShiftRowToTime(anchorRow, targetTime);
+        } else {
+            gTempo->nonDestructiveShiftRowToTime(anchorRow, targetTime);
+        }
+    }
+
+    void requantizeNotes() override {
+        if (gSimfile->isClosed()) return;
+
+        // Get RowType from SnapType
+        const RowType snapToRowType[NUM_SNAP_TYPES] = {
+            RT_192TH, RT_4TH,  RT_8TH,  RT_12TH,  RT_16TH,  RT_24TH,
+            RT_32ND,  RT_48TH, RT_64TH, RT_192TH, RT_192TH, RT_192TH};
+        auto currentType = snapToRowType[gView->getSnapType()];
+
+        // Get all Notes by Row
+        NoteEdit selection;
+        gSelection->getSelectedNotes(selection.rem);
+
+        if (selection.rem.empty()) {
+            HudNote("There are no notes selected.");
             return;
         }
-        Vortex::vec2i mouse_pos = gSystem->getMousePos();
-        Vortex::ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
 
-        double target_time = gView->offsetToTime(chart_offset);
-        int anchor_row = this->getAnchorRow();
+        auto select = selection.rem.begin();
+        auto notes = gNotes->begin();
 
-        if (is_destructive) {
-            gTempo->destructiveShiftRowToTime(anchor_row, target_time);
-        } else {
-            gTempo->nonDestructiveShiftRowToTime(anchor_row, target_time);
+        while (select != selection.rem.end() && notes != gNotes->end()) {
+            if (notes->isWarped || ToRowType(notes->row) == currentType) {
+                ++notes;
+            } else if (notes->row < select->row) {
+                ++notes;
+            } else if (notes->row > select->row) {
+                ++select;
+            } else {
+                selection.add.append(CompressNote(*notes));
+                ++notes;
+            }
         }
+
+        if (selection.add.empty()) {
+            HudNote("There are no notes selected.");
+            return;
+        }
+
+        // Begin Editing
+        auto findSnapRow = [](int start, int mid, int end, RowType snap) {
+            int row = -1;
+            int snapDistance = INT_MAX;
+            for (int r = start; r <= end; r++) {
+                if (ToRowType(r) == snap) {
+                    auto dist = abs(r - mid);
+                    if (dist < snapDistance) {
+                        row = r;
+                        snapDistance = dist;
+                    } else if (dist > snapDistance) {
+                        break;
+                    }
+                }
+            }
+            return row;
+        };
+
+        auto calculateBPM = [](int prev_row, double prev_time, int target_row,
+                               double target_time) {
+            return 60 * ((target_row - prev_row) / 48.0) /
+                   (target_time - prev_time);
+        };
+
+        gHistory->startChain();
+
+        // Start Per-Note Edits, from end to beginning.
+        auto segs = gTempo->getSegments();
+        auto lastRow = -1;
+        auto lastRowPosition = -1;
+        auto lastSnap = -1;
+
+        auto note = selection.add.end();
+        while (note != selection.add.begin()) {
+            --note;
+
+            NoteEdit notesEdit;
+            SegmentEdit tempoEdit;
+
+            // Quick Edit chords.
+            if (note->row == lastRow) {
+                note->row = lastRowPosition;
+                notesEdit.rem.append(*note);
+                notesEdit.add.append({lastSnap, lastSnap, note->col,
+                                      note->player, note->type, 192});
+                gNotes->modify(notesEdit, false);
+                gHistory->updateChain();
+                continue;
+            }
+
+            // Find Note Bounds
+            int before = 0, after = INT_MAX;
+            auto it = gNotes->begin();
+            while (it != gNotes->end()) {
+                if (it->row < note->row) {
+                    before = it->row;
+                } else if (it->row > note->row) {
+                    after = it->row;
+                    break;
+                }
+                ++it;
+            }
+
+            // Find Tempo Bounds
+            auto segments = gTempo->getSegments();
+            for (const auto& segment : *segments) {
+                for (auto seg = segment.begin(), segEnd = segment.end();
+                     seg != segEnd; ++seg) {
+                    if (seg->row < note->row) {
+                        before = max(before, seg->row);
+                    } else if (seg->row > note->row) {
+                        after = min(after, seg->row);
+                        break;
+                    }
+                }
+            }
+
+            // Store previous values.
+            auto boundStart = max(before, note->row - ROWS_PER_BEAT);
+            auto boundMid = note->row;
+            auto boundEnd = min(after, note->row + ROWS_PER_BEAT);
+
+            int range[] = {boundStart, boundMid, boundEnd};
+            double time[] = {gTempo->rowToTime(boundStart),
+                             gTempo->rowToTime(boundMid),
+                             gTempo->rowToTime(boundEnd)};
+
+            double bpms[] = {segs->getRecent<BpmChange>(boundStart).bpm,
+                             segs->getRecent<BpmChange>(boundMid).bpm,
+                             segs->getRecent<BpmChange>(boundEnd).bpm};
+
+            double scrolls[] = {segs->getRecent<Scroll>(boundStart).ratio,
+                                segs->getRecent<Scroll>(boundMid).ratio,
+                                segs->getRecent<Scroll>(boundEnd).ratio};
+
+            // Prevent Infinite BPMs.
+            if (time[0] == time[1] || time[1] == time[2]) {
+                lastRow = -1;
+                continue;
+            }
+
+            // Find Nearest Valid Snap Point
+            int snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
+                                   currentType);
+
+            // No Snap Point, Insert beat and try again.
+            if (snap == -1) {
+                gNotes->insertRows(boundMid, ROWS_PER_BEAT, true);
+                gTempo->insertRows(boundMid, ROWS_PER_BEAT, true);
+                gHistory->updateChain();
+
+                note->row += ROWS_PER_BEAT;
+                boundEnd += ROWS_PER_BEAT;
+
+                // Find Snap
+                snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
+                                   currentType);
+
+                notesEdit.rem.append(*note);
+                notesEdit.add.append(
+                    {snap, snap, note->col, note->player, note->type, 192});
+
+                tempoEdit.rem.append(
+                    BpmChange(boundMid + ROWS_PER_BEAT, bpms[1]));
+                tempoEdit.rem.append(
+                    Scroll(boundMid + ROWS_PER_BEAT, scrolls[1]));
+            }
+
+            // It fits, move note.
+            else {
+                notesEdit.rem.append(*note);
+                notesEdit.add.append(
+                    {snap, snap, note->col, note->player, note->type, 192});
+            }
+
+            // Tempo Changes
+            double newbpms[] = {
+                calculateBPM(boundStart, time[0], snap, time[1]),
+                calculateBPM(snap, time[1], boundEnd, time[2])};
+
+            tempoEdit.add.append(BpmChange(boundStart, newbpms[0]));
+            tempoEdit.add.append(BpmChange(snap, newbpms[1]));
+            tempoEdit.add.append(BpmChange(boundEnd, bpms[2]));
+            tempoEdit.rem.append(BpmChange(boundMid, bpms[1]));
+
+            tempoEdit.add.append(
+                Scroll(boundStart, bpms[0] / newbpms[0] * scrolls[0]));
+            tempoEdit.add.append(
+                Scroll(snap, bpms[1] / newbpms[1] * scrolls[1]));
+            tempoEdit.add.append(Scroll(boundEnd, scrolls[2]));
+            tempoEdit.rem.append(Scroll(boundMid, scrolls[1]));
+
+            gNotes->modify(notesEdit, false);
+            gTempo->modify(tempoEdit, false);
+            gHistory->updateChain();
+
+            lastRow = boundMid;
+            lastRowPosition = note->row;
+            lastSnap = snap;
+        }
+        gHistory->finishChain("Recolorized Selected Notes");
+    }
+
+    void openTempoEdit(Segment::Type type) override {
+        if (gSimfile->isClosed()) return;
+        int anchorRow = getAnchorRow(myTempoEditAnchor);
+        gEditor->openSegmentDialog(type, anchorRow);
     }
 
     /*
@@ -1122,13 +1347,13 @@ struct EditingImpl : public Editing {
 
     bool hasTimeBasedCopy() override { return myUseTimeBasedCopy; }
 
-    void setVisualSyncAnchor(VisualSyncAnchor anchor) override {
+    void setVisualSyncAnchor(EditingAnchor anchor) override {
         myVisualSyncAnchor = anchor;
         switch (myVisualSyncAnchor) {
-            case VisualSyncAnchor::RECEPTORS:
+            case EditingAnchor::RECEPTORS:
                 HudInfo("Visual sync will use current row");
                 break;
-            case VisualSyncAnchor::CURSOR:
+            case EditingAnchor::CURSOR:
                 HudInfo(
                     "Visual sync will use mouse cursor's closest row of "
                     "selected snap");
@@ -1137,7 +1362,24 @@ struct EditingImpl : public Editing {
         gMenubar->update(Menubar::VISUAL_SYNC_ANCHOR);
     }
 
-    VisualSyncAnchor getVisualSyncMode() override { return myVisualSyncAnchor; }
+    EditingAnchor getVisualSyncAnchor() override { return myVisualSyncAnchor; }
+
+    void setTempoEditAnchor(EditingAnchor anchor) override {
+        myTempoEditAnchor = anchor;
+        switch (myTempoEditAnchor) {
+            case EditingAnchor::RECEPTORS:
+                HudInfo("Tempo editing will use current row");
+                break;
+            case EditingAnchor::CURSOR:
+                HudInfo(
+                    "Tempo editing will use mouse cursor's closest row of "
+                    "selected snap");
+                break;
+        }
+        gMenubar->update(Menubar::TEMPO_EDIT_ANCHOR);
+    }
+
+    EditingAnchor getTempoEditAnchor() override { return myTempoEditAnchor; }
 
 };  // EditingImpl
 
