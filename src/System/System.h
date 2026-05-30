@@ -109,14 +109,11 @@ struct System {
     /// Returns the current window size.
     virtual vec2i getWindowSize() const = 0;
 
-    /// Returns the current window scale factor.
-    virtual float getScaleFactor() const = 0;
-
-    /// Returns the current window title.
-    virtual const std::string& getWindowTitle() const = 0;
-  
     /// Sets the window size and centers window.
     virtual void setWindowSize(vec2i size) = 0;
+
+    /// Returns the current window scale factor.
+    virtual float getScaleFactor() const = 0;
 
     /// Returns the window state, either normal or maximized.
     virtual bool getWindowState() const = 0;

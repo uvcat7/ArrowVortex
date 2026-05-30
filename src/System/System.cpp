@@ -300,10 +300,11 @@ struct SystemImpl : public System {
         myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
         // Create a window handle.
-        if (!SDL_CreateWindowAndRenderer(
-                "ArrowVortex", 800, 600,
-                SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY, &window,
-                &renderer)) {
+        if (!SDL_CreateWindowAndRenderer("ArrowVortex", 800, 600,
+                                         SDL_WINDOW_OPENGL |
+                                             SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                             SDL_WINDOW_RESIZABLE,
+                                         &window, &renderer)) {
             SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
         }
 
@@ -334,11 +335,8 @@ struct SystemImpl : public System {
         Debug::log("swap interval support :: %s\n",
                    interval_supported != -1 ? "OK" : "MISSING");
         if (interval_supported != -1) {
-            if (SDL_GL_SetSwapInterval(1))
-                HudError(
-                    "Failed to set V-sync even though it should be supported: "
-                    "%s",
-                    SDL_GetError());
+            if (!SDL_GL_SetSwapInterval(1))
+                Debug::log("Failed to set V-sync state: %s\n", SDL_GetError());
         }
 
         // Check for shader support.
@@ -347,11 +345,8 @@ struct SystemImpl : public System {
 
         // Make sure the window is centered on the desktop.
         myScale = SDL_GetWindowDisplayScale(window);
-        mySize = {static_cast<int>(1200 * myScale),
-                  static_cast<int>(900 * myScale)};
-        SDL_SetWindowSize(window, mySize.x, mySize.y);
-        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED);
+        setWindowSize({static_cast<int>(1200 * myScale),
+                       static_cast<int>(900 * myScale)});
 
         // Show the window.
         myIsActive = true;
@@ -546,21 +541,29 @@ struct SystemImpl : public System {
 
     vec2i getWindowSize() const override { return mySize; }
 
-    float getScaleFactor() const override { return myScale; }
-
-    const std::string& getWindowTitle() const override { return myTitle; }
     void setWindowSize(vec2i size) override {
         mySize = {std::clamp(size.x, 100, 32768),
                   std::clamp(size.y, 100, 32768)};
-        SDL_SetWindowSize(window, mySize.w, mySize.h);
+        SDL_SetWindowSize(window, mySize.x, mySize.y);
+        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED);
     }
 
+    float getScaleFactor() const override { return myScale; }
+
     bool getWindowState() const override {
-        return (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN);
+        auto temp = SDL_GetWindowFlags(window);
+        return (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED);
     }
 
     void setWindowState(bool isMaximized) const override {
-        SDL_SetWindowFullscreen(window, isMaximized);
+        if (isMaximized) {
+            if (!SDL_MaximizeWindow(window))
+                Debug::log("Couldn't maximize window with error: %s\n",
+                           SDL_GetError());
+        } else if (!SDL_RestoreWindow(window))
+            Debug::log("Couldn't restore window with error: %s\n",
+                       SDL_GetError());
     }
 
     InputEvents& getEvents() override { return myEvents; }
@@ -636,6 +639,10 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     using namespace std::chrono;
 
     if (!myInitSuccesful) return SDL_APP_FAILURE;
+    if (myIsTerminated) {
+        Editor::destroy();
+        return SDL_APP_SUCCESS;
+    }
 
 #ifndef NDEBUG
     static long long frames = 0;
@@ -652,7 +659,6 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     // Enter the message loop.
     MSG message;
     auto prevTime = Debug::getElapsedTime();
-    // while (!myIsTerminated) {
     auto startTime = Debug::getElapsedTime();
 
     // Set up the OpenGL view.
@@ -756,11 +762,9 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     int mc = 0;
     switch (event->type) {
         case SDL_EVENT_QUIT: {
-            if (gEditor->onExitProgram())
-                return SDL_APP_SUCCESS;
-            else
-                return SDL_APP_CONTINUE;
-            break;
+            gEditor->onExitProgram();
+            // myIsTerminated is set to true which actually stops the program
+            return SDL_APP_CONTINUE;
         }
         case SDL_EVENT_WINDOW_MOUSE_ENTER:
         case SDL_EVENT_WINDOW_FOCUS_GAINED: {
