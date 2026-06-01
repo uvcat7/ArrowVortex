@@ -114,6 +114,20 @@ style {
 	source = pump-double
 }
 style {
+	id = pump-routine
+	name = Pump Routine
+	numCols = 10
+	numPlayers = 2
+	pad {
+		row = B-DG-I
+		row = -C--H-
+		row = A-EF-J
+	}
+	feetPos = AE, FJ
+	mirrorH = BI, DG, CH, AJ, EF
+	mirrorV = BA, DE, GF, IJ
+}
+style {
 	id = techno-single4
 	name = Techno Single (4)
 	source = dance-single
