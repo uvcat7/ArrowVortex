@@ -42,12 +42,15 @@ install(DIRECTORY bin/assets DESTINATION bin)
 install(DIRECTORY bin/noteskins DESTINATION bin)
 install(DIRECTORY bin/settings DESTINATION bin)
 
-file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
-add_custom_target(format ALL)
-add_custom_command(
-    TARGET format
-    POST_BUILD
-    COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
-    USES_TERMINAL
-)
-add_dependencies(format ArrowVortex)
+find_program(CLANG_FORMAT clang-format)
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
+    add_custom_target(format ALL)
+    add_custom_command(
+        TARGET format
+        POST_BUILD
+        COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
+        USES_TERMINAL
+    )
+    add_dependencies(format ArrowVortex)
+endif()
