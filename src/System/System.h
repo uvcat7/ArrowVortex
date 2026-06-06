@@ -20,20 +20,6 @@ namespace Vortex {
 // custom filter, filterIndex is set to zero.
 
 struct System {
-    // Helper struct for building the menu bar.
-    struct MenuItem {
-        static MenuItem* create();
-
-        void addSeperator();
-        void addItem(int item, const std::string& text);
-        void addSubmenu(MenuItem* submenu, const std::string& text,
-                        bool grayed = false);
-        void replaceSubmenu(int pos, MenuItem* submenu, const std::string& text,
-                            bool grayed = false);
-
-        void setChecked(int item, bool checked);
-        void setEnabled(int item, bool checked);
-    };
 
     /// Helper struct for running system commands.
     struct CommandPipe {

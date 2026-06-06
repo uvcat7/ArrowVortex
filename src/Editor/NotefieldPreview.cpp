@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <Core/Draw.h>
 #include <Core/Gui.h>

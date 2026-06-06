@@ -189,8 +189,8 @@ void DialogData::ClampRect() {
             rect_.h = std::min(rect_.h, bounds.y + bounds.h - a->anchor.y);
     }
 
-    rect_.w = std::clamp(std::min(bounds.w, rect_.w), min_size_.x, max_size.x);
-    rect_.h = std::clamp(std::min(bounds.h, rect_.h), min_size_.y, max_size.y);
+    rect_.w = std::clamp(std::min(bounds.w, rect_.w), min_size_.x, max_size_.x);
+    rect_.h = std::clamp(std::min(bounds.h, rect_.h), min_size_.y, max_size_.y);
 
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
         auto a = static_cast<ResizeAction*>(current_action_);

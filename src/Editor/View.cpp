@@ -304,7 +304,7 @@ struct ViewImpl : public View, public InputHandler {
         // Clamp the receptor X and Y to the view region.
         int minRecepX = rect_.x - rect_.w / 2;
         int maxRecepX = RightX(rect_) - rect_.w / 2;
-        myReceptorY = std::clamp(yReceptorY, rect_.y, BottomY(rect_));
+        myReceptorY = std::clamp(myReceptorY, rect_.y, BottomY(rect_));
         myReceptorX = std::clamp(myReceptorX, minRecepX, maxRecepX);
 
         // Store the y-position of time zero.

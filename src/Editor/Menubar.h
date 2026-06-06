@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <System/System.h>
+#include <System/Menu.h>
 
 namespace Vortex {
 
@@ -63,10 +63,13 @@ struct Menubar {
     };
 
     /// Creates the menu's and submenu's when the window is initialized.
-    virtual void init(System::MenuItem* menu) = 0;
+    virtual void init(MenuItem* menu) = 0;
 
     /// Updates the menu items associated with the given property.
     virtual void update(Property prop) = 0;
+
+    /// Draws the menu bar for non-Windows platforms.
+    virtual void draw() = 0;
 };
 
 extern Menubar* gMenubar;

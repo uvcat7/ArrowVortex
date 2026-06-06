@@ -222,6 +222,7 @@ struct EditorImpl : public Editor, public InputHandler {
         Statusbar::create(settings);
         Minimap::create();
         Menubar::create();
+        gSystem->createMenu();
 
         // Load the editor logo.
         myLogo = Texture("assets/arrow vortex logo.png", false, Texture::ALPHA);
@@ -891,6 +892,8 @@ struct EditorImpl : public Editor, public InputHandler {
         gui_->draw();
 
         gTextOverlay->draw();
+
+        gMenubar->draw();
 
         GuiMain::frameEnd();
     }

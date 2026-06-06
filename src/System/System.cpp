@@ -3,11 +3,11 @@
 #ifdef _WIN32
 #define CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
+#include <System/Resources.h>
 #endif
 #endif
 
 #include <System/System.h>
-#include <System/Resources.h>
 #include <System/File.h>
 #include <System/Debug.h>
 
@@ -121,16 +121,6 @@ static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
                                 SDLK_LCTRL,        Key::CTRL_L,
                                 SDLK_RCTRL,        Key::CTRL_R};
 
-#ifdef _WIN32
-// Translates a dialog button type to a windows message box type.
-static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
-                                            MB_YESNOCANCEL};
-
-// Translates a dialog icon type to a windows message box icon.
-static int sDlgIcon[System::NUM_ICONS] = {0, MB_ICONASTERISK, MB_ICONWARNING,
-                                          MB_ICONHAND};
-#endif
-
 static void SDLCALL FileDialogOpenCallback(void* userdata,
                                            const char* const* filelist,
                                            int filter) {
@@ -202,46 +192,6 @@ static bool LogCheckpoint(bool result, const char* description) {
 // SystemImpl :: menu item.
 
 };  // anonymous namespace
-
-typedef System::MenuItem MItem;
-
-MItem* MItem::create() {
-    // return reinterpret_cast<MenuItem*>(CreatePopupMenu());
-    return nullptr;
-}
-
-void MItem::addSeperator() {
-    // AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
-}
-void MItem::addItem(int item, const std::string& text) {
-    /* AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
-                Widen(text).c_str()); */
-}
-
-void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed) {
-    /* int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str()); */
-}
-
-void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
-                           bool grayed) {
-    /* int flags =
-        MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    DeleteMenu(reinterpret_cast<HMENU>(this), pos, MF_BYPOSITION);
-    InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str()); */
-}
-
-void MItem::setChecked(int item, bool state) {
-    /* CheckMenuItem(reinterpret_cast<HMENU>(this), item,
-                  state ? MF_CHECKED : MF_UNCHECKED); */
-}
-
-void MItem::setEnabled(int item, bool state) {
-    /* EnableMenuItem(reinterpret_cast<HMENU>(this), item,
-                   state ? MF_ENABLED : MF_GRAYED); */
-}
 
 namespace {
 
@@ -379,6 +329,9 @@ struct SystemImpl : public System {
                 return true;
             },
             nullptr);
+#else
+
+        gMenubar->init(new MenuItem);
 #endif
     }
 
@@ -610,9 +563,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     Debug::openConsole();
 #endif
     gSystem = new SystemImpl;
-
     Editor::create();
-    gSystem->createMenu();  // TODO: multiplatform
     SDL_StartTextInput(window);
     SDL_SetWindowResizable(window, true);
 

@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 
@@ -278,7 +279,7 @@ struct MusicImpl : public Music, public MixSource {
         if (framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 &&
             !myIsMuted) {
             int n = static_cast<int>(
-                std::clamp(mySamples.getNumFrames() - srcPos, 0,
+                std::clamp(mySamples.getNumFrames() - srcPos, 0L,
                            static_cast<int64_t>(framesLeft)));
             const short* srcL = mySamples.samplesL() + srcPos;
             const short* srcR = mySamples.samplesR() + srcPos;

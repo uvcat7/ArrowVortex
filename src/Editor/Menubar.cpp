@@ -2,6 +2,8 @@
 
 #include <Core/WideString.h>
 #include <Core/Utils.h>
+#include <Core/Draw.h>
+#include <Core/Text.h>
 #include <Core/StringUtils.h>
 
 #include <Managers/NoteskinMan.h>
@@ -34,8 +36,9 @@ namespace {
 
 struct MenuBarImpl : public Menubar {
     typedef void (*UpdateFunction)();
-    typedef System::MenuItem Item;
+    typedef MenuItem Item;
 
+    Item* myTopMenu;
     Item* myFileMenu;
     Item* myVisualSyncMenu;
     Item* myNotesSelectMenu;
@@ -59,7 +62,7 @@ struct MenuBarImpl : public Menubar {
     // ================================================================================================
     // MenuBarImpl :: menu construction functions.
 
-    static Item* newMenu() { return System::MenuItem::create(); }
+    static Item* newMenu() { return MenuItem::create(); }
 
     static void sep(Item* menu) { menu->addSeperator(); }
 
@@ -76,7 +79,7 @@ struct MenuBarImpl : public Menubar {
     }
 
     static void add(Item* menu, int item, const char* str) {
-        menu->addItem(item, str);
+        menu->addItem(static_cast<Action::Type>(item), str);
     }
 
     static void sub(Item* menu, Item* sub, const char* str) {
@@ -86,10 +89,12 @@ struct MenuBarImpl : public Menubar {
     void init(Item* menu) override {
         using namespace Action;
 
+        myTopMenu = menu;
+
         // File menu.
         Item* hFile = newMenu();
         add(hFile, FILE_OPEN, "Open...");
-        add(hFile, 0 /*dummy*/, "Recent files");
+        add(hFile, NONE, "Recent files");
         add(hFile, FILE_CLOSE, "Close");
         sep(hFile);
         add(hFile, FILE_SAVE, "Save");
@@ -156,7 +161,7 @@ struct MenuBarImpl : public Menubar {
         // Notes > Select menu.
         Item* hSelection = myNotesSelectMenu = newMenu();
         sub(hSelection, hSelectQuant, "Quantization");
-        add(hSelection, 0 /*dummy*/, "Density");
+        add(hSelection, NONE /*dummy*/, "Density");
         sep(hSelection);
         add(hSelection, SELECT_ALL_STEPS, "Steps");
         add(hSelection, SELECT_ALL_MINES, "Mines");
@@ -377,7 +382,7 @@ struct MenuBarImpl : public Menubar {
         add(myViewMenu, USE_ROW_BASED_VIEW, "Row based (X-mod)");
         sep(myViewMenu);
         add(myViewMenu, OPEN_DIALOG_WAVEFORM_SETTINGS, "Waveform...");
-        add(myViewMenu, 0 /*dummy*/, "Noteskins");
+        add(myViewMenu, NONE /*dummy*/, "Noteskins");
         sub(myViewMenu, myBeatlineMenu, "Beatlines");
         sub(myViewMenu, myPreviewMenu, "Preview");
         sub(myViewMenu, myMinimapMenu, "Minimap");
@@ -427,7 +432,7 @@ struct MenuBarImpl : public Menubar {
                 recent->addItem(FILE_CLEAR_RECENT_FILES, "Clear list");
                 recent->addSeperator();
                 for (int i = 0; i < numFiles; ++i) {
-                    recent->addItem(FILE_OPEN_RECENT_BEGIN + i,
+                    recent->addItem(static_cast<Action::Type>(FILE_OPEN_RECENT_BEGIN + i),
                                     gEditor->getRecentFile(i));
                 }
             }
@@ -554,14 +559,14 @@ struct MenuBarImpl : public Menubar {
                                             bg == BG_STYLE_CROP);
         };
         myUpdateFunctions[VIEW_NOTESKIN] = [] {
-            Item* hSkins = System::MenuItem::create();
+            Item* hSkins = MenuItem::create();
             int numValid = 0;
             int numTypes = std::min(gNoteskin->getNumTypes(),
                                static_cast<int>(Action::MAX_NOTESKINS));
             int activeType = gNoteskin->getType();
             for (int type = 0; type < numTypes; ++type) {
                 if (gNoteskin->isSupported(type)) {
-                    hSkins->addItem(SET_NOTESKIN_BEGIN + type,
+                    hSkins->addItem(static_cast<Action::Type>(SET_NOTESKIN_BEGIN + type),
                                     gNoteskin->getName(type));
                     if (type == activeType) {
                         hSkins->setChecked(static_cast<Action::Type>(
@@ -632,6 +637,31 @@ struct MenuBarImpl : public Menubar {
         } else {
             myUpdateFunctions[prop]();
         }
+    }
+
+    void draw() override {
+#ifndef _WIN32
+        int window_w = gSystem->getWindowSize().x;
+        recti r = {0, 0, window_w,
+                   static_cast<int>(16 * gSystem->getScaleFactor())};
+        Draw::fill(r, Color32(77));
+        int x = 0;
+        TextStyle textStyle;
+        textStyle.textFlags = Text::MARKUP;
+        for (auto it : myTopMenu->getMenuData()) {
+            recti this_r = r;
+            std::string str = it.item_text;
+            Text::arrange(Text::MC, textStyle, str.c_str());
+            int w = Text::getBoundingBox(vec2i{x, 0}).w;
+            r.w = w;
+            r.x = x;
+            if (x + w > window_w) {
+                break;
+            }
+            Text::draw(r);
+            x += w;
+        }
+#endif
     }
 
 };  // MenuBarImpl
