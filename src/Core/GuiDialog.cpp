@@ -300,7 +300,7 @@ void DialogData::draw() {
     // Draw the titlebar buttons.
     auto& icons = GuiDraw::getIcons();
     int titleTextW = r.w;
-    int buttonX = RightX(r) - FRAME_BUTTON_W * 3 / 2;
+    int buttonX = RightX(r) - FRAME_BUTTON_W * 2;
     int buttonY = r.y + FRAME_TITLEBAR_H / 2 - FRAME_BUTTON_W / 2;
     if (!pinned_state_) {
         if (is_closeable_) {
@@ -361,8 +361,7 @@ DialogData::ActionType DialogData::GetAction(int x, int y) const {
         recti rect = dialog_ptr_->getOuterRect();
         if (IsInside(rect, x, y)) {
             // Titlebar buttons.
-            int dx = x - rect.x - rect.w + FRAME_BUTTON_W * 3 / 2,
-                dy = y - rect.y;
+            int dx = x - rect.x - rect.w + FRAME_BUTTON_W * 2, dy = y - rect.y;
             if (dy < FRAME_TITLEBAR_H) {
                 if (!pinned_state_) {
                     if (is_closeable_) {
