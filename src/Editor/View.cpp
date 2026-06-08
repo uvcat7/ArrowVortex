@@ -258,7 +258,9 @@ struct ViewImpl : public View, public InputHandler {
         // handle preview receptor dragging.
         else if (myIsDraggingReceptorsPreview) {
             auto mx = mpos.x - CenterX(rect_) - myReceptorX;
-            auto ofs = (mx << 8) / static_cast<int>(64 * myScaleLevel);
+            auto ofs =
+                (mx << 8) /
+                static_cast<int>(64 * gSystem->getScaleFactor() * myScaleLevel);
             myPreviewOffset = ofs;
         }
 
