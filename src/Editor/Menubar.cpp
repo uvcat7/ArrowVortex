@@ -3,6 +3,7 @@
 #include <Core/WideString.h>
 #include <Core/Utils.h>
 #include <Core/Draw.h>
+#include <Core/GuiDraw.h>
 #include <Core/Text.h>
 #include <Core/StringUtils.h>
 
@@ -34,9 +35,15 @@ namespace {
 // ================================================================================================
 // MenuBarImpl :: member data.
 
-struct MenuBarImpl : public Menubar {
+struct MenuBarImpl : public Menubar, public InputHandler {
     typedef void (*UpdateFunction)();
     typedef MenuItem Item;
+
+#ifndef _WIN32
+    int menu_height = 0;
+#else
+    constexpr int menu_height = 0;
+#endif
 
     Item* myTopMenu;
     Item* myFileMenu;
@@ -83,7 +90,7 @@ struct MenuBarImpl : public Menubar {
     }
 
     static void sub(Item* menu, Item* sub, const char* str) {
-        menu->addSubmenu(sub, str);
+        menu->addSubmenu(sub, str, false);
     }
 
     void init(Item* menu) override {
@@ -427,13 +434,14 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[RECENT_FILES] = [] {
             Item* recent = newMenu();
             int numFiles = std::min(gEditor->getNumRecentFiles(),
-                               static_cast<int>(Action::MAX_RECENT_FILES));
+                                    static_cast<int>(Action::MAX_RECENT_FILES));
             if (numFiles > 0) {
                 recent->addItem(FILE_CLEAR_RECENT_FILES, "Clear list");
                 recent->addSeperator();
                 for (int i = 0; i < numFiles; ++i) {
-                    recent->addItem(static_cast<Action::Type>(FILE_OPEN_RECENT_BEGIN + i),
-                                    gEditor->getRecentFile(i));
+                    recent->addItem(
+                        static_cast<Action::Type>(FILE_OPEN_RECENT_BEGIN + i),
+                        gEditor->getRecentFile(i));
                 }
             }
             MENU->myFileMenu->replaceSubmenu(1, recent, "Recent files",
@@ -562,12 +570,13 @@ struct MenuBarImpl : public Menubar {
             Item* hSkins = MenuItem::create();
             int numValid = 0;
             int numTypes = std::min(gNoteskin->getNumTypes(),
-                               static_cast<int>(Action::MAX_NOTESKINS));
+                                    static_cast<int>(Action::MAX_NOTESKINS));
             int activeType = gNoteskin->getType();
             for (int type = 0; type < numTypes; ++type) {
                 if (gNoteskin->isSupported(type)) {
-                    hSkins->addItem(static_cast<Action::Type>(SET_NOTESKIN_BEGIN + type),
-                                    gNoteskin->getName(type));
+                    hSkins->addItem(
+                        static_cast<Action::Type>(SET_NOTESKIN_BEGIN + type),
+                        gNoteskin->getName(type));
                     if (type == activeType) {
                         hSkins->setChecked(static_cast<Action::Type>(
                                                SET_NOTESKIN_BEGIN + type),
@@ -641,28 +650,212 @@ struct MenuBarImpl : public Menubar {
 
     void draw() override {
 #ifndef _WIN32
+        constexpr int menu_color = 77;
+        constexpr int menu_highlight_color = 90;
+        constexpr int dropdown_color = 64;
+        constexpr int dropdown_highlight_color = 85;
         int window_w = gSystem->getWindowSize().x;
-        recti r = {0, 0, window_w,
-                   static_cast<int>(16 * gSystem->getScaleFactor())};
-        Draw::fill(r, Color32(77));
-        int x = 0;
+        int line_h = static_cast<int>(24 * gSystem->getScaleFactor());
+        int entry_h = static_cast<int>(20 * gSystem->getScaleFactor());
+        int box_padding = static_cast<int>(4 * gSystem->getScaleFactor());
+        int separator_h =
+            std::max(1, static_cast<int>(2 * gSystem->getScaleFactor()));
+        int separator_padding = static_cast<int>(3 * gSystem->getScaleFactor());
+
+        int x = 0, y = 0;
         TextStyle textStyle;
         textStyle.textFlags = Text::MARKUP;
-        for (auto it : myTopMenu->getMenuData()) {
-            recti this_r = r;
+
+        int chevron_space = static_cast<int>(16 * gSystem->getScaleFactor());
+        Text::arrange(Text::MC, textStyle, "✓");
+        int check_space = Text::getBoundingBox(vec2i{0, 0}).w * 2;
+        recti r = {0, 0, window_w, line_h};
+        Draw::fill(r, Color32(menu_color));
+        int i = 0;
+
+        // Draw the fixed top level menu
+        for (auto& it : myTopMenu->getMenuData()) {
             std::string str = it.item_text;
             Text::arrange(Text::MC, textStyle, str.c_str());
-            int w = Text::getBoundingBox(vec2i{x, 0}).w;
-            r.w = w;
-            r.x = x;
-            if (x + w > window_w) {
-                break;
+            int w = Text::getBoundingBox(vec2i{x, y}).w +
+                    12 * gSystem->getScaleFactor();
+            if (x + w > window_w && x > 0) {
+                y += line_h;
+                r.y = y;
+                x = 0;
+                Draw::fill(r, Color32(menu_color));
             }
-            Text::draw(r);
+            recti this_r = {x, y, w, line_h};
+            if (IsInside(this_r, gSystem->getMousePos()) &&
+                myTopMenu->getOpen() >= 0 &&
+                myTopMenu->getMenuData()[i].is_enabled &&
+                myTopMenu->getMenuData()[i].submenu)
+                myTopMenu->setOpen(i);
+            if (myTopMenu->getOpen() == i ||
+                IsInside(this_r, gSystem->getMousePos()) &&
+                    myTopMenu->getOpen() == -1) {
+                Draw::fill(this_r, Color32(menu_highlight_color));
+            }
+            Text::draw(this_r);
+            it.active_rect = this_r;
             x += w;
+            i++;
+        }
+        menu_height = y + line_h;
+        if (myTopMenu->getOpen() == -1) return;
+
+        // Now draw any open submenus (can't render outside the main window)
+        MenuItem* this_menu = myTopMenu;
+        while (this_menu && this_menu->getOpen() >= 0) {
+            int this_box_w = 0;
+            int this_box_h = 0;
+            MenuEntry* sub_entry =
+                &this_menu->getMenuData()[this_menu->getOpen()];
+            if (this_menu == myTopMenu) {
+                x = sub_entry->active_rect.x;
+                y = menu_height;
+            } else {
+                x = sub_entry->active_rect.x + sub_entry->active_rect.w;
+                y = sub_entry->active_rect.y;
+            }
+            this_menu = sub_entry->submenu;
+            if (!this_menu) return;
+
+            // Get the size of the bounding submenu box
+            for (auto it : this_menu->getMenuData()) {
+                if (it.is_separator) {
+                    this_box_h += entry_h / 2;
+                    continue;
+                }
+                this_box_h += entry_h;
+                Text::arrange(Text::MC, textStyle, it.item_text.c_str());
+                this_box_w =
+                    std::max(this_box_w, Text::getBoundingBox(vec2i{x, y}).w +
+                                             chevron_space + check_space +
+                                             box_padding * 2);
+            }
+            if (this_box_w == 0) continue;
+            this_box_h += box_padding * 2;
+            this_box_w += box_padding * 2;
+            recti box_r = {x, y, this_box_w, this_box_h};
+            Draw::roundedBox(box_r, Color32(dropdown_highlight_color));
+            box_r = Shrink(box_r, 1);
+            Draw::roundedBox(box_r, Color32(dropdown_color));
+
+            // Now draw the submenu items
+            i = 0;
+            for (auto& it : this_menu->getMenuData()) {
+                if (it.is_separator) {
+                    recti this_r = {
+                        x + separator_padding, y + entry_h / 2 - separator_h,
+                        this_box_w - 2 * separator_padding, separator_h};
+                    it.active_rect = this_r;
+                    Draw::fill(this_r, Color32(dropdown_highlight_color));
+                    y += entry_h / 2;
+                    i++;
+                    continue;
+                }
+
+                std::string line_string;
+                int delim = it.item_text.find('\t');
+                if (delim != std::string::npos) {
+                    line_string = it.item_text.substr(0, delim);
+                } else {
+                    line_string = it.item_text;
+                }
+                recti this_r = {x + box_padding, y + box_padding,
+                                this_box_w - box_padding * 2, entry_h};
+
+                if (IsInside(this_r, gSystem->getMousePos()) && it.is_enabled) {
+                    if (it.submenu)
+                        this_menu->setOpen(i);
+                    else if (this_menu->getOpen() != i) {
+                        this_menu->close();
+                    }
+                    Draw::fill(this_r, Color32(dropdown_highlight_color));
+                }
+                it.active_rect = this_r;
+                textStyle.textColor = Color32(it.is_enabled ? 255 : 128);
+                if (it.is_checked) {
+                    Text::arrange(Text::MC, textStyle, "✓");
+                    Text::draw({this_r.x, this_r.y, check_space, this_r.h});
+                }
+                this_r.x += check_space;
+                this_r.w -= chevron_space;
+                Text::arrange(Text::ML, textStyle, line_string.c_str());
+                Text::draw(this_r);
+                std::string shortcut = "";
+                if (delim != std::string::npos) {
+                    shortcut += it.item_text.substr(delim + 1) + "\t";
+                    Text::arrange(Text::MR, textStyle, shortcut.c_str());
+                    Text::draw(this_r);
+                }
+                if (it.submenu) {
+                    int text_h = Text::getBoundingBox(vec2i{0, 0}).h * 3 / 4;
+                    Draw::sprite(
+                        GuiDraw::getIcons().chevron,
+                        {this_r.x + this_r.w - chevron_space / 2 - text_h / 2,
+                         this_r.y + this_r.h / 2 - text_h / 2, text_h, text_h},
+                        textStyle.textColor);
+                }
+                y += entry_h;
+                i++;
+            }
         }
 #endif
     }
+
+    void onMousePress(MousePress& evt) override {
+#ifndef _WIN32
+        if (evt.button != Mouse::LMB || !evt.unhandled()) return;
+        auto handle_menu = [&](MenuItem* menu) {
+            int i = 0;
+            for (auto it : menu->getMenuData()) {
+                if (!IsInside(it.active_rect, evt.x, evt.y) ||
+                    it.is_separator || !it.is_enabled) {
+                    i++;
+                    continue;
+                }
+                if (it.submenu)
+                    menu->setOpen(i);
+                else {
+                    Action::perform(it.action);
+                }
+                evt.setHandled();
+                return false;
+            }
+            return true;
+        };
+
+        if (!handle_menu(myTopMenu)) return;
+        MenuItem* this_menu = myTopMenu;
+        while (this_menu && this_menu->getOpen() >= 0) {
+            this_menu = this_menu->getMenuData()[this_menu->getOpen()].submenu;
+        }
+        if (this_menu != myTopMenu)
+            if (!handle_menu(this_menu)) return;
+
+        // If we clicked outside the menu, close all menus
+        if (myTopMenu->getOpen() >= 0) closeMenus();
+#endif
+    }
+
+    void onKeyPress(KeyPress& evt) override {
+#ifndef _WIN32
+        if (evt.key == Key::Code::ESCAPE) {
+            evt.handled = true;
+            closeMenus();
+        }
+#endif
+    }
+
+    void closeMenus() override {
+#ifndef _WIN32
+        myTopMenu->close();
+#endif
+    }
+
+    int getMenubarHeight() override { return menu_height; }
 
 };  // MenuBarImpl
 };  // anonymous namespace.

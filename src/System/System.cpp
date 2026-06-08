@@ -503,7 +503,7 @@ struct SystemImpl : public System {
         SDL_SetWindowTitle(window, text.c_str());
     }
 
-    vec2i getWindowSize() const override { return mySize; }
+    vec2i getWindowSize() const override { return {mySize.x, mySize.y}; }
 
     float getScaleFactor() const override { return myScale; }
 

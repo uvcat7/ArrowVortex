@@ -14,7 +14,7 @@ struct MenuEntry {
     bool is_checked = false;
     bool is_enabled = true;
     MenuItem* submenu = nullptr;
-    bool is_open = false;
+    recti active_rect;
 };
 
 struct MenuItem {
@@ -31,10 +31,14 @@ struct MenuItem {
     void setChecked(Action::Type item, bool checked);
     void setEnabled(Action::Type item, bool checked);
     void setTopLevel(bool topLevel);
-    MenuItem* setOpen(int pos, bool open);
+    void setOpen(int pos);
+    int getOpen();
+    void close();
     std::vector<MenuEntry>& getMenuData();
 
+    private:
     std::vector<MenuEntry> menu_data;
+    int open_entry = -1;
     bool is_top_level = false;
 };
 

@@ -48,6 +48,10 @@ TT inline void operator-=(rectt<T>& r, const vec2t<T>& v) {
     r.x -= v.x, r.y -= v.y;
 }
 
+TT inline bool IsInside(const rectt<T>& r, const vec2t<T>& v) {
+    return IsInside(r, v.x, v.y);
+}
+
 TT inline bool IsInside(const rectt<T>& r, T x, T y) {
     return (x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h);
 }

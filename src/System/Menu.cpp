@@ -44,29 +44,33 @@ void MenuItem::setEnabled(int item, bool state) {
 MenuItem* MenuItem::create() { return new MenuItem(); }
 
 void MenuItem::addSeperator() {
-    menu_data.push_back(
-        {Action::Type::NONE, "", true, false, true, nullptr, false});
+    menu_data.push_back({Action::Type::NONE, "", true, false, false, nullptr});
 }
 
 void MenuItem::addItem(Action::Type item, const std::string& text) {
-    menu_data.push_back({item, text, false, false, true, nullptr, false});
+    menu_data.push_back({item, text, false, false, true, nullptr});
 }
 
 void MenuItem::addSubmenu(MenuItem* submenu, const std::string& text,
                           bool grayed) {
     menu_data.push_back(
-        {Action::Type::NONE, text, false, false, grayed, submenu, false});
+        {Action::Type::NONE, text, false, false, !grayed, submenu});
 }
 
 void MenuItem::replaceSubmenu(int pos, MenuItem* submenu,
                               const std::string& text, bool grayed) {
-    MenuEntry item = {
-        Action::Type::NONE, text, false, false, grayed, submenu, false};
-    std::swap(menu_data[pos], item);
+    MenuEntry item = {Action::Type::NONE, text, false, false, !grayed, submenu};
+    menu_data[pos].action = Action::Type::NONE;
+    menu_data[pos].item_text = text;
+    menu_data[pos].is_separator = false;
+    menu_data[pos].is_checked = false;
+    menu_data[pos].is_enabled = !grayed;
+    menu_data[pos].submenu = submenu;
+    // std::swap(menu_data[pos], item);
 }
 
 void MenuItem::setChecked(Action::Type item, bool state) {
-    for (auto it : menu_data) {
+    for (auto& it : menu_data) {
         if (it.action == item) {
             it.is_checked = state;
         }
@@ -74,22 +78,37 @@ void MenuItem::setChecked(Action::Type item, bool state) {
 }
 
 void MenuItem::setEnabled(Action::Type item, bool state) {
-    for (auto it : menu_data) {
+    for (auto& it : menu_data) {
         if (it.action == item) {
             it.is_enabled = state;
         }
     }
 }
 
-std::vector<MenuEntry>& MenuItem::getMenuData() {
-    return menu_data;
-}
+std::vector<MenuEntry>& MenuItem::getMenuData() { return menu_data; }
 
 void MenuItem::setTopLevel(bool topLevel) { is_top_level = topLevel; }
 
-MenuItem* MenuItem::setOpen(int pos, bool open) {
-    menu_data[pos].is_open = open;
-    return menu_data[pos].submenu;
+void MenuItem::setOpen(int pos) {
+    if (menu_data[pos].submenu == nullptr) {
+        open_entry = -1;
+    } else if (open_entry != pos) {
+        if (open_entry != -1)
+            close();
+        open_entry = pos;
+    }
+}
+
+int MenuItem::getOpen() { return open_entry; }
+
+void MenuItem::close() {
+    if (open_entry == -1) return;
+    MenuItem* this_menu = this;
+    while (this_menu && this_menu->open_entry >= 0) {
+        int this_entry = this_menu->open_entry;
+        this_menu->open_entry = -1;
+        this_menu = this_menu->menu_data[this_entry].submenu;
+    }
 }
 
 #endif

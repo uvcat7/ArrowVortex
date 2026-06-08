@@ -804,7 +804,8 @@ struct EditorImpl : public Editor, public InputHandler {
     void drawLogo() {
         vec2i size = gSystem->getWindowSize();
         vec2i logo_size = myLogo.size();
-        Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(38, 38, 38, 255));
+        Draw::fill({0, gMenubar->getMenubarHeight(), size.x, size.y - gMenubar->getMenubarHeight()},
+                   RGBAtoColor32(38, 38, 38, 255));
         Draw::sprite(myLogo,
                      {size.x / 2 - logo_size.x / 2,
                       size.y / 2 - logo_size.y / 2, logo_size.x, logo_size.y},
@@ -816,9 +817,15 @@ struct EditorImpl : public Editor, public InputHandler {
         handleInputs(events);
         notifyChanges();
 
+        int menu_h = gMenubar->getMenubarHeight();
+        menu_h = 0;
+
+        gMenubar->draw();
+        gMenubar->handleInputs(events);
+
         vec2i windowSize = gSystem->getWindowSize();
         float scale = gSystem->getScaleFactor();
-        recti r = {0, 0, windowSize.x, windowSize.y};
+        recti r = {0, menu_h, windowSize.x, windowSize.y - menu_h};
 
         gTextOverlay->handleInputs(events);
 
@@ -829,7 +836,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
         handleDialogs();
 
-        gui_->tick({0, 0, view.x, view.y}, deltaTime.count(), events);
+        gui_->tick({0, menu_h, view.x, view.y - menu_h},
+                   deltaTime.count(), events);
 
         if (!GuiMain::isCapturingText()) {
             for (KeyPress* press = nullptr; events.next(press);) {
@@ -893,6 +901,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
         gTextOverlay->draw();
 
+        // TODO remove this call once rework is done
         gMenubar->draw();
 
         GuiMain::frameEnd();

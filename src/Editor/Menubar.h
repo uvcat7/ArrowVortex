@@ -1,10 +1,11 @@
 ﻿#pragma once
 
 #include <System/Menu.h>
+#include <Core/Input.h>
 
 namespace Vortex {
 
-struct Menubar {
+struct Menubar : public InputHandler {
     static void create();
     static void destroy();
 
@@ -70,6 +71,11 @@ struct Menubar {
 
     /// Draws the menu bar for non-Windows platforms.
     virtual void draw() = 0;
+
+    /// Closes all open menus.
+    virtual void closeMenus() = 0;
+
+    virtual int getMenubarHeight() = 0;
 };
 
 extern Menubar* gMenubar;

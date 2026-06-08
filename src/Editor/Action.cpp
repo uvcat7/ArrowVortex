@@ -28,6 +28,7 @@
 namespace Vortex {
 
 void Action::perform(Type action) {
+    gMenubar->closeMenus();
 #define FIRST_CASE(x) case x: {
 #define CASE(x) \
     }           \
