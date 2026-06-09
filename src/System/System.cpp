@@ -503,7 +503,12 @@ struct SystemImpl : public System {
         SDL_SetWindowTitle(window, text.c_str());
     }
 
-    vec2i getWindowSize() const override { return {mySize.x, mySize.y}; }
+    vec2i getWindowSize() const override {
+        if (!gMenubar)
+            return mySize;
+        else
+            return {mySize.x, mySize.y - gMenubar->getMenubarHeight()};
+    }
 
     float getScaleFactor() const override { return myScale; }
 
@@ -697,6 +702,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     static const Mouse::Code mcodes[4] = {Mouse::NONE, Mouse::LMB, Mouse::MMB,
                                           Mouse::RMB};
     int mc = 0;
+    int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
     switch (event->type) {
         case SDL_EVENT_QUIT: {
             if (gEditor->onExitProgram())
@@ -730,7 +736,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                 float x, y;
                 SDL_GetMouseState(&x, &y);
                 myMousePos.x = static_cast<int>(x);
-                myMousePos.y = static_cast<int>(y);
+                myMousePos.y = static_cast<int>(y - menu_h);
                 myEvents.addMouseMove(myMousePos.x, myMousePos.y);
             }
             break;
@@ -766,7 +772,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                     float x, y;
                     SDL_GetMouseState(&x, &y);
                     myEvents.addMousePress(Mouse::LMB, static_cast<int>(x),
-                                           static_cast<int>(y),
+                                           static_cast<int>(y - menu_h),
                                            gSystem->getKeyFlags(), false);
                     myMouseState.set(Mouse::LMB);
                 }
@@ -779,7 +785,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                     float x, y;
                     SDL_GetMouseState(&x, &y);
                     myEvents.addMouseRelease(Mouse::LMB, static_cast<int>(x),
-                                             static_cast<int>(y),
+                                             static_cast<int>(y - menu_h),
                                              gSystem->getKeyFlags());
                     myMouseState.reset(Mouse::LMB);
                 }

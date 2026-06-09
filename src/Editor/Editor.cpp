@@ -591,7 +591,7 @@ struct EditorImpl : public Editor, public InputHandler {
     void addToRecentfiles(fs::path path) {
         std::string spath = pathToUtf8(path);
         std::erase(myRecentFiles, spath);
-        myRecentFiles.insert(myRecentFiles.begin(),1 , spath);
+        myRecentFiles.insert(myRecentFiles.begin(), 1, spath);
         myRecentFiles.resize(MAX_RECENT_FILES);
         gMenubar->update(Menubar::RECENT_FILES);
     }
@@ -804,8 +804,7 @@ struct EditorImpl : public Editor, public InputHandler {
     void drawLogo() {
         vec2i size = gSystem->getWindowSize();
         vec2i logo_size = myLogo.size();
-        Draw::fill({0, gMenubar->getMenubarHeight(), size.x, size.y - gMenubar->getMenubarHeight()},
-                   RGBAtoColor32(38, 38, 38, 255));
+        Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(38, 38, 38, 255));
         Draw::sprite(myLogo,
                      {size.x / 2 - logo_size.x / 2,
                       size.y / 2 - logo_size.y / 2, logo_size.x, logo_size.y},
@@ -818,26 +817,22 @@ struct EditorImpl : public Editor, public InputHandler {
         notifyChanges();
 
         int menu_h = gMenubar->getMenubarHeight();
-        menu_h = 0;
-
-        gMenubar->draw();
-        gMenubar->handleInputs(events);
 
         vec2i windowSize = gSystem->getWindowSize();
         float scale = gSystem->getScaleFactor();
-        recti r = {0, menu_h, windowSize.x, windowSize.y - menu_h};
+        recti r = {0, 0, windowSize.x, windowSize.y};
 
-        gTextOverlay->handleInputs(events);
-
-        GuiMain::setViewSize(r.w, r.h);
+        GuiMain::setViewSize(r.w, r.h + menu_h);
         GuiMain::frameStart(deltaTime.count(), events);
+
+        gMenubar->handleInputs(events);
+        gTextOverlay->handleInputs(events);
 
         vec2i view = gSystem->getWindowSize();
 
         handleDialogs();
 
-        gui_->tick({0, menu_h, view.x, view.y - menu_h},
-                   deltaTime.count(), events);
+        gui_->tick({0, 0, view.x, view.y}, deltaTime.count(), events);
 
         if (!GuiMain::isCapturingText()) {
             for (KeyPress* press = nullptr; events.next(press);) {
@@ -901,7 +896,6 @@ struct EditorImpl : public Editor, public InputHandler {
 
         gTextOverlay->draw();
 
-        // TODO remove this call once rework is done
         gMenubar->draw();
 
         GuiMain::frameEnd();

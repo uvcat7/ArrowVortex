@@ -60,13 +60,7 @@ void MenuItem::addSubmenu(MenuItem* submenu, const std::string& text,
 void MenuItem::replaceSubmenu(int pos, MenuItem* submenu,
                               const std::string& text, bool grayed) {
     MenuEntry item = {Action::Type::NONE, text, false, false, !grayed, submenu};
-    menu_data[pos].action = Action::Type::NONE;
-    menu_data[pos].item_text = text;
-    menu_data[pos].is_separator = false;
-    menu_data[pos].is_checked = false;
-    menu_data[pos].is_enabled = !grayed;
-    menu_data[pos].submenu = submenu;
-    // std::swap(menu_data[pos], item);
+    std::swap(menu_data[pos], item);
 }
 
 void MenuItem::setChecked(Action::Type item, bool state) {

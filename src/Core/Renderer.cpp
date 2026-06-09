@@ -4,6 +4,7 @@
 #include <Core/Renderer.h>
 #include <Core/Draw.h>
 #include <Core/Canvas.h>
+#include <Editor/Menubar.h>
 
 #include <System/Debug.h>
 #include <System/OpenGL.h>
@@ -162,8 +163,10 @@ void Renderer::destroy() {
 
 void Renderer::startFrame() {
     vec2i view = GuiMain::getViewSize();
+    int menu_height = gMenubar ? gMenubar->getMenubarHeight(): 0;
     glLoadIdentity();
     glOrtho(0, view.x, view.y, 0, -1, 1);
+    glTranslated(0, menu_height, 0);
 }
 
 void Renderer::endFrame() {
@@ -221,7 +224,9 @@ void Renderer::pushScissorRect(int x, int y, int w, int h) {
 
     // Apply the new scissor region.
     vec2i view = GuiMain::getViewSize();
-    glScissor(x, view.y - (y + h), w, h);
+    // Scissor is in window coordinates
+    int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
+    glScissor(x, view.y - (y + h) - menu_h, w, h);
 }
 
 void Renderer::popScissorRect() {
@@ -233,7 +238,9 @@ void Renderer::popScissorRect() {
         stack.pop_back();
         recti r = stack.back();
         vec2i view = GuiMain::getViewSize();
-        glScissor(r.x, view.y - (r.y + r.h), r.w, r.h);
+        // Scissor is in window coordinates
+        int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
+        glScissor(r.x, view.y - (r.y + r.h) - menu_h, r.w, r.h);
     }
 }
 

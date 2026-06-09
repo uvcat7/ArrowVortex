@@ -655,12 +655,12 @@ struct MenuBarImpl : public Menubar, public InputHandler {
         constexpr int dropdown_color = 64;
         constexpr int dropdown_highlight_color = 85;
         int window_w = gSystem->getWindowSize().x;
-        int line_h = static_cast<int>(24 * gSystem->getScaleFactor());
+        int menu_h = static_cast<int>(24 * gSystem->getScaleFactor());
         int entry_h = static_cast<int>(20 * gSystem->getScaleFactor());
         int box_padding = static_cast<int>(4 * gSystem->getScaleFactor());
         int separator_h =
             std::max(1, static_cast<int>(2 * gSystem->getScaleFactor()));
-        int separator_padding = static_cast<int>(3 * gSystem->getScaleFactor());
+        int separator_padding = static_cast<int>(6 * gSystem->getScaleFactor());
 
         int x = 0, y = 0;
         TextStyle textStyle;
@@ -669,42 +669,50 @@ struct MenuBarImpl : public Menubar, public InputHandler {
         int chevron_space = static_cast<int>(16 * gSystem->getScaleFactor());
         Text::arrange(Text::MC, textStyle, "✓");
         int check_space = Text::getBoundingBox(vec2i{0, 0}).w * 2;
-        recti r = {0, 0, window_w, line_h};
-        Draw::fill(r, Color32(menu_color));
+        y = -menu_h;
         int i = 0;
 
-        // Draw the fixed top level menu
+        // Figure how big the top level menu is
         for (auto& it : myTopMenu->getMenuData()) {
             std::string str = it.item_text;
             Text::arrange(Text::MC, textStyle, str.c_str());
             int w = Text::getBoundingBox(vec2i{x, y}).w +
                     12 * gSystem->getScaleFactor();
             if (x + w > window_w && x > 0) {
-                y += line_h;
-                r.y = y;
+                y -= menu_h;
                 x = 0;
-                Draw::fill(r, Color32(menu_color));
             }
-            recti this_r = {x, y, w, line_h};
-            if (IsInside(this_r, gSystem->getMousePos()) &&
+            recti this_r = {x, y, w, menu_h};
+            it.active_rect = this_r;
+            x += w;
+            i++;
+        }
+
+        menu_height = std::abs(y);
+        recti r = {0, y, window_w, menu_height};
+        Draw::fill(r, Color32(menu_color));
+
+        // Draw the fixed top level menu
+        i = 0;
+        for (auto& it : myTopMenu->getMenuData()) {
+            Text::arrange(Text::MC, textStyle, it.item_text.c_str());
+            if (IsInside(it.active_rect, gSystem->getMousePos()) &&
                 myTopMenu->getOpen() >= 0 &&
                 myTopMenu->getMenuData()[i].is_enabled &&
                 myTopMenu->getMenuData()[i].submenu)
                 myTopMenu->setOpen(i);
             if (myTopMenu->getOpen() == i ||
-                IsInside(this_r, gSystem->getMousePos()) &&
+                IsInside(it.active_rect, gSystem->getMousePos()) &&
                     myTopMenu->getOpen() == -1) {
-                Draw::fill(this_r, Color32(menu_highlight_color));
+                Draw::fill(it.active_rect, Color32(menu_highlight_color));
             }
-            Text::draw(this_r);
-            it.active_rect = this_r;
-            x += w;
+            Text::draw(it.active_rect);
             i++;
         }
-        menu_height = y + line_h;
-        if (myTopMenu->getOpen() == -1) return;
 
         // Now draw any open submenus (can't render outside the main window)
+        if (myTopMenu->getOpen() == -1) return;
+
         MenuItem* this_menu = myTopMenu;
         while (this_menu && this_menu->getOpen() >= 0) {
             int this_box_w = 0;
@@ -713,7 +721,7 @@ struct MenuBarImpl : public Menubar, public InputHandler {
                 &this_menu->getMenuData()[this_menu->getOpen()];
             if (this_menu == myTopMenu) {
                 x = sub_entry->active_rect.x;
-                y = menu_height;
+                y = 0;
             } else {
                 x = sub_entry->active_rect.x + sub_entry->active_rect.w;
                 y = sub_entry->active_rect.y;
@@ -727,6 +735,7 @@ struct MenuBarImpl : public Menubar, public InputHandler {
                     this_box_h += entry_h / 2;
                     continue;
                 }
+                if (it.item_text.empty()) continue;
                 this_box_h += entry_h;
                 Text::arrange(Text::MC, textStyle, it.item_text.c_str());
                 this_box_w =
@@ -755,6 +764,8 @@ struct MenuBarImpl : public Menubar, public InputHandler {
                     i++;
                     continue;
                 }
+
+                if (it.item_text.empty()) continue;
 
                 std::string line_string;
                 int delim = it.item_text.find('\t');
@@ -842,7 +853,7 @@ struct MenuBarImpl : public Menubar, public InputHandler {
 
     void onKeyPress(KeyPress& evt) override {
 #ifndef _WIN32
-        if (evt.key == Key::Code::ESCAPE) {
+        if (evt.key == Key::Code::ESCAPE && myTopMenu->getOpen() >= 0) {
             evt.handled = true;
             closeMenus();
         }
