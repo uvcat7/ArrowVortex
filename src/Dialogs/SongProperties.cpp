@@ -23,6 +23,8 @@
 
 namespace Vortex {
 
+static SDL_DialogFileFilter loadFilter[] = {{"All Files (*.*)", "*"}};
+
 #define BANNER_W static_cast<int>(418 * gSystem->getScaleFactor())
 #define BANNER_H static_cast<int>(164 * gSystem->getScaleFactor())
 
@@ -401,8 +403,7 @@ void DialogSongProperties::onPlayPreview() {
 }
 
 fs::path DialogSongProperties::fileDlgPath(const std::string& title) {
-    // gSystem->openFileDlg(title);
-    fs::path path;
+    fs::path path = gSystem->openFileDlg(title, loadFilter, 1, std::string());
     // Hack: FileDlg eats the mouse release event, stop mouse capture directly.
     GuiManager::stopCapturingMouse(GuiManager::getMouseCapture());
     if (path.empty()) return path;

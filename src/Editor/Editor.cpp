@@ -73,22 +73,23 @@ struct DialogEntry {
 
 #define LOAD_FILTERS_COUNT 9
 static SDL_DialogFileFilter loadFilters[] = {
-    {"Supported Media", "sm;ssc;dwi;osu;osz;ogg;mp3;wav"},
-    {"Stepmania/ITG", "sm"},
-    {"Stepmania 5", "ssc"},
-    {"Dance With Intensity", "dwi"},
-    {"Osu!mania", "osu;osz"},
-    {"Ogg Vorbis", "ogg"},
-    {"MP3 Audio", "mp3"},
-    {"Waveform", "wav"},
-    {"All Files", "*"},
+    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.ogg, *.mp3, *.wav)",
+     "sm;ssc;dwi;osu;ogg;mp3;wav"},
+    {"Stepmania/ITG (*.sm)", "sm"},
+    {"Stepmania 5 (*.ssc)", "ssc"},
+    {"Dance With Intensity (*.dwi)", "dwi"},
+    {"Osu!mania (*.osu)", "osu"},
+    {"Ogg Vorbis (*.ogg)", "ogg"},
+    {"MP3 Audio (*.mp3)", "mp3"},
+    {"Waveform (*.wav)", "wav"},
+    {"All Files (*.*)", "*"},
 };
 
 #define SAVE_FILTERS_COUNT 4
-static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG", "sm"},
-                                             {"Stepmania 5", "ssc"},
-                                             {"Osu!mania", "osu"},
-                                             {"All Files", "*"}};
+static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG (*.sm)", "sm"},
+                                             {"Stepmania 5 (*.ssc)", "ssc"},
+                                             {"Osu!mania (*.osu)", "osu"},
+                                             {"All Files (*.*)", "*"}};
 struct DialogSegment {
     Segment::Type type;
     int row;
