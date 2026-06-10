@@ -23,14 +23,6 @@ set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags};${tidy_extra}-p=build")
 # Sometimes caching will cause CMAKE_TOOLCHAIN_FILE, build presets, and includes to not update/work, so include by hand.
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
-if(LINUX AND "${PRESET_NAME}" STREQUAL "")
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        set(PRESET_NAME "linux-debug")
-    else()
-        set(PRESET_NAME "linux-release")
-    endif()
-endif()
-
 if("${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
     if("$ENV{VCPKG_ROOT}" STREQUAL "")
         message(WARNING "%VCPKG_ROOT% is not defined, attempting fallback generation.") 
