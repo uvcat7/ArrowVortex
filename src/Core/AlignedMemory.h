@@ -1,18 +1,14 @@
 #pragma once
-#include <cstdlib>
+#include <SDL3/SDL_stdinc.h>
 
 template <typename T>
 inline T* AlignedMalloc(size_t count) {
-#ifndef _WIN32
-    return static_cast<T*>(std::aligned_alloc(16, count * sizeof(T)));
-#else
-    return static_cast<T*>(_aligned_malloc(16, count * sizeof(T)));
-#endif
+    return static_cast<T*>(SDL_aligned_alloc(16, count * sizeof(T)));
 }
 
 inline void AlignedFree(void* ptr) {
     if (ptr) {
-        std::free(ptr);
+        SDL_aligned_free(ptr);
         ptr = nullptr;
     }
 }
