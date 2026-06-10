@@ -109,7 +109,7 @@ jobs:
           -DPRESET_NAME=linux-release
           -DYML=YML
       - name: Build AV
-        run: cmake --build build --config Release --parallel $(nproc)"
+        run: cmake --build build --config Release --parallel $(nproc)
       - name: Collect into a directory
         if: github.ref_name == 'beta'
         run: cmake --install build --config Release --prefix ./
