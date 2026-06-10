@@ -50,9 +50,7 @@ jobs:
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
-          -DPRESET_NAME=windows-release
-      - name: Test
-        run: dir build/vcpkg_installed/x64-windows-static-md/include
+          -DYML=YML
       - name: Build AV
         run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
       - name: Collect into a directory
@@ -91,14 +89,17 @@ jobs:
           mono `vcpkg fetch nuget | tail -n 1` \
             setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
+      - name: Test
+        run: env
       - name: Configure CMake
         run: >
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-linux
           -DPRESET_NAME=linux-release
+          -DYML=YML
       - name: Build AV
-        run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
+        run: cmake --build build --config Release --parallel 16"
       - name: Collect into a directory
         if: github.ref_name == 'beta'
         run: cmake --install build --config Release --prefix ./
