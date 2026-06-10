@@ -58,5 +58,4 @@ list(APPEND SRC
 add_library(Editor STATIC ${SRC} ${INC})
 target_include_directories(Editor PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_link_directories(Editor PRIVATE ${FFMPEG_LIBRARY_DIRS})
-message("${FFMPEG_LIBRARIES}")
-target_link_libraries(Editor PRIVATE Core Dialogs MAD::MAD Managers Simfile System Aubio::aubio iir::iir_static Vorbis::vorbisfile Vorbis::vorbis Ogg::ogg ${FFMPEG_LIBRARIES})
+target_link_libraries(Editor PRIVATE Core Dialogs MAD::MAD Managers Simfile System Aubio::aubio iir::iir_static Vorbis::vorbisfile Vorbis::vorbis Ogg::ogg ${FFMPEG_LIBRARIES} SDL3::SDL3)

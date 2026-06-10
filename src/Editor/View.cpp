@@ -188,7 +188,7 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     // ================================================================================================
-    // ViewImpl :: member functions.
+    // ViewImpl :: member function
 
     double getZoomLevel() const override { return myZoomLevel; }
 
@@ -258,7 +258,9 @@ struct ViewImpl : public View, public InputHandler {
         // handle preview receptor dragging.
         else if (myIsDraggingReceptorsPreview) {
             auto mx = mpos.x - CenterX(rect_) - myReceptorX;
-            auto ofs = (mx << 8) / static_cast<int>(64 * myScaleLevel);
+            auto ofs =
+                (mx << 8) /
+                static_cast<int>(64 * gSystem->getScaleFactor() * myScaleLevel);
             myPreviewOffset = ofs;
         }
 
@@ -504,13 +506,16 @@ struct ViewImpl : public View, public InputHandler {
     Coords getReceptorCoords() const override {
         Coords out;
         auto noteskin = gNoteskin->get();
+        float scale = gSystem->getScaleFactor();
         out.y = rect_.y + myReceptorY;
         out.xc = rect_.x + rect_.w / 2 + myReceptorX;
         if (noteskin) {
-            out.xl = out.xc + applyZoom(noteskin->leftX);
-            out.xr = out.xc + applyZoom(noteskin->rightX);
+            out.xl =
+                out.xc + static_cast<int>(scale * applyZoom(noteskin->leftX));
+            out.xr =
+                out.xc + static_cast<int>(scale * applyZoom(noteskin->rightX));
         } else {
-            int w = applyZoom(128);
+            int w = static_cast<int>(scale * applyZoom(128));
             out.xl = out.xc - w;
             out.xr = out.xc + w;
         }
@@ -534,7 +539,7 @@ struct ViewImpl : public View, public InputHandler {
         int cx = rect_.x + rect_.w / 2 + myReceptorX;
         if (!noteskin) return cx;
         int x = (col < gStyle->getNumCols()) ? noteskin->colX[col] : 0;
-        return cx + applyZoom(x);
+        return cx + static_cast<int>(gSystem->getScaleFactor() * applyZoom(x));
     }
 
     int rowToY(int row) const override {
@@ -600,7 +605,10 @@ struct ViewImpl : public View, public InputHandler {
             applyZoom(enabled ? -myPreviewOffset : myPreviewOffset) / 2;
     }
 
-    int getPreviewOffset() const override { return applyZoom(myPreviewOffset); }
+    int getPreviewOffset() const override {
+        return static_cast<int>(gSystem->getScaleFactor() *
+                                applyZoom(myPreviewOffset));
+    }
 
     int applyZoom(int v) const override {
         return (v * static_cast<int>(64 * myScaleLevel)) >> 8;

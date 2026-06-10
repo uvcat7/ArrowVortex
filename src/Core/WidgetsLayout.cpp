@@ -2,6 +2,8 @@
 #include <Core/Utils.h>
 #include <Core/VectorUtils.h>
 
+#include <System/System.h>
+
 #include <math.h>
 
 namespace Vortex {
@@ -155,7 +157,8 @@ RowLayout& RowLayout::col(bool expand) { return col(INT_MAX, expand); }
 
 RowLayout& RowLayout::col(int w, bool expand) {
     Col& col = row_list_.back().cols.append();
-    col.width = (w == INT_MAX) ? 0 : w;
+    col.width =
+        (w == INT_MAX) ? 0 : static_cast<int>(w * gSystem->getScaleFactor());
     col.adjust = (w == INT_MAX);
     col.expand = (expand == true);
 

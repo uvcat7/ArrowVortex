@@ -74,7 +74,7 @@ struct Editor {
     virtual void onMenuAction(int action) = 0;
 
     /// Called by system when the window close button is pressed.
-    virtual void onExitProgram() = 0;
+    virtual bool onExitProgram() = 0;
 
     /// Returns the main gui of the editor.
     virtual GuiContext* getGui() const = 0;

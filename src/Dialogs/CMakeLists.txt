@@ -39,4 +39,4 @@ list(APPEND SRC
 )
 
 add_library(Dialogs STATIC ${SRC} ${INC})
-target_link_libraries(Dialogs PRIVATE Core Editor Managers Simfile System)
+target_link_libraries(Dialogs PRIVATE Core Editor Managers Simfile System SDL3::SDL3)

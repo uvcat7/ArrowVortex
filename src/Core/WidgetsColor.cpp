@@ -10,6 +10,8 @@
 #include <Core/Shader.h>
 #include <Core/Widgets.h>
 
+#include <System/System.h>
+
 namespace Vortex {
 
 // ================================================================================================
@@ -133,7 +135,10 @@ void WgColorPicker::Expanded::startDrag(int x, int y) {
 void WgColorPicker::Expanded::endDrag() { myDrag = 0; }
 
 void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
-    rect_ = {r.x + r.w + 2, r.y + r.h / 2 - 80, 196, 160};
+    float scale = gSystem->getScaleFactor();
+    int w = static_cast<int>(scale * 196);
+    int h = static_cast<int>(scale * 160);
+    rect_ = {r.x + r.w + 2, r.y + r.h / 2 - h / 2, w, h};
 
     recti view = gui->getView();
 
@@ -166,9 +171,11 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
 void WgColorPicker::Expanded::draw() {
     auto& dlg = GuiDraw::getDialog();
     dlg.frame.draw(rect_, 0);
+    float scale = gSystem->getScaleFactor();
+    int pick_size = static_cast<int>(scale * 16);
 
-    Draw::fill({rect_.x - 8, rect_.y + rect_.h / 2 - 8, 16, 16}, Colors::white,
-               dlg.vshape.handle());
+    Draw::fill({rect_.x - 8, rect_.y + rect_.h / 2 - 8, pick_size, pick_size},
+               Colors::white, dlg.vshape.handle());
 
     recti ar = getAr();
     uint32_t t = ToColor32(HSVtoRGB(myCol, 1.0f));

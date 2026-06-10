@@ -1,13 +1,8 @@
-#pragma once
-
-#include <Core/Core.h>
-
-namespace Vortex {
-
 struct MixSource {
     virtual void writeFrames(short* buffer, int frames) = 0;
 };
 
+namespace Vortex {
 struct Mixer {
     static Mixer* create();
 
@@ -26,5 +21,4 @@ struct Mixer {
     /// Unpauses the audio mixer and starts playing samples from the mix source.
     virtual void resume() = 0;
 };
-
-};  // namespace Vortex
+}  // namespace Vortex

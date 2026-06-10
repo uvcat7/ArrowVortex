@@ -14,6 +14,7 @@
 #include <Editor/Selection.h>
 #include <Simfile/Segments.h>
 #include <Simfile/Tempo.h>
+#include <System/System.h>
 #include <string>
 
 namespace Vortex {
@@ -103,7 +104,8 @@ void DialogAdjustSync::myCreateWidgets() {
     myLayout.add<WgSeperator>();
 
     myBPMLabel = myLayout.add<WgLabel>();
-    myBPMList = myLayout.addH<WgSelectList>(62);
+    myBPMList = myLayout.addH<WgSelectList>(
+        static_cast<int>(gSystem->getScaleFactor() * 62));
     myBPMList->value.bind(&mySelectedResult);
     myBPMList->setTooltip("BPM estimates calculated by the editor");
 

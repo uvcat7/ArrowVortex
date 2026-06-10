@@ -28,8 +28,9 @@ namespace Vortex {
 namespace {
 
 static const int MAP_HEIGHT = 4096;
-static const int MAP_WIDTH = 16;
-static const int TEXTURE_SIZE = 256;  // sqrt(MAP_HEIGHT_MAX * MAP_WIDTH)
+static const int MAP_WIDTH = 64;
+static const int MAP_WIDTH_NORMAL = 16;
+static const int TEXTURE_SIZE = 512;  // sqrt(MAP_HEIGHT_MAX * MAP_WIDTH)
 static const int NUM_PIECES = MAP_HEIGHT / TEXTURE_SIZE;
 
 static const uint32_t freezecol = {
@@ -216,7 +217,8 @@ struct MinimapImpl : public Minimap {
 
     recti myGetMapRect() {
         vec2i size = gSystem->getWindowSize();
-        rect_ = {size.x - 32, 8, 24, size.y - 16};
+        int width = static_cast<int>(24 * gSystem->getScaleFactor());
+        rect_ = {size.x - 8 - width, 8, width, size.y - 16};
         return {rect_.x + 2, rect_.y + 16, rect_.w - 4, rect_.h - 32};
     }
 
@@ -279,7 +281,9 @@ struct MinimapImpl : public Minimap {
             // Calculate the x-position of every note column.
             int cols = gStyle->getNumCols();
             int colw = (cols <= 8) ? 2 : 1;
+            colw = static_cast<int>(colw * gSystem->getScaleFactor());
             int coldx = (cols <= 4) ? 3 : (cols <= 8) ? 2 : 1;
+            coldx = static_cast<int>(coldx * gSystem->getScaleFactor());
             int colx[SIM_MAX_COLUMNS] = {};
             for (int c = 0; c < cols; ++c) {
                 colx[c] = MAP_WIDTH / 2 + (c - cols / 2) * coldx;

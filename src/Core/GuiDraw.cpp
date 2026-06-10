@@ -134,17 +134,17 @@ static void CreateTextBoxTextures() {
 }
 
 static void CreateIcons() {
-    Canvas c(8, 8, 0.2f);
+    Canvas c(64, 64, 0.2f);
 
     // Grab : three horizontal lines.
     c.setColor(0.2f);
-    c.box(1, 2, 2, 6);
-    c.box(4, 2, 5, 6);
-    c.box(7, 2, 8, 6);
+    c.box(8, 16, 16, 48);
+    c.box(32, 16, 40, 48);
+    c.box(56, 16, 64, 48);
     c.setColor(0.6f);
-    c.box(0, 2, 1, 6);
-    c.box(3, 2, 4, 6);
-    c.box(6, 2, 7, 6);
+    c.box(0, 16, 8, 48);
+    c.box(24, 16, 32, 48);
+    c.box(48, 16, 56, 48);
     GD->icons.grab = c.createTexture();
 
     // Icons.
@@ -152,47 +152,45 @@ static void CreateIcons() {
 
     // Pin : diagonal thumbtack.
     c.clear(1.0f);
-    float pinneedle[6] = {0, 2, 4, 8, 4, 6};
-    float pinhandle[12] = {2, 4, 6, 8, 6, 6, 2, 2, 0, 2, 4, 6};
+    float pinneedle[6] = {0, 16, 32, 64, 32, 48};
+    float pinhandle[12] = {16, 32, 48, 64, 48, 48, 16, 16, 0, 16, 32, 48};
     c.polygon(pinneedle, pinneedle + 3, 3);
     c.polygon(pinhandle, pinhandle + 6, 6);
     GD->icons.pin = c.createTexture();
 
     // Unpin : vertical thumbtack.
     c.clear(1.0f);
-    float unpinneedle[8] = {
-        1, 2, 4, 3, 5, 4, 6, 7,
-    };
+    float unpinneedle[8] = {8, 16, 32, 24, 40, 32, 48, 56};
     c.polygon(unpinneedle, unpinneedle + 4, 4);
     c.polygon(pinhandle, pinhandle + 6, 6);
     GD->icons.unpin = c.createTexture();
 
     // Cross : two diagonal lines.
     c.clear(1.0f);
-    c.line(1, 1, 7, 7, 2);
-    c.line(1, 7, 7, 1, 2);
+    c.line(8, 8, 56, 56, 16);
+    c.line(8, 56, 56, 8, 16);
     GD->icons.cross = c.createTexture();
 
     // Minus : horizontal line.
     c.clear(1.0f);
-    c.line(1, 4, 7, 4, 2);
+    c.line(8, 32, 56, 32, 16);
     GD->icons.minus = c.createTexture();
 
     // Plus : horizontal and vertical line.
     c.clear(1.0f);
-    c.line(1, 4, 7, 4, 2);
-    c.line(4, 1, 4, 7, 2);
+    c.line(8, 32, 56, 32, 16);
+    c.line(32, 8, 32, 56, 16);
     GD->icons.plus = c.createTexture();
 
     // Arrow : right pointing triangle.
     c.clear(1.0f);
-    float arrow[6] = {2, 6, 2, 1, 4, 7};
+    float arrow[6] = {16, 48, 16, 8, 32, 56};
     c.polygon(arrow, arrow + 3, 3);
     GD->icons.arrow = c.createTexture();
 
     // Check : checkmark.
-    c = Canvas(10, 10, 1.f);
-    float check[12] = {7, 10, 5, 0, 2, 4, 0, 1, 10, 5, 3, 6};
+    c = Canvas(80, 80, 1.f);
+    float check[12] = {56, 80, 40, 0, 16, 32, 0, 8, 80, 40, 24, 48};
     c.polygon(check, check + 6, 6);
     GD->icons.check = c.createTexture();
 }

@@ -427,7 +427,7 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
 
         WgButton* button = myButtons[i];
         button->text.set(item.text.c_str());
-        button->setSize(w, 20);
+        button->setSize(w, static_cast<int>(20 * gSystem->getScaleFactor()));
         button->onPress.bind(this, &BreakdownWidget::selectStream,
                              vec2i{item.row, item.endrow});
     }
@@ -444,26 +444,32 @@ void DialogChartProperties::BreakdownWidget::selectStream(vec2i rows) {
 }
 
 void DialogChartProperties::BreakdownWidget::onUpdateSize() {
-    int x = 0, y = 20;
+    int x = 0;
+    int w = static_cast<int>(340 * gSystem->getScaleFactor());
+    int y_spacing = static_cast<int>(20 * gSystem->getScaleFactor());
+    int x_spacing = static_cast<int>(2 * gSystem->getScaleFactor());
+    int y = y_spacing;
     for (auto button : myButtons) {
         vec2i size = button->getSize();
-        if (x + size.x > 340) {
-            x = 0, y += 22;
+        if (x + size.x > w) {
+            x = 0, y += y_spacing + x_spacing;
         }
-        x += size.x + 2;
+        x += size.x + x_spacing;
     }
-    setSize(340, y);
+    setSize(w, y);
 }
 
 void DialogChartProperties::BreakdownWidget::onArrange(recti r) {
     int x = 0, y = 0;
+    int y_spacing = static_cast<int>(20 * gSystem->getScaleFactor());
+    int x_spacing = static_cast<int>(2 * gSystem->getScaleFactor());
     for (auto button : myButtons) {
         vec2i size = button->getSize();
         if (x + size.x > r.w) {
-            x = 0, y += 22;
+            x = 0, y += y_spacing + x_spacing;
         }
         button->arrange({r.x + x, r.y + y, size.x, size.y});
-        x += size.x + 2;
+        x += size.x + x_spacing;
     }
 }
 

@@ -11,6 +11,11 @@
 #include <Simfile/SegmentList.h>
 #include <Simfile/SegmentGroup.h>
 
+#include <System/System.h>
+
+#define ITEM_H static_cast<int>(16 * gSystem->getScaleFactor())
+#define ITEM_HEADER static_cast<int>(20 * gSystem->getScaleFactor())
+
 namespace Vortex {
 
 // ================================================================================================
@@ -22,11 +27,11 @@ static int GetTempoListH() {
     if (segments) {
         for (const auto& segment : *segments) {
             if (segment.size()) {
-                h += 26 + segment.size() * 16;
+                h += ITEM_HEADER + 6 + segment.size() * ITEM_H;
             }
         }
     }
-    return max(h, 16);
+    return max(h, ITEM_H);
 }
 
 struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
@@ -42,7 +47,7 @@ struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
     }
 
     const Segment* getSegmentUnderMouse(vec2i position) {
-        int my = position.y - 16;
+        int my = position.y - ITEM_H;
         int y = rect_.y - scroll_position_y_;
 
         if (!isMouseOver() || my < y || position.x > rect_.x + getViewWidth())
@@ -51,10 +56,10 @@ struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
         auto segments = gTempo->getSegments();
         for (const auto& segment : *segments) {
             if (segment.size()) {
-                y += 22;
+                y += ITEM_HEADER + 2;
                 auto seg = segment.begin(), segEnd = segment.end();
                 while (seg != segEnd && y < my) {
-                    y += 16, ++seg;
+                    y += ITEM_H, ++seg;
                 }
                 y += 4;
                 if (y >= my) return seg.ptr;
@@ -98,27 +103,28 @@ struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
                 auto meta = Segment::meta[segment.type()];
                 auto seg = segment.begin(), segEnd = segment.end();
 
-                Draw::fill({x, y, view.w, 20}, Color32(26));
+                Draw::fill({x, y, view.w, ITEM_HEADER}, Color32(26));
                 Text::arrange(Text::MC, style, meta->plural);
-                Text::draw({x, y, view.w, 20});
-                y += 22;
+                Text::draw({x, y, view.w, ITEM_HEADER});
+                y += ITEM_HEADER + 2;
 
-                while (seg != segEnd && y < view.y - 20) {
-                    y += 16, ++seg;
+                while (seg != segEnd && y < view.y - ITEM_HEADER) {
+                    y += ITEM_H, ++seg;
                 }
-                while (seg != segEnd && y < view.y + view.h + 20) {
-                    if (isMouseOver() && m.y >= y && m.y < y + 16)
-                        Draw::fill({x, y - 1, view.w, 20}, Color32(34));
+                while (seg != segEnd && y < view.y + view.h + ITEM_HEADER) {
+                    if (isMouseOver() && m.y >= y && m.y < y + ITEM_H)
+                        Draw::fill({x, y - 1, view.w, ITEM_HEADER},
+                                   Color32(34));
 
                     std::string str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
                     Text::arrange(Text::MR, style, str.c_str());
-                    Text::draw(vec2i{x + view.w / 2 - 6, y + 8});
+                    Text::draw(vec2i{x + view.w / 2 - 6, y + ITEM_H / 2});
 
                     str = meta->getDescription(seg.ptr);
                     Text::arrange(Text::ML, style, str.c_str());
-                    Text::draw(vec2i{x + view.w / 2 + 6, y + 8});
+                    Text::draw(vec2i{x + view.w / 2 + 6, y + ITEM_H / 2});
 
-                    y += 16, ++seg;
+                    y += ITEM_H, ++seg;
                 }
 
                 y += 4;
@@ -139,9 +145,10 @@ DialogTempoBreakdown::~DialogTempoBreakdown() { delete myList; }
 
 DialogTempoBreakdown::DialogTempoBreakdown() {
     setTitle("TEMPO BREAKDOWN");
-    setWidth(200);
+    float scale = gSystem->getScaleFactor();
+    setWidth(static_cast<int>(scale * 200));
 
-    setMinimumHeight(32);
+    setMinimumHeight(static_cast<int>(scale * 32));
     setResizeable(false, true);
 
     myList = new TempoList(getGui());

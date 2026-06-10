@@ -58,6 +58,8 @@
 #include <algorithm>
 #include <fstream>
 
+#include <SDL3/SDL.h>
+
 namespace Vortex {
 
 extern std::string VerifySaveLoadIdentity(const Simfile& simfile);
@@ -69,6 +71,25 @@ struct DialogEntry {
     bool requestOpen;
 };
 
+#define LOAD_FILTERS_COUNT 9
+static SDL_DialogFileFilter loadFilters[] = {
+    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.ogg, *.mp3, *.wav)",
+     "sm;ssc;dwi;osu;ogg;mp3;wav"},
+    {"Stepmania/ITG (*.sm)", "sm"},
+    {"Stepmania 5 (*.ssc)", "ssc"},
+    {"Dance With Intensity (*.dwi)", "dwi"},
+    {"Osu!mania (*.osu)", "osu"},
+    {"Ogg Vorbis (*.ogg)", "ogg"},
+    {"MP3 Audio (*.mp3)", "mp3"},
+    {"Waveform (*.wav)", "wav"},
+    {"All Files (*.*)", "*"},
+};
+
+#define SAVE_FILTERS_COUNT 4
+static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG (*.sm)", "sm"},
+                                             {"Stepmania 5 (*.ssc)", "ssc"},
+                                             {"Osu!mania (*.osu)", "osu"},
+                                             {"All Files (*.*)", "*"}};
 struct DialogSegment {
     Segment::Type type;
     int row;
@@ -80,24 +101,6 @@ struct DialogFocus {
     const char* name;
     bool requestFocus = false;
 };
-
-static const char loadFilters[] =
-    "Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.osz, *.ogg, *.mp3, "
-    "*.wav)\0*.sm;*.ssc;*.dwi;*.osu;*.osz;*.ogg;*.mp3;*.wav\0"
-    "Stepmania/ITG (*.sm)\0*.sm\0"
-    "Stepmania 5 (*.ssc)\0*.ssc\0"
-    "Dance With Intensity (*.dwi)\0*.dwi\0"
-    "Osu!mania (*.osu, *.osz)\0*.osu;*.osz\0"
-    "Ogg Vorbis (*.ogg)\0*.ogg\0"
-    "MP3 Audio (*.mp3)\0*.mp3\0"
-    "Waveform (*.wav)\0*.wav\0"
-    "All Files (*.*)\0*.*\0";
-
-static const char saveFilters[] =
-    "Stepmania/ITG (*.sm)\0*.sm\0"
-    "Stepmania 5 (*.ssc)\0*.ssc\0"
-    "Osu!mania (*.osu)\0*.osu\0"
-    "All Files (*.*)\0*.*\0";
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -247,11 +250,6 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Open the saved pinned dialogs.
         openPinnedDialogs(settings);
-
-        // openSimfile("D:\\Development\\ArrowVortex\\test\\sm\\Alchemist
-        // (Double)\\alchemist.sm"); openSimfile("D:\\Installed
-        // Games\\OpenITG\\Songs\\Really Long Stuff\\90,000 Miles\\90000
-        // Miles.sm"); openDialog(DIALOG_NEW_CHART);
     }
 
     void shutdown() {
@@ -496,10 +494,8 @@ struct EditorImpl : public Editor, public InputHandler {
     }
 
     bool openSimfile() override {
-        std::string filters(loadFilters, sizeof(loadFilters));
-        fs::path path =
-            gSystem->openFileDlg("Open file", std::string(), filters);
-        return openSimfile(path);
+        return openSimfile(gSystem->openFileDlg(
+            "Open file", loadFilters, LOAD_FILTERS_COUNT, std::string()));
     }
 
     bool openSimfile(fs::path path) override {
@@ -598,13 +594,14 @@ struct EditorImpl : public Editor, public InputHandler {
             };
 
             // Show the save file dialog.
-            std::string filters(saveFilters, sizeof(saveFilters));
-            fs::path path = gSystem->saveFileDlg("save file", save_path,
-                                                 filters, &filterIndex);
-            if (path.empty()) return false;
+            save_path = gSystem->saveFileDlg("Save file", saveFilters,
+                                             SAVE_FILTERS_COUNT, &filterIndex,
+                                             fs::path());
+            dir = pathToUtf8(save_path.parent_path());
+            file = pathToUtf8(save_path.filename());
+            auto ext = pathToUtf8(save_path.extension());
 
-            auto ext = pathToUtf8(path.extension());
-            Str::toLower(ext);
+            if (save_path.empty()) return false;
 
             // Update the save format based on the selected filter index.
             switch (filterIndex) {
@@ -816,7 +813,11 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
         };
 
-        if (!dlg) return;
+        if (dlg == nullptr) {
+            HudError("Tried to open an invalid dialog, id %d",
+                     static_cast<int>(id));
+            return;
+        }
 
         dlg->setId(id);
 
@@ -866,10 +867,12 @@ struct EditorImpl : public Editor, public InputHandler {
         Action::perform(static_cast<Action::Type>(id));
     }
 
-    void onExitProgram() override {
-        if (closeSimfile()) {
+    bool onExitProgram() override {
+        bool result = closeSimfile();
+        if (result) {
             gSystem->terminate();
         }
+        return result;
     }
 
     void notifyChanges() {
@@ -925,8 +928,11 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void drawLogo() {
         vec2i size = gSystem->getWindowSize();
+        vec2i logo_size = myLogo.size();
         Draw::fill({0, 0, size.x, size.y}, RGBAtoColor32(38, 38, 38, 255));
-        Draw::sprite(myLogo, {size.x / 2, size.y / 2},
+        Draw::sprite(myLogo,
+                     {size.x / 2 - logo_size.x / 2,
+                      size.y / 2 - logo_size.y / 2, logo_size.x, logo_size.y},
                      RGBAtoColor32(255, 255, 255, 26));
     }
 
@@ -936,6 +942,7 @@ struct EditorImpl : public Editor, public InputHandler {
         notifyChanges();
 
         vec2i windowSize = gSystem->getWindowSize();
+        float scale = gSystem->getScaleFactor();
         recti r = {0, 0, windowSize.x, windowSize.y};
 
         gTextOverlay->handleInputs(events);
@@ -975,10 +982,6 @@ struct EditorImpl : public Editor, public InputHandler {
             }
         }
 
-        if (GuiMain::isCapturingMouse()) {
-            gSystem->setCursor(GuiMain::getCursorIcon());
-        }
-
         gTextOverlay->tick();
         gHistory->handleInputs(events);
         gMinimap->handleInputs(events);
@@ -1000,6 +1003,12 @@ struct EditorImpl : public Editor, public InputHandler {
 
         updateTitle();
         notifyChanges();
+
+        if (GuiMain::isCapturingMouse()) {
+            gSystem->setCursor(GuiMain::getCursorIcon());
+        } else {
+            gSystem->setCursor(gSystem->getCursor());
+        }
 
         if (gSimfile->isOpen()) {
             gNotefield->draw();

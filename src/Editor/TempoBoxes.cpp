@@ -108,8 +108,9 @@ struct TempoBoxesImpl : public TempoBoxes {
         int previousRow = -1;
         int stacks[2] = {0, 0};
         for (TempoBox& box : myBoxes) {
-            vec2i bounds =
-                Text::arrange(Text::MC, textStyle, MAX_WIDTH, box.str.c_str());
+            vec2i bounds = Text::arrange(Text::MC, textStyle,
+                                         MAX_WIDTH * gSystem->getScaleFactor(),
+                                         box.str.c_str());
             int width = max(32, bounds.x + 24);
             box.width = width;
             box.height = bounds.y + 16;
@@ -293,7 +294,7 @@ struct TempoBoxesImpl : public TempoBoxes {
                 int side = Segment::meta[box.type]->side;
                 int x = baseX[side] + box.x;
                 if (IsInside(
-                        recti{x, y - (box.height / 2), box.width, box.height},
+                        recti{x, y - box.height / 2, box.width, box.height},
                         mpos.x, mpos.y)) {
                     myMouseOverBox = i;
                     break;
@@ -331,13 +332,14 @@ struct TempoBoxesImpl : public TempoBoxes {
             int y = static_cast<int>(
                 oy + dy * (timeBased ? tracker.advance(box.row)
                                      : static_cast<double>(box.row)));
-            if (y < viewTop - 16 || y > viewBtm + 16) continue;
+            if (y < viewTop - box.height / 2 || y > viewBtm + box.height / 2)
+                continue;
 
             int side = Segment::meta[box.type]->side;
             int x = baseX[side] + box.x;
 
             int flags = side * TileBar::FLIP_H;
-            recti r = {x, y - (box.height / 2), box.width, box.height};
+            recti r = {x, y - box.height / 2, box.width, box.height};
 
             uint32_t color = Segment::meta[box.type]->color;
             myBoxBar.draw(&batch, r, color, flags);
@@ -353,13 +355,16 @@ struct TempoBoxesImpl : public TempoBoxes {
             int y = static_cast<int>(
                 oy + dy * (timeBased ? tracker.advance(box.row)
                                      : static_cast<double>(box.row)));
-            if (y < viewTop - 16 || y > viewBtm + 16) continue;
+            if (y < viewTop - box.height / 2 || y > viewBtm + box.height / 2)
+                continue;
 
             int side = Segment::meta[box.type]->side;
             int x = baseX[side] + box.x + side * 4 - 2;
 
-            Text::arrange(Text::MC, textStyle, MAX_WIDTH, box.str.c_str());
-            Text::draw(recti{x, y - 17, static_cast<int>(box.width), 32});
+            Text::arrange(Text::MC, textStyle,
+                          MAX_WIDTH * gSystem->getScaleFactor(),
+                          box.str.c_str());
+            Text::draw(recti{x, y - box.height / 2 - 1, box.width, box.height});
         }
 
         // Display detailed info of the mouse over box.

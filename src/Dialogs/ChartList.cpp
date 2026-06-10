@@ -14,6 +14,9 @@
 
 #include <Editor/Common.h>
 
+#include <System/System.h>
+
+#define TEXT_H static_cast<int>(20 * gSystem->getScaleFactor())
 namespace Vortex {
 
 // ================================================================================================
@@ -48,6 +51,7 @@ struct DialogChartList::ChartButton : public GuiWidget {
 
     void onDraw() override {
         recti r = rect_;
+        int w = static_cast<int>(128 * gSystem->getScaleFactor());
 
         TextStyle textStyle;
         textStyle.textFlags = Text::ELLIPSES;
@@ -59,29 +63,30 @@ struct DialogChartList::ChartButton : public GuiWidget {
         const Chart* chart = gSimfile->getChart(myChartIndex);
         if (chart) {
             // Draw the left-side colored bar with difficulty and meter.
-            recti left = {rect_.x, rect_.y, min(r.w, 128), 20};
+            recti left = {rect_.x, rect_.y, min(r.w, w), TEXT_H};
             uint32_t color = ToColor(chart->difficulty);
             myBar->draw(left, 0, color);
 
             Text::arrange(Text::ML, textStyle,
                           GetDifficultyName(chart->difficulty));
-            Text::draw(vec2i{left.x + 4, left.y + 10});
+            Text::draw(vec2i{left.x + 4, left.y + TEXT_H / 2});
 
             Text::arrange(Text::MR, textStyle, Str::val(chart->meter).c_str());
-            Text::draw(vec2i{left.x + left.w - 6, left.y + 10});
+            Text::draw(vec2i{left.x + left.w - 6, left.y + TEXT_H / 2});
 
             // Draw the right-side step artist and note count.
             if (r.w > left.w) {
                 std::string stepCount = Str::val(chart->stepCount());
 
                 int maxW = r.w - left.w - 8;
-                recti right = {rect_.x + left.w, rect_.y, rect_.w - left.w, 20};
+                recti right = {rect_.x + left.w, rect_.y, rect_.w - left.w,
+                               TEXT_H};
                 Text::arrange(Text::MR, textStyle, maxW, stepCount.c_str());
-                Text::draw(vec2i{right.x + right.w - 6, right.y + 10});
+                Text::draw(vec2i{right.x + right.w - 6, right.y + TEXT_H / 2});
 
                 maxW = right.w - Text::getSize().x - 16;
                 Text::arrange(Text::ML, textStyle, maxW, chart->artist.c_str());
-                Text::draw(vec2i{right.x + 6, right.y + 10});
+                Text::draw(vec2i{right.x + 6, right.y + TEXT_H / 2});
             }
         }
 
@@ -107,11 +112,11 @@ static int GetChartListH() {
         auto chart = gSimfile->getChart(i);
         if (style != chart->style) {
             style = chart->style;
-            h += 24;
+            h += TEXT_H + 4;
         }
-        h += 21;
+        h += TEXT_H + 1;
     }
-    return max(24, h);
+    return max(TEXT_H, h);
 }
 
 struct DialogChartList::ChartList : public WgScrollRegion {
@@ -160,11 +165,11 @@ struct DialogChartList::ChartList : public WgScrollRegion {
             auto chart = gSimfile->getChart(i);
             if (chart && style != chart->style) {
                 style = chart->style;
-                y += 24;
+                y += TEXT_H + 4;
             }
-            button->arrange({rect_.x, y, viewW, 20});
+            button->arrange({rect_.x, y, viewW, TEXT_H});
             button->tick();
-            y += 21;
+            y += TEXT_H + 1;
         }
 
         PostTick();
@@ -191,10 +196,10 @@ struct DialogChartList::ChartList : public WgScrollRegion {
                     Text::arrange(Text::MC, textStyle, style->name.c_str());
                     Text::draw(vec2i{x + w / 2, y + 10});
                     textStyle.textColor = Colors::white;
-                    y += 24;
+                    y += TEXT_H + 4;
                 }
                 button->draw();
-                y += 21;
+                y += TEXT_H + 1;
             }
         Renderer::popScissorRect();
 
@@ -222,11 +227,12 @@ DialogChartList::~DialogChartList() { delete myList; }
 DialogChartList::DialogChartList() {
     setTitle("LIST OF CHARTS");
 
-    setWidth(320);
+    float scale = gSystem->getScaleFactor();
+    setWidth(static_cast<int>(320 * scale));
 
-    setMinimumWidth(128);
-    setMaximumWidth(1024);
-    setMinimumHeight(16);
+    setMinimumWidth(static_cast<int>(128 * scale));
+    setMaximumWidth(static_cast<int>(1024 * scale));
+    setMinimumHeight(static_cast<int>(16 * scale));
 
     setResizeable(true, true);
 
@@ -238,7 +244,7 @@ void DialogChartList::onChanges(int changes) {
         myList->updateButtons();
         int h = GetChartListH();
         h = min(h, getGui()->getView().h - 128);
-        h = max(h, 32);
+        h = max(h, static_cast<int>(gSystem->getScaleFactor() * 32));
         setHeight(h);
     }
 }

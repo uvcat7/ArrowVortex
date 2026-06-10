@@ -209,7 +209,8 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         speed =
             (drawMode_ == VARIABLE ? gTempo->positionToSpeed(beat, time) : 1);
         cols = gStyle->getNumCols();
-        scale = gView->getNoteScale();
+        scale =
+            static_cast<int>(gSystem->getScaleFactor() * gView->getNoteScale());
         currentRow = beat * ROWS_PER_BEAT;
         updateNotefieldSize();
 

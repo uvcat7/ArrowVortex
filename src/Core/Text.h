@@ -99,7 +99,7 @@ int getEscapedCharIndex(const char* unformattedText, int charIndex);
 /// Creates a glyph image that can be embedded in text by using the {g:name}
 /// markup.
 bool createGlyph(const char* name, const Texture& texture, int dx = 0,
-                 int dy = 0, int advance = 0);
+                 int dy = 0, int advance = 0, int sizex = 0, int sizey = 0);
 };  // namespace Text
 
 // Reference counted font object.

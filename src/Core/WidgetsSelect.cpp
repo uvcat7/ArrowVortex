@@ -4,12 +4,16 @@
 #include <Core/Utils.h>
 #include <Core/GuiDraw.h>
 
+#include <System/System.h>
+
 namespace Vortex {
 
 // ================================================================================================
 // WgSelectList
 
-#define ITEM_H 18
+#define ITEM_H static_cast<int>(18 * gSystem->getScaleFactor())
+#define ICON_W static_cast<int>(8 * gSystem->getScaleFactor())
+#define ICON_SPACE static_cast<int>(10 * gSystem->getScaleFactor())
 
 WgSelectList::~WgSelectList() {
     clearItems();
@@ -183,7 +187,9 @@ void WgDroplist::onMousePress(MousePress& evt) {
         int numItems = droplist_items_.size();
         if (isEnabled() && numItems && evt.button == Mouse::LMB &&
             evt.unhandled()) {
-            int h = min(numItems * 18 + 8, 128);
+            int h = min(
+                numItems * static_cast<int>(18 * gSystem->getScaleFactor()) + 8,
+                static_cast<int>(128 * gSystem->getScaleFactor()));
             recti r = {rect_.x, rect_.y + rect_.h, rect_.w, h};
             selectlist_widget_ = new WgSelectList(gui_);
             selectlist_widget_->setHeight(h);
@@ -255,7 +261,9 @@ void WgDroplist::onDraw() {
     recti r = rect_;
     button.base.draw(rect_);
     if (isEnabled())
-        Draw::sprite(icons.arrow, {r.x + r.w - 10, r.y + r.h / 2},
+        Draw::sprite(icons.arrow,
+                     {r.x + r.w - ICON_SPACE, r.y + r.h / 2 - ICON_W / 2,
+                      ICON_W, ICON_W},
                      Draw::ROT_90);
 
     // Draw the selected item text.
@@ -346,11 +354,17 @@ void WgCycleButton::onDraw() {
 
     uint32_t colL =
         (isEnabled() && mouseX < 0) ? Colors::white : misc.colDisabled;
-    Draw::sprite(icons.arrow, {r.x + 10, r.y + r.h / 2}, colL, Draw::FLIP_H);
+    Draw::sprite(
+        icons.arrow,
+        {r.x + ICON_SPACE - ICON_W, r.y + r.h / 2 - ICON_W / 2, ICON_W, ICON_W},
+        colL, Draw::FLIP_H);
 
     uint32_t colR =
         (isEnabled() && mouseX > 0) ? Colors::white : misc.colDisabled;
-    Draw::sprite(icons.arrow, {r.x + r.w - 10, r.y + r.h / 2}, colR);
+    Draw::sprite(
+        icons.arrow,
+        {r.x + r.w - ICON_SPACE, r.y + r.h / 2 - ICON_W / 2, ICON_W, ICON_W},
+        colR);
 
     // Draw the button text.
     if (item >= 0 && item < numItems) {

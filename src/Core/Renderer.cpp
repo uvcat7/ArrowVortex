@@ -8,6 +8,7 @@
 
 #include <System/Debug.h>
 #include <System/OpenGL.h>
+#include <System/System.h>
 
 namespace Vortex {
 

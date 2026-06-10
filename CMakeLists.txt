@@ -26,6 +26,7 @@ find_package(iir CONFIG REQUIRED)
 find_package(MAD REQUIRED)
 find_package(Ogg CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(SDL3 CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(Vorbis REQUIRED)
 

@@ -21,6 +21,7 @@
     "libmad",
     "libogg",
     "libvorbis",
-    "opengl"
+    "opengl",
+    "sdl3"
   ]
 }

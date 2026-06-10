@@ -16,14 +16,13 @@
 #include <Editor/Editor.h>
 #include <Editor/Menubar.h>
 
-#define UNICODE
-
+#define SDL_MAIN_USE_CALLBACKS
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3/SDL_video.h>
 #ifdef _WIN32
+#define _UNICODE
 #include <System/OpenGL.h>
-#include <winuser.h>
-#include <shellapi.h>
-#include <shlwapi.h>
-#include <commdlg.h>
 #include <gl/gl.h>
 #endif
 #undef ERROR
@@ -36,14 +35,28 @@
 #include <bitset>
 #include <list>
 #include <vector>
+#include <map>
+#include <mutex>
+#include <condition_variable>
 
 #undef DELETE
 
-// Enable visual styles.
-#pragma comment(linker, \
-                "\"/manifestdependency:type='win32' \
-name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
-processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+// Various statics had to be pulled out of the System singleton since
+// SDL needs non-member callback functions for event handling.
+bool myInitSuccesful = false;
+Vortex::InputEvents myEvents;
+Vortex::vec2i myMousePos = {0, 0};
+Vortex::vec2i mySize = {0, 0};
+SDL_Window* window = nullptr;
+Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
+std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
+bool myIsActive = false;
+bool myIsTerminated = false;
+bool myIsInsideMessageLoop = false;
+std::vector<std::string> droppedFiles;
+std::bitset<Vortex::Key::MAX_VALUE> myKeyState;
+std::bitset<Vortex::Mouse::MAX_VALUE> myMouseState;
+float myScale = 1.0f;
 
 namespace Vortex {
 
@@ -54,51 +67,60 @@ namespace {
 static wchar_t sRunDir[MAX_PATH + 1] = {};
 static wchar_t sExeDir[MAX_PATH + 1] = {};
 
-// Swap interval extension for enabling/disabling vsync.
-typedef BOOL(APIENTRY* PFNWGLSWAPINTERVALFARPROC)(int);
-static PFNWGLSWAPINTERVALFARPROC wglSwapInterval;
+static int wglSwapInterval;
+
+static std::string outPath;
+std::mutex fileDialogMutex;
+std::condition_variable fileDialogCv;
+fs::path fileDialogPath;
+int file_extension_index = 0;
+bool isDialogClosed = false;
 
 // Mapping of windows virtual keys to vortex key codes.
-static const int VKtoKCmap[] = {
-    VK_OEM_3,      Key::ACCENT,
-    VK_OEM_MINUS,  Key::DASH,
-    VK_OEM_PLUS,   Key::EQUAL,
-    VK_OEM_4,      Key::BRACKET_L,
-    VK_OEM_6,      Key::BRACKET_R,
-    VK_OEM_1,      Key::SEMICOLON,
-    VK_OEM_7,      Key::QUOTE,
-    VK_OEM_5,      Key::BACKSLASH,
-    VK_OEM_COMMA,  Key::COMMA,
-    VK_OEM_PERIOD, Key::PERIOD,
-    VK_OEM_2,      Key::SLASH,
-    VK_SPACE,      Key::SPACE,
-    VK_ESCAPE,     Key::ESCAPE,
-    VK_LWIN,       Key::SYSTEM_L,
-    VK_RWIN,       Key::SYSTEM_R,
-    VK_TAB,        Key::TAB,
-    VK_CAPITAL,    Key::CAPS,
-    VK_RETURN,     Key::RETURN,
-    VK_BACK,       Key::BACKSPACE,
-    VK_PRIOR,      Key::PAGE_UP,
-    VK_NEXT,       Key::PAGE_DOWN,
-    VK_HOME,       Key::HOME,
-    VK_END,        Key::END,
-    VK_INSERT,     Key::INSERT,
-    VK_DELETE,     Key::DELETE,
-    VK_SNAPSHOT,   Key::PRINT_SCREEN,
-    VK_SCROLL,     Key::SCROLL_LOCK,
-    VK_PAUSE,      Key::PAUSE,
-    VK_LEFT,       Key::LEFT,
-    VK_RIGHT,      Key::RIGHT,
-    VK_UP,         Key::UP,
-    VK_DOWN,       Key::DOWN,
-    VK_NUMLOCK,    Key::NUM_LOCK,
-    VK_DIVIDE,     Key::NUMPAD_DIVIDE,
-    VK_MULTIPLY,   Key::NUMPAD_MULTIPLY,
-    VK_SUBTRACT,   Key::NUMPAD_SUBTRACT,
-    VK_ADD,        Key::NUMPAD_ADD,
-    VK_SEPARATOR,  Key::NUMPAD_SEPERATOR,
-};
+static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
+                                SDLK_MINUS,        Key::DASH,
+                                SDLK_EQUALS,       Key::EQUAL,
+                                SDLK_LEFTBRACKET,  Key::BRACKET_L,
+                                SDLK_RIGHTBRACKET, Key::BRACKET_R,
+                                SDLK_SEMICOLON,    Key::SEMICOLON,
+                                SDLK_APOSTROPHE,   Key::QUOTE,
+                                SDLK_BACKSLASH,    Key::BACKSLASH,
+                                SDLK_COMMA,        Key::COMMA,
+                                SDLK_PERIOD,       Key::PERIOD,
+                                SDLK_SLASH,        Key::SLASH,
+                                SDLK_SPACE,        Key::SPACE,
+                                SDLK_ESCAPE,       Key::ESCAPE,
+                                SDLK_LGUI,         Key::SYSTEM_L,
+                                SDLK_RGUI,         Key::SYSTEM_R,
+                                SDLK_TAB,          Key::TAB,
+                                SDLK_CAPSLOCK,     Key::CAPS,
+                                SDLK_RETURN,       Key::RETURN,
+                                SDLK_BACKSPACE,    Key::BACKSPACE,
+                                SDLK_PAGEUP,       Key::PAGE_UP,
+                                SDLK_PAGEDOWN,     Key::PAGE_DOWN,
+                                SDLK_HOME,         Key::HOME,
+                                SDLK_END,          Key::END,
+                                SDLK_INSERT,       Key::INSERT,
+                                SDLK_DELETE,       Key::DELETE,
+                                SDLK_PRINTSCREEN,  Key::PRINT_SCREEN,
+                                SDLK_SCROLLLOCK,   Key::SCROLL_LOCK,
+                                SDLK_PAUSE,        Key::PAUSE,
+                                SDLK_LEFT,         Key::LEFT,
+                                SDLK_RIGHT,        Key::RIGHT,
+                                SDLK_UP,           Key::UP,
+                                SDLK_DOWN,         Key::DOWN,
+                                SDLK_NUMLOCKCLEAR, Key::NUM_LOCK,
+                                SDLK_KP_DIVIDE,    Key::NUMPAD_DIVIDE,
+                                SDLK_KP_MULTIPLY,  Key::NUMPAD_MULTIPLY,
+                                SDLK_KP_MINUS,     Key::NUMPAD_SUBTRACT,
+                                SDLK_KP_PLUS,      Key::NUMPAD_ADD,
+                                SDLK_SEPARATOR,    Key::NUMPAD_SEPERATOR,
+                                SDLK_LSHIFT,       Key::SHIFT_L,
+                                SDLK_RSHIFT,       Key::SHIFT_R,
+                                SDLK_LALT,         Key::ALT_L,
+                                SDLK_RALT,         Key::ALT_R,
+                                SDLK_LCTRL,        Key::CTRL_L,
+                                SDLK_RCTRL,        Key::CTRL_R};
 
 // Translates a dialog button type to a windows message box type.
 static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
@@ -108,38 +130,56 @@ static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
 static int sDlgIcon[System::NUM_ICONS] = {0, MB_ICONASTERISK, MB_ICONWARNING,
                                           MB_ICONHAND};
 
+static void SDLCALL FileDialogOpenCallback(void* userdata,
+                                           const char* const* filelist,
+                                           int filter) {
+    if (!filelist) {
+        HudError("Failed to open the file dialog: \"%s\".", SDL_GetError());
+        return;
+    }
+    if (filelist[0]) {
+        fileDialogPath = utf8ToPath(filelist[0]);
+    }
+    isDialogClosed = true;
+    fileDialogCv.notify_all();
+    return;
+}
+
+static void SDLCALL FileDialogSaveCallback(void* userdata,
+                                           const char* const* filelist,
+                                           int filter) {
+    if (!filelist) {
+        HudError("Failed to open the file dialog: \"%s\".", SDL_GetError());
+        return;
+    }
+    if (filelist[0]) {
+        fileDialogPath = utf8ToPath(filelist[0]);
+    }
+    file_extension_index = filter;
+    isDialogClosed = true;
+    fileDialogCv.notify_all();
+    return;
+}
+
 // Shows an open/save message box and returns the path selected by the user.
-static fs::path ShowFileDialog(std::string title, fs::path path,
-                               std::string filters, int* index, bool save) {
-    std::wstring wfilter = Widen(filters);
-    std::wstring wtitle = Widen(title);
-
-    // Split the input path into a directory and filename.
-    std::wstring wdir = path.parent_path().wstring();
-    std::wstring wfile = path.filename().wstring();
-
-    // Write the input filename to the output path buffer.
-    wchar_t outPath[MAX_PATH + 1] = {};
-    if (wfile.size() && wfile.length() <= MAX_PATH)
-        memcpy(outPath, wfile.data(), sizeof(wchar_t) * wfile.length());
-
-    // Prepare the open/save file dialog.
-    OPENFILENAMEW ofns = {sizeof(OPENFILENAMEW)};
-    ofns.lpstrFilter = wfilter.c_str();
-    ofns.hwndOwner = static_cast<HWND>(gSystem->getHWND());
-    ofns.lpstrFile = outPath;
-    ofns.nMaxFile = MAX_PATH;
-    ofns.lpstrTitle = wtitle.c_str();
-    if (wdir.size()) ofns.lpstrInitialDir = wdir.data();
-    ofns.Flags = save ? 0 : OFN_FILEMUSTEXIST;
-    ofns.nFilterIndex = index ? *index : 0;
-
-    BOOL res = save ? GetSaveFileNameW(&ofns) : GetOpenFileNameW(&ofns);
-    if (index) *index = ofns.nFilterIndex;
-    if (res == 0) outPath[0] = 0;
-    gSystem->setWorkingDir(gSystem->getExeDir());
-
-    return fs::path(outPath);
+fs::path ShowFileDialog(std::string title, fs::path path,
+                        SDL_DialogFileFilter filters[], int num_filters,
+                        int* index, bool save) {
+    fileDialogPath.clear();
+    isDialogClosed = false;
+    std::unique_lock<std::mutex> lock(fileDialogMutex);
+    if (save) {
+        SDL_ShowSaveFileDialog(FileDialogSaveCallback, nullptr, nullptr,
+                               filters, num_filters, pathToUtf8(path).c_str());
+    } else {
+        SDL_ShowOpenFileDialog(FileDialogOpenCallback, nullptr, nullptr,
+                               filters, num_filters, pathToUtf8(path).c_str(),
+                               false);
+    }
+    fileDialogCv.wait(lock,
+                      [] { return isDialogClosed || !fileDialogPath.empty(); });
+    if (save) *index = file_extension_index;
+    return fileDialogPath;
 }
 
 // ================================================================================================
@@ -149,14 +189,8 @@ static bool LogCheckpoint(bool result, const char* description) {
     if (result) {
         Debug::log("%s :: OK\n", description);
     } else {
-        char lpMsgBuf[100];
-        DWORD code = GetLastError();
-        FormatMessageA(
-            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
-            code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), lpMsgBuf, 60,
-            nullptr);
         Debug::blockBegin(Debug::ERROR, description);
-        Debug::log("windows error code %i: %s", code, lpMsgBuf);
+        Debug::log("SDL error message: %s", SDL_GetError());
         Debug::blockEnd();
     }
     return !result;
@@ -211,119 +245,76 @@ namespace {
 // SystemImpl :: member data.
 
 struct SystemImpl : public System {
-    LPCWSTR myClassName = L"ArrowVortex";
-    HINSTANCE myInstance;
     std::chrono::steady_clock::time_point myApplicationStartTime;
-    Cursor::Icon myCursor = Cursor::ARROW;
-    Key::Code myKeyMap[256];
-    InputEvents myEvents;
-    vec2i myMousePos, mySize;
-    std::bitset<Key::MAX_VALUE> myKeyState;
-    std::bitset<Mouse::MAX_VALUE> myMouseState;
+    std::map<SDL_Keycode, Key::Code> myKeyMap;
     std::string myTitle;
-    std::wstring myInput;
-    DWORD myStyle, myExStyle;
-    HWND myHWND;
-    HDC myHDC;
-    HGLRC myHRC;
-    bool myIsActive = false;
-    bool myInitSuccesful = false;
-    bool myIsTerminated = false;
-    bool myIsInsideMessageLoop = false;
+    SDL_GLContext myHRC = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    std::string workingDirectory;
 
     // ================================================================================================
     // SystemImpl :: constructor and destructor.
 
     ~SystemImpl() {
         // Destroy the rendering context.
-        if (myHRC) wglDeleteContext(myHRC);
+        if (myHRC) SDL_GL_DestroyContext(myHRC);
 
         // Destroy the window.
-        if (myHWND) DestroyWindow(myHWND);
-
-        // Deregister the window class.
-        UnregisterClassW(myClassName, myInstance);
+        if (window) SDL_DestroyWindow(window);
     }
 
-    SystemImpl()
-        : myInstance(GetModuleHandle(nullptr)),
-
-          myMousePos({0, 0}),
-          mySize({0, 0}),
-          myTitle("ArrowVortex") {
+    SystemImpl() : myTitle("ArrowVortex") {
         myApplicationStartTime = Debug::getElapsedTime();
 
-        // Register the window class.
-        WNDCLASSW wndclass = {};
-        wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-        wndclass.lpfnWndProc = GlobalProc;
-        wndclass.hInstance = myInstance;
-        wndclass.hIcon = LoadIcon(myInstance, MAKEINTRESOURCE(MAIN_ICON));
-        wndclass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        wndclass.lpszClassName = myClassName;
-
-        ATOM classAtom = RegisterClassW(&wndclass);
-        if (LogCheckpoint(classAtom != 0, "registering window class")) return;
+        if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
+            SDL_Log("Couldn't initialize SDL subsystems: %s", SDL_GetError());
+        }
 
         // Initialize the keymap, which maps windows virtual keys to vortex key
         // codes.
-        memset(myKeyMap, 0, sizeof(myKeyMap));
         int k = sizeof(VKtoKCmap) / sizeof(VKtoKCmap[0]);
         for (int i = 0; i < k; i += 2)
-            myKeyMap[VKtoKCmap[i]] = static_cast<Key::Code>(VKtoKCmap[i + 1]);
+            myKeyMap.insert({static_cast<SDL_Keycode>(VKtoKCmap[i]),
+                             static_cast<Key::Code>(VKtoKCmap[i + 1])});
         for (int i = 0; i < 26; ++i)
-            myKeyMap['A' + i] = static_cast<Key::Code>(Key::A + i);
+            myKeyMap.insert({static_cast<SDL_Keycode>(SDLK_A + i),
+                             static_cast<Key::Code>(Key::A + i)});
         for (int i = 0; i < 10; ++i)
-            myKeyMap['0' + i] = static_cast<Key::Code>(Key::DIGIT_0 + i);
+            myKeyMap.insert({static_cast<SDL_Keycode>(SDLK_0 + i),
+                             static_cast<Key::Code>(Key::DIGIT_0 + i)});
         for (int i = 0; i < 15; ++i)
-            myKeyMap[VK_F1 + i] = static_cast<Key::Code>(Key::F1 + i);
+            myKeyMap.insert({static_cast<SDL_Keycode>(SDLK_F1 + i),
+                             static_cast<Key::Code>(Key::F1 + i)});
         for (int i = 0; i < 9; ++i)
-            myKeyMap[VK_NUMPAD0 + i] =
-                static_cast<Key::Code>(Key::NUMPAD_0 + i);
+            myKeyMap.insert({static_cast<SDL_Keycode>(SDLK_KP_0 + i),
+                             static_cast<Key::Code>(Key::NUMPAD_0 + i)});
+
+        // Initialize the cursor map
+        myCursorMap.insert({Cursor::ARROW, SDL_SYSTEM_CURSOR_DEFAULT});
+        myCursorMap.insert({Cursor::HAND, SDL_SYSTEM_CURSOR_POINTER});
+        myCursorMap.insert({Cursor::IBEAM, SDL_SYSTEM_CURSOR_TEXT});
+        myCursorMap.insert({Cursor::SIZE_ALL, SDL_SYSTEM_CURSOR_MOVE});
+        myCursorMap.insert({Cursor::SIZE_WE, SDL_SYSTEM_CURSOR_EW_RESIZE});
+        myCursorMap.insert({Cursor::SIZE_NS, SDL_SYSTEM_CURSOR_NS_RESIZE});
+        myCursorMap.insert({Cursor::SIZE_NESW, SDL_SYSTEM_CURSOR_NESW_RESIZE});
+        myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
         // Create a window handle.
-        myStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-        myExStyle = WS_EX_WINDOWEDGE | WS_EX_ACCEPTFILES | WS_EX_APPWINDOW;
-        myHWND = CreateWindowExW(myExStyle, myClassName, L"ArrowVortex",
-                                 myStyle, CW_USEDEFAULT, CW_USEDEFAULT, 640,
-                                 480, nullptr, nullptr, myInstance, this);
+        if (!SDL_CreateWindowAndRenderer("ArrowVortex", 800, 600,
+                                         SDL_WINDOW_OPENGL |
+                                             SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                             SDL_WINDOW_RESIZABLE,
+                                         &window, &renderer)) {
+            SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+        }
 
-        if (LogCheckpoint(myHWND != nullptr, "creating window")) return;
-
-        // Create a device context.
-        myHDC = GetDC(myHWND);
-        if (LogCheckpoint(myHDC != nullptr, "creating device context")) return;
-
-        // Create the pixel format descriptor.
-        PIXELFORMATDESCRIPTOR pfd;
-        memset(&pfd, 0, sizeof(pfd));
-        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-        pfd.nVersion = 1;
-        pfd.dwFlags =
-            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.cColorBits = 32;
-        pfd.cRedBits = 8;
-        pfd.cGreenBits = 8;
-        pfd.cBlueBits = 8;
-        pfd.cAlphaBits = 8;
-        pfd.cDepthBits = 24;
-        pfd.cStencilBits = 8;
-
-        // Set the pixel format
-#pragma warning(suppress : 6387)
-        int cpf = ChoosePixelFormat(myHDC, &pfd);
-        if (LogCheckpoint(cpf != 0, "choosing pixel format")) return;
-
-#pragma warning(suppress : 6387)
-        BOOL spf = SetPixelFormat(myHDC, cpf, &pfd);
-        if (LogCheckpoint(spf != 0, "setting pixel format")) return;
+        if (LogCheckpoint(window != nullptr, "creating window")) return;
 
         // Create the OpenGL rendering context.
-        myHRC = wglCreateContext(myHDC);
+        myHRC = SDL_GL_CreateContext(window);
         if (LogCheckpoint(myHRC != nullptr, "creating OpenGL context")) return;
 
-        BOOL mc = wglMakeCurrent(myHDC, myHRC);
+        BOOL mc = SDL_GL_MakeCurrent(window, myHRC);
         if (LogCheckpoint(mc != 0, "activating OpenGL context")) return;
 
         VortexCheckGlError();
@@ -339,13 +330,13 @@ struct SystemImpl : public System {
 
         // Enable vsync for now, we will disable it later if the settings
         // require it.
-        wglSwapInterval = reinterpret_cast<PFNWGLSWAPINTERVALFARPROC>(
-            wglGetProcAddress("wglSwapIntervalEXT"));
+        int interval_supported = 1;
+        interval_supported = SDL_GL_GetSwapInterval(&wglSwapInterval);
         Debug::log("swap interval support :: %s\n",
-                   wglSwapInterval ? "OK" : "MISSING");
-        if (wglSwapInterval) {
-            wglSwapInterval(1);
-            VortexCheckGlError();
+                   interval_supported != -1 ? "OK" : "MISSING");
+        if (interval_supported != -1) {
+            if (!SDL_GL_SetSwapInterval(1))
+                Debug::log("Failed to set V-sync state: %s\n", SDL_GetError());
         }
 
         // Check for shader support.
@@ -353,11 +344,11 @@ struct SystemImpl : public System {
         Debug::logBlankLine();
 
         // Make sure the window is centered on the desktop.
-        setWindowSize({1200, 900});
+        myScale = SDL_GetWindowDisplayScale(window);
+        setWindowSize({static_cast<int>(1200 * myScale),
+                       static_cast<int>(900 * myScale)});
 
         // Show the window.
-        ShowWindow(myHWND, SW_SHOW);
-        SetFocus(myHWND);
         myIsActive = true;
         myInitSuccesful = true;
     }
@@ -365,218 +356,39 @@ struct SystemImpl : public System {
     // ================================================================================================
     // SystemImpl :: message loop.
 
-    void forwardArgs() {
-        int numArgs = 0;
-        LPWSTR* wideArgs = CommandLineToArgvW(GetCommandLineW(), &numArgs);
-        Vector<std::string> args(numArgs, std::string());
-        for (int i = 0; i < numArgs; ++i) {
-            args[i] = Narrow(wideArgs[i], wcslen(wideArgs[i]));
-        }
-        gEditor->onCommandLineArgs(args.data(), args.size());
-        LocalFree(wideArgs);
-    }
-
-    void createMenu() {
+    void createMenu() override {
+#ifdef _WIN32
         HMENU menu = CreateMenu();
         gMenubar->init(reinterpret_cast<MenuItem*>(menu));
-        SetMenu(myHWND, menu);
-    }
-
-    void CALLBACK messageLoop() {
-        using namespace std::chrono;
-
-        if (!myInitSuccesful) return;
-
-#ifndef NDEBUG
-        long long frames = 0;
-        auto lowcounts = 0;
-        std::list<double> fpsList, sleepList, frameList, inputList, waitList;
-        // Adjust frameGuess to your VSync target if you are testing with VSync
-        // enabled
-        auto frameGuess = 960;
-#endif
-
-        Editor::create();
-        forwardArgs();
-        createMenu();
-
-        // Non-vsync FPS max target
-        auto frameTarget = duration<double>(1.0 / 960.0);
-
-        // Enter the message loop.
-        MSG message;
-        auto prevTime = Debug::getElapsedTime();
-        while (!myIsTerminated) {
-            auto startTime = Debug::getElapsedTime();
-
-            myEvents.clear();
-            // Process all windows messages.
-            myIsInsideMessageLoop = true;
-            while (PeekMessage(&message, nullptr, 0, 0,
-                               PM_NOREMOVE | PM_NOYIELD)) {
-                GetMessageW(&message, nullptr, 0, 0);
-                TranslateMessage(&message);
-                DispatchMessage(&message);
-            }
-            myIsInsideMessageLoop = false;
-
-            // Check if there were text input events.
-            if (!myInput.empty()) {
-                myEvents.addTextInput(Narrow(myInput).c_str());
-                myInput.clear();
-            }
-
-            // Set up the OpenGL view.
-            glViewport(0, 0, mySize.x, mySize.y);
-            glLoadIdentity();
-            glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            // Reset the mouse cursor.
-            myCursor = Cursor::ARROW;
-
-#ifndef NDEBUG
-            auto inputTime = Debug::getElapsedTime();
-
-            VortexCheckGlError();
-#endif
-
-            gEditor->tick();
-
-            // Display.
-            SwapBuffers(myHDC);
-
-#ifndef NDEBUG
-            auto renderTime = Debug::getElapsedTime();
-#endif
-            // Tick function.
-            duration<double> frameTime = Debug::getElapsedTime() - prevTime;
-            auto waitTime = frameTarget.count() - frameTime.count();
-
-            if (wglSwapInterval) {
-                while (Debug::getElapsedTime() - prevTime < frameTarget) {
-                    std::this_thread::yield();
+        SetMenu(GetActiveWindow(), menu);
+        SDL_SetWindowsMessageHook(
+            [](void* userdata, tagMSG* msg) {
+                if (msg->message == WM_COMMAND) {
+                    gEditor->onMenuAction(LOWORD(msg->wParam));
+                    return false;
                 }
-            }
-
-            // End of frame
-            auto curTime = Debug::getElapsedTime();
-            deltaTime = duration<double>(static_cast<float> min(
-                max(0, duration<double>(curTime - prevTime).count()), 0.25));
-            prevTime = curTime;
-
-#ifndef NDEBUG
-            // Do frame statistics
-            // Note that these will be wrong with VSync enabled.
-            fpsList.push_front(deltaTime.count());
-            waitList.push_front(duration<double>(curTime - renderTime).count());
-            frameList.push_front(
-                duration<double>(renderTime - inputTime).count());
-            inputList.push_front(
-                duration<double>(inputTime - startTime).count());
-
-            if (abs(deltaTime.count() - 1.0 / static_cast<double>(frameGuess)) /
-                    (1.0 / static_cast<double>(frameGuess)) >
-                0.01) {
-                lowcounts++;
-            }
-            if (fpsList.size() >= frameGuess * 2) {
-                fpsList.pop_back();
-                frameList.pop_back();
-                inputList.pop_back();
-                waitList.pop_back();
-            }
-            auto min = *std::min_element(fpsList.begin(), fpsList.end());
-            auto max = *std::max_element(fpsList.begin(), fpsList.end());
-            auto maxIndex =
-                std::distance(fpsList.begin(),
-                              std::max_element(fpsList.begin(), fpsList.end()));
-            auto siz = fpsList.size();
-            auto avg =
-                std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
-            auto varianceFunc = [&avg, &siz](double accumulator, double val) {
-                return accumulator + (val - avg) * (val - avg);
-            };
-            auto std = sqrt(std::accumulate(fpsList.begin(), fpsList.end(), 0.0,
-                                            varianceFunc) /
-                            siz);
-            auto frameAvg =
-                std::accumulate(frameList.begin(), frameList.end(), 0.0) /
-                frameList.size();
-            auto frameMax = frameList.begin();
-            std::advance(frameMax, maxIndex);
-            auto inputMax = inputList.begin();
-            std::advance(inputMax, maxIndex);
-            auto waitMax = waitList.begin();
-            std::advance(waitMax, maxIndex);
-            if (frames % (frameGuess * 2) == 0) {
-                Debug::log(
-                    "frame total average: %f, frame render average %f, std dev "
-                    "%f, lowest FPS %f, highest FPS %f, highest FPS render "
-                    "time %f, highest FPS input time %f, highest FPS wait time "
-                    "%f, lag frames %d\n",
-                    avg, frameAvg, std, 1.0 / max, 1.0 / min, *frameMax,
-                    *inputMax, *waitMax, lowcounts);
-                lowcounts = 0;
-            }
-            frames++;
+                return true;
+            },
+            nullptr);
 #endif
-        }
-        Editor::destroy();
     }
 
     // ================================================================================================
     // SystemImpl :: clipboard functions.
 
     bool setClipboardText(const std::string& text) override {
-        bool result = false;
-        if (OpenClipboard(nullptr)) {
-            EmptyClipboard();
-            std::wstring wtext = Widen(text);
-            size_t size = sizeof(wchar_t) * (wtext.length() + 1);
-            HGLOBAL bufferHandle = GlobalAlloc(GMEM_DDESHARE, size);
-            char* buffer = static_cast<char*>(GlobalLock(bufferHandle));
-            if (buffer) {
-                memcpy(buffer, wtext.c_str(), size);
-                GlobalUnlock(bufferHandle);
-                if (SetClipboardData(CF_UNICODETEXT, bufferHandle)) {
-                    result = true;
-                } else {
-                    GlobalFree(bufferHandle);
-                }
-            }
-            CloseClipboard();
-        }
-        return result;
+        return SDL_SetClipboardText(text.c_str());
     }
 
     std::string getClipboardText() const override {
-        std::string str;
-        if (OpenClipboard(nullptr)) {
-            HANDLE hData = GetClipboardData(CF_UNICODETEXT);
-            wchar_t* src = static_cast<wchar_t*>(GlobalLock(hData));
-            if (src) {
-                str = Narrow(src, wcslen(src));
-                GlobalUnlock(hData);
-                Str::replace(str, "\n", "");
-            }
-            CloseClipboard();
-        }
-        return str;
+        return std::string(SDL_GetClipboardText());
     }
 
     // ================================================================================================
     // SystemImpl :: message handling.
 
-#define GET_LPX(lp) ((INT)(SHORT)LOWORD(lp))
-#define GET_LPY(lp) ((INT)(SHORT)HIWORD(lp))
-
-    LPCWSTR getCursorResource() {
-        static LPCWSTR cursorMap[Cursor::NUM_CURSORS] = {
-            IDC_ARROW,  IDC_HAND,   IDC_IBEAM,    IDC_SIZEALL,
-            IDC_SIZEWE, IDC_SIZENS, IDC_SIZENESW, IDC_SIZENWSE,
-        };
-        return cursorMap[min(max(0, myCursor), Cursor::NUM_CURSORS - 1)];
+    SDL_SystemCursor getCursorResource() const override {
+        return myCursorMap[myCursor];
     }
 
     int getKeyFlags() const override {
@@ -592,245 +404,18 @@ struct SystemImpl : public System {
         return flags;
     }
 
-    Key::Code translateKeyCode(int vkCode, int flags) {
-        static const UINT lshift = MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC);
-
-        if (vkCode == VK_SHIFT)
-            return (((flags & 0xFF0000) >> 16) == lshift) ? Key::SHIFT_L
-                                                          : Key::SHIFT_R;
-        if (vkCode == VK_MENU)
-            return ((HIWORD(flags) & KF_EXTENDED) ? Key::ALT_R : Key::ALT_L);
-        if (vkCode == VK_CONTROL)
-            return ((HIWORD(flags) & KF_EXTENDED) ? Key::CTRL_R : Key::CTRL_L);
-        if (vkCode >= 0 && vkCode < 256) return myKeyMap[vkCode];
-
-        return Key::NONE;
+    Key::Code translateKeyCode(SDL_Keycode vkCode) override {
+        if (myKeyMap.contains(vkCode))
+            return myKeyMap[vkCode];
+        else
+            return Key::NONE;
     }
 
-    void handleKeyPress(Key::Code kc, bool repeated) {
+    void handleKeyPress(Key::Code kc, bool repeated) override {
         bool handled = false;
         int kf = getKeyFlags();
         myEvents.addKeyPress(kc, kf, repeated);
         myKeyState.set(kc);
-    }
-
-    bool handleMsg(UINT msg, WPARAM wp, LPARAM lp, LRESULT& result) {
-        static const Mouse::Code mcodes[4] = {Mouse::NONE, Mouse::LMB,
-                                              Mouse::MMB, Mouse::RMB};
-
-        int mc = 0;
-        switch (msg) {
-            case WM_CLOSE: {
-                gEditor->onExitProgram();
-                result = 0;
-                return true;
-            }
-            case WM_ACTIVATE: {
-                int state = LOWORD(wp), minimized = HIWORD(wp);
-                if (state == WA_ACTIVE && minimized)
-                    break;  // Ignore minimize messages.
-                myIsActive = (state != WA_INACTIVE);
-                if (!myIsActive) myEvents.addWindowInactive();
-                myMouseState.reset();
-                myKeyState.reset();
-                break;
-            }
-            case WM_GETMINMAXINFO: {
-                vec2i minSize = {256, 256}, maxSize = {0, 0};
-                MINMAXINFO* mm = reinterpret_cast<MINMAXINFO*>(lp);
-                if (minSize.x > 0 && minSize.y > 0) {
-                    RECT r = {0, 0, minSize.x, minSize.y};
-                    AdjustWindowRectEx(&r, myStyle, FALSE, myExStyle);
-                    mm->ptMinTrackSize.x = r.right - r.left;
-                    mm->ptMinTrackSize.y = r.bottom - r.top;
-                }
-                if (maxSize.x > 0 && maxSize.y > 0) {
-                    RECT r = {0, 0, maxSize.x, maxSize.y};
-                    AdjustWindowRectEx(&r, myStyle, FALSE, myExStyle);
-                    mm->ptMaxTrackSize.x = r.right - r.left;
-                    mm->ptMaxTrackSize.y = r.bottom - r.top;
-                }
-                break;
-            }
-            case WM_SIZE: {
-                vec2i next = {LOWORD(lp), HIWORD(lp)};
-                if (next.x > 0 && next.y > 0) mySize = next;
-                break;
-            }
-            case WM_MOUSEMOVE: {
-                if (myIsInsideMessageLoop) {
-                    myMousePos.x = GET_LPX(lp);
-                    myMousePos.y = GET_LPY(lp);
-                    myEvents.addMouseMove(myMousePos.x, myMousePos.y);
-                }
-                break;
-            }
-            case WM_MOUSEWHEEL: {
-                if (myIsInsideMessageLoop) {
-                    POINT pos = {GET_LPX(lp), GET_LPY(lp)};
-                    ScreenToClient(myHWND, &pos);
-                    bool up = GET_WHEEL_DELTA_WPARAM(wp) > 0;
-                    myEvents.addMouseScroll(up, pos.x, pos.y, getKeyFlags());
-                }
-                break;
-            }
-            case WM_SYSKEYDOWN:
-            case WM_KEYDOWN: {
-                if (myIsInsideMessageLoop) {
-                    int prev = lp & (1 << 30);
-                    Key::Code kc = translateKeyCode(wp, lp);
-                    handleKeyPress(kc, prev != 0);
-                    if (kc == Key::ALT_L || kc == Key::ALT_R) {
-                        result = 0;
-                        return true;
-                    }
-                }
-                break;
-            }
-            case WM_SYSKEYUP:
-            case WM_KEYUP: {
-                if (myIsInsideMessageLoop) {
-                    Key::Code kc = translateKeyCode(wp, lp);
-                    myEvents.addKeyRelease(kc, getKeyFlags());
-                    myKeyState.reset(kc);
-                    break;
-                }
-            }
-            case WM_RBUTTONDOWN:
-                ++mc;
-                break;
-            case WM_MBUTTONDOWN:
-                ++mc;
-                break;
-            case WM_LBUTTONDOWN:
-                ++mc;
-                {
-                    SetCapture(myHWND);
-                    if (myIsInsideMessageLoop) {
-                        int x = GET_LPX(lp), y = GET_LPY(lp);
-                        myEvents.addMousePress(mcodes[mc], x, y, getKeyFlags(),
-                                               false);
-                        myMouseState.set(mcodes[mc]);
-                    }
-                    break;
-                }
-            case WM_RBUTTONDBLCLK:
-                ++mc;
-                break;
-            case WM_MBUTTONDBLCLK:
-                ++mc;
-                break;
-            case WM_LBUTTONDBLCLK:
-                ++mc;
-                {
-                    SetCapture(myHWND);
-                    if (myIsInsideMessageLoop) {
-                        int x = GET_LPX(lp), y = GET_LPY(lp);
-                        myEvents.addMousePress(mcodes[mc], x, y, getKeyFlags(),
-                                               true);
-                        myMouseState.set(mcodes[mc]);
-                    }
-                    break;
-                }
-            case WM_RBUTTONUP:
-                ++mc;
-                break;
-            case WM_MBUTTONUP:
-                ++mc;
-                break;
-            case WM_LBUTTONUP:
-                ++mc;
-                {
-                    ReleaseCapture();
-                    if (myIsInsideMessageLoop) {
-                        int x = GET_LPX(lp), y = GET_LPY(lp);
-                        myEvents.addMouseRelease(mcodes[mc], x, y,
-                                                 getKeyFlags());
-                        myMouseState.reset(mcodes[mc]);
-                    }
-                    break;
-                }
-            case WM_MENUCHAR: {
-                // Removes beep sound for unused alt+key accelerators.
-                result = MNC_CLOSE << 16;
-                return true;
-            }
-            case WM_CHAR: {
-                if (wp >= 32)
-                    myInput.push_back(wp);
-                else if (wp == '\r')
-                    myInput.push_back('\n');
-                break;
-            }
-            case WM_DROPFILES: {
-                if (myIsInsideMessageLoop) {
-                    POINT pos;
-                    DragQueryPoint(reinterpret_cast<HDROP>(wp), &pos);
-
-                    // Get the number of files dropped.
-                    UINT numFiles = DragQueryFileW(reinterpret_cast<HDROP>(wp),
-                                                   0xFFFFFFFF, nullptr, 0);
-                    std::vector<std::string> files(numFiles);
-
-                    for (UINT i = 0; i < numFiles; ++i) {
-                        // Get the length of the file path and retrieve it.
-                        // Giving 0 for the stringbuffer returns path size
-                        // without nullbyte.
-                        UINT pathLen = DragQueryFileW(
-                            reinterpret_cast<HDROP>(wp), i, nullptr, 0);
-                        std::wstring wstr(pathLen, 0);
-                        DragQueryFileW(reinterpret_cast<HDROP>(wp), i,
-                                       wstr.data(), pathLen + 1);
-                        files[i] = pathToUtf8(fs::path(wstr));
-                    }
-
-                    DragFinish(reinterpret_cast<HDROP>(wp));
-
-                    // Pass the file drop event to the input handler.
-                    std::vector<const char*> filePtrs;
-                    for (const auto& file : files) {
-                        filePtrs.push_back(file.c_str());
-                    }
-                    myEvents.addFileDrop(filePtrs.data(),
-                                         static_cast<int>(filePtrs.size()),
-                                         pos.x, pos.y);
-                }
-                break;
-            }
-            case WM_SETCURSOR: {
-                if (LOWORD(lp) == HTCLIENT) {
-                    HCURSOR cursor = LoadCursorW(nullptr, getCursorResource());
-                    if (cursor) SetCursor(cursor);
-                    result = TRUE;
-                    return true;
-                }
-                break;
-            }
-            case WM_COMMAND: {
-                if (myIsInsideMessageLoop) {
-                    gEditor->onMenuAction(LOWORD(wp));
-                }
-                break;
-            }
-        };  // end of message switch.
-
-        return false;
-    }
-
-    static LRESULT CALLBACK GlobalProc(HWND hwnd, UINT msg, WPARAM wp,
-                                       LPARAM lp) {
-        LRESULT res = 0;
-        bool handled = false;
-        if (msg == WM_CREATE) {
-            void* app = reinterpret_cast<LPCREATESTRUCT>(lp)->lpCreateParams;
-            SetWindowLongPtrW(hwnd, GWLP_USERDATA,
-                              reinterpret_cast<LONG_PTR>(app));
-        } else {
-            SystemImpl* app = reinterpret_cast<SystemImpl*>(
-                GetWindowLongPtrW(hwnd, GWLP_USERDATA));
-            if (app) handled = app->handleMsg(msg, wp, lp, res);
-        }
-        return handled ? res : DefWindowProcW(hwnd, msg, wp, lp);
     }
 
     // ================================================================================================
@@ -838,119 +423,99 @@ struct SystemImpl : public System {
 
     Result showMessageDlg(const std::string& title, const std::string& text,
                           Buttons b, Icon i) override {
-        std::wstring wtitle = Widen(title), wtext = Widen(text);
-        int flags = sDlgType[b] | sDlgIcon[i], result = R_OK;
-        switch (MessageBoxW(static_cast<HWND>(gSystem->getHWND()),
-                            wtext.c_str(), wtitle.c_str(), flags)) {
-            case IDOK:
-                return R_OK;
-            case IDYES:
-                return R_YES;
-            case IDNO:
-                return R_NO;
-        };
-        return R_CANCEL;
+        SDL_MessageBoxData box;
+        SDL_MessageBoxButtonData buttons[3];
+        box.flags = SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT;
+        box.window = nullptr;
+        box.title = title.c_str();
+        box.message = text.c_str();
+        box.colorScheme = nullptr;
+        switch (b) {
+            case (T_OK):
+                box.numbuttons = 1;
+                buttons[0].buttonID = R_OK;
+                buttons[0].text = "OK";
+                buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
+                break;
+            case (T_OK_CANCEL):
+                box.numbuttons = 2;
+                buttons[0].buttonID = R_OK;
+                buttons[0].text = "OK";
+                buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
+                buttons[1].buttonID = R_CANCEL;
+                buttons[1].text = "CANCEL";
+                buttons[1].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+                break;
+            case (T_YES_NO):
+                box.numbuttons = 2;
+                buttons[0].buttonID = R_YES;
+                buttons[0].text = "YES";
+                buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
+                buttons[1].buttonID = R_NO;
+                buttons[1].text = "NO";
+                buttons[1].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+                break;
+            case (T_YES_NO_CANCEL):
+                box.numbuttons = 3;
+                buttons[0].buttonID = R_YES;
+                buttons[0].text = "YES";
+                buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
+                buttons[1].buttonID = R_NO;
+                buttons[1].text = "NO";
+                buttons[1].flags = 0;
+                buttons[2].buttonID = R_CANCEL;
+                buttons[2].text = "CANCEL";
+                buttons[2].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+                break;
+            default:
+                return R_CANCEL;
+        }
+        box.buttons = buttons;
+        int result = 0;
+        if (!SDL_ShowMessageBox(&box, &result)) {
+            HudError("Failed to open message box with error %s",
+                     SDL_GetError());
+            return R_CANCEL;
+        }
+        return static_cast<Result>(result);
     }
 
-    fs::path openFileDlg(const std::string& title, fs::path filename,
-                         const std::string& filters) override {
-        return ShowFileDialog(title, filename, filters, nullptr, false);
+    fs::path openFileDlg(const std::string& title,
+                         SDL_DialogFileFilter filters[], int num_filters,
+                         fs::path filename) override {
+        return ShowFileDialog(title, filename, filters, num_filters, nullptr,
+                              false);
     }
 
-    fs::path saveFileDlg(const std::string& title, fs::path filename,
-                         const std::string& filters, int* index) override {
-        return ShowFileDialog(title, filename, filters, index, true);
+    fs::path saveFileDlg(const std::string& title,
+                         SDL_DialogFileFilter filters[], int num_filters,
+                         int* index, fs::path filename) override {
+        return ShowFileDialog(title, filename, filters, num_filters, index,
+                              true);
     }
 
     // ================================================================================================
     // SystemImpl :: misc/get/set functions.
 
-    bool runSystemCommand(const std::string& cmd) override {
-        return runSystemCommand(cmd, nullptr, nullptr);
-    }
-
-    bool runSystemCommand(const std::string& cmd, CommandPipe* pipe,
-                          void* buffer) override {
-        bool result = false;
-
-        // Copy the command to a Vector because CreateProcessW requires a
-        // modifiable buffer, urgh.
-        std::wstring wcommand = Widen(cmd);
-        Vector<wchar_t> wbuffer;
-        wbuffer.resize(wcommand.length() + 1);
-        memcpy(wbuffer.begin(), wcommand.data(),
-               sizeof(wchar_t) * (wcommand.length() + 1));
-
-        // Create a pipe for the process's stdin.
-        STARTUPINFOW startupInfo;
-        startupInfo.cb = sizeof(startupInfo);
-        ZeroMemory(&startupInfo, sizeof(startupInfo));
-
-        HANDLE readPipe, writePipe;
-        if (pipe) {
-            // Set the bInheritHandle flag so pipe handles are inherited.
-            SECURITY_ATTRIBUTES attr;
-            attr.nLength = sizeof(SECURITY_ATTRIBUTES);
-            attr.bInheritHandle = TRUE;
-            attr.lpSecurityDescriptor = nullptr;
-
-            // Create a pipe to send data to stdin of the child process.
-            CreatePipe(&readPipe, &writePipe, &attr, 0);
-            SetHandleInformation(writePipe, HANDLE_FLAG_INHERIT, 0);
-
-            startupInfo.hStdInput = readPipe;
-            startupInfo.dwFlags |= STARTF_USESTDHANDLES;
-        }
-
-        // Fire off the process.
-        int flags = CREATE_NO_WINDOW;
-        PROCESS_INFORMATION processInfo;
-        ZeroMemory(&processInfo, sizeof(processInfo));
-        if (CreateProcessW(nullptr, wbuffer.data(), nullptr, nullptr, TRUE,
-                           flags, nullptr, nullptr, &startupInfo,
-                           &processInfo)) {
-            if (pipe) {
-                DWORD bytesWritten;
-                int bytesRead = pipe->read();
-                while (bytesRead > 0) {
-                    WriteFile(writePipe, buffer, bytesRead, &bytesWritten,
-                              nullptr);
-                    bytesRead = pipe->read();
-                }
-                CloseHandle(writePipe);
-            }
-            WaitForSingleObject(processInfo.hProcess, INFINITE);
-            CloseHandle(processInfo.hProcess);
-            CloseHandle(processInfo.hThread);
-            result = true;
-        }
-
-        return result;
-    }
-
     void openWebpage(const std::string& link) override {
-        ShellExecuteW(nullptr, nullptr, Widen(link).c_str(), nullptr, nullptr,
-                      SW_SHOW);
+        SDL_OpenURL(link.c_str());
     }
 
-    void setWorkingDir(const std::string& path) override {
-        SetCurrentDirectoryW(Widen(path).c_str());
+    void setCursor(Cursor::Icon c) override {
+        myCursor = c;
+        SDL_SetCursor(SDL_CreateSystemCursor(getCursorResource()));
     }
-
-    void setCursor(Cursor::Icon c) override { myCursor = c; }
 
     void disableVsync() override {
-        if (wglSwapInterval) {
-            Debug::log("[NOTE] turning off v-sync\n");
-            wglSwapInterval(0);
+        if (wglSwapInterval != -1) {
+            if (SDL_GL_SetSwapInterval(0))
+                HudError("Failed to disable V-sync: %s", SDL_GetError());
         }
     }
 
     double getElapsedTime() const override {
         return Debug::getElapsedTime(myApplicationStartTime);
     }
-
-    void* getHWND() const override { return myHWND; }
 
     std::string getExeDir() const override { return Narrow(sExeDir); }
 
@@ -971,10 +536,7 @@ struct SystemImpl : public System {
     const std::string& getWindowTitle() const override { return myTitle; }
 
     void setWindowTitle(const std::string& text) override {
-        if (!(myTitle == text)) {
-            SetWindowTextW(myHWND, Widen(text).c_str());
-            myTitle = text;
-        }
+        SDL_SetWindowTitle(window, text.c_str());
     }
 
     vec2i getWindowSize() const override { return mySize; }
@@ -982,30 +544,26 @@ struct SystemImpl : public System {
     void setWindowSize(vec2i size) override {
         mySize = {std::clamp(size.x, 100, 32768),
                   std::clamp(size.y, 100, 32768)};
-        RECT wr;
-        wr.left = max(0, GetSystemMetrics(SM_CXSCREEN) / 2 - mySize.x / 2);
-        wr.top = max(0, GetSystemMetrics(SM_CYSCREEN) / 2 - mySize.y / 2);
-        wr.right = wr.left + max(mySize.x, 0);
-        wr.bottom = wr.top + max(mySize.y, 0);
-        AdjustWindowRectEx(&wr, myStyle, FALSE, myExStyle);
-        int flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
-        SetWindowPos(myHWND, nullptr, wr.left, wr.top, wr.right - wr.left,
-                     wr.bottom - wr.top, flags);
+        SDL_SetWindowSize(window, mySize.x, mySize.y);
+        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED);
     }
 
+    float getScaleFactor() const override { return myScale; }
+
     bool getWindowState() const override {
-        WINDOWPLACEMENT placement = {};
-        placement.length = sizeof(WINDOWPLACEMENT);
-        if (GetWindowPlacement(myHWND, &placement)) {
-            return placement.showCmd == SW_MAXIMIZE ||
-                   (placement.showCmd == SW_SHOWMINIMIZED &&
-                    placement.flags & WPF_RESTORETOMAXIMIZED);
-        }
-        return false;
+        auto temp = SDL_GetWindowFlags(window);
+        return (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED);
     }
 
     void setWindowState(bool isMaximized) const override {
-        ShowWindow(myHWND, isMaximized ? SW_MAXIMIZE : SW_NORMAL);
+        if (isMaximized) {
+            if (!SDL_MaximizeWindow(window))
+                Debug::log("Couldn't maximize window with error: %s\n",
+                           SDL_GetError());
+        } else if (!SDL_RestoreWindow(window))
+            Debug::log("Couldn't restore window with error: %s\n",
+                       SDL_GetError());
     }
 
     InputEvents& getEvents() override { return myEvents; }
@@ -1037,13 +595,6 @@ std::string System::getBuildData() {
 }
 
 static void ApplicationStart() {
-    // Set the executable directory as the working dir.
-    GetCurrentDirectoryW(MAX_PATH, sRunDir);
-    GetModuleFileNameW(nullptr, sExeDir, MAX_PATH);
-    wchar_t* finalSlash = wcsrchr(sExeDir, L'\\');
-    if (finalSlash) finalSlash[1] = 0;
-    SetCurrentDirectoryW(sExeDir);
-
     // Log the application start-up time.
     Debug::openLogFile();
     Debug::log("Starting ArrowVortex :: %s\n", System::getLocalTime().c_str());
@@ -1059,22 +610,285 @@ static void ApplicationEnd() {
     Debug::log("Closing ArrowVortex :: %s", System::getLocalTime().c_str());
 }
 
-int APIENTRY WinMain(HINSTANCE, HINSTANCE, char*, int) {
-    //_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF |
-    //_CRTDBG_CHECK_ALWAYS_DF);
-
+SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
+#ifdef WIN32
+    std::wstring exe_folder = Widen(SDL_GetBasePath());
+    SetCurrentDirectoryW(exe_folder.c_str());
+#endif
     ApplicationStart();
 #ifndef NDEBUG
     Debug::openConsole();
 #endif
     gSystem = new SystemImpl;
-    static_cast<SystemImpl*>(gSystem)->messageLoop();
+
+    Editor::create();
+    gSystem->createMenu();  // TODO: multiplatform
+    SDL_StartTextInput(window);
+    SDL_SetWindowResizable(window, true);
+
+    if (argc > 1) {
+        gEditor->openSimfile(fs::path(argv[1]));
+    }
+
+    myIsInsideMessageLoop = true;
+
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppIterate(void* appstate) {
+    using namespace std::chrono;
+
+    if (!myInitSuccesful) return SDL_APP_FAILURE;
+    if (myIsTerminated) {
+        Editor::destroy();
+        return SDL_APP_SUCCESS;
+    }
+
+#ifndef NDEBUG
+    static long long frames = 0;
+    static auto lowcounts = 0;
+    std::list<double> fpsList, sleepList, frameList, inputList, waitList;
+    // Adjust frameGuess to your VSync target if you are testing with VSync
+    // enabled
+    auto frameGuess = 960;
+#endif
+
+    // Non-vsync FPS max target
+    auto frameTarget = duration<double>(1.0 / 960.0);
+
+    // Enter the message loop.
+    MSG message;
+    auto prevTime = Debug::getElapsedTime();
+    auto startTime = Debug::getElapsedTime();
+
+    // Set up the OpenGL view.
+    glViewport(0, 0, mySize.x, mySize.y);
+    glLoadIdentity();
+    glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Reset the mouse cursor.
+    myCursor = Cursor::ARROW;
+
+#ifndef NDEBUG
+    auto inputTime = Debug::getElapsedTime();
+
+    VortexCheckGlError();
+#endif
+
+    gEditor->tick();
+    // Tick processes the events, so clear them out after.
+    myEvents.clear();
+
+    // Display.
+    SDL_GL_SwapWindow(window);
+
+#ifndef NDEBUG
+    auto renderTime = Debug::getElapsedTime();
+#endif
+    // Tick function.
+    duration<double> frameTime = Debug::getElapsedTime() - prevTime;
+    auto waitTime = frameTarget.count() - frameTime.count();
+
+    if (wglSwapInterval) {
+        while (Debug::getElapsedTime() - prevTime < frameTarget) {
+            std::this_thread::yield();
+        }
+    }
+
+    // End of frame
+    auto curTime = Debug::getElapsedTime();
+    deltaTime = duration<double>(static_cast<float> min(
+        max(0, duration<double>(curTime - prevTime).count()), 0.25));
+    prevTime = curTime;
+
+#ifndef NDEBUG
+    // Do frame statistics
+    // Note that these will be wrong with VSync enabled.
+    fpsList.push_front(deltaTime.count());
+    waitList.push_front(duration<double>(curTime - renderTime).count());
+    frameList.push_front(duration<double>(renderTime - inputTime).count());
+    inputList.push_front(duration<double>(inputTime - startTime).count());
+
+    if (abs(deltaTime.count() - 1.0 / static_cast<double>(frameGuess)) /
+            (1.0 / static_cast<double>(frameGuess)) >
+        0.01) {
+        lowcounts++;
+    }
+    if (fpsList.size() >= frameGuess * 2) {
+        fpsList.pop_back();
+        frameList.pop_back();
+        inputList.pop_back();
+        waitList.pop_back();
+    }
+    auto min = *std::min_element(fpsList.begin(), fpsList.end());
+    auto max = *std::max_element(fpsList.begin(), fpsList.end());
+    auto maxIndex = std::distance(
+        fpsList.begin(), std::max_element(fpsList.begin(), fpsList.end()));
+    auto siz = fpsList.size();
+    auto avg = std::accumulate(fpsList.begin(), fpsList.end(), 0.0) / siz;
+    auto varianceFunc = [&avg, &siz](double accumulator, double val) {
+        return accumulator + (val - avg) * (val - avg);
+    };
+    auto std = sqrt(
+        std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) /
+        siz);
+    auto frameAvg = std::accumulate(frameList.begin(), frameList.end(), 0.0) /
+                    frameList.size();
+    auto frameMax = frameList.begin();
+    std::advance(frameMax, maxIndex);
+    auto inputMax = inputList.begin();
+    std::advance(inputMax, maxIndex);
+    auto waitMax = waitList.begin();
+    std::advance(waitMax, maxIndex);
+    if (frames % (frameGuess * 2) == 0) {
+        Debug::log(
+            "frame total average: %f, frame render average %f, std dev "
+            "%f, lowest FPS %f, highest FPS %f, highest FPS render "
+            "time %f, highest FPS input time %f, highest FPS wait time "
+            "%f, lag frames %d\n",
+            avg, frameAvg, std, 1.0 / max, 1.0 / min, *frameMax, *inputMax,
+            *waitMax, lowcounts);
+        lowcounts = 0;
+    }
+    frames++;
+#endif
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
+    static const Mouse::Code mcodes[4] = {Mouse::NONE, Mouse::LMB, Mouse::MMB,
+                                          Mouse::RMB};
+    int mc = 0;
+    switch (event->type) {
+        case SDL_EVENT_QUIT: {
+            gEditor->onExitProgram();
+            // myIsTerminated is set to true which actually stops the program
+            return SDL_APP_CONTINUE;
+        }
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED: {
+            myMouseState.reset();
+            myKeyState.reset();
+            break;
+        }
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case SDL_EVENT_WINDOW_FOCUS_LOST: {
+            myEvents.addWindowInactive();
+            myMouseState.reset();
+            myKeyState.reset();
+            break;
+        }
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
+            myScale = SDL_GetWindowDisplayScale(window);
+            vec2i next = {event->window.data1, event->window.data2};
+            if (next.x > 0 && next.y > 0) mySize = next;
+            break;
+        }
+        case SDL_EVENT_MOUSE_MOTION: {
+            if (myIsInsideMessageLoop) {
+                float x, y;
+                SDL_GetMouseState(&x, &y);
+                myMousePos.x = static_cast<int>(x);
+                myMousePos.y = static_cast<int>(y);
+                myEvents.addMouseMove(myMousePos.x, myMousePos.y);
+            }
+            break;
+        }
+        case SDL_EVENT_MOUSE_WHEEL: {
+            if (myIsInsideMessageLoop) {
+                bool up = (event->wheel.y > 0) !=
+                          (event->wheel.direction != SDL_MOUSEWHEEL_NORMAL);
+                myEvents.addMouseScroll(up, event->wheel.x, event->wheel.y,
+                                        gSystem->getKeyFlags());
+            }
+            break;
+        }
+        case SDL_EVENT_KEY_DOWN: {
+            if (myIsInsideMessageLoop) {
+                Key::Code kc = gSystem->translateKeyCode(event->key.key);
+                gSystem->handleKeyPress(kc, event->key.repeat);
+            }
+            break;
+        }
+        case SDL_EVENT_KEY_UP: {
+            if (myIsInsideMessageLoop) {
+                Key::Code kc = gSystem->translateKeyCode(event->key.key);
+                myEvents.addKeyRelease(kc, gSystem->getKeyFlags());
+                myKeyState.reset(kc);
+            }
+            break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            if (event->button.button == SDL_BUTTON_LEFT) {
+                SDL_CaptureMouse(true);
+                if (myIsInsideMessageLoop) {
+                    float x, y;
+                    SDL_GetMouseState(&x, &y);
+                    myEvents.addMousePress(Mouse::LMB, static_cast<int>(x),
+                                           static_cast<int>(y),
+                                           gSystem->getKeyFlags(), false);
+                    myMouseState.set(Mouse::LMB);
+                }
+            }
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (event->button.button == SDL_BUTTON_LEFT) {
+                SDL_CaptureMouse(false);
+                if (myIsInsideMessageLoop) {
+                    float x, y;
+                    SDL_GetMouseState(&x, &y);
+                    myEvents.addMouseRelease(Mouse::LMB, static_cast<int>(x),
+                                             static_cast<int>(y),
+                                             gSystem->getKeyFlags());
+                    myMouseState.reset(Mouse::LMB);
+                }
+            }
+            break;
+        case SDL_EVENT_TEXT_INPUT: {
+            const char* wp = event->text.text;
+            const char n = '\n';
+            if (*wp >= 32)
+                myEvents.addTextInput(wp);
+            else if (*wp == '\r')
+                myEvents.addTextInput(&n);
+            break;
+        }
+        case SDL_EVENT_DROP_BEGIN: {
+            if (myIsInsideMessageLoop) {
+                droppedFiles.clear();
+            }
+            break;
+        }
+        case SDL_EVENT_DROP_FILE: {
+            if (myIsInsideMessageLoop) {
+                droppedFiles.push_back(event->drop.data);
+            }
+            break;
+        }
+        case SDL_EVENT_DROP_COMPLETE: {
+            if (myIsInsideMessageLoop && !droppedFiles.empty()) {
+                std::vector<const char*> filePtrs;
+                for (const auto& file : droppedFiles) {
+                    filePtrs.push_back(file.c_str());
+                }
+                myEvents.addFileDrop(filePtrs.data(),
+                                     static_cast<int>(filePtrs.size()),
+                                     event->drop.x, event->drop.y);
+            }
+            break;
+        }
+    };  // end of message switch.
+    return SDL_APP_CONTINUE;
+}
+
+void SDL_AppQuit(void* appstate, SDL_AppResult result) {
+    SDL_StopTextInput(window);
     delete static_cast<SystemImpl*>(gSystem);
     ApplicationEnd();
 
 #ifdef CRTDBG_MAP_ALLOC
     _CrtDumpMemoryLeaks();
 #endif
-
-    return 0;
 }

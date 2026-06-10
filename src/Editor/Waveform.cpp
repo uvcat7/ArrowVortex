@@ -24,7 +24,7 @@
 
 namespace Vortex {
 
-static const int TEX_W = 256;
+static const int TEX_W = 1024;
 static const int TEX_H = 128;
 static const int UNUSED_BLOCK = -1;
 
@@ -562,7 +562,9 @@ struct WaveformImpl : public Waveform {
     void updateBlockW() {
         int width = waveformBlockWidth_;
 
-        waveformBlockWidth_ = min(TEX_W, gView->applyZoom(256));
+        waveformBlockWidth_ =
+            min(TEX_W, static_cast<int>(gSystem->getScaleFactor() *
+                                        gView->applyZoom(256)));
         waveformSpacing_ = gView->applyZoom(24);
 
         if (waveformBlockWidth_ != width) clearBlocks();

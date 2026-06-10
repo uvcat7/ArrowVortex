@@ -458,21 +458,19 @@ void Draw::roundedBox(recti r, uint32_t c) {
 // ================================================================================================
 // Sprite drawing.
 
-void Draw::sprite(const Texture& tex, vec2i pos, int flags) {
-    Draw::sprite(tex, pos, Colors::white, flags);
+void Draw::sprite(const Texture& tex, recti r, int flags) {
+    Draw::sprite(tex, r, Colors::white, flags);
 }
 
-void Draw::sprite(const Texture& tex, vec2i pos, uint32_t col, int flags) {
+void Draw::sprite(const Texture& tex, recti r, uint32_t col, int flags) {
     vec2i size = tex.size();
-    int w = size.x, x = pos.x - w / 2;
-    int h = size.y, y = pos.y - h / 2;
 
     // Vertex positions.
     int vp[8];
-    vp[0] = vp[4] = x;
-    vp[1] = vp[3] = y;
-    vp[2] = vp[6] = x + w;
-    vp[5] = vp[7] = y + h;
+    vp[0] = vp[4] = r.x;
+    vp[1] = vp[3] = r.y;
+    vp[2] = vp[6] = r.x + r.w;
+    vp[5] = vp[7] = r.y + r.h;
 
     // Texture coordinates.
     float vt[8];

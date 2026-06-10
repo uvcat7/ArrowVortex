@@ -1,5 +1,6 @@
 #include <Dialogs/Dialog.h>
 #include <Editor/Editor.h>
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -14,11 +15,13 @@ static const char* IdStrings[NUM_DIALOG_IDS] = {
 EditorDialog::~EditorDialog() { gEditor->onDialogClosed(myId); }
 
 EditorDialog::EditorDialog()
-    : GuiDialog(gEditor->getGui()), myLayout(gEditor->getGui(), 4) {}
+    : GuiDialog(gEditor->getGui()),
+      myLayout(gEditor->getGui(),
+               static_cast<int>(gSystem->getScaleFactor() * 4)) {}
 
 void EditorDialog::onUpdateSize() {
     myLayout.onUpdateSize();
-
+    float scale = gSystem->getScaleFactor();
     setWidth(myLayout.getWidth());
     setHeight(myLayout.getHeight());
 }

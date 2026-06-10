@@ -4,6 +4,8 @@
 #include <Core/Draw.h>
 #include <Core/Renderer.h>
 
+#include <System/System.h>
+
 #include <math.h>
 
 namespace Vortex {

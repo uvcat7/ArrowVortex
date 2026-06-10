@@ -4,6 +4,7 @@
 #include <Core/GuiManager.h>
 
 #include <System/File.h>
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -20,9 +21,10 @@ uint32_t flags_;
 
 GuiWidget::GuiWidget(GuiContext* gui)
     : gui_(gui),
-      rect_({0, 0, 128, 24}),
-      width_(128),
-      height_(24),
+      rect_({0, 0, static_cast<int>(128 * gSystem->getScaleFactor()),
+             static_cast<int>(24 * gSystem->getScaleFactor())}),
+      width_(static_cast<int>(128 * gSystem->getScaleFactor())),
+      height_(static_cast<int>(24 * gSystem->getScaleFactor())),
       flags_(WF_ENABLED) {}
 
 GuiWidget::~GuiWidget() {

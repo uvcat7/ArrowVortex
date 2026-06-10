@@ -141,8 +141,8 @@ void outline(recti r, uint32_t c);
 void roundedBox(recti r, uint32_t c);
 
 /// Draws a sprite.
-void sprite(const Texture& t, vec2i pos, int flags = 0);
-void sprite(const Texture& t, vec2i pos, uint32_t c, int flags = 0);
+void sprite(const Texture& t, recti r, int flags = 0);
+void sprite(const Texture& t, recti r, uint32_t c, int flags = 0);
 };  // namespace Draw
 
 };  // namespace Vortex

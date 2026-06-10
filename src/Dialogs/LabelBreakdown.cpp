@@ -13,6 +13,9 @@
 
 #include <Simfile/SegmentGroup.h>
 
+#define ITEM_H static_cast<int>(20 * gSystem->getScaleFactor())
+#define ITEM_W static_cast<int>(74 * gSystem->getScaleFactor())
+
 namespace Vortex {
 
 // ================================================================================================
@@ -62,16 +65,16 @@ struct DialogLabelBreakdown::LabelButton : public GuiWidget {
         button.base.draw(r, 0);
 
         // Draw the button text.
-        recti left = {rect_.x, rect_.y, 74, 20};
+        recti left = {rect_.x, rect_.y, ITEM_W, ITEM_H};
 
         uint32_t color = RGBAtoColor32(139, 148, 148, 255);
         myBar->draw(left, 0, color);
 
         Text::arrange(Text::MR, myDisplayTime.c_str());
-        Text::draw(vec2i{left.x + left.w - 6, left.y + 10});
+        Text::draw(vec2i{left.x + left.w - 6, left.y + ITEM_H / 2});
 
         Text::arrange(Text::ML, textStyle, myDisplayText.c_str());
-        Text::draw(vec2i{left.x + left.w + 6, left.y + 10});
+        Text::draw(vec2i{left.x + left.w + 6, left.y + ITEM_H / 2});
 
         // Interaction effects.
         if (isCapturingMouse()) {
@@ -120,7 +123,8 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
     }
 
     void onUpdateSize() override {
-        scroll_height_ = max(24, myButtons.size() * 21);
+        scroll_height_ = max(static_cast<int>(24 * gSystem->getScaleFactor()),
+                             myButtons.size() * (ITEM_H + 1));
         ClampScrollPositions();
     }
 
@@ -132,9 +136,9 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
         // Update the properties of each button.
         int y = rect_.y - scroll_position_y_;
         for (auto button : myButtons) {
-            button->arrange({rect_.x, y, viewW, 20});
+            button->arrange({rect_.x, y, viewW, ITEM_H});
             button->tick();
-            y += 21;
+            y += ITEM_H + 1;
         }
 
         PostTick();
@@ -158,7 +162,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
         } else
             for (auto button : myButtons) {
                 button->draw();
-                y += 21;
+                y += ITEM_H + 1;
             }
         Renderer::popScissorRect();
 
@@ -225,12 +229,12 @@ DialogLabelBreakdown::~DialogLabelBreakdown() = default;
 
 DialogLabelBreakdown::DialogLabelBreakdown() {
     setTitle("LABELS");
-
-    setWidth(298);
-    setMinimumWidth(298);
-    setMinimumHeight(152);
-    setMaximumWidth(1024);
-    setMaximumHeight(1024);
+    float scale = gSystem->getScaleFactor();
+    setWidth(static_cast<int>(scale * 298));
+    setMinimumWidth(static_cast<int>(scale * 298));
+    setMinimumHeight(static_cast<int>(scale * 152));
+    setMaximumWidth(static_cast<int>(scale * 1024));
+    setMaximumHeight(static_cast<int>(scale * 1024));
     setResizeable(true, true);
 
     myDisplayType = TIMESTAMP;
@@ -287,7 +291,8 @@ void DialogLabelBreakdown::onUpdateSize() { myLayout.onUpdateSize(); }
 
 void DialogLabelBreakdown::onTick() {
     recti bounds = getInnerRect();
-    myList->setHeight(bounds.h - 58);
+    myList->setHeight(bounds.h -
+                      static_cast<int>(58 * gSystem->getScaleFactor()));
 
     if (gSimfile->isOpen()) {
         int row = gView->getCursorRow();

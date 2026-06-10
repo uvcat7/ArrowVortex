@@ -3,6 +3,7 @@
 #include <Core/Input.h>
 #include <filesystem>
 namespace fs = std::filesystem;
+#include <SDL3/SDL.h>
 
 namespace Vortex {
 
@@ -48,28 +49,18 @@ struct System {
                                   Icon icon = I_INFO) = 0;
 
     /// Shows an open file dialog, see class description.
-    virtual fs::path openFileDlg(
-        const std::string& title, fs::path initialPath = std::string(),
-        const std::string& extFilters = std::string()) = 0;
+    virtual fs::path openFileDlg(const std::string& title,
+                                 SDL_DialogFileFilter filters[],
+                                 int num_filters, fs::path filename) = 0;
 
     /// Shows a save file dialog, see class description.
     virtual fs::path saveFileDlg(const std::string& title,
-                                 fs::path initialPath = std::string(),
-                                 const std::string& extFilters = std::string(),
-                                 int* outFilterIndex = nullptr) = 0;
-
-    /// Runs a system command.
-    virtual bool runSystemCommand(const std::string& cmd) = 0;
-
-    /// Runs a system command and pipes data to it.
-    virtual bool runSystemCommand(const std::string& cmd, CommandPipe* pipe,
-                                  void* buffer) = 0;
+                                 SDL_DialogFileFilter filters[],
+                                 int num_filters, int* index,
+                                 fs::path filename) = 0;
 
     /// Opens a link to a webpage in the default browser.
     virtual void openWebpage(const std::string& link) = 0;
-
-    /// Sets the current working directory to the given path.
-    virtual void setWorkingDir(const std::string& path) = 0;
 
     /// Sends the given text to the clipboard.
     virtual bool setClipboardText(const std::string& text) = 0;
@@ -83,9 +74,6 @@ struct System {
     /// Returns the elapsed time since the application was started.
     virtual double getElapsedTime() const = 0;
 
-    /// Returns the HWND of the main window.
-    virtual void* getHWND() const = 0;
-
     /// Returns the current clipboard text.
     virtual std::string getClipboardText() const = 0;
 
@@ -97,6 +85,8 @@ struct System {
 
     /// Returns the current mouse cursor icon.
     virtual Cursor::Icon getCursor() const = 0;
+
+    virtual SDL_SystemCursor getCursorResource() const = 0;
 
     /// Returns true if the given key is currently down.
     virtual bool isKeyDown(Key::Code key) const = 0;
@@ -122,6 +112,9 @@ struct System {
     /// Sets the window size and centers window.
     virtual void setWindowSize(vec2i size) = 0;
 
+    /// Returns the current window scale factor.
+    virtual float getScaleFactor() const = 0;
+
     /// Returns the window state, either normal or maximized.
     virtual bool getWindowState() const = 0;
 
@@ -142,6 +135,15 @@ struct System {
 
     /// Returns the build date of the application.
     static std::string getBuildData();
+
+    /// Creates the menu bar.
+    virtual void createMenu() = 0;
+
+    /// Gets the Vortex key code for the given SDL key code.
+    virtual Key::Code translateKeyCode(SDL_Keycode vkCode) = 0;
+
+    /// Handles a key press event.
+    virtual void handleKeyPress(Key::Code kc, bool repeated) = 0;
 };
 
 extern System* gSystem;
