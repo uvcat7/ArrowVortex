@@ -13,9 +13,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
     set(format_flags "-i")
 else()
 # Only prevent format/building on Windows, as Linux's clang-format is slightly different
-    if(WIN32)
-        set(tidy_flags "--warnings-as-errors=*;")
-    endif()
+    set(tidy_flags "--warnings-as-errors=*;")
     set(format_flags "--dry-run")
 endif()
 if(WIN32)
@@ -80,11 +78,13 @@ install(DIRECTORY bin/noteskins DESTINATION bin)
 install(DIRECTORY bin/settings DESTINATION bin)
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
-add_custom_target(format ALL)
-add_custom_command(
-    TARGET format
-    POST_BUILD
-    COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
-    USES_TERMINAL
-)
-add_dependencies(format ArrowVortex)
+if(WIN32)
+    add_custom_target(format ALL)
+    add_custom_command(
+        TARGET format
+        POST_BUILD
+        COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
+        USES_TERMINAL
+    )
+    add_dependencies(format ArrowVortex)
+endif()
