@@ -35,6 +35,7 @@ jobs:
       - name: Add NuGet sources
         shell: pwsh
         run: |
+          dir out/build/windows-release/vcpkg_installed/x64-windows-static-md/include
           .$(vcpkg fetch nuget) `
             sources add `
             -Source "${{ env.FEED_URL }}" `
@@ -79,7 +80,7 @@ jobs:
         shell: bash
         run: |
             sudo apt-get install -y mono-devel
-            mono `vcpkg fetch nuget | tail -n 1`
+            mono `vcpkg fetch nuget | tail -n 1``
             sources add`
             -Source "${{ env.FEED_URL }}"
             -StorePasswordInClearText `
