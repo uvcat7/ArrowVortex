@@ -86,15 +86,13 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "environment": {
-        "VCPKG_ROOT": "/opt/vcpkg"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "PRESET_NAME": "${presetName}",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-linux"
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_ROOT": "/opt/vcpkg"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/2.0": {
@@ -111,15 +109,13 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "environment": {
-        "VCPKG_ROOT": "/opt/vcpkg"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "PRESET_NAME": "${presetName}",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-linux"
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_ROOT": "/opt/vcpkg"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/2.0": {
@@ -128,22 +124,6 @@
         "microsoft.com/VisualStudioRemoteSettings/CMake/2.0": {
           "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
         }
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "linux-debug",
-      "configurePreset": "linux-debug",
-      "environment": {
-        "VCPKG_ROOT": "/opt/vcpkg"
-      }
-    },
-    {
-      "name": "linux-release",
-      "configurePreset": "linux-release",
-      "environment": {
-        "VCPKG_ROOT": "/opt/vcpkg"
       }
     }
   ]
