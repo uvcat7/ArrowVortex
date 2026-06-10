@@ -78,7 +78,7 @@ jobs:
       - name: Add NuGet sources
         shell: bash
         run: |
-          sudo apt-get install -qq -y mono-devel
+          sudo apt-get install -qq -y mono-devel nasm
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
@@ -99,7 +99,7 @@ jobs:
           -DPRESET_NAME=linux-release
           -DYML=YML
       - name: Build AV
-        run: cmake --build build --config Release --parallel 16"
+        run: cmake --build build --config Release --parallel $(nproc)"
       - name: Collect into a directory
         if: github.ref_name == 'beta'
         run: cmake --install build --config Release --prefix ./
