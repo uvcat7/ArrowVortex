@@ -50,6 +50,7 @@ jobs:
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+          -DPRESET_NAME=windows-release
       - name: Build AV
         run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
       - name: Collect into a directory
@@ -75,16 +76,16 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v6
       - name: Add NuGet sources
-        shell: pwsh
+        shell: bash
         run: |
-          .$(vcpkg fetch nuget) `
-            sources add `
-            -Source "${{ env.FEED_URL }}" `
+            mono `vcpkg fetch nuget | tail -n 1`
+            sources add`
+            -Source "${{ env.FEED_URL }}"
             -StorePasswordInClearText `
             -Name GitHubPackages `
             -UserName "${{ env.USERNAME }}" `
             -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
-          .$(vcpkg fetch nuget) `
+            mono `vcpkg fetch nuget | tail -n 1`
             setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
             -Source "${{ env.FEED_URL }}"
       - name: Configure CMake
@@ -92,6 +93,7 @@ jobs:
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-linux
+          -DPRESET_NAME=linux-release
       - name: Build AV
         run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
       - name: Collect into a directory
@@ -106,5 +108,5 @@ jobs:
             bin/assets
             bin/noteskins
             bin/settings
-            bin/ArrowVortex.exe
+            bin/ArrowVortex
           if-no-files-found: error
