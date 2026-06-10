@@ -98,8 +98,7 @@ void ApplyScrollOffset(int& offset, int page, int scroll, bool up) {
 
 WgScrollbar::~WgScrollbar() = default;
 
-WgScrollbar::WgScrollbar(GuiContext* gui)
-    : GuiWidget(gui), scrollbar_action_(0), scrollbar_grab_position_(0) {
+WgScrollbar::WgScrollbar(GuiContext* gui) : GuiWidget(gui) {
     scrollbar_end_ = 1;
     scrollbar_page_ = 1;
 }
@@ -215,18 +214,7 @@ static const int SCROLLBAR_SIZE = 14;
 
 WgScrollRegion::~WgScrollRegion() = default;
 
-WgScrollRegion::WgScrollRegion(GuiContext* gui)
-    : GuiWidget(gui),
-      scroll_type_horizontal_(0),
-      scroll_type_vertical_(0),
-      is_horizontal_scrollbar_active_(0),
-      is_vertical_scrollbar_active_(0),
-      scroll_region_action_(0),
-      scroll_region_grab_position_(0),
-      scroll_width_(0),
-      scroll_height_(0),
-      scroll_position_x_(0),
-      scroll_position_y_(0) {}
+WgScrollRegion::WgScrollRegion(GuiContext* gui) : GuiWidget(gui) {}
 
 void WgScrollRegion::onMouseScroll(MouseScroll& evt) {
     if (is_vertical_scrollbar_active_) {

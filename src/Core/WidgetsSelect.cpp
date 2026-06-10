@@ -21,11 +21,7 @@ WgSelectList::~WgSelectList() {
     delete scrollbar_;
 }
 
-WgSelectList::WgSelectList(GuiContext* gui)
-    : GuiWidget(gui),
-      scroll_position_(0),
-      is_interacted_(0),
-      show_background_(1) {
+WgSelectList::WgSelectList(GuiContext* gui) : GuiWidget(gui) {
     scrollbar_ = new WgScrollbarV(gui_);
     scrollbar_->value.bind(&scroll_position_);
 }

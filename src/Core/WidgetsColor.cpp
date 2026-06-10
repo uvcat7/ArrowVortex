@@ -221,8 +221,7 @@ WgColorPicker::~WgColorPicker() {
     if (colorpicker_expanded_) delete colorpicker_expanded_;
 }
 
-WgColorPicker::WgColorPicker(GuiContext* gui)
-    : GuiWidget(gui), colorpicker_expanded_(nullptr) {}
+WgColorPicker::WgColorPicker(GuiContext* gui) : GuiWidget(gui) {}
 
 void WgColorPicker::onMousePress(MousePress& evt) {
     if (colorpicker_expanded_) {

@@ -108,8 +108,8 @@ class WgScrollbar : public GuiWidget {
    protected:
     void ScrollbarUpdateValue(int v);
     int scrollbar_end_, scrollbar_page_;
-    uint32_t scrollbar_action_ : 9;
-    uint32_t scrollbar_grab_position_ : 16;
+    uint32_t scrollbar_action_ : 9 = 0;
+    uint32_t scrollbar_grab_position_ : 16 = 0;
 
    private:
     uint32_t GetScrollbarActionAtPosition(int x, int y);
@@ -145,14 +145,14 @@ class WgScrollRegion : public GuiWidget {
     void PostTick();
     void ClampScrollPositions();
 
-    uint32_t scroll_type_horizontal_ : 2;
-    uint32_t scroll_type_vertical_ : 2;
-    uint32_t is_horizontal_scrollbar_active_ : 1;
-    uint32_t is_vertical_scrollbar_active_ : 1;
-    uint32_t scroll_region_action_ : 9;
-    uint32_t scroll_region_grab_position_ : 16;
-    int scroll_width_, scroll_height_;
-    int scroll_position_x_, scroll_position_y_;
+    uint32_t scroll_type_horizontal_ : 2 = 0;
+    uint32_t scroll_type_vertical_ : 2 = 0;
+    uint32_t is_horizontal_scrollbar_active_ : 1 = 0;
+    uint32_t is_vertical_scrollbar_active_ : 1 = 0;
+    uint32_t scroll_region_action_ : 9 = 0;
+    uint32_t scroll_region_grab_position_ : 16 = 0;
+    int scroll_width_ = 0, scroll_height_ = 0;
+    int scroll_position_x_ = 0, scroll_position_y_ = 0;
 
    private:
     uint32_t getScrollRegionActionAt_(int x, int y);
@@ -200,11 +200,11 @@ class WgSelectList : public GuiWidget {
     bool HasScrollBar() const;
     recti ItemRect() const;
 
-    WgScrollbarV* scrollbar_;
+    WgScrollbarV* scrollbar_ = nullptr;
     std::vector<std::string> selectlist_items_;
-    int scroll_position_;
-    uint32_t is_interacted_ : 1;
-    uint32_t show_background_ : 1;
+    int scroll_position_ = 0;
+    uint32_t is_interacted_ : 1 = 0;
+    uint32_t show_background_ : 1 = 1;
 };
 
 /// Vertical Drop Down List GuiWidget.
@@ -290,7 +290,7 @@ class WgLineEdit : public GuiWidget {
     uint32_t is_numerical_ : 1;
     uint32_t is_editable_ : 1;
     uint32_t force_scroll_update_ : 1;
-    uint32_t lineedit_show_background_ : 1;
+    uint32_t lineedit_show_background_ : 1 = 1;
     TextStyle lineedit_style_;
 };
 
@@ -345,7 +345,7 @@ class WgColorPicker : public GuiWidget {
 
    private:
     struct Expanded;
-    Expanded* colorpicker_expanded_;
+    Expanded* colorpicker_expanded_ = nullptr;
 };
 
 };  // namespace Vortex

@@ -38,7 +38,8 @@ namespace {};  // anonymous namespace
 struct ViewImpl : public View, public InputHandler {
     recti rect_;
     double myChartTopY = 0.0;
-    double myPixPerSec = 32, myPixPerRow;
+    double myPixPerSec = 32;
+    double myPixPerRow = 16 * BEATS_PER_ROW;
     int myCursorRow = 0;
     double myCursorTime = 0.0, myCursorBeat = 0.0;
     int myHoveredRow = 0;
@@ -59,7 +60,7 @@ struct ViewImpl : public View, public InputHandler {
 
     ~ViewImpl() = default;
 
-    ViewImpl() : myPixPerRow(16 * BEATS_PER_ROW) {
+    ViewImpl() {
         vec2i windowSize = gSystem->getWindowSize();
         rect_ = {0, 0, windowSize.x, windowSize.y};
     }

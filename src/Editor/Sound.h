@@ -68,9 +68,9 @@ class Sound {
 
    private:
     class Thread;
-    Thread* myThread;
-    short* mySamplesL;
-    short* mySamplesR;
+    Thread* myThread = nullptr;
+    short* mySamplesL = nullptr;
+    short* mySamplesR = nullptr;
     int myFrequency;
     int myNumFrames;
     bool myIsAllocated;

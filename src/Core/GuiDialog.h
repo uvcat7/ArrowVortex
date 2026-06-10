@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Widgets.h>
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -46,19 +47,19 @@ class DialogData : public GuiWidget {
     GuiDialog* dialog_ptr_;
     GuiContext* gui_;
 
-    bool is_pinnable_ : 1;
-    bool is_closeable_ : 1;
-    bool is_minimizable_ : 1;
-    bool is_horizontally_resizable_ : 1;
-    bool is_vertically_resizable_ : 1;
+    bool is_pinnable_ : 1 = true;
+    bool is_closeable_ : 1 = true;
+    bool is_minimizable_ : 1 = true;
+    bool is_horizontally_resizable_ : 1 = false;
+    bool is_vertically_resizable_ : 1 = false;
 
-    bool request_close_ : 1;
-    bool request_pin_ : 1;
-    bool request_minimize_ : 1;
-    bool request_move_to_top_ : 1;
+    bool request_close_ : 1 = false;
+    bool request_pin_ : 1 = false;
+    bool request_minimize_ : 1 = false;
+    bool request_move_to_top_ : 1 = false;
 
-    bool pinned_state_ : 1;
-    bool minimized_state_ : 1;
+    bool pinned_state_ : 1 = false;
+    bool minimized_state_ : 1 = false;
 
    private:
     friend class GuiDialog;
@@ -71,13 +72,13 @@ class DialogData : public GuiWidget {
     ActionType GetAction(int x, int y) const;
     void FinishActions();
 
-    vec2i min_size_;
-    vec2i max_size_;
-    vec2i pinned_position_;
+    vec2i min_size_ = {0, 0};
+    vec2i max_size_ = {INT_MAX, INT_MAX};
+    vec2i pinned_position_ = {0, 0};
 
     std::string dialog_title_;
 
-    BaseAction* current_action_;
+    BaseAction* current_action_ = nullptr;
 };
 
 };  // namespace Vortex

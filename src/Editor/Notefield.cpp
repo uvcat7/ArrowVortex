@@ -245,9 +245,11 @@ struct NotefieldImpl : public Notefield {
 
         // Update the tweak info box if necessary.
         TempoMan::TweakMode mode = gTempo->getTweakMode();
-        if (mode == TempoMan::TWEAK_NONE && myTweakInfoBox) {
+        if (mode == TempoMan::TWEAK_NONE &&
+            static_cast<TweakInfoBox*>(myTweakInfoBox)) {
             myTweakInfoBox.destroy();
-        } else if (mode != TempoMan::TWEAK_NONE && !myTweakInfoBox) {
+        } else if (mode != TempoMan::TWEAK_NONE &&
+                   !static_cast<TweakInfoBox*>(myTweakInfoBox)) {
             myTweakInfoBox.create();
         }
 

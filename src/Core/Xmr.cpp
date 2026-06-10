@@ -71,8 +71,6 @@ class xstring {
 // ================================================================================================
 // Utility functions.
 
-static const char* NO_ERROR = "no error";
-
 static const char* EMPTY_ERROR_STRING = "";
 
 // Valid chars: space, horizontal tab, carriage return, line feed.
@@ -478,13 +476,7 @@ static void WriteComment(xstring& out, const char* str) {
 // =============================================================================================================
 // XmrSaveSettings
 
-XmrSaveSettings::XmrSaveSettings()
-    : headerComment(nullptr),
-      useTabsInsteadOfSpaces(false),
-      quoteNodes(XMR_QUOTE_WHEN_NECESSARY),
-      quoteNames(XMR_QUOTE_WHEN_NECESSARY),
-      quoteValues(XMR_QUOTE_WHEN_NECESSARY),
-      spacesPerIndent(2) {}
+XmrSaveSettings::XmrSaveSettings() = default;
 
 // =============================================================================================================
 // XmrAttrib
@@ -787,7 +779,7 @@ XmrDoc::~XmrDoc() {
     clear();
 }
 
-XmrDoc::XmrDoc() : lastError(NO_ERROR) {
+XmrDoc::XmrDoc() {
     name = "root";
     attribPtr = nullptr;
     childPtr = nextPtr = nullptr;

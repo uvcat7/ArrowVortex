@@ -30,8 +30,7 @@ enum LineEditDragType {
 
 WgLineEdit::~WgLineEdit() = default;
 
-WgLineEdit::WgLineEdit(GuiContext* gui)
-    : GuiWidget(gui), lineedit_show_background_(1) {
+WgLineEdit::WgLineEdit(GuiContext* gui) : GuiWidget(gui) {
     lineedit_max_length_ = MaximumTextBoxLength;
     lineedit_blink_time_ = 0.f;
     lineedit_scroll_offset_ = 0.f;

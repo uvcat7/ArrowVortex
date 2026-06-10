@@ -534,7 +534,7 @@ struct MusicImpl : public Music, public MixSource {
 
     void tick() override {
         if (myAudioConversionThread) {
-            if (myInfoBox) {
+            if (static_cast<InfoBoxWithProgress*>(myInfoBox)) {
                 myInfoBox->setProgress(myAudioConversionThread->progress *
                                        0.01f);
             }
@@ -546,7 +546,8 @@ struct MusicImpl : public Music, public MixSource {
 
         if (!gSimfile->isOpen()) return;
 
-        if (myLoadState != LOADING_DONE && myInfoBox) {
+        if (myLoadState != LOADING_DONE &&
+            static_cast<InfoBoxWithProgress*>(myInfoBox)) {
             if (mySamples.getLoadingProgress() > 0) {
                 myInfoBox->setProgress(mySamples.getLoadingProgress() * 0.01f);
             } else {

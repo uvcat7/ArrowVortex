@@ -8,8 +8,6 @@
 
 namespace Vortex {
 
-#define MY_GUI ((GuiContextImpl*)gui_)
-
 // ================================================================================================
 // GuiWidget :: constructor / destructor.
 
@@ -24,11 +22,10 @@ GuiWidget::GuiWidget(GuiContext* gui)
       rect_({0, 0, static_cast<int>(128 * gSystem->getScaleFactor()),
              static_cast<int>(24 * gSystem->getScaleFactor())}),
       width_(static_cast<int>(128 * gSystem->getScaleFactor())),
-      height_(static_cast<int>(24 * gSystem->getScaleFactor())),
-      flags_(WF_ENABLED) {}
+      height_(static_cast<int>(24 * gSystem->getScaleFactor())) {}
 
 GuiWidget::~GuiWidget() {
-    MY_GUI->removeWidget(this);
+    reinterpret_cast<GuiContextImpl*>(gui_)->removeWidget(this);
     GuiManager::removeWidget(this);
 }
 
@@ -66,12 +63,12 @@ void GuiWidget::onMouseCaptureLost() {}
 void GuiWidget::onTextCaptureLost() {}
 
 void GuiWidget::startCapturingFocus() {
-    MY_GUI->grabFocus(this);
+    reinterpret_cast<GuiContextImpl*>(gui_)->grabFocus(this);
     SetFlags(flags_, WF_IN_FOCUS, true);
 }
 
 void GuiWidget::stopCapturingFocus() {
-    MY_GUI->releaseFocus(this);
+    reinterpret_cast<GuiContextImpl*>(gui_)->releaseFocus(this);
     SetFlags(flags_, WF_IN_FOCUS, false);
 }
 

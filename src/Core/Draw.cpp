@@ -135,7 +135,7 @@ static void TB_setVerts(const TileBar& bar, int* vp, float* vt, recti r,
     TB_setUvs(vt, s, t, u, v, w, x);
 }
 
-TileBar::TileBar() : uvs({0, 0, 1, 1}), border(0) {}
+TileBar::TileBar() : uvs({0, 0, 1, 1}) {}
 
 void TileBar::draw(recti rect, uint32_t color, int flags) const {
     int vp[24];
@@ -245,7 +245,7 @@ static void TR_setVerts(const TileRect& rect, int* vp, float* vt, recti r,
     TR_setUvs(vt, s, t, u, v, w, x, y, z);
 }
 
-TileRect::TileRect() : uvs({0, 0, 1, 1}), border(0) {}
+TileRect::TileRect() : uvs({0, 0, 1, 1}) {}
 
 void TileRect::draw(recti rect, uint32_t color, int flags) const {
     int vp[72];

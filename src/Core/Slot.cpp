@@ -161,7 +161,7 @@ static void ReleaseVal(void* data) {
 // ================================================================================================
 // ValueSlot :: implementation.
 
-ValueSlot::ValueSlot() : data_(nullptr) {}
+ValueSlot::ValueSlot() = default;
 
 ValueSlot::~ValueSlot() { ReleaseVal(data_); }
 
@@ -391,7 +391,7 @@ const char* TextSlot::get() const {
 // ================================================================================================
 // CallSlot :: implementation.
 
-CallSlot::CallSlot() : data_(nullptr) {}
+CallSlot::CallSlot() = default;
 
 CallSlot::~CallSlot() { delete static_cast<Functor::Generic*>(data_); }
 

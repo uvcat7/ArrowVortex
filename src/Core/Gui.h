@@ -2,6 +2,7 @@
 
 #include <Core/Input.h>
 #include <Core/Slot.h>
+#include <Core/GuiWidget.h>
 
 namespace Vortex {
 
@@ -145,7 +146,7 @@ class GuiWidget : public InputHandler {
     recti rect_;
     int width_;
     int height_;
-    uint32_t flags_;
+    uint32_t flags_ = WidgetFlags::WF_ENABLED;
 };
 
 // Base class for dialog objects.

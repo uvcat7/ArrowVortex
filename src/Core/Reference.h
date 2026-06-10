@@ -41,10 +41,10 @@ class Reference {
     }
 
     /// Returns a pointer to the current value.
-    inline operator T*() { return reference_ptr_; }
+    inline explicit operator T*() { return reference_ptr_; }
 
     /// Returns a const pointer to the current value.
-    inline operator T*() const { return reference_ptr_; }
+    inline explicit operator T*() const { return reference_ptr_; }
 
     /// Returns a pointer to the current value.
     inline T* operator->() { return reference_ptr_; }

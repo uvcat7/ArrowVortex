@@ -291,10 +291,18 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
+    int selectNotes(NotesMan::Filter filter) override {
+        return selectNotes(filter, false);
+    }
+
     int selectNotes(RowType rowType, bool ignoreRegion) override {
         int numSelected = gNotes->selectQuant(rowType, ignoreRegion);
         showSelectionResult(SELECT_SET, numSelected);
         return numSelected;
+    }
+
+    int selectNotes(RowType rowType) override {
+        return selectNotes(rowType, false);
     }
 
     int selectNotes(SelectModifier mod, int density,
@@ -302,6 +310,10 @@ struct SelectionImpl : public Selection {
         int numSelected = gNotes->selectDensity(mod, density, ignoreRegion);
         showSelectionResult(mod, numSelected);
         return numSelected;
+    }
+
+    int selectNotes(SelectModifier mod, int density) override {
+        return selectNotes(mod, density, false);
     }
 
     int selectNotes(SelectModifier mod, RowCol begin, RowCol end,
@@ -312,11 +324,20 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
+    int selectNotes(SelectModifier mod, RowCol begin, RowCol end) override {
+        return selectNotes(mod, begin, end, false);
+    }
+
     int selectNotes(SelectModifier mod, const std::vector<RowCol>& indices,
                     bool ignoreRegion) override {
         int numSelected = gNotes->select(mod, indices, ignoreRegion);
         showSelectionResult(mod, numSelected);
         return numSelected;
+    }
+
+    int selectNotes(SelectModifier mod,
+                    const std::vector<RowCol>& indices) override {
+        return selectNotes(mod, indices, false);
     }
 
     int getSelectedNotes(NoteList& out) override {

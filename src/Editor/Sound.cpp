@@ -191,9 +191,7 @@ SoundSource* LoadMP3(std::ifstream&& file, std::string& title,
 SoundSource* LoadWav(std::ifstream&& file, std::string& title,
                      std::string& artist);  // Defined in "load_wav.cpp".
 
-Sound::Sound() : myThread(nullptr), mySamplesL(nullptr), mySamplesR(nullptr) {
-    clear();
-}
+Sound::Sound() { clear(); }
 
 Sound::~Sound() { clear(); }
 

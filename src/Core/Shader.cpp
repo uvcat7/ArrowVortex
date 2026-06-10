@@ -182,8 +182,7 @@ Shader::~Shader() {
     Destroy(program_id_, vertex_shader_id_, fragment_shader_id_);
 }
 
-Shader::Shader()
-    : program_id_(0), vertex_shader_id_(0), fragment_shader_id_(0) {}
+Shader::Shader() = default;
 
 bool Shader::load(const char* vertexCode, const char* fragmentCode,
                   const char* def, const char* shaderName,

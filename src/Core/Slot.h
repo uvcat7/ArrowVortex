@@ -83,7 +83,8 @@ class ValueSlot {
     void bind(bool* v);
 
    protected:
-    void* data_;  // TODO: replace with a more descriptive variable name.
+    void* data_ =
+        nullptr;  // TODO: replace with a more descriptive variable name.
 };
 
 /// Slot that binds to an integer value.
@@ -204,7 +205,8 @@ class CallSlot {
     }
 
    private:
-    void* data_;  // TODO: replace with a more descriptive variable name.
+    void* data_ =
+        nullptr;  // TODO: replace with a more descriptive variable name.
 };
 
 };  // namespace Vortex

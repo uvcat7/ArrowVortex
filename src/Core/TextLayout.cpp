@@ -608,11 +608,7 @@ static vec2i ArrangeText(const TextStyle& style, int maxLineWidth,
 // ================================================================================================
 // TextStyle
 
-TextStyle::TextStyle()
-    : fontSize(12),
-      textFlags(0),
-      textColor(Colors::white),
-      shadowColor(Colors::black) {
+TextStyle::TextStyle() {
     if (LD) *this = LD->defaultStyle;
 }
 

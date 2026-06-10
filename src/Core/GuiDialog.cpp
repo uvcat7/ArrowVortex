@@ -8,8 +8,6 @@
 
 namespace Vortex {
 
-#define MY_GUI ((GuiContextImpl*)gui_)
-
 static const int FRAME_TITLEBAR_H = 24;
 #define FRAME_TITLEBAR_H static_cast<int>(24 * gSystem->getScaleFactor())
 static const int FRAME_PADDING = 4;
@@ -25,26 +23,9 @@ DialogData::~DialogData() {
 }
 
 DialogData::DialogData(GuiContext* gui, GuiDialog* dialog)
-    : GuiWidget(gui),
-      dialog_ptr_(dialog),
-      gui_(gui),
-      is_pinnable_(true),
-      is_closeable_(true),
-      is_minimizable_(true),
-      is_horizontally_resizable_(false),
-      is_vertically_resizable_(false),
-      request_close_(false),
-      request_pin_(false),
-      request_minimize_(false),
-      request_move_to_top_(false),
-      pinned_state_(false),
-      minimized_state_(false),
-      min_size_({0, 0}),
-      max_size_({INT_MAX, INT_MAX}),
-      pinned_position_({0, 0}),
-      current_action_(nullptr) {
+    : GuiWidget(gui), dialog_ptr_(dialog), gui_(gui) {
     rect_ = {16, 16, 256, 256};
-    MY_GUI->addDialog(this);
+    reinterpret_cast<GuiContextImpl*>(gui_)->addDialog(this);
 }
 
 // ================================================================================================
