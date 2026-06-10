@@ -40,6 +40,7 @@ jobs:
             cmake -Bbuild
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
             -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+            -DYML=YML
           build: cmake --build build --parallel "$env:NUMBER_OF_PROCESSORS"
 
     steps:
