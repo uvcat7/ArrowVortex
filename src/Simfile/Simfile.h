@@ -14,7 +14,6 @@ enum SimFormat {
     SIM_SM,
     SIM_SSC,
     SIM_OSU,
-    SIM_OSZ,
     SIM_DWI,
 
     NUM_SIMFILE_FORMATS

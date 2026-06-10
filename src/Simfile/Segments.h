@@ -1,8 +1,12 @@
 #pragma once
 
+#include <Simfile/Simfile.h>
+
 namespace Vortex {
 
 struct Segment;
+
+#define FORMAT_BIT(fmt) (1u << (fmt))
 
 /// Contains metadata and functions of a specific segment type.
 struct SegmentMeta {
@@ -36,6 +40,11 @@ struct SegmentMeta {
     Red isRedundant;
     Equ isEquivalent;
     Dsc getDescription;
+
+    uint32_t format;
+    inline bool supports(SimFormat test) const {
+        return (format & FORMAT_BIT(test)) != 0;
+    }
 };
 
 /// Base class for all segments.

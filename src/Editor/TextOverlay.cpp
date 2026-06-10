@@ -41,7 +41,7 @@ struct Shortcut {
     bool isHeader;
 };
 
-static const int NUM_ICONS = 17;
+static const int NUM_ICONS = 20;
 
 static uint8_t supportLink[] = "https://discord.gg/GCNAyDmjqy";
 static uint8_t githubLink[] = "https://github.com/uvcat7/ArrowVortex";
@@ -50,8 +50,7 @@ static const char* iconNames[NUM_ICONS] = {
     "up one",      "up half",        "down one",       "down half", "halve",
     "double",      "full selection", "half selection", "undo",      "redo",
     "calculate",   "tweak",          "search",         "copy",      "play",
-    "arrow right", "folder",
-};
+    "arrow right", "folder",         "trash",          "keyboard",  "mouse"};
 
 };  // anonymous namespace
 
@@ -105,7 +104,10 @@ struct TextOverlayImpl : public TextOverlay {
 
     void addShortcut(Action::Type action, const char* name) {
         std::string notation = gShortcuts->getNotation(action, true);
-        if (notation.length()) addShortcut(name, notation.c_str());
+        if (!notation.length())
+            addShortcut(name, "{tc:666}-- unassigned --");
+        else
+            addShortcut(name, notation.c_str());
     }
 
     void LoadShortcuts() {
@@ -181,6 +183,19 @@ struct TextOverlayImpl : public TextOverlay {
         addShortcut(Action::CURSOR_SELECTION_END, "End of selection");
         addShortcut(Action::CURSOR_CHART_START, "Start of chart");
         addShortcut(Action::CURSOR_CHART_END, "End of chart");
+
+        addShortcutHeader("Quick Editing");
+        addShortcut(Action::EDIT_TEMPO_BPM, "Edit BPM");
+        addShortcut(Action::EDIT_TEMPO_STOP, "Edit Stop");
+        addShortcut(Action::EDIT_TEMPO_DELAY, "Edit Delay");
+        addShortcut(Action::EDIT_TEMPO_WARP, "Edit Warp");
+        addShortcut(Action::EDIT_TEMPO_TIME_SIG, "Edit Time Signature");
+        addShortcut(Action::EDIT_TEMPO_TICK_COUNT, "Edit Tick Count");
+        addShortcut(Action::EDIT_TEMPO_COMBO, "Edit Combo");
+        addShortcut(Action::EDIT_TEMPO_SPEED, "Edit Speed");
+        addShortcut(Action::EDIT_TEMPO_SCROLL, "Edit Scroll");
+        addShortcut(Action::EDIT_TEMPO_FAKE, "Edit Fake");
+        addShortcut(Action::EDIT_TEMPO_LABEL, "Edit Label");
     }
 
     // ================================================================================================
@@ -476,6 +491,8 @@ struct TextOverlayImpl : public TextOverlay {
         int x = gSystem->getWindowSize().x / 2 - 325, w = 650;
         int y = TEXT_Y_START - textOverlayScrollPos_;
         int y_off = static_cast<int>(gSystem->getScaleFactor() * 18);
+        TextStyle textStyle;
+        textStyle.textFlags = Text::MARKUP;
         for (const Shortcut& e : displayShortcuts_) {
             if (e.isHeader) {
                 Text::arrange(Text::TL, e.a.c_str());
@@ -483,9 +500,9 @@ struct TextOverlayImpl : public TextOverlay {
                 Draw::fill({x, y + y_off, w, 1}, Colors::white);
                 y += static_cast<int>(gSystem->getScaleFactor() * 24);
             } else {
-                Text::arrange(Text::TR, e.a.c_str());
+                Text::arrange(Text::TR, textStyle, e.a.c_str());
                 Text::draw(vec2i{x + w / 2 - 10, y});
-                Text::arrange(Text::TL, e.b.c_str());
+                Text::arrange(Text::TL, textStyle, e.b.c_str());
                 Text::draw(vec2i{x + w / 2 + 10, y});
 
                 y += static_cast<int>(gSystem->getScaleFactor() * 18);

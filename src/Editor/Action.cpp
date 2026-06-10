@@ -104,15 +104,18 @@ void Action::perform(Type action) {
         gEditing->toggleTimeBasedCopy();
 
         CASE(SET_VISUAL_SYNC_CURSOR_ANCHOR)
-        gEditing->setVisualSyncAnchor(Editing::VisualSyncAnchor::CURSOR);
+        gEditing->setVisualSyncAnchor(Editing::EditingAnchor::CURSOR);
         CASE(SET_VISUAL_SYNC_RECEPTOR_ANCHOR)
-        gEditing->setVisualSyncAnchor(Editing::VisualSyncAnchor::RECEPTORS);
+        gEditing->setVisualSyncAnchor(Editing::EditingAnchor::RECEPTORS);
         CASE(INJECT_BOUNDING_BPM_CHANGE)
         gEditing->injectBoundingBpmChange();
         CASE(SHIFT_ROW_NONDESTRUCTIVE)
         gEditing->shiftAnchorRowToMousePosition(false);
         CASE(SHIFT_ROW_DESTRUCTIVE)
         gEditing->shiftAnchorRowToMousePosition(true);
+
+        CASE(REQUANTIZE_NOTES)
+        gEditing->requantizeNotes();
 
         CASE(SELECT_REGION)
         gSelection->selectRegion();
@@ -174,6 +177,35 @@ void Action::perform(Type action) {
         gTempoBoxes->selectType(Segment::FAKE);
         CASE(SELECT_TEMPO_LABEL)
         gTempoBoxes->selectType(Segment::LABEL);
+
+        CASE(SET_TEMPO_EDIT_CURSOR_ANCHOR)
+        gEditing->setTempoEditAnchor(Editing::EditingAnchor::CURSOR);
+        CASE(SET_TEMPO_EDIT_RECEPTOR_ANCHOR)
+        gEditing->setTempoEditAnchor(Editing::EditingAnchor::RECEPTORS);
+        CASE(EDIT_TEMPO_BPM)
+        gEditing->openTempoEdit(Segment::BPM);
+        CASE(EDIT_TEMPO_STOP)
+        gEditing->openTempoEdit(Segment::STOP);
+        CASE(EDIT_TEMPO_DELAY)
+        gEditing->openTempoEdit(Segment::DELAY);
+        CASE(EDIT_TEMPO_WARP)
+        gEditing->openTempoEdit(Segment::WARP);
+        CASE(EDIT_TEMPO_TIME_SIG)
+        gEditing->openTempoEdit(Segment::TIME_SIG);
+        CASE(EDIT_TEMPO_TICK_COUNT)
+        gEditing->openTempoEdit(Segment::TICK_COUNT);
+        CASE(EDIT_TEMPO_COMBO)
+        gEditing->openTempoEdit(Segment::COMBO);
+        CASE(EDIT_TEMPO_SPEED)
+        gEditing->openTempoEdit(Segment::SPEED);
+        CASE(EDIT_TEMPO_SCROLL)
+        gEditing->openTempoEdit(Segment::SCROLL);
+        CASE(EDIT_TEMPO_FAKE)
+        gEditing->openTempoEdit(Segment::FAKE);
+        CASE(EDIT_TEMPO_LABEL)
+        gEditing->openTempoEdit(Segment::LABEL);
+        CASE(SELECTION_TOGGLE_TEMPO_EDITOR)
+        gSelection->toggleTempoEditor();
 
         CASE(CHART_PREVIOUS)
         gSimfile->previousChart();

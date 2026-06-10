@@ -280,7 +280,7 @@ void DialogData::draw() {
     // Draw the titlebar buttons.
     auto& icons = GuiDraw::getIcons();
     int titleTextW = r.w;
-    int buttonX = RightX(r) - FRAME_BUTTON_W * 3 / 2;
+    int buttonX = RightX(r) - FRAME_BUTTON_W * 2;
     int buttonY = r.y + FRAME_TITLEBAR_H / 2 - FRAME_BUTTON_W / 2;
     if (!pinned_state_) {
         if (is_closeable_) {
@@ -341,8 +341,7 @@ DialogData::ActionType DialogData::GetAction(int x, int y) const {
         recti rect = dialog_ptr_->getOuterRect();
         if (IsInside(rect, x, y)) {
             // Titlebar buttons.
-            int dx = x - rect.x - rect.w + FRAME_BUTTON_W * 3 / 2,
-                dy = y - rect.y;
+            int dx = x - rect.x - rect.w + FRAME_BUTTON_W * 2, dy = y - rect.y;
             if (dy < FRAME_TITLEBAR_H) {
                 if (!pinned_state_) {
                     if (is_closeable_) {
@@ -358,7 +357,7 @@ DialogData::ActionType DialogData::GetAction(int x, int y) const {
                     if (dx >= 0) return ACT_PIN;
                     dx += FRAME_BUTTON_W * 2;
                 }
-                return pinned_state_ ? ACT_NONE : ACT_DRAG;
+                return pinned_state_ || !is_draggable_ ? ACT_NONE : ACT_DRAG;
             }
         }
 
@@ -432,9 +431,13 @@ void GuiDialog::setMaximumWidth(int w) { DATA->max_size_.x = std::max(0, w); }
 
 void GuiDialog::setMaximumHeight(int h) { DATA->max_size_.y = std::max(0, h); }
 
-void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = true; }
+void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = enable; }
 
-void GuiDialog::setMinimizable(bool enable) { DATA->is_minimizable_ = true; }
+void GuiDialog::setMinimizable(bool enable) { DATA->is_minimizable_ = enable; }
+
+void GuiDialog::setPinnable(bool enable) { DATA->is_pinnable_ = enable; }
+
+void GuiDialog::setDraggable(bool enable) { DATA->is_draggable_ = enable; }
 
 void GuiDialog::setResizeable(bool horizontal, bool vertical) {
     DATA->is_horizontally_resizable_ = horizontal;

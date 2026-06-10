@@ -12,6 +12,9 @@
 
 namespace Vortex {
 
+static constexpr uint32_t fmtSM = FORMAT_BIT(SIM_SM);
+static constexpr uint32_t fmtSM_SSC = FORMAT_BIT(SIM_SM) | FORMAT_BIT(SIM_SSC);
+
 // ================================================================================================
 // Low level segment functions.
 
@@ -136,7 +139,8 @@ static const SegmentMeta BpmChangeMeta = {sizeof(BpmChange),
                                           "Beats per minute",
                                           RGBAtoColor32(128, 26, 26, 255),
                                           SegmentMeta::RIGHT,
-                                          WRAP(BpmChange)};
+                                          WRAP(BpmChange),
+                                          fmtSM};
 
 // ================================================================================================
 // Stop.
@@ -176,7 +180,8 @@ static const SegmentMeta StopMeta = {sizeof(Stop),
                                      "Duration (seconds)",
                                      RGBAtoColor32(128, 128, 51, 255),
                                      SegmentMeta::LEFT,
-                                     WRAP(Stop)};
+                                     WRAP(Stop),
+                                     fmtSM};
 
 // ================================================================================================
 // Delay.
@@ -216,7 +221,8 @@ static const SegmentMeta DelayMeta = {sizeof(Delay),
                                       "Duration (seconds)",
                                       RGBAtoColor32(26, 128, 128, 255),
                                       SegmentMeta::LEFT,
-                                      WRAP(Delay)};
+                                      WRAP(Delay),
+                                      fmtSM_SSC};
 
 // ================================================================================================
 // Warp.
@@ -256,7 +262,8 @@ static const SegmentMeta WarpMeta = {sizeof(Warp),
                                      "Duration (beats)",
                                      RGBAtoColor32(128, 26, 51, 255),
                                      SegmentMeta::RIGHT,
-                                     WRAP(Warp)};
+                                     WRAP(Warp),
+                                     fmtSM_SSC};
 
 // ================================================================================================
 // TimeSignature.
@@ -304,7 +311,8 @@ static const SegmentMeta TimeSignatureMeta = {
     "Beats per measure\nBeat note type",
     RGBAtoColor32(128, 102, 26, 255),
     SegmentMeta::LEFT,
-    WRAP(TimeSignature)};
+    WRAP(TimeSignature),
+    fmtSM_SSC};
 
 // ================================================================================================
 // TickCount.
@@ -344,7 +352,8 @@ static const SegmentMeta TickCountMeta = {sizeof(TickCount),
                                           "Hold ticks per beat",
                                           RGBAtoColor32(51, 128, 26, 255),
                                           SegmentMeta::RIGHT,
-                                          WRAP(TickCount)};
+                                          WRAP(TickCount),
+                                          fmtSM_SSC};
 
 // ================================================================================================
 // Combo.
@@ -389,7 +398,8 @@ static const SegmentMeta ComboMeta = {sizeof(Combo),
                                       "Hit multiplier\nMiss multiplier",
                                       RGBAtoColor32(51, 102, 26, 255),
                                       SegmentMeta::RIGHT,
-                                      WRAP(Combo)};
+                                      WRAP(Combo),
+                                      fmtSM_SSC};
 
 // ================================================================================================
 // Speed.
@@ -440,7 +450,8 @@ static const SegmentMeta SpeedMeta = {
     "Stretch ratio\nDelay time\nUnit (beats/time)",
     RGBAtoColor32(26, 51, 51, 255),
     SegmentMeta::RIGHT,
-    WRAP(Speed)};
+    WRAP(Speed),
+    fmtSM_SSC};
 
 // ================================================================================================
 // Scroll.
@@ -480,7 +491,8 @@ static const SegmentMeta ScrollMeta = {sizeof(Scroll),
                                        "Scroll rate multiplier",
                                        RGBAtoColor32(51, 102, 102, 255),
                                        SegmentMeta::LEFT,
-                                       WRAP(Scroll)};
+                                       WRAP(Scroll),
+                                       fmtSM_SSC};
 
 // ================================================================================================
 // Fake.
@@ -520,7 +532,8 @@ static const SegmentMeta FakeMeta = {sizeof(Fake),
                                      "Duration (beats)",
                                      RGBAtoColor32(128, 128, 51, 255),
                                      SegmentMeta::LEFT,
-                                     WRAP(Fake)};
+                                     WRAP(Fake),
+                                     fmtSM_SSC};
 
 // ================================================================================================
 // Label.
@@ -560,7 +573,8 @@ static const SegmentMeta LabelMeta = {sizeof(Label),
                                       "Description",
                                       RGBAtoColor32(102, 51, 51, 255),
                                       SegmentMeta::RIGHT,
-                                      WRAP(Label)};
+                                      WRAP(Label),
+                                      fmtSM_SSC};
 
 // ================================================================================================
 // SegmentMeta.

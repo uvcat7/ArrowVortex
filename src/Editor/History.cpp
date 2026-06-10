@@ -157,6 +157,8 @@ struct HistoryImpl : public History {
     int myOpenChains = 0;
 
     std::vector<Callback> myCallbacks;
+    int myChainEntries = 0;
+    int myAppliedChainEntries = 0;
 
     // ================================================================================================
     // HistoryImpl :: constructor and destructor.
@@ -220,6 +222,7 @@ struct HistoryImpl : public History {
         Entry* entry = CreateEntry(id, data, size, targetChart, targetTempo);
         if (myOpenChains > 0) {
             myChain.add(entry);
+            myChainEntries++;
         } else {
             pushEntry(entry);
         }
@@ -349,17 +352,46 @@ struct HistoryImpl : public History {
     void finishChain(std::string msg) override {
         myOpenChains = std::max(0, myOpenChains - 1);
         if (myChain.head && myOpenChains == 0) {
+            bool partialApply = myAppliedChainEntries > 0;
+
             clearUnappliedEntries();
+            if (partialApply) updateChain();
 
             WriteStream stream;
             stream.write(myChain);
             stream.writeStr(msg);
 
             myChain.head = nullptr;
+            myChainEntries = 0;
+            myAppliedChainEntries = 0;
 
             auto entry =
                 CreateEntry(0, stream.data(), stream.size(), nullptr, nullptr);
-            pushEntry(entry);
+
+            if (partialApply) {
+                myEntries.add(entry);
+                ++myAppliedEntries;
+                ++myTotalEntries;
+            } else {
+                pushEntry(entry);
+            }
+        }
+    }
+
+    void updateChain() override {
+        if (myChain.head && myAppliedChainEntries < myChainEntries) {
+            clearUnappliedEntries();
+
+            Bindings bound = {mySimfile, nullptr, nullptr};
+            auto it = myEntries.head;
+            while (it) it = Advance(it, bound);
+
+            it = myChain.head;
+            for (int i = 0; i < myAppliedChainEntries && it; ++i) it = it->next;
+            for (; it; it = it->next) {
+                ApplyEntry(it, bound, false, false);
+                myAppliedChainEntries++;
+            }
         }
     }
 

@@ -1,8 +1,6 @@
 #include <System/Mixer.h>
-// NOLINTBEGIN
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_stdinc.h>
-// NOLINTEND
 #include <Editor/Common.h>
 
 namespace Vortex {

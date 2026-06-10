@@ -1,13 +1,21 @@
 #include <Editor/Editor.h>
 #include <Editor/Selection.h>
 
-#include <Core/Draw.h>
-#include <Core/StringUtils.h>
-#include <Core/Utils.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 
-#include <System/System.h>
+#include <Core/Core.h>
+#include <Core/Draw.h>
+#include <Core/Input.h>
+#include <Core/StringUtils.h>
+#include <Core/Texture.h>
+#include <Core/Utils.h>
+#include <Core/Vector.h>
+#include <Core/Xmr.h>
 
 #include <Editor/Common.h>
+#include <Editor/Menubar.h>
 #include <Editor/TempoBoxes.h>
 #include <Editor/View.h>
 
@@ -22,10 +30,13 @@
 #include <Managers/NoteMan.h>
 #include <Managers/StyleMan.h>
 #include <Managers/TempoMan.h>
+
 #include <Simfile/Common.h>
 #include <Simfile/NoteList.h>
 #include <Simfile/Notes.h>
 #include <Simfile/Tempo.h>
+
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -41,6 +52,7 @@ struct SelectionImpl : public Selection {
 
     SelectionRegion myRegion;
     bool myIsSelectingRegion;
+    bool myOpenTempoEditor;
 
     // ================================================================================================
     // SelectionImpl :: constructor and destructor.
@@ -53,12 +65,30 @@ struct SelectionImpl : public Selection {
         myIsDraggingSelection = false;
         myRegion = {0, 0};
         myIsSelectingRegion = false;
+        myOpenTempoEditor = true;
 
         Texture icons[2];
         Texture::createTiles("assets/icons selection.png", 16, 16, 2, icons,
                              false, Texture::RGBA);
         myAddIcon = icons[0];
         mySubIcon = icons[1];
+    }
+
+    // ================================================================================================
+    // SelectionImpl :: load / save settings.
+
+    void loadSettings(XmrNode& settings) {
+        XmrNode* selection = settings.child("selection");
+        if (selection) {
+            selection->get("openTempoEditor", &myOpenTempoEditor);
+        }
+    }
+
+    void saveSettings(XmrNode& settings) override {
+        XmrNode* selection = settings.child("selection");
+        if (!selection) selection = settings.addChild("selection");
+
+        selection->addAttrib("openTempoEditor", myOpenTempoEditor);
     }
 
     // ================================================================================================
@@ -101,14 +131,25 @@ struct SelectionImpl : public Selection {
             if (t > b) std::swap(t, b);
             if (l > r) std::swap(l, r);
 
-            selectTempoBoxes(mod, t, b, l, r);
-            selectNotes(mod, t, b, l, r);
+            auto tempos = selectTempoBoxes(mod, t, b, l, r);
+            auto notes = selectNotes(mod, t, b, l, r);
 
-            // Clear the selection region if we didn't select anything.
-            if (mod == SELECT_SET && gNotes->noneSelected() &&
-                gTempoBoxes->noneSelected()) {
-                this->setRegion(0, 0);
-                gEditor->reportChanges(VCM_SELECTION_CHANGED);
+            if (mod == SELECT_SET) {
+                // Clear the selection region if we didn't select anything.
+                if (notes == 0 && tempos == 0) {
+                    setRegion(0, 0);
+                    gEditor->reportChanges(VCM_SELECTION_CHANGED);
+                }
+
+                // Single tempo selection opens dialog editor.
+                if (myOpenTempoEditor && notes == 0 && tempos == 1) {
+                    for (auto& box : gTempoBoxes->getBoxes()) {
+                        if (box.isSelected) {
+                            gEditor->openSegmentDialog(box.type, box.row);
+                            break;
+                        }
+                    }
+                }
             }
 
             myIsDraggingSelection = false;
@@ -138,23 +179,18 @@ struct SelectionImpl : public Selection {
         return r1 >= l2 && r2 >= l1;
     }
 
-    void selectTempoBoxes(SelectModifier mod, double t, double b, int l,
-                          int r) {
+    int selectTempoBoxes(SelectModifier mod, double t, double b, int l, int r) {
         if (gView->getScaleLevel() >= 2) {
-            if (gView->isTimeBased()) {
-                gTempoBoxes->selectTime(mod, t, b, l, r);
-            } else {
-                gTempoBoxes->selectRows(mod, static_cast<int>(t + 0.5),
-                                        static_cast<int>(b + 0.5), l, r);
-            }
+            return gTempoBoxes->select(mod, t, b, l, r);
         }
     }
 
-    void selectNotes(SelectModifier mod, double torT, double torB, int xl,
-                     int xr) {
+    int selectNotes(SelectModifier mod, double torT, double torB, int xl,
+                    int xr) {
         // If the selection rectangle is empty, we will select a single note
         // under the mouse.
         bool timeBased = gView->isTimeBased();
+        int count = 0;
 
         // For this particular case, since this is done via mouse selection, we
         // allow notes to be selected outside the region.
@@ -178,14 +214,15 @@ struct SelectionImpl : public Selection {
                 }
             }
             if (closest) {
-                selectNotes(
+                count = selectNotes(
                     mod, std::vector<RowCol>(1, {closest->row, closest->col}),
                     true);
             } else {
-                selectNotes(mod, {0, 0}, {0, 0}, true);
+                count = selectNotes(mod, {0, 0}, {0, 0}, true);
             }
-        } else  // The selection rectangle is non-empty.
-        {
+        }
+        // The selection rectangle is non-empty.
+        else {
             RowCol begin{0, 0}, end{0, 0};
 
             // Determine the columns that fall within the selection.
@@ -203,9 +240,10 @@ struct SelectionImpl : public Selection {
                 begin.row = static_cast<int>(torT);
                 end.row = static_cast<int>(torB) + 1;
             }
-            selectNotes(mod, begin, end, true);
+            count = selectNotes(mod, begin, end, true);
         }
         gEditor->reportChanges(VCM_SELECTION_CHANGED);
+        return count;
     }
 
     void drawRegionSelection() override {
@@ -399,6 +437,15 @@ struct SelectionImpl : public Selection {
         }
     }
 
+    // ================================================================================================
+    // Setting toggles.
+
+    void toggleTempoEditor() override {
+        myOpenTempoEditor = !myOpenTempoEditor;
+        gMenubar->update(Menubar::SELECTION_TEMPO_EDITOR);
+    }
+    bool getTempoEditor() override { return myOpenTempoEditor; }
+
 };  // SelectionImpl
 
 // ================================================================================================
@@ -406,7 +453,10 @@ struct SelectionImpl : public Selection {
 
 Selection* gSelection = nullptr;
 
-void Selection::create() { gSelection = new SelectionImpl; }
+void Selection::create(XmrNode& settings) {
+    gSelection = new SelectionImpl;
+    static_cast<SelectionImpl*>(gSelection)->loadSettings(settings);
+}
 
 void Selection::destroy() {
     delete static_cast<SelectionImpl*>(gSelection);

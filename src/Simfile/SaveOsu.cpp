@@ -236,17 +236,19 @@ static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
     Write(out, "//Storyboard Sound Samples");
 
     // Create timing data.
-    auto tempo = chart->getTempo(sim);
-    TimingData timing;
-    timing.update(tempo);
+    if (chart) {
+        auto tempo = chart->getTempo(sim);
+        TimingData timing;
+        timing.update(tempo);
 
-    // Write timing points.
-    WriteBlock(out, "TimingPoints");
-    WriteTimingPoints(out, chart, timing, tempo);
+        // Write timing points.
+        WriteBlock(out, "TimingPoints");
+        WriteTimingPoints(out, chart, timing, tempo);
 
-    // Write notes.
-    WriteBlock(out, "HitObjects");
-    WriteNotes(out, chart, timing);
+        // Write notes.
+        WriteBlock(out, "HitObjects");
+        WriteNotes(out, chart, timing);
+    }
 
     out.close();
 }
@@ -254,29 +256,29 @@ static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
 };  // namespace
 
 bool SaveOsu(const Simfile* sim, bool backup) {
+    fs::path path = utf8ToPath(sim->dir);
+    path.append(stringToUtf8(sim->file));
+    path.replace_extension(".osu");
     if (sim->charts.empty()) {
-        fs::path path = utf8ToPath(sim->dir);
-        path.append(stringToUtf8(sim->file));
-        path.append(".osu");
         SaveChart(path, sim, nullptr);
-        HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
     } else {
         std::map<std::string, int> duplicateCounters;
         for (auto chart : sim->charts) {
-            fs::path path = fs::path(sim->dir.c_str());
-            std::string file = " [";
-            file += std::string(GetDifficultyName(chart->difficulty));
-            int& counter = duplicateCounters[file];
-            if (++counter > 1) {
-                file += Str::fmt(" %1").arg(counter).str;
-            }
-            file += "].osu";
+            auto diffName = std::string(GetDifficultyName(chart->difficulty));
+            fs::path path = utf8ToPath(sim->dir);
             path.append(stringToUtf8(sim->file));
+            path.replace_extension();
+            path.concat(" [");
+            path.concat(diffName);
+            int& counter = duplicateCounters[diffName];
+            if (++counter > 1) {
+                path.concat(Str::fmt(" %1").arg(counter).str);
+            }
+            path.concat("].osu");
             SaveChart(path, sim, chart);
         }
-        HudInfo("Saved: %s", utf8ToPath(sim->file).c_str());
     }
-
+    HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
     return true;
 }
 

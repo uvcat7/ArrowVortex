@@ -487,7 +487,7 @@ struct NoteskinManImpl : public NoteskinMan {
         if (myActiveStyle == style) return;
         myActiveStyle = style;
 
-        int type = -1;
+        int type = -2;
         NoteskinImpl* skin = nullptr;
 
         // Find the noteskin for the style.
@@ -507,6 +507,16 @@ struct NoteskinManImpl : public NoteskinMan {
                 if (Supports(myTypes[i], style)) {
                     type = i;
                     break;
+                }
+            }
+
+            // No priority skin found, find one that supports the style.
+            if (type < 0) {
+                for (auto i = 0; i < myTypes.size(); ++i) {
+                    if (Supports(myTypes[i], style)) {
+                        type = i;
+                        break;
+                    }
                 }
             }
         }

@@ -138,13 +138,13 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->setRange(0, 1000);
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
                            static_cast<int>(ACT_SPEED_SET));
-    spinner->setTooltip("Delay time");
+    spinner->setTooltip("Ease time");
 
     WgCycleButton* cycler = myLayout.add<WgCycleButton>();
     cycler->value.bind(&mySpeedUnit);
     cycler->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
                           static_cast<int>(ACT_SPEED_SET));
-    cycler->setTooltip("Delay unit (beats/time)");
+    cycler->setTooltip("Ease unit (beats/time)");
     cycler->addItem("B");
     cycler->addItem("T");
 

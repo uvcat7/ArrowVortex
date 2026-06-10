@@ -273,6 +273,7 @@ class WgLineEdit : public GuiWidget {
     void setNumerical(bool numerical);
     void setEditable(bool editable);
     void setMaxLength(int n);
+    void setFocus() override;
 
     void deselect();
 
@@ -309,6 +310,7 @@ class WgSpinner : public GuiWidget {
     void setRange(double min, double max);
     void setStep(double step);
     void setPrecision(int minDecimalPlaces, int maxDecimalPlaces);
+    void setFocus() override;
 
     FloatSlot value;
     CallSlot onChange;

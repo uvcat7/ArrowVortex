@@ -29,6 +29,9 @@ struct Menubar : public InputHandler {
         USE_CHART_PREVIEW,
 
         VISUAL_SYNC_ANCHOR,
+        TEMPO_EDIT_ANCHOR,
+
+        SELECTION_TEMPO_EDITOR,
 
         SELECT_DENSITY,
 

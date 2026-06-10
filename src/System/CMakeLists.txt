@@ -2,6 +2,7 @@ list(APPEND INC
 	"Debug.h"
 	"File.h"
 	"Mixer.h"
+  "Menu.h"
 	"OpenGL.h"
 	"Resources.h"
 	"System.h"
@@ -12,12 +13,13 @@ list(APPEND SRC
 	"Debug.cpp"
 	"File.cpp"
 	"Mixer.cpp"
+  "Menu.cpp"
 	"System.cpp"
 	"Thread.cpp"
 )
 
-add_library(System STATIC ${SRC} ${INC} "Menu.h" "Menu.cpp") 
-target_link_libraries(System PRIVATE Core Editor OpenGL::GL SDL3::SDL3)
+add_library(System STATIC ${SRC} ${INC}) 
+target_link_libraries(System PRIVATE Core Editor OpenGL::GL winmm SDL3::SDL3)
 
 add_executable(ArrowVortex WIN32 System.cpp "${CMAKE_CURRENT_SOURCE_DIR}/ArrowVortex.rc" "Menu.h" "Menu.cpp")
 add_custom_command(

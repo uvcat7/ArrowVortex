@@ -24,7 +24,7 @@ struct RGBA {
     float a;
 };
 
-// Converts a 8-bit RGBA colorfto a float RGBA color.
+// Converts a 8-bit RGBA colorf to a float RGBA color.
 static RGBA ToRGBA(const colorf& i) {
     RGBA c = {{i.r, i.g, i.b}, i.a};
     return c;

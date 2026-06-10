@@ -147,6 +147,13 @@ struct TempoMan {
         modify(edit);
     }
 
+    /// Remove a segment from the tempo.
+    void removeSegment(Segment::Type type, int row) {
+        SegmentEdit edit;
+        edit.rem.append(type, row);
+        modify(edit);
+    }
+
     /// Add a (normally redundant) BPM change at `target_row` equal to BPM at
     /// that row
     virtual void injectBoundingBpmChange(const int target_row) = 0;

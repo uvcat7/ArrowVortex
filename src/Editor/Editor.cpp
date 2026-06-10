@@ -54,9 +54,12 @@
 #include <Dialogs/Zoom.h>
 #include <Dialogs/CustomSnap.h>
 #include <Dialogs/PreviewSettings.h>
+#include <Dialogs/EditSegment.h>
 
 #include <algorithm>
 #include <fstream>
+
+#include <SDL3/SDL.h>
 
 namespace Vortex {
 
@@ -71,24 +74,36 @@ struct DialogEntry {
 
 #define LOAD_FILTERS_COUNT 9
 static SDL_DialogFileFilter loadFilters[] = {
-    {"Supported Media", "sm;ssc;dwi;osu;osz;ogg;mp3;wav"},
-    {"Stepmania/ITG", "sm"},
-    {"Stepmania 5", "ssc"},
-    {"Dance With Intensity", "dwi"},
-    {"Osu!mania", "osu;osz"},
-    {"Ogg Vorbis", "ogg"},
-    {"MP3 Audio", "mp3"},
-    {"Waveform", "wav"},
-    {"All Files", "*"},
+    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.ogg, *.mp3, *.wav)",
+     "sm;ssc;dwi;osu;ogg;mp3;wav"},
+    {"Stepmania/ITG (*.sm)", "sm"},
+    {"Stepmania 5 (*.ssc)", "ssc"},
+    {"Dance With Intensity (*.dwi)", "dwi"},
+    {"Osu!mania (*.osu)", "osu"},
+    {"Ogg Vorbis (*.ogg)", "ogg"},
+    {"MP3 Audio (*.mp3)", "mp3"},
+    {"Waveform (*.wav)", "wav"},
+    {"All Files (*.*)", "*"},
 };
 
 #define SAVE_FILTERS_COUNT 4
-static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG", "sm"},
-                                             {"Stepmania 5", "ssc"},
-                                             {"Osu!mania", "osu"},
-                                             {"All Files", "*"}};
+static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG (*.sm)", "sm"},
+                                             {"Stepmania 5 (*.ssc)", "ssc"},
+                                             {"Osu!mania (*.osu)", "osu"},
+                                             {"All Files (*.*)", "*"}};
+struct DialogSegment {
+    Segment::Type type;
+    int row;
+    bool requestOpen;
+};
 
-static const size_t MAX_RECENT_FILES = 10;
+struct DialogFocus {
+    int dialogId;
+    const char* name;
+    bool requestFocus = false;
+};
+
+static const int MAX_RECENT_FILES = 10;
 
 static std::string ClipboardGet() { return gSystem->getClipboardText(); }
 
@@ -107,15 +122,17 @@ static BackgroundStyle ToBackgroundStyle(const std::string& str) {
 }
 
 static const char* ToString(SimFormat format) {
+    if (format == SIM_SM) return "sm";
     if (format == SIM_SSC) return "ssc";
     if (format == SIM_OSU) return "osu";
-    return "sm";
+    return "none";
 }
 
 static SimFormat ToSimFormat(const std::string& str) {
+    if (str == "sm") return SIM_SM;
     if (str == "ssc") return SIM_SSC;
     if (str == "osu") return SIM_OSU;
-    return SIM_SM;
+    return SIM_NONE;
 }
 
 // ================================================================================================
@@ -124,6 +141,8 @@ static SimFormat ToSimFormat(const std::string& str) {
 struct EditorImpl : public Editor, public InputHandler {
     GuiContext* gui_;
     DialogEntry myDialogs[NUM_DIALOG_IDS];
+    DialogFocus myDialogFocus;
+    DialogSegment mySegmentEditor;
     int myChanges;
     Texture myLogo;
     std::vector<std::string> myRecentFiles;
@@ -135,7 +154,7 @@ struct EditorImpl : public Editor, public InputHandler {
     bool myUseVerticalSync;
 
     BackgroundStyle myBackgroundStyle;
-    SimFormat myDefaultSaveFormat;
+    std::vector<SimFormat> myDefaultSaveFormat;
 
     // ================================================================================================
     // EditorImpl :: constructor and destructor.
@@ -149,6 +168,8 @@ struct EditorImpl : public Editor, public InputHandler {
             dialog.ptr = nullptr;
             dialog.requestOpen = false;
         }
+        mySegmentEditor.requestOpen = false;
+        myDialogFocus.requestFocus = false;
 
         gui_ = nullptr;
         myChanges = 0;
@@ -157,7 +178,7 @@ struct EditorImpl : public Editor, public InputHandler {
         myUseVerticalSync = true;
 
         myBackgroundStyle = BG_STYLE_STRETCH;
-        myDefaultSaveFormat = SIM_SM;
+        myDefaultSaveFormat = {SIM_SM};
 
         myFontPath = "assets/NotoSansJP-Medium.ttf";
         myFontSize = 13;
@@ -211,7 +232,7 @@ struct EditorImpl : public Editor, public InputHandler {
         // Create the editor components.
         Shortcuts::create();
         Music::create(settings);
-        Selection::create();
+        Selection::create(settings);
         Editing::create(settings);
         View::create(settings);
         Notefield::create(settings);
@@ -240,6 +261,7 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrDoc settings;
         saveGeneralSettings(settings);
         gStatusbar->saveSettings(settings);
+        gSelection->saveSettings(settings);
         gEditing->saveSettings(settings);
         gWaveform->saveSettings(settings);
         gNotefield->saveSettings(settings);
@@ -297,8 +319,18 @@ struct EditorImpl : public Editor, public InputHandler {
             general->get("useMultithreading", &myUseMultithreading);
             general->get("useVerticalSync", &myUseVerticalSync);
 
-            const char* saveFormat = general->get("defaultSaveFormat");
-            if (saveFormat) myDefaultSaveFormat = ToSimFormat(saveFormat);
+            std::vector<SimFormat> saveFormats;
+            auto saveFormat = general->attrib("defaultSaveFormat");
+            if (saveFormat) {
+                for (int i = 0; i < saveFormat->numValues; ++i) {
+                    auto toFormat = ToSimFormat(saveFormat->values[i]);
+                    if (toFormat != SIM_NONE) {
+                        saveFormats.push_back(toFormat);
+                    }
+                }
+            }
+            if (saveFormats.empty()) saveFormats.push_back(SIM_SM);
+            myDefaultSaveFormat = saveFormats;
         }
 
         XmrNode* view = settings.child("view");
@@ -312,10 +344,21 @@ struct EditorImpl : public Editor, public InputHandler {
             interface->get("fontSize", &myFontSize);
 
             fs::path path = fs::path(interface->get("fontPath"));
-            if (path.empty()) return;
-
-            if (std::ifstream testPath(path.c_str()); testPath.good())
+            if (std::ifstream testPath(path.c_str());
+                !path.empty() && testPath.good())
                 myFontPath = pathToUtf8(path);
+
+            bool winMax = false;
+            interface->get("windowMaximized", &winMax);
+            if (winMax)
+                gSystem->setWindowState(true);
+            else {
+                int winSize[2] = {0, 0};
+                if (interface->get("windowSize", winSize, 2)) {
+                    vec2i size = {winSize[0], winSize[1]};
+                    gSystem->setWindowSize(size);
+                }
+            }
         }
     }
 
@@ -324,7 +367,10 @@ struct EditorImpl : public Editor, public InputHandler {
 
         general->addAttrib("useMultithreading", myUseMultithreading);
         general->addAttrib("useVerticalSync", myUseVerticalSync);
-        general->addAttrib("defaultSaveFormat", ToString(myDefaultSaveFormat));
+
+        std::vector<const char*> formats;
+        for (SimFormat f : myDefaultSaveFormat) formats.push_back(ToString(f));
+        general->addAttrib("defaultSaveFormat", formats.data(), formats.size());
 
         XmrNode* view = settings.addChild("view");
 
@@ -334,6 +380,15 @@ struct EditorImpl : public Editor, public InputHandler {
 
         interface->addAttrib("fontPath", myFontPath.c_str());
         interface->addAttrib("fontSize", static_cast<long>(myFontSize));
+
+        bool windowState = gSystem->getWindowState();
+        if (windowState) {
+            interface->addAttrib("windowMaximized", true);
+        } else {
+            vec2i ws = gSystem->getWindowSize();
+            long windowSize[] = {ws.x, ws.y};
+            interface->addAttrib("windowSize", windowSize, 2);
+        }
     }
 
     void saveDialogSettings(XmrNode& settings) {
@@ -383,8 +438,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Make a list of loadable extensions, from high priority to low
         // priority.
-        static const char* extList[] = {"ssc", "sm",  "dwi", "osu",
-                                        "ogg", "mp3", "wav"};
+        static const char* extList[] = {".ssc", ".sm",  ".dwi", ".osu",
+                                        ".ogg", ".mp3", ".wav"};
         const char** extEnd = extList + (ignoreAudio ? 4 : 7);
 
         // Check if the path is a directory.
@@ -392,8 +447,7 @@ struct EditorImpl : public Editor, public InputHandler {
             // If so, look for loadable files in the given directory.
             auto curPriority = extEnd;
             for (auto& file : File::findFiles(path, false)) {
-                std::string ext(reinterpret_cast<const char*>(
-                    file.extension().u8string().c_str()));
+                std::string ext(pathToUtf8(file.extension()));
                 Str::toLower(ext);
                 auto priority = std::find(extList, extEnd, ext);
                 if (priority != extEnd && priority < curPriority) {
@@ -517,21 +571,11 @@ struct EditorImpl : public Editor, public InputHandler {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return true;
 
-        SimFormat saveFmt = myDefaultSaveFormat;
-
         std::string dir = gSimfile->getDir();
         std::string file = gSimfile->getFile();
 
-        // Give priority to the load format.
-        SimFormat fmt = gSimfile->get()->format;
-        if (fmt == SIM_SM || fmt == SIM_DWI) {
-            saveFmt = (myDefaultSaveFormat == SIM_SSC) ? SIM_SSC : SIM_SM;
-        } else if (fmt == SIM_SSC) {
-            saveFmt = SIM_SSC;
-        } else if (fmt == SIM_OSU || fmt == SIM_OSZ) {
-            saveFmt = SIM_OSU;
-        }
-
+        // Save As is single file.
+        SimFormat saveFmt = myDefaultSaveFormat[0];
         fs::path save_path = utf8ToPath(dir);
         save_path.append(stringToUtf8(file));
 
@@ -562,21 +606,49 @@ struct EditorImpl : public Editor, public InputHandler {
 
             if (save_path.empty()) return false;
 
-            // Update the song directory and filename.
-            saveFmt = SIM_SM;
+            // Update the save format based on the selected filter index.
+            switch (filterIndex) {
+                case 1:
+                    saveFmt = SIM_SM;
+                    break;
+                case 2:
+                    saveFmt = SIM_SSC;
+                    break;
+                case 3:
+                    saveFmt = SIM_OSU;
+                    break;
+                default:
+                    if (ext == ".ssc") {
+                        saveFmt = SIM_SSC;
+                    } else if (ext == ".osu") {
+                        saveFmt = SIM_OSU;
+                    } else {
+                        saveFmt = SIM_SM;
+                    }
+                    break;
+            };
 
-            if (ext == ".ssc") {
-                saveFmt = SIM_SSC;
-            } else if (ext == ".osu") {
-                saveFmt = SIM_OSU;
-            } else {
-                saveFmt = SIM_SM;
+            // Save the simfile.
+            if (!gSimfile->save(dir, file, saveFmt)) {
+                HudError("Could not save %s", file.c_str());
             }
+
+            return true;
         }
 
-        // Save the simfile.
-        if (!gSimfile->save(dir, file, saveFmt)) {
-            HudError("Could not save %s", file.c_str());
+        // Saving multiple formats.
+        std::vector<SimFormat> save = myDefaultSaveFormat;
+        SimFormat fmt = gSimfile->get()->format;
+        if (fmt == SIM_NONE || fmt == SIM_DWI) {
+            fmt = save[0];
+        }
+        save.erase(std::remove(save.begin(), save.end(), fmt), save.end());
+        save.insert(save.begin(), fmt);  // Give priority to the load format.
+
+        for (auto saveFmt : save) {
+            if (!gSimfile->save(dir, file, saveFmt)) {
+                HudError("Could not save %s", file.c_str());
+            }
         }
 
         // Signal to the edit history that the current state is the saved state.
@@ -629,7 +701,22 @@ struct EditorImpl : public Editor, public InputHandler {
         myDialogs[dialogId].requestOpen = true;
     }
 
-    void handleDialogs() {
+    void openSegmentDialog(Segment::Type type, int row) override {
+        auto& entry = myDialogs[DIALOG_EDIT_SEGMENT];
+        if (entry.ptr) entry.ptr->requestClose();
+        entry.requestOpen = true;
+        mySegmentEditor.type = type;
+        mySegmentEditor.row = row;
+        mySegmentEditor.requestOpen = true;
+    }
+
+    void setDialogFocus(int dialogId, const char* name) override {
+        myDialogFocus.dialogId = dialogId;
+        myDialogFocus.name = name;
+        myDialogFocus.requestFocus = true;
+    }
+
+    void handleDialogOpens() {
         for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
             if (myDialogs[id].requestOpen) {
                 handleDialogOpening(static_cast<DialogId>(id), {0, 0, 0, 0});
@@ -637,9 +724,45 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
+    void handleDialogFocus() {
+        if (myDialogFocus.requestFocus) {
+            auto dlg = myDialogs[myDialogFocus.dialogId].ptr;
+            if (dlg) dlg->setFocus(myDialogFocus.name);
+            myDialogFocus.requestFocus = false;
+        }
+    }
+
+    void handleSegmentEditor() {
+        auto& entry = myDialogs[DIALOG_EDIT_SEGMENT];
+        if (!entry.ptr) return;
+
+        auto dlg = static_cast<DialogEditSegment*>(entry.ptr);
+
+        // Set Type
+        if (mySegmentEditor.requestOpen) {
+            dlg->setSegment(mySegmentEditor.type, mySegmentEditor.row);
+            mySegmentEditor.requestOpen = false;
+        }
+
+        // Set Position
+        auto meta = Segment::meta[mySegmentEditor.type];
+        auto coords = gView->getNotefieldCoords();
+        int offset =
+            gTempoBoxes->getStackWidth(meta->side, mySegmentEditor.row);
+        int x = meta->side ? coords.xr + offset + 16
+                           : coords.xl - offset - 10 - dlg->getFixedWidth();
+        int y =
+            gView->rowToY(mySegmentEditor.row) - (dlg->getFixedHeight() / 2);
+
+        dlg->setPosition(x, y);
+    }
+
     void handleDialogOpening(DialogId id, recti rect) {
         auto& entry = myDialogs[id];
-        if (entry.ptr) return;
+        if (entry.ptr) {
+            entry.requestOpen = false;
+            return;
+        }
 
         EditorDialog* dlg = nullptr;
         switch (id) {
@@ -688,6 +811,9 @@ struct EditorImpl : public Editor, public InputHandler {
             case DIALOG_PREVIEW_SETTINGS:
                 dlg = new DialogPreviewSettings;
                 break;
+            case DIALOG_EDIT_SEGMENT:
+                dlg = new DialogEditSegment;
+                break;
         };
 
         if (dlg == nullptr) {
@@ -710,6 +836,8 @@ struct EditorImpl : public Editor, public InputHandler {
             dlg->setPosition(x, y);
         }
 
+        if (!myDialogFocus.requestFocus) setDialogFocus(id, "initial");
+
         entry.ptr = dlg;
         entry.requestOpen = false;
     }
@@ -729,7 +857,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void onFileDrop(FileDrop& evt) override {
         if (evt.count >= 1) {
-            fs::path path(evt.files[0]);
+            fs::path path = utf8ToPath(evt.files[0]);
             if (!openSimfile(findSimfile(path, false))) {
                 if (canConvertAudio(pathToUtf8(path).c_str())) {
                     gMusic->startAudioConversion(path, true);
@@ -753,10 +881,6 @@ struct EditorImpl : public Editor, public InputHandler {
     void notifyChanges() {
         if (!myChanges) return;
 
-        for (auto dialog : myDialogs) {
-            if (dialog.ptr) dialog.ptr->onChanges(myChanges);
-        }
-
         gSimfile->onChanges(myChanges);
         gView->onChanges(myChanges);
         gMusic->onChanges(myChanges);
@@ -765,6 +889,10 @@ struct EditorImpl : public Editor, public InputHandler {
         gNotefield->onChanges(myChanges);
         gTempoBoxes->onChanges(myChanges);
         gWaveform->onChanges(myChanges);
+
+        for (auto dialog : myDialogs) {
+            if (dialog.ptr) dialog.ptr->onChanges(myChanges);
+        }
 
         myChanges = 0;
     }
@@ -830,9 +958,13 @@ struct EditorImpl : public Editor, public InputHandler {
 
         vec2i view = gSystem->getWindowSize();
 
-        handleDialogs();
+        gui_->closeDialogs();
+        handleDialogOpens();
+        handleSegmentEditor();
 
         gui_->tick({0, 0, view.x, view.y}, deltaTime.count(), events);
+
+        handleDialogFocus();
 
         if (!GuiMain::isCapturingText()) {
             for (KeyPress* press = nullptr; events.next(press);) {
@@ -910,7 +1042,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
     int getBackgroundStyle() const override { return myBackgroundStyle; }
 
-    int getDefaultSaveFormat() const override { return myDefaultSaveFormat; }
+    std::vector<SimFormat> getDefaultSaveFormats() const override {
+        return myDefaultSaveFormat;
+    }
 
     GuiContext* getGui() const override { return gui_; }
 
