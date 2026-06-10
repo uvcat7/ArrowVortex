@@ -78,6 +78,7 @@ jobs:
       - name: Add NuGet sources
         shell: bash
         run: |
+            sudo apt-get install -y mono
             mono `vcpkg fetch nuget | tail -n 1`
             sources add`
             -Source "${{ env.FEED_URL }}"
