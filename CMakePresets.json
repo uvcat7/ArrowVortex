@@ -86,6 +86,9 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "environment": {
+        "VCPKG_ROOT": "/opt/vcpkg"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "PRESET_NAME": "${presetName}",
@@ -109,6 +112,9 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "environment": {
+        "VCPKG_ROOT": "/opt/vcpkg"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "PRESET_NAME": "${presetName}",
