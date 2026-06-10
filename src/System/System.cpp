@@ -279,11 +279,10 @@ struct SystemImpl : public System {
 
         // Enable vsync for now, we will disable it later if the settings
         // require it.
-        int interval_supported = 1;
-        interval_supported = SDL_GL_GetSwapInterval(&wglSwapInterval);
+        bool interval_supported = SDL_GL_GetSwapInterval(&wglSwapInterval);
         Debug::log("swap interval support :: %s\n",
-                   interval_supported != -1 ? "OK" : "MISSING");
-        if (interval_supported != -1) {
+                   interval_supported ? "OK" : "MISSING");
+        if (interval_supported) {
             if (!SDL_GL_SetSwapInterval(1))
                 Debug::log("Failed to set V-sync state: %s\n", SDL_GetError());
         }
@@ -458,10 +457,8 @@ struct SystemImpl : public System {
     }
 
     void disableVsync() override {
-        if (wglSwapInterval != -1) {
-            if (SDL_GL_SetSwapInterval(0))
-                HudError("Failed to disable V-sync: %s", SDL_GetError());
-        }
+        if (!SDL_GL_SetSwapInterval(0))
+            HudError("Failed to disable V-sync: %s", SDL_GetError());
     }
 
     double getElapsedTime() const override {
@@ -506,8 +503,6 @@ struct SystemImpl : public System {
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
     }
-
-    float getScaleFactor() const override { return myScale; }
 
     bool getWindowState() const override {
         auto temp = SDL_GetWindowFlags(window);

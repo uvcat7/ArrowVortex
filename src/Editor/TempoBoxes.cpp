@@ -340,7 +340,8 @@ struct TempoBoxesImpl : public TempoBoxes {
             int x = baseX[side] + box.x;
 
             int flags = side * TileBar::FLIP_H;
-            recti r = {x, y - box.height / 2, static_cast<int>(box.width), box.height};
+            recti r = {x, y - box.height / 2, static_cast<int>(box.width),
+                       box.height};
 
             uint32_t color = Segment::meta[box.type]->color;
             myBoxBar.draw(&batch, r, color, flags);
@@ -365,7 +366,8 @@ struct TempoBoxesImpl : public TempoBoxes {
             Text::arrange(Text::MC, textStyle,
                           MAX_WIDTH * gSystem->getScaleFactor(),
                           box.str.c_str());
-            Text::draw(recti{x, y - box.height / 2 - 1, static_cast<int>(box.width), box.height});
+            Text::draw(recti{x, y - box.height / 2 - 1,
+                             static_cast<int>(box.width), box.height});
         }
 
         // Display detailed info of the mouse over box.
@@ -416,7 +418,8 @@ struct TempoBoxesImpl : public TempoBoxes {
         for (const TempoBox& box : myBoxes) {
             if (box.row > row) break;
             if (box.row == row && side == Segment::meta[box.type]->side)
-                width = max(width, side == 0 ? abs(box.x) : box.x + box.width);
+                width =
+                    std::max(width, side == 0 ? abs(box.x) : box.x + box.width);
         }
         return width;
     }

@@ -915,7 +915,7 @@ struct EditingImpl : public Editing {
                 notesEdit.rem.append(*note);
                 notesEdit.add.append({lastSnap, lastSnap, note->col,
                                       note->player, note->type, 192});
-                gNotes->modify(notesEdit, false);
+                gNotes->modify(notesEdit, false, nullptr);
                 gHistory->updateChain();
                 continue;
             }
@@ -939,18 +939,18 @@ struct EditingImpl : public Editing {
                 for (auto seg = segment.begin(), segEnd = segment.end();
                      seg != segEnd; ++seg) {
                     if (seg->row < note->row) {
-                        before = max(before, seg->row);
+                        before = std::max(before, seg->row);
                     } else if (seg->row > note->row) {
-                        after = min(after, seg->row);
+                        after = std::min(after, seg->row);
                         break;
                     }
                 }
             }
 
             // Store previous values.
-            auto boundStart = max(before, note->row - ROWS_PER_BEAT);
+            auto boundStart = std::max(before, note->row - ROWS_PER_BEAT);
             auto boundMid = note->row;
-            auto boundEnd = min(after, note->row + ROWS_PER_BEAT);
+            auto boundEnd = std::min(after, note->row + ROWS_PER_BEAT);
 
             int range[] = {boundStart, boundMid, boundEnd};
             double time[] = {gTempo->rowToTime(boundStart),
@@ -1022,7 +1022,7 @@ struct EditingImpl : public Editing {
             tempoEdit.add.append(Scroll(boundEnd, scrolls[2]));
             tempoEdit.rem.append(Scroll(boundMid, scrolls[1]));
 
-            gNotes->modify(notesEdit, false);
+            gNotes->modify(notesEdit, false, nullptr);
             gTempo->modify(tempoEdit, false);
             gHistory->updateChain();
 

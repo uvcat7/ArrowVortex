@@ -251,7 +251,7 @@ void WgLineEdit::onTick() {
         Text::getCursorPos(vec2i{0, 0}, lineedit_cursor_.y).x);
     float target = std::clamp(lineedit_scroll_offset_,
                               cursorX - barW + SPINNER_W, cursorX - SPINNER_W);
-    target = std::clamp(target, 0.f, textW - barW);
+    target = std::clamp(target, textW - barW, 0.f);
 
     float delta = std::max(fabs(lineedit_scroll_offset_ - target) * 10.f * dt,
                            dt * 256.f);

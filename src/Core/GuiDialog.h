@@ -50,6 +50,7 @@ class DialogData : public GuiWidget {
     bool is_pinnable_ : 1 = true;
     bool is_closeable_ : 1 = true;
     bool is_minimizable_ : 1 = true;
+    bool is_draggable_ : 1 = true;
     bool is_horizontally_resizable_ : 1 = false;
     bool is_vertically_resizable_ : 1 = false;
 

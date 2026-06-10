@@ -103,7 +103,7 @@ struct DialogFocus {
     bool requestFocus = false;
 };
 
-static const int MAX_RECENT_FILES = 10;
+static const size_t MAX_RECENT_FILES = 10;
 
 static std::string ClipboardGet() { return gSystem->getClipboardText(); }
 

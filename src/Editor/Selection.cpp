@@ -11,7 +11,6 @@
 #include <Core/StringUtils.h>
 #include <Core/Texture.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
 #include <Core/Xmr.h>
 
 #include <Editor/Common.h>
@@ -183,6 +182,7 @@ struct SelectionImpl : public Selection {
         if (gView->getScaleLevel() >= 2) {
             return gTempoBoxes->select(mod, t, b, l, r);
         }
+        return 0;
     }
 
     int selectNotes(SelectModifier mod, double torT, double torB, int xl,
