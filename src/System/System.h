@@ -20,7 +20,6 @@ namespace Vortex {
 // custom filter, filterIndex is set to zero.
 
 struct System {
-
     /// Helper struct for running system commands.
     struct CommandPipe {
         virtual int read() = 0;
@@ -37,9 +36,8 @@ struct System {
 
     /// Shows a message box dialog.
     virtual Result showMessageDlg(const std::string& title,
-                                  const std::string& text,
-                                  Buttons buttons = T_OK,
-                                  Icon icon = I_INFO) = 0;
+                                  const std::string& text, Buttons buttons,
+                                  Icon icon) = 0;
 
     /// Shows an open file dialog, see class description.
     virtual fs::path openFileDlg(const std::string& title,
@@ -69,9 +67,6 @@ struct System {
 
     /// Returns the current clipboard text.
     virtual std::string getClipboardText() const = 0;
-
-    /// Returns the directory of the executable.
-    virtual std::string getExeDir() const = 0;
 
     /// Returns the directory from which the program was run.
     virtual std::string getRunDir() const = 0;

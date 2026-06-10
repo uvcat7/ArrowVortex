@@ -113,7 +113,8 @@ struct SimfileManImpl : public SimfileMan {
     void myUpdateChart() {
         if (mySimfile) {
             myChartIndex =
-                std::clamp(myChartIndex, -1, static_cast<int>(mySimfile->charts.size() - 1));
+                std::clamp(myChartIndex, -1,
+                           static_cast<int>(mySimfile->charts.size() - 1));
             myChart =
                 (myChartIndex >= 0) ? mySimfile->charts[myChartIndex] : nullptr;
         } else {
@@ -312,7 +313,8 @@ struct SimfileManImpl : public SimfileMan {
         if (!chart) return;
 
         if (mySimfile) {
-            auto pos = std::find(mySimfile->charts.begin(), mySimfile->charts.end(), chart);
+            auto pos = std::find(mySimfile->charts.begin(),
+                                 mySimfile->charts.end(), chart);
             if (pos == mySimfile->charts.end()) {
                 HudError(
                     "Trying to remove a chart that is not in the chart list.");
@@ -448,7 +450,8 @@ struct SimfileManImpl : public SimfileMan {
     }
 
     std::string applyRemove(Chart* chart) {
-        auto pos = std::find(mySimfile->charts.begin(), mySimfile->charts.end(), chart);
+        auto pos = std::find(mySimfile->charts.begin(), mySimfile->charts.end(),
+                             chart);
         if (pos == mySimfile->charts.end()) {
             std::string err = "Failed to remove " + chart->description() +
                               ", could not find it.";

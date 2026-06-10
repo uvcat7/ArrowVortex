@@ -182,8 +182,7 @@ struct Givens {
 
 */
 template <typename T>
-std::vector<T> polyfit(const T* oX, const T* oY, size_t nCount,
-                          int nDegree) {
+std::vector<T> polyfit(const T* oX, const T* oY, size_t nCount, int nDegree) {
     // more intuitive this way
     nDegree++;
 

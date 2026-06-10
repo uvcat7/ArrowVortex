@@ -76,7 +76,8 @@ static int FindNextNoteRow(const NoteList& list, int row) {
     return (it != list.end()) ? it->row : INT_MAX;
 }
 
-static void ConvertStop(std::vector<ExportTP>& tps, const TimingData::Event* cur,
+static void ConvertStop(std::vector<ExportTP>& tps,
+                        const TimingData::Event* cur,
                         const TimingData::Event* next, const Chart* chart) {
     // Find the row on which the next BPM change, stop, or note occurs.
     int endRow = cur->row + 48;

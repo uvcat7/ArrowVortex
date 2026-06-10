@@ -172,19 +172,19 @@ struct EditingImpl : public Editing {
                                                PLACE_AFTER_REMOVE, quant};
                     }
                     edit.rem.append(CompressNote(*note));
-                    gNotes->modify(edit, false);
+                    gNotes->modify(edit, false, nullptr);
                 } else {
                     edit.add.append({row, row, static_cast<uint32_t>(col),
                                      static_cast<uint32_t>(myCurPlayer),
                                      NOTE_STEP_OR_HOLD, quant});
                     if (evt.keyflags & Keyflag::SHIFT) {
                         edit.add.begin()->type = NOTE_MINE;
-                        gNotes->modify(edit, false);
+                        gNotes->modify(edit, false, nullptr);
                     } else if (gMusic->isPaused()) {
                         myPlacingNotes[col] = {myCurPlayer, row, row, PLACE_NEW,
                                                quant};
                     } else {
-                        gNotes->modify(edit, false);
+                        gNotes->modify(edit, false, nullptr);
                     }
                 }
             }
@@ -333,14 +333,14 @@ struct EditingImpl : public Editing {
             if (note.quant > 0 && note.quant <= 192) {
                 note.quant = std::min(
                     192u, static_cast<uint32_t>(
-                                  note.quant * gView->getSnapQuant() /
-                                  std::gcd(note.quant, gView->getSnapQuant())));
+                              note.quant * gView->getSnapQuant() /
+                              std::gcd(note.quant, gView->getSnapQuant())));
             } else {
                 note.quant = 192;
             }
             NoteEdit edit;
             edit.add.append(note);
-            gNotes->modify(edit, false);
+            gNotes->modify(edit, false, nullptr);
         }
         pnote.mode = PLACE_NONE;
     }
@@ -1052,7 +1052,7 @@ struct EditingImpl : public Editing {
 
         } else {
             std::string time = Str::formatTime(gView->getCursorTime());
-            gSystem->setClipboardText(Str::fmt("%1").arg(time));
+            gSystem->setClipboardText(time);
             HudNote("Copied timestamp to Clipboard.");
         }
     }

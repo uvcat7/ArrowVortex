@@ -28,18 +28,14 @@ static bool sSupported = false;
 #define PROC(name)                                       \
     name = (decltype(name))SDL_GL_GetProcAddress(#name); \
     if (!name) {                                         \
-        missing.emplace_back(#name);                        \
+        missing.emplace_back(#name);                     \
         ++numMissing;                                    \
     }
 #define PROC_OPT(name)                                   \
     name = (decltype(name))SDL_GL_GetProcAddress(#name); \
     if (!name) {                                         \
-        missing.emplace_back(#name);                        \
+        missing.emplace_back(#name);                     \
     }
-
-// #define PROC(name) name = nullptr; if(!name) { missing.emplace_back(#name);
-// ++numMissing; } #define PROC_OPT(name) name = nullptr; if(!name) {
-// missing.emplace_back(#name); }
 
 EXT(glCreateShader, GLint)(GLenum type);
 EXT(glDeleteShader, void)(GLuint shader);

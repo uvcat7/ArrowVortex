@@ -19,6 +19,10 @@ extern std::string pathToUtf8(fs::path path);
 /// to UTF-16 on Windows.
 extern std::u8string stringToUtf8(std::string str);
 
+/// Returns a string representation of a u8string.
+/// Use this for UTF-8 string literals on Windows.
+extern std::string utf8ToString(std::u8string str);
+
 /// Returns a path from a UTF-8 formatted string.
 /// Always use this when creating paths that could have UTF-8 characters.
 extern fs::path utf8ToPath(std::string str);
@@ -35,7 +39,7 @@ extern std::vector<std::string> getLines(fs::path path, bool* success);
 /// a file. Filters is a string of acceptable extensions seperated by semicolons
 /// (e.g. "sm;ssc").
 extern std::vector<fs::path> findFiles(fs::path path, bool recursive = true,
-                                  const char* filters = nullptr);
+                                       const char* filters = nullptr);
 
 /// Returns a list of all subdirectories in a directory.
 extern std::vector<fs::path> findDirs(fs::path path, bool recursive = true);

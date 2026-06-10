@@ -15,11 +15,11 @@ namespace Vortex {
 
 class GuiContextImpl : public GuiContext {
    public:
-    ~GuiContextImpl();
     GuiContextImpl();
+    ~GuiContextImpl() override;
 
-    void tick(recti view, float deltaTime, InputEvents& events);
-    void draw();
+    void tick(recti view, float deltaTime, InputEvents& events) override;
+    void draw() override;
 
     recti getView();
     vec2i getMousePos();

@@ -1,6 +1,7 @@
 #include <Editor/Editor.h>
 
 #include <map>
+#include <format>
 
 #include <Core/Xmr.h>
 #include <Core/Gui.h>
@@ -57,8 +58,6 @@
 #include <algorithm>
 #include <fstream>
 
-#include <SDL3/SDL.h>
-
 namespace Vortex {
 
 extern std::string VerifySaveLoadIdentity(const Simfile& simfile);
@@ -89,7 +88,7 @@ static SDL_DialogFileFilter saveFilters[] = {{"Stepmania/ITG", "sm"},
                                              {"Osu!mania", "osu"},
                                              {"All Files", "*"}};
 
-static const int MAX_RECENT_FILES = 10;
+static const size_t MAX_RECENT_FILES = 10;
 
 static std::string ClipboardGet() { return gSystem->getClipboardText(); }
 
@@ -361,7 +360,8 @@ struct EditorImpl : public Editor, public InputHandler {
     void loadRecentFiles() {
         bool success;
         myRecentFiles = File::getLines("settings/recent files.txt", &success);
-        myRecentFiles.resize(MAX_RECENT_FILES);
+        std::erase(myRecentFiles, "");
+        myRecentFiles.resize(std::min(MAX_RECENT_FILES, myRecentFiles.size()));
     }
 
     void saveRecentFiles() {
@@ -419,8 +419,8 @@ struct EditorImpl : public Editor, public InputHandler {
         if (gHistory->hasUnsavedChanges()) {
             std::string title = gSimfile->get()->title;
             if (title.empty()) title = "the current file";
-            Str::fmt msg("Do you want to save changes to %1?");
-            msg.arg(title);
+            std::string msg =
+                std::format("Do you want to save changes to {}?", title);
 
             int res = gSystem->showMessageDlg(
                 "ArrowVortex", msg, System::T_YES_NO_CANCEL, System::I_NONE);
@@ -592,7 +592,7 @@ struct EditorImpl : public Editor, public InputHandler {
         std::string spath = pathToUtf8(path);
         std::erase(myRecentFiles, spath);
         myRecentFiles.insert(myRecentFiles.begin(), 1, spath);
-        myRecentFiles.resize(MAX_RECENT_FILES);
+        myRecentFiles.resize(std::min(MAX_RECENT_FILES, myRecentFiles.size()));
         gMenubar->update(Menubar::RECENT_FILES);
     }
 

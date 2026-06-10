@@ -10,7 +10,7 @@ using namespace Vortex;
 struct Functor {
     /// Generic functor that can be called trough exec.
     struct Generic {
-        virtual ~Generic() {}
+        virtual ~Generic() = default;
         virtual void exec() = 0;
     };
 
@@ -18,8 +18,8 @@ struct Functor {
     template <typename Result>
     struct Static : public Generic {
         typedef Result (*Function)();
-        Static(Function f) : f(f) {}
-        void exec() { (*f)(); }
+        explicit Static(Function f) : f(f) {}
+        void exec() override { (*f)(); }
         Function f;
     };
 
@@ -28,7 +28,7 @@ struct Functor {
     struct StaticWithArg : public Generic {
         typedef Result (*Function)(Arg);
         StaticWithArg(Function f, Arg a) : f(f), a(a) {}
-        void exec() { (*f)(a); }
+        void exec() override { (*f)(a); }
         Function f;
         Arg a;
     };
@@ -38,7 +38,7 @@ struct Functor {
     struct Member : public Generic {
         typedef Result (Object::*Function)();
         Member(Object* o, Function f) : o(o), f(f) {}
-        void exec() { (o->*f)(); }
+        void exec() override { (o->*f)(); }
         Object* o;
         Function f;
     };
@@ -48,7 +48,7 @@ struct Functor {
     struct MemberWithArg : public Generic {
         typedef Result (Object::*Function)(Arg);
         MemberWithArg(Object* o, Function f, Arg a) : o(o), f(f), a(a) {}
-        void exec() { (o->*f)(a); }
+        void exec() override { (o->*f)(a); }
         Object* o;
         Function f;
         Arg a;

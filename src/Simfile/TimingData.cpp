@@ -42,14 +42,20 @@ static void Merge(std::vector<MergedTS>& out, const SegmentList& in) {
 
     auto tempin = in.size();
     auto tempout = out.size();
-    auto read = out.end() - in.size() - 1;
-    auto readEnd = out.begin() - 1;
+    auto read = ((tempin == tempout) ? out.begin() : out.end() - 1 - in.size());
+    auto readEnd = out.begin();
 
     auto ins = in.rbegin();
     auto insEnd = in.rend();
 
-    while (read != readEnd) {
+    while (read >= readEnd) {
         // Copy segments from the in list.
+        if (!read->seg) {
+            if (read == readEnd) break;
+            --read;
+            continue;
+        }
+
         while (ins != insEnd && ins->row > read->seg->row) {
             write->type = in.type();
             write->seg = ins.ptr;
@@ -60,16 +66,22 @@ static void Merge(std::vector<MergedTS>& out, const SegmentList& in) {
         // Move existing segments.
         while (read != readEnd && read->seg->row >= ins->row) {
             *write = *read;
-            --read, --write;
+            --read;
+            if (read == readEnd) goto exit_loop;
+            --write;
         }
     }
+
+exit_loop:
 
     // After read end is reached, there might still be some segments that need
     // to be inserted.
     while (ins != insEnd) {
         write->type = in.type();
         write->seg = ins.ptr;
-        --ins, --write;
+        --ins;
+        if (ins == insEnd) break;
+        --write;
     }
 }
 
@@ -82,8 +94,8 @@ struct WarpResult {
     MergedTS* it;
 };
 
-static WarpResult HandleWarp(std::vector<Event>& out, MergedTS* it, MergedTS* end,
-                             int warpRows) {
+static WarpResult HandleWarp(std::vector<Event>& out, MergedTS* it,
+                             MergedTS* end, int warpRows) {
     Event* entry = &out.back();
     double spr = entry->spr;
     double time = entry->endTime;
@@ -118,8 +130,8 @@ static WarpResult HandleWarp(std::vector<Event>& out, MergedTS* it, MergedTS* en
                 entry->endTime = time;
                 entry->spr = spr;
             } else if (warpEndRow < row) {
-                out.emplace_back(
-                    warpEndRow, targetTime, targetTime, targetTime, spr);
+                out.emplace_back(warpEndRow, targetTime, targetTime, targetTime,
+                                 spr);
             }
             return {row, time, it};
         }
@@ -301,8 +313,8 @@ static void CreateScrollFakes(std::vector<ScrollFake>& out, const Fake* it,
 // ================================================================================================
 // Timing translation functions.
 
-static const ScrollRow* MostRecentScrollRow(const std::vector<ScrollRow>& scrolls,
-                                            int row) {
+static const ScrollRow* MostRecentScrollRow(
+    const std::vector<ScrollRow>& scrolls, int row) {
     auto it = scrolls.begin(), mid = it;
     int count = scrolls.size(), step;
     while (count > 1) {
@@ -333,7 +345,8 @@ static const ScrollSpeed* MostRecentScrollSpeed(
     return &(*it);
 }
 
-static const TimeSig* MostRecentTimeSig(const std::vector<TimeSig>& sigs, int row) {
+static const TimeSig* MostRecentTimeSig(const std::vector<TimeSig>& sigs,
+                                        int row) {
     auto it = sigs.begin(), mid = it;
     int count = sigs.size(), step;
     while (count > 1) {
@@ -363,7 +376,8 @@ static const Event* MostRecentEvent(const std::vector<Event>& events, int row) {
     return &(*it);
 }
 
-static const Event* MostRecentEvent(const std::vector<Event>& events, double time) {
+static const Event* MostRecentEvent(const std::vector<Event>& events,
+                                    double time) {
     auto it = events.begin(), mid = it;
     int count = events.size(), step;
     while (count > 1) {
@@ -463,7 +477,8 @@ void TimingData::update(const Tempo* tempo) {
     Merge(items, segments->getList<Warp>());
 
     events.clear();
-    CreateEvents(events, -tempo->offset, &(*items.begin()), &(*items.end()));
+    CreateEvents(events, -tempo->offset, &(*items.begin()),
+                 &(*(items.end() - 1)) + 1);
     events.shrink_to_fit();
 
     // Create a measure list from time signatures.
@@ -533,15 +548,17 @@ double TimingData::positionToSpeed(double beat, double time) const {
 TempoTimeTracker::TempoTimeTracker()
     : TempoTimeTracker(gTempo->getTimingData()) {}
 
-TempoTimeTracker::TempoTimeTracker(const TimingData& data)
-    : it(&(*data.events.begin())), end(&(*data.events.end())) {
-    VortexAssert(it != end);
-    auto next = it + 1;
-    if (next != end) {
-        nextRow = next->row;
+TempoTimeTracker::TempoTimeTracker(const TimingData& data) {
+    if (data.events.empty()) {
+        it = nullptr;
+        end = nullptr;
     } else {
-        nextRow = INT_MAX;
+        it = &(*data.events.begin());
+        end = &(*(data.events.end() - 1)) + 1;
     }
+    nextRow = INT_MAX;
+    auto next = it + 1;
+    if (next != end) nextRow = next->row;
 }
 
 double TempoTimeTracker::advance(int row) {
@@ -581,15 +598,18 @@ double TempoTimeTracker::lookAhead(int row) const {
 
 TempoRowTracker::TempoRowTracker() : TempoRowTracker(gTempo->getTimingData()) {}
 
-TempoRowTracker::TempoRowTracker(const TimingData& data)
-    : it(&(*data.events.begin())), end(&(*data.events.end())) {
-    VortexAssert(it != end);
-    auto next = it + 1;
-    if (next != end) {
-        nextTime = next->time;
+TempoRowTracker::TempoRowTracker(const TimingData& data) {
+    if (data.events.empty()) {
+        it = nullptr;
+        end = nullptr;
     } else {
-        nextTime = DBL_MAX;
+        it = &(*data.events.begin());
+        end = &(*(data.events.end() - 1)) + 1;
     }
+    nextTime = DBL_MAX;
+    if (it == end) return;
+    auto next = it + 1;
+    if (next != end) nextTime = next->time;
 }
 
 int TempoRowTracker::advance(double time) {

@@ -25,6 +25,7 @@
 
 #include <System/System.h>
 #include <System/Debug.h>
+#include <System/File.h>
 
 namespace Vortex {
 
@@ -35,14 +36,14 @@ namespace {
 // ================================================================================================
 // MenuBarImpl :: member data.
 
-struct MenuBarImpl : public Menubar, public InputHandler {
+struct MenuBarImpl : public Menubar {
     typedef void (*UpdateFunction)();
     typedef MenuItem Item;
 
 #ifndef _WIN32
     int menu_height = 0;
 #else
-    constexpr int menu_height = 0;
+    static constexpr int menu_height = 0;
 #endif
 
     Item* myTopMenu;
@@ -134,9 +135,9 @@ struct MenuBarImpl : public Menubar, public InputHandler {
         // Chart > Convert menu.
         Item* hChartConvert = newMenu();
         add(hChartConvert, CHART_CONVERT_ROUTINE_TO_COUPLES,
-            "Routine → ITG Couple");
+            utf8ToString(u8"Routine → ITG Couple").c_str());
         add(hChartConvert, CHART_CONVERT_COUPLES_TO_ROUTINE,
-            "ITG Couple → Routine");
+            utf8ToString(u8"ITG Couple → Routine").c_str());
 
         // Chart menu.
         Item* hChart = newMenu();
@@ -182,20 +183,31 @@ struct MenuBarImpl : public Menubar, public InputHandler {
 
         // Notes > Convert menu.
         Item* hNoteConvert = newMenu();
-        add(hNoteConvert, CHANGE_NOTES_TO_MINES, "Notes → Mines");
-        add(hNoteConvert, CHANGE_NOTES_TO_FAKES, "Notes → Fakes");
-        add(hNoteConvert, CHANGE_NOTES_TO_LIFTS, "Notes → Lifts");
+        add(hNoteConvert, CHANGE_NOTES_TO_MINES,
+            utf8ToString(u8"Notes → Mines").c_str());
+        add(hNoteConvert, CHANGE_NOTES_TO_FAKES,
+            utf8ToString(u8"Notes → Fakes").c_str());
+        add(hNoteConvert, CHANGE_NOTES_TO_LIFTS,
+            utf8ToString(u8"Notes → Lifts").c_str());
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_MINES_TO_NOTES, "Mines → Notes");
-        add(hNoteConvert, CHANGE_MINES_TO_FAKES, "Mines → Fakes");
-        add(hNoteConvert, CHANGE_MINES_TO_LIFTS, "Mines → Lifts");
+        add(hNoteConvert, CHANGE_MINES_TO_NOTES,
+            utf8ToString(u8"Mines → Notes").c_str());
+        add(hNoteConvert, CHANGE_MINES_TO_FAKES,
+            utf8ToString(u8"Mines → Fakes").c_str());
+        add(hNoteConvert, CHANGE_MINES_TO_LIFTS,
+            utf8ToString(u8"Mines → Lifts").c_str());
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_FAKES_TO_NOTES, "Fakes → Notes");
-        add(hNoteConvert, CHANGE_LIFTS_TO_NOTES, "Lifts → Notes");
+        add(hNoteConvert, CHANGE_FAKES_TO_NOTES,
+            utf8ToString(u8"Fakes → Notes").c_str());
+        add(hNoteConvert, CHANGE_LIFTS_TO_NOTES,
+            utf8ToString(u8"Lifts → Notes").c_str());
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS, "Holds → Rolls");
-        add(hNoteConvert, CHANGE_HOLDS_TO_STEPS, "Holds → Steps");
-        add(hNoteConvert, CHANGE_HOLDS_TO_MINES, "Holds → Mines");
+        add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS,
+            utf8ToString(u8"Holds → Rolls").c_str());
+        add(hNoteConvert, CHANGE_HOLDS_TO_STEPS,
+            utf8ToString(u8"Holds → Steps").c_str());
+        add(hNoteConvert, CHANGE_HOLDS_TO_MINES,
+            utf8ToString(u8"Holds → Mines").c_str());
         sep(hNoteConvert);
         add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, "Switch Player");
         add(hNoteConvert, CHANGE_NOTE_SIDE, "Switch Sides");
@@ -695,9 +707,14 @@ struct MenuBarImpl : public Menubar, public InputHandler {
         // Draw the fixed top level menu
         i = 0;
         for (auto& it : myTopMenu->getMenuData()) {
+            it.active_rect.y = y - it.active_rect.y - menu_h;
             Text::arrange(Text::MC, textStyle, it.item_text.c_str());
+            int open_menu = myTopMenu->getOpen();
             if (IsInside(it.active_rect, gSystem->getMousePos()) &&
-                myTopMenu->getOpen() >= 0 &&
+                open_menu >= 0 &&
+                gSystem->getMousePos().y <=
+                    myTopMenu->getMenuData()[open_menu].active_rect.y +
+                        myTopMenu->getMenuData()[open_menu].active_rect.h &&
                 myTopMenu->getMenuData()[i].is_enabled &&
                 myTopMenu->getMenuData()[i].submenu)
                 myTopMenu->setOpen(i);
@@ -721,7 +738,7 @@ struct MenuBarImpl : public Menubar, public InputHandler {
                 &this_menu->getMenuData()[this_menu->getOpen()];
             if (this_menu == myTopMenu) {
                 x = sub_entry->active_rect.x;
-                y = 0;
+                y = sub_entry->active_rect.y + menu_h;
             } else {
                 x = sub_entry->active_rect.x + sub_entry->active_rect.w;
                 y = sub_entry->active_rect.y;

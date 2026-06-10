@@ -93,8 +93,7 @@ struct Vec {
     // true. Both vectors must be sorted according to compare.
     template <typename T, typename U, typename Compare, typename Predicate>
     static void erasePairs(std::vector<T>& a, std::vector<U>& b,
-                           Compare compare,
-                           Predicate pred) {
+                           Compare compare, Predicate pred) {
         for (int i = a.size() - 1, j = b.size() - 1; i >= 0 && j >= 0;) {
             if (compare(a[i], b[j])) {
                 --j;

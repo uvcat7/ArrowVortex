@@ -38,7 +38,8 @@ struct Selection : public InputHandler {
                             bool ignoreRegion = false) = 0;
     virtual int selectNotes(SelectModifier t, RowCol begin, RowCol end,
                             bool ignoreRegion = false) = 0;
-    virtual int selectNotes(SelectModifier t, const std::vector<RowCol>& indices,
+    virtual int selectNotes(SelectModifier t,
+                            const std::vector<RowCol>& indices,
                             bool ignoreRegion = false) = 0;
     virtual int getSelectedNotes(NoteList& out) = 0;
 

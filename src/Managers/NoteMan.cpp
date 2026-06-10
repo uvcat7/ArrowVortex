@@ -825,11 +825,22 @@ struct NotesManImpl : public NotesMan {
 
     int getNumJudge() const override { return myNumJudge; }
 
-    const ExpandedNote* begin() const override { return &(*myNotes.begin()); }
+    const ExpandedNote* begin() const override {
+        if (!myNotes.empty())
+            return &(*myNotes.begin());
+        else
+            return nullptr;
+    }
 
-    const ExpandedNote* end() const override { return &(*myNotes.end()); }
+    const ExpandedNote* end() const override {
+        if (!myNotes.empty())
+            return &(*(myNotes.end() - 1)) + 1;
+        else
+            return nullptr;
+    }
 
     const ExpandedNote* getNoteAt(int row, int col) const override {
+        auto t = myNotes.begin();
         RowCol key = {row, col};
         auto it = std::lower_bound(myNotes.begin(), myNotes.end(), key,
                                    [](const ExpandedNote& a, const RowCol& b) {

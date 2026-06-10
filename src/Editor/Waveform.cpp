@@ -89,10 +89,10 @@ struct WaveFilter {
             samplesL.resize(numFrames, 0);
             samplesR.resize(numFrames, 0);
 
-            filter(music.samplesL(), &(*samplesL.begin()), numFrames, samplerate,
-                   strength);
-            filter(music.samplesR(), &(*samplesR.begin()), numFrames, samplerate,
-                   strength);
+            filter(music.samplesL(), &(*samplesL.begin()), numFrames,
+                   samplerate, strength);
+            filter(music.samplesR(), &(*samplesR.begin()), numFrames,
+                   samplerate, strength);
         }
     }
 
@@ -521,16 +521,17 @@ struct WaveformImpl : public Waveform {
 
         if (waveformFilter_) {
             if (waveformOverlayFilter_) {
-                renderWaveform(block->tex + 0, &(*edges.begin()), w, h, block->id,
-                               false);
-                renderWaveform(block->tex + 2, &(*edges.begin()), w, h, block->id,
-                               true);
+                renderWaveform(block->tex + 0, &(*edges.begin()), w, h,
+                               block->id, false);
+                renderWaveform(block->tex + 2, &(*edges.begin()), w, h,
+                               block->id, true);
             } else {
                 renderWaveform(block->tex, &(*edges.begin()), w, h, block->id,
                                true);
             }
         } else {
-            renderWaveform(block->tex, &(*edges.begin()), w, h, block->id, false);
+            renderWaveform(block->tex, &(*edges.begin()), w, h, block->id,
+                           false);
         }
     }
 
@@ -565,7 +566,7 @@ struct WaveformImpl : public Waveform {
 
         waveformBlockWidth_ =
             std::min(TEX_W, static_cast<int>(gSystem->getScaleFactor() *
-                                        gView->applyZoom(256)));
+                                             gView->applyZoom(256)));
         waveformSpacing_ = gView->applyZoom(24);
 
         if (waveformBlockWidth_ != width) clearBlocks();

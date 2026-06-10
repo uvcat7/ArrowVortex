@@ -52,8 +52,7 @@ struct SetPixelData {
 static void SetPixels(const SetPixelData& spd, int x, double tor,
                       uint32_t color) {
     int y = std::clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs),
-                       0,
-                  MAP_HEIGHT - 1);
+                       0, MAP_HEIGHT - 1);
     uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
     for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
 }
@@ -62,11 +61,9 @@ static void SetPixels(const SetPixelData& spd, int x, double tor, double end,
                       uint32_t color) {
     int cx = std::clamp(x, 0, MAP_WIDTH);
     int yt = std::clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs),
-                        0,
-                   MAP_HEIGHT - 1);
+                        0, MAP_HEIGHT - 1);
     int yb = std::clamp(static_cast<int>((end - spd.startOfs) * spd.pixPerOfs),
-                        0,
-                   MAP_HEIGHT - 1);
+                        0, MAP_HEIGHT - 1);
     for (int y = yt; y <= yb; ++y) {
         uint32_t* dst = spd.pixels + y * MAP_WIDTH + cx;
         for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
@@ -250,8 +247,8 @@ struct MinimapImpl : public Minimap {
             bottomY = chartRect.y + chartRect.h;
 
             double t = std::clamp(static_cast<double>(y - topY) /
-                                 static_cast<double>(bottomY - topY),
-                             0.0, 1.0);
+                                      static_cast<double>(bottomY - topY),
+                                  0.0, 1.0);
             if (gView->hasReverseScroll()) t = 1.0 - t;
 
             tor = myChartBeginOfs + (myChartEndOfs - myChartBeginOfs) * t;

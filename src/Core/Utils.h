@@ -157,10 +157,12 @@ TT inline rectt<T> ToRect(areat<T> a) {
     return {a.l, a.t, a.r - a.l, a.b - a.t};
 }
 
-TT inline vec2t<int> ToVec2i(const vec2t<T>& v) { return {(int)v.x, (int)v.y}; }
+TT inline vec2t<int> ToVec2i(const vec2t<T>& v) {
+    return {static_cast<int>(v.x), static_cast<int>(v.y)};
+}
 
 TT inline vec2t<float> ToVec2f(const vec2t<T>& v) {
-    return {(float)v.x, (float)v.y};
+    return {static_cast<float>(v.x), static_cast<float>(v.y)};
 }
 
 #undef TT
@@ -206,10 +208,10 @@ inline uint32_t ToColor32(const colorf& c) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)std::clamp((int)(c.r * 255.0f), 0, 255);
-    u8[1] = (uint8_t)std::clamp((int)(c.g * 255.0f), 0, 255);
-    u8[2] = (uint8_t)std::clamp((int)(c.b * 255.0f), 0, 255);
-    u8[3] = (uint8_t)std::clamp((int)(c.a * 255.0f), 0, 255);
+    u8[0] = static_cast<uint8_t>(std::clamp(c.r * 255.0f, 0.f, 255.f));
+    u8[1] = static_cast<uint8_t>(std::clamp(c.g * 255.0f, 0.f, 255.f));
+    u8[2] = static_cast<uint8_t>(std::clamp(c.b * 255.0f, 0.f, 255.f));
+    u8[3] = static_cast<uint8_t>(std::clamp(c.a * 255.0f, 0.f, 255.f));
     return u32;
 }
 
@@ -218,10 +220,10 @@ inline uint32_t ToColor32(float r, float g, float b, float a) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)std::clamp((int)(r * 255.0f), 0, 255);
-    u8[1] = (uint8_t)std::clamp((int)(g * 255.0f), 0, 255);
-    u8[2] = (uint8_t)std::clamp((int)(b * 255.0f), 0, 255);
-    u8[3] = (uint8_t)std::clamp((int)(a * 255.0f), 0, 255);
+    u8[0] = static_cast<uint8_t>(std::clamp(r * 255.0f, 0.f, 255.f));
+    u8[1] = static_cast<uint8_t>(std::clamp(g * 255.0f, 0.f, 255.f));
+    u8[2] = static_cast<uint8_t>(std::clamp(b * 255.0f, 0.f, 255.f));
+    u8[3] = static_cast<uint8_t>(std::clamp(a * 255.0f, 0.f, 255.f));
     return u32;
 }
 };  // namespace Vortex

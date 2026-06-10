@@ -512,7 +512,7 @@ int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
                 uint8_t* src = image.pixels + ((y * image.width) + x) * ch;
                 for (int line = 0; line < tileH; ++line) {
                     std::memcpy(dst + line * tileW * ch,
-                           src + line * image.width * ch, tileW * ch);
+                                src + line * image.width * ch, tileW * ch);
                 }
                 outTiles[tileIndex++] = Texture(tileW, tileH, dst, mipmap, fmt);
             }
@@ -540,7 +540,7 @@ int Texture::createTiles(fs::path path, int tileW, int tileH, int numTiles,
                 uint8_t* src = image.pixels + ((y * image.width) + x) * ch;
                 for (int line = 0; line < tileH; ++line) {
                     std::memcpy(dst + line * tileW * ch,
-                           src + line * image.width * ch, tileW * ch);
+                                src + line * image.width * ch, tileW * ch);
                 }
                 outTiles.emplace_back(tileW, tileH, dst, mipmap, fmt);
             }

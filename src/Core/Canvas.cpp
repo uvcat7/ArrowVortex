@@ -339,7 +339,7 @@ Canvas& Canvas::operator=(const Canvas& other) {
         canvas_data_ = static_cast<float*>(
             malloc(canvas_width_ * canvas_height_ * 4 * sizeof(float)));
     std::memcpy(canvas_data_, other.canvas_data_,
-           canvas_width_ * canvas_height_ * 4 * sizeof(float));
+                canvas_width_ * canvas_height_ * 4 * sizeof(float));
     return *this;
 }
 

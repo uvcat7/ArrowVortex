@@ -179,7 +179,8 @@ struct SelectionImpl : public Selection {
             }
             if (closest) {
                 selectNotes(
-                    mod, std::vector<RowCol>(1, {closest->row, closest->col}), true);
+                    mod, std::vector<RowCol>(1, {closest->row, closest->col}),
+                    true);
             } else {
                 selectNotes(mod, {0, 0}, {0, 0}, true);
             }

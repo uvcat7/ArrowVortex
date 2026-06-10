@@ -60,7 +60,7 @@ struct NotesMan {
 
     // Editing functions.
     virtual void modify(const NoteEdit& edit, bool clearRegion,
-                        const EditDescription* desc = nullptr) = 0;
+                        const EditDescription* desc) = 0;
     virtual void removeSelectedNotes() = 0;
     virtual void insertRows(int row, int numRows, bool curChartOnly) = 0;
 

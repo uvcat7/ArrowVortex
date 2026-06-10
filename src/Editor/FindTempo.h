@@ -11,7 +11,7 @@ struct TempoResult {
 class TempoDetector {
    public:
     static TempoDetector* New(double time, double len);
-    virtual ~TempoDetector() {}
+    virtual ~TempoDetector() = default;
 
     virtual const char* getProgress() const = 0;
     virtual bool hasResult() const = 0;

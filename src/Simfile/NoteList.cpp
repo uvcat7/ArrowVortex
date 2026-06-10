@@ -40,16 +40,14 @@ NoteList::~NoteList() {
     free(myNotes);
 }
 
-NoteList::NoteList() : myNotes(nullptr), myNum(0), myCap(0) {}
+NoteList::NoteList() = default;
 
 NoteList::NoteList(List&& list)
     : myNotes(list.myNotes), myNum(list.myNum), myCap(list.myCap) {
     list.myNotes = nullptr;
 }
 
-NoteList::NoteList(const List& list) : myNotes(nullptr), myNum(0), myCap(0) {
-    assign(list);
-}
+NoteList::NoteList(const List& list) { assign(list); }
 
 NoteList& NoteList::operator=(List&& list) {
     myNotes = list.myNotes;

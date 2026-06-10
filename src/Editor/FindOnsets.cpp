@@ -16,11 +16,11 @@ namespace Vortex {
 // ================================================================================================
 // Main function.
 
-void FindOnsets(const float *samples, int samplerate, int numFrames,
-                int numThreads, std::vector<Onset> &out) {
+void FindOnsets(const float* samples, int samplerate, int numFrames,
+                int numThreads, std::vector<Onset>& out) {
     static const int windowlen = 256;
     static const int bufsize = windowlen * 4;
-    static const char *method = "complex";
+    static const char* method = "complex";
 
     auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
     fvec_t *samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);

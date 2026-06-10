@@ -4,7 +4,7 @@
 #include <System/Debug.h>
 
 namespace Vortex {
-extern bool canConvertAudio(const char *filename);
+extern bool canConvertAudio(const char* filename);
 
 enum class AudioFormat {
     OGG,

@@ -61,12 +61,8 @@ struct ExpandedNote {
 
 // Converts and expanded note to a compact note.
 inline Note CompressNote(const ExpandedNote& note) {
-    return {note.row,
-            note.endrow,
-            (uint32_t)note.col,
-            (uint32_t)note.player,
-            (uint32_t)note.type,
-            (uint32_t)note.quant};
+    return {note.row,    note.endrow, static_cast<uint32_t>(note.col),
+            note.player, note.type,   note.quant};
 }
 
 // Encodes a single note and writes it to a bytestream.

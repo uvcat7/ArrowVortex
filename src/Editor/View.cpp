@@ -403,7 +403,7 @@ struct ViewImpl : public View, public InputHandler {
     void setCursorTime(double time) override {
         double begintime = gTempo->rowToTime(0);
         double endtime = gTempo->rowToTime(gSimfile->getEndRow());
-        myCursorTime = std::clamp(begintime, time, endtime);
+        myCursorTime = std::clamp(time, begintime, endtime);
         myCursorBeat = gTempo->timeToBeat(myCursorTime);
         myCursorRow = static_cast<int>(myCursorBeat * ROWS_PER_BEAT);
         gMusic->seek(myCursorTime);

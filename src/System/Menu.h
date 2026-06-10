@@ -9,7 +9,7 @@ struct MenuItem;
 // Helper struct for building the menu bar
 struct MenuEntry {
     Action::Type action = Action::Type::NONE;
-    std::string item_text = 0;
+    std::string item_text = "";
     bool is_separator = false;
     bool is_checked = false;
     bool is_enabled = true;
@@ -18,7 +18,6 @@ struct MenuEntry {
 };
 
 struct MenuItem {
-
     static MenuItem* create();
 
     void addSeperator();
@@ -36,7 +35,7 @@ struct MenuItem {
     void close();
     std::vector<MenuEntry>& getMenuData();
 
-    private:
+   private:
     std::vector<MenuEntry> menu_data;
     int open_entry = -1;
     bool is_top_level = false;

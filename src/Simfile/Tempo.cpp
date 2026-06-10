@@ -7,11 +7,7 @@
 
 namespace Vortex {
 
-Tempo::Tempo()
-    : offset(0),
-      displayBpmType(BPM_ACTUAL),
-      displayBpmRange({0.0, 0.0}),
-      segments(new SegmentGroup) {}
+Tempo::Tempo() : segments(new SegmentGroup) {}
 
 Tempo::~Tempo() { delete segments; }
 

@@ -1,4 +1,6 @@
 #include <System/Menu.h>
+#include <System/OpenGL.h>
+#include <Core/WideString.h>
 #include <vector>
 
 namespace Vortex {
@@ -11,7 +13,7 @@ MenuItem* MenuItem::create() {
 void MenuItem::addSeperator() {
     AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
 }
-void MenuItem::addItem(int item, const std::string& text) {
+void MenuItem::addItem(Action::Type item, const std::string& text) {
     AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
                 Widen(text).c_str());
 }
@@ -31,12 +33,12 @@ void MenuItem::replaceSubmenu(int pos, MenuItem* submenu,
                 reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
 }
 
-void MenuItem::setChecked(int item, bool state) {
+void MenuItem::setChecked(Action::Type item, bool state) {
     CheckMenuItem(reinterpret_cast<HMENU>(this), item,
                   state ? MF_CHECKED : MF_UNCHECKED);
 }
 
-void MenuItem::setEnabled(int item, bool state) {
+void MenuItem::setEnabled(Action::Type item, bool state) {
     EnableMenuItem(reinterpret_cast<HMENU>(this), item,
                    state ? MF_ENABLED : MF_GRAYED);
 }
@@ -87,8 +89,7 @@ void MenuItem::setOpen(int pos) {
     if (menu_data[pos].submenu == nullptr) {
         open_entry = -1;
     } else if (open_entry != pos) {
-        if (open_entry != -1)
-            close();
+        if (open_entry != -1) close();
         open_entry = pos;
     }
 }

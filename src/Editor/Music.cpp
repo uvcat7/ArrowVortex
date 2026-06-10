@@ -278,9 +278,9 @@ struct MusicImpl : public Music, public MixSource {
         // Fill the remaining buffer with music samples.
         if (framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 &&
             !myIsMuted) {
-            int n = static_cast<int>(
-                std::clamp(mySamples.getNumFrames() - srcPos, 0L,
-                           static_cast<int64_t>(framesLeft)));
+            int n = static_cast<int>(std::clamp(
+                static_cast<int64_t>(mySamples.getNumFrames() - srcPos),
+                static_cast<int64_t>(0L), static_cast<int64_t>(framesLeft)));
             const short* srcL = mySamples.samplesL() + srcPos;
             const short* srcR = mySamples.samplesR() + srcPos;
             if (musicVolume == 100) {
@@ -688,9 +688,9 @@ struct MusicImpl : public Music, public MixSource {
         double freq = static_cast<double>(mySamples.getFrequency());
         double ofs = myTickOffsetMs / 1000.0;
 
-        for (auto& note : *gNotes) {
-            if (!(note.isMine | note.isWarped | note.isFake)) {
-                int frame = static_cast<int>((note.time + ofs) * freq);
+        for (auto note = gNotes->begin(); note < gNotes->end(); note++) {
+            if (!(note->isMine | note->isWarped | note->isFake)) {
+                int frame = static_cast<int>((note->time + ofs) * freq);
                 myNoteTick.frames.emplace_back(frame);
             }
         }

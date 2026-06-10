@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <format>
 
 #include <Core/Draw.h>
 #include <Core/Gui.h>
@@ -422,7 +423,9 @@ struct NotefieldImpl : public Notefield {
                 ++measure;
                 row += it->rowsPerMeasure;
             }
-            it = next, ++next;
+            it = next;
+            if (next == end) break;
+            ++next;
         }
 
         // Draw Hovered Row
@@ -846,7 +849,7 @@ void TweakInfoBox::draw(recti r) {
     Str::fmt str("Tweak %1 :: %2");
     str.arg(name[mode]).arg(gTempo->getTweakValue(), 3, 3);
 
-    Text::arrange(Text::MC, str);
+    Text::arrange(Text::MC, static_cast<const char*>(str));
     Text::draw(vec2i{r.x, r.y + 16});
 
     const char* keys[] = {

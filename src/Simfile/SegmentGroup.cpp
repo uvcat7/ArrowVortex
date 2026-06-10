@@ -3,6 +3,7 @@
 #include <Core/ByteStream.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
+#include <format>
 
 #include <System/System.h>
 
@@ -107,7 +108,7 @@ static std::string GetSegmentDescription(uint32_t num, const char* singular,
         case 1:
             return singular;
     }
-    return Str::fmt("%1 %2").arg(num).arg(plural);
+    return std::format("{} {}", num, plural);
 }
 
 std::string SegmentGroup::description() const {

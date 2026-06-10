@@ -46,7 +46,11 @@ class xstring {
     void append(const char* str) { append(str, strlen(str)); }
     void append(long v) {
         char buf[32];
+#ifdef _WIN32
         int n = std::snprintf(buf, 32, "%i", v);
+#else
+        int n = std::snprintf(buf, 32, "%li", v);
+#endif
         if (n < 0) n = 32;
         append(buf, n);
     }

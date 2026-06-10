@@ -8,7 +8,7 @@ class RatingEstimator {
    public:
     ~RatingEstimator();
 
-    RatingEstimator(const char* databaseFile);
+    explicit RatingEstimator(const char* databaseFile);
 
     double estimateRating();
 

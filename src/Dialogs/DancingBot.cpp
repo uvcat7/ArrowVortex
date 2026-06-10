@@ -509,8 +509,9 @@ void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn) {
         if (endtime > curTime) {
             double startTime = std::max(curTime, endtime - 0.5);
             double delta = LerpDelta(startTime, endtime, time);
-            curPos = SmoothStep(curPos, endPos,
-                static_cast<float>(std::clamp(delta, 0.0, 1.0)));
+            curPos =
+                SmoothStep(curPos, endPos,
+                           static_cast<float>(std::clamp(delta, 0.0, 1.0)));
         }
 
         // Determine feet scale.

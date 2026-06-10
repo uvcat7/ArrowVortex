@@ -749,8 +749,8 @@ std::vector<std::string> Str::split(const std::string& s) {
     return out;
 }
 
-std::vector<std::string> Str::split(const std::string& s, const char* lim, bool trim,
-                               bool skip) {
+std::vector<std::string> Str::split(const std::string& s, const char* lim,
+                                    bool trim, bool skip) {
     std::vector<std::string> out;
     auto limlen = strlen(lim);
     auto slen = s.length() - limlen;
@@ -808,9 +808,10 @@ std::string Str::formatTime(double seconds, bool precise) {
     t -= min * (60 * 1000);
     int64_t sec = t / 1000;
 
-    auto fmt = Str::fmt("%1:%2.")
-                   .arg(static_cast<int>(min), 2)
-                   .arg(static_cast<int>(sec), 2);
+    std::string fmt =
+        static_cast<std::string>(Str::fmt("%1:%2.")
+                                     .arg(static_cast<int>(min), 2)
+                                     .arg(static_cast<int>(sec), 2));
 
     if (precise) {
         t -= sec * 1000;

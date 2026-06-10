@@ -362,21 +362,24 @@ static void AddEllipsesToLine() {
 
     // Omit all glyphs that are past the maximum line width.
     while (lastGlyph >= firstGlyph &&
-           LD->glyphs[lastGlyph].x + LD->glyphs[lastGlyph].glyph->advance > maxLineW) {
+           LD->glyphs[lastGlyph].x + LD->glyphs[lastGlyph].glyph->advance >
+               maxLineW) {
         lineEndCharIndex = LD->glyphs[lastGlyph].charIndex;
         --lastGlyph;
     }
 
     // We don't put ellipses after whitespace, so omit trailing whitespace as
     // well.
-    while (lastGlyph >= firstGlyph && LD->glyphs[lastGlyph].glyph->isWhitespace) {
+    while (lastGlyph >= firstGlyph &&
+           LD->glyphs[lastGlyph].glyph->isWhitespace) {
         lineEndCharIndex = LD->glyphs[lastGlyph].charIndex;
         --lastGlyph;
     }
 
     // Determine the new line width.
     if (lastGlyph >= 0) {
-        LD->lineW = LD->glyphs[lastGlyph].x + LD->glyphs[lastGlyph].glyph->advance;
+        LD->lineW =
+            LD->glyphs[lastGlyph].x + LD->glyphs[lastGlyph].glyph->advance;
     } else {
         LD->lineW = 0;
     }
@@ -439,7 +442,8 @@ static void FinishCurrentLine(bool last) {
     }
 
     // Store the current line info.
-    LD->lines.emplace_back(LD->lineBeginGlyph, LD->glyphs.size(), 0, lineY,
+    LD->lines.emplace_back(LD->lineBeginGlyph,
+                           static_cast<int>(LD->glyphs.size()), 0, lineY,
                            LD->lineW, LD->lineTop, LD->lineBottom);
 
     // Update the size of the text area.

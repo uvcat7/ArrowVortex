@@ -5,12 +5,7 @@
 
 namespace Vortex {
 
-Simfile::Simfile()
-    : format(SIM_NONE),
-      previewStart(0.0),
-      previewLength(0.0),
-      isSelectable(true),
-      tempo(new Tempo) {}
+Simfile::Simfile() : tempo(new Tempo) {}
 
 Simfile::~Simfile() {
     for (auto chart : charts) {

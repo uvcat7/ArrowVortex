@@ -118,7 +118,8 @@ bool Sound::Thread::readBlock() {
     int framesRead = mySource->readFrames(BUFFER_SIZE, myBuffer);
 
     if (mySound->myIsAllocated) {
-        framesRead = std::min(framesRead, mySound->myNumFrames - myCurrentFrame);
+        framesRead =
+            std::min(framesRead, mySound->myNumFrames - myCurrentFrame);
     }
 
     if (framesRead > 0) {

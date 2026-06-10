@@ -192,8 +192,8 @@ struct TextOverlayImpl : public TextOverlay {
         int height_header = static_cast<int>(24 * gSystem->getScaleFactor());
         if (textOverlayMode_ == MESSAGE_LOG) {
             textOverlayPageSize_ = std::max(0, (size.y - TEXT_Y_START) / 16);
-            textOverlayScrollEnd_ =
-                std::max(0, static_cast<int>(logEntries_.size() - textOverlayPageSize_));
+            textOverlayScrollEnd_ = std::max(
+                0, static_cast<int>(logEntries_.size() - textOverlayPageSize_));
         } else if (textOverlayMode_ == SHORTCUTS) {
             textOverlayPageSize_ = size.y;
             textOverlayScrollEnd_ = TEXT_Y_START;
@@ -383,7 +383,8 @@ struct TextOverlayImpl : public TextOverlay {
             float delta = std::clamp(deltaTime.count() * fade, 0.0, 1.0);
 
             hudEntries_[i].timeLeft -= delta;
-            if (hudEntries_[i].timeLeft <= -0.5f) hudEntries_.erase(hudEntries_.begin() + i);
+            if (hudEntries_[i].timeLeft <= -0.5f)
+                hudEntries_.erase(hudEntries_.begin() + i);
         }
     }
 
@@ -585,7 +586,7 @@ struct TextOverlayImpl : public TextOverlay {
 
         auto fps = Str::fmt("%1 FPS").arg(
             1.0f / std::max(deltaTime.count(), 0.0001), 0, 0);
-        Text::arrange(Text::TR, fps);
+        Text::arrange(Text::TR, static_cast<const char*>(fps));
         Text::draw(vec2i{size.x - 4, 4});
     }
 

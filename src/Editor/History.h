@@ -21,8 +21,8 @@ struct History : public InputHandler {
     static void create();
     static void destroy();
 
-    virtual EditId addCallback(ApplyFunc apply,
-                               ReleaseFunc release = nullptr) = 0;
+    virtual EditId addCallback(ApplyFunc apply) = 0;
+    virtual EditId addCallback(ApplyFunc apply, ReleaseFunc release) = 0;
 
     virtual void addEntry(EditId id, const void* data, uint32_t size) = 0;
     virtual void addEntry(EditId id, const void* data, uint32_t size,

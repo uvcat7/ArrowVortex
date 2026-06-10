@@ -12,8 +12,8 @@ struct InfoBox {
 };
 
 struct InfoBoxWithProgress : public InfoBox {
-    void draw(recti r);
-    int height();
+    void draw(recti r) override;
+    int height() override;
     void setProgress(double rate);
     void setTime(double seconds);
     std::string left, right;

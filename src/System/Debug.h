@@ -7,9 +7,11 @@
 #ifdef NDEBUG
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
-#elifdef __linux__
+#else
+#ifdef __linux__
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
+#endif
 #endif
 
 namespace Vortex {

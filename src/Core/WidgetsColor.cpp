@@ -150,16 +150,16 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
     if (myDrag == 1) {
         recti r = getSr();
         myCol.s = std::clamp(
-            static_cast<float>(mpos.x - r.x) / static_cast<float>(r.w),
-                  0.0f, 1.0f);
+            static_cast<float>(mpos.x - r.x) / static_cast<float>(r.w), 0.0f,
+            1.0f);
         myCol.v = std::clamp(
             1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
             0.0f, 1.0f);
     } else if (myDrag == 2) {
         recti r = getHr();
         myCol.h = std::clamp(
-            static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
-                  0.0f, 1.0f);
+            static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h), 0.0f,
+            1.0f);
     } else if (myDrag == 3) {
         recti r = getAr();
         myCol.a = std::clamp(

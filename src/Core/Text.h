@@ -113,7 +113,7 @@ class Font {
     Font& operator=(const Font& s);
 
     /// Loads a font from a TrueType/OpenType font file.
-    Font(const char* path, Text::Hinting hint = Text::HINT_NORMAL);
+    explicit Font(const char* path, Text::Hinting hint = Text::HINT_NORMAL);
 
     /// Makes sure the font stays loaded until the shutdown of goo.
     void cache() const;

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <Core/Core.h>
+#ifdef DELETE
+#undef DELETE
+#endif
 
 namespace Vortex {
 

@@ -33,12 +33,7 @@ enum Actions {
 
 DialogAdjustSync::~DialogAdjustSync() { delete myTempoDetector; }
 
-DialogAdjustSync::DialogAdjustSync()
-    : mySelectedResult(0),
-      myOffset(0),
-      myInitialBPM(0),
-      myTempoDetector(nullptr),
-      myDetectionRow(0) {
+DialogAdjustSync::DialogAdjustSync() {
     setTitle("ADJUST SYNC");
     myCreateWidgets();
     onChanges(VCM_ALL_CHANGES);
@@ -162,7 +157,7 @@ void DialogAdjustSync::onTick() {
 
                 Str::fmt fmt("#%1 :: %2 BPM :: %3%");
                 fmt.arg(i + 1).arg(t.bpm, 2, 2).arg(t.fitness * 100, 0, 0);
-                myBPMList->addItem(fmt);
+                myBPMList->addItem(static_cast<std::string>(fmt));
             }
             if (myDetectionResults.size() == 0) {
                 myBPMList->addItem("- no results found -");

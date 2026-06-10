@@ -37,8 +37,7 @@ static const char* noteItemLabels[] = {"steps", "jumps", "mines",
 
 DialogChartProperties::~DialogChartProperties() = default;
 
-DialogChartProperties::DialogChartProperties()
-    : myDifficulty(0), myRating(1), myStyle(0) {
+DialogChartProperties::DialogChartProperties() {
     setTitle("CHART PROPERTIES");
 
     myCreateChartProperties();
@@ -200,7 +199,8 @@ void DialogChartProperties::myUpdateNoteInfo() {
 
     double density = 0.0;
     if (gNotes->begin() < gNotes->end()) {
-        density = static_cast<double>(gNotes->getNumJudge()) /
+        density =
+            static_cast<double>(gNotes->getNumJudge()) /
             std::max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
     }
 
@@ -379,7 +379,7 @@ void DialogChartProperties::myUpdateBreakdown() {
 }
 
 void DialogChartProperties::myCopyBreakdown() {
-    auto breakdown = gChart->getStreamBreakdown();
+    auto breakdown = gChart->getStreamBreakdown(nullptr);
     if (breakdown.empty()) {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {

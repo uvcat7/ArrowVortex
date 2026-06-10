@@ -73,7 +73,7 @@ struct TempoTimeTracker {
     TempoTimeTracker();
 
     // Constructs a tracker from the given timing data.
-    TempoTimeTracker(const TimingData& data);
+    explicit TempoTimeTracker(const TimingData& data);
 
     // Advances the current row, and returns the time corresponding to that row.
     double advance(int row);
@@ -91,7 +91,7 @@ struct TempoRowTracker {
     TempoRowTracker();
 
     // Constructs a tracker from the given timing data.
-    TempoRowTracker(const TimingData& data);
+    explicit TempoRowTracker(const TimingData& data);
 
     // Advances the current time, and returns the row corresponding to that
     // time.

@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <stdio.h>
 #include <ctime>
 #include <bitset>
 #include <list>
@@ -62,9 +61,6 @@ namespace Vortex {
 std::chrono::duration<double> deltaTime;  // Defined in <Core/Core.h>
 
 namespace {
-
-static wchar_t sRunDir[MAX_PATH + 1] = {};
-static wchar_t sExeDir[MAX_PATH + 1] = {};
 
 static int wglSwapInterval;
 
@@ -479,12 +475,8 @@ struct SystemImpl : public System {
         return Debug::getElapsedTime(myApplicationStartTime);
     }
 
-    std::string getExeDir() const override {  // return Narrow(sExeDir);
-        return "";
-    }
-
-    std::string getRunDir() const override {  // return Narrow(sRunDir);
-        return "";
+    std::string getRunDir() const override {
+        return std::string(SDL_GetBasePath());
     }
 
     Cursor::Icon getCursor() const override { return myCursor; }

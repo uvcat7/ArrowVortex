@@ -235,7 +235,9 @@ static void LoadNoteskin(NoteskinImpl* skin, const SkinType& type) {
 
         for (const auto& filename : paths) {
             if (filename.empty()) continue;
-            path = fs::path("noteskins/" + type.name + "/");
+            std::string l_name = type.name;
+            Str::toLower(l_name);
+            path = fs::path("noteskins/" + l_name + "/");
             path.append(stringToUtf8(filename + ".txt"));
             if (doc.loadFile(path) == XMR_SUCCESS) {
                 loadFallback = false;

@@ -13,7 +13,7 @@ namespace Vortex {
 class WgSeperator : public GuiWidget {
    public:
     ~WgSeperator();
-    WgSeperator(GuiContext* gui);
+    explicit WgSeperator(GuiContext* gui);
 
     void onDraw() override;
 };
@@ -22,7 +22,7 @@ class WgSeperator : public GuiWidget {
 class WgLabel : public GuiWidget {
    public:
     ~WgLabel();
-    WgLabel(GuiContext* gui);
+    explicit WgLabel(GuiContext* gui);
 
     void onDraw() override;
 
@@ -33,7 +33,7 @@ class WgLabel : public GuiWidget {
 class WgButton : public GuiWidget {
    public:
     ~WgButton();
-    WgButton(GuiContext* gui);
+    explicit WgButton(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -49,7 +49,7 @@ class WgButton : public GuiWidget {
 class WgCheckbox : public GuiWidget {
    public:
     ~WgCheckbox();
-    WgCheckbox(GuiContext* gui);
+    explicit WgCheckbox(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -67,7 +67,7 @@ class WgCheckbox : public GuiWidget {
 class WgSlider : public GuiWidget {
    public:
     ~WgSlider();
-    WgSlider(GuiContext* gui);
+    explicit WgSlider(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -90,7 +90,7 @@ class WgSlider : public GuiWidget {
 class WgScrollbar : public GuiWidget {
    public:
     ~WgScrollbar();
-    WgScrollbar(GuiContext* gui);
+    explicit WgScrollbar(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -121,7 +121,7 @@ class WgScrollRegion : public GuiWidget {
     enum ScrollType { SCROLL_ALWAYS, SCROLL_WHEN_NEEDED, SCROLL_NEVER };
 
     ~WgScrollRegion();
-    WgScrollRegion(GuiContext* gui);
+    explicit WgScrollRegion(GuiContext* gui);
 
     void onMouseScroll(MouseScroll& evt) override;
     void onMousePress(MousePress& evt) override;
@@ -161,14 +161,14 @@ class WgScrollRegion : public GuiWidget {
 // Vertical Scrollbar GuiWidget.
 class WgScrollbarV : public WgScrollbar {
    public:
-    WgScrollbarV(GuiContext* gui);
+    explicit WgScrollbarV(GuiContext* gui);
     bool isVertical() const;
 };
 
 // Horizontal Scrollbar GuiWidget.
 class WgScrollbarH : public WgScrollbar {
    public:
-    WgScrollbarH(GuiContext* gui);
+    explicit WgScrollbarH(GuiContext* gui);
     bool isVertical() const;
 };
 
@@ -176,7 +176,7 @@ class WgScrollbarH : public WgScrollbar {
 class WgSelectList : public GuiWidget {
    public:
     ~WgSelectList();
-    WgSelectList(GuiContext* gui);
+    explicit WgSelectList(GuiContext* gui);
 
     void onArrange(recti r) override;
     void onMousePress(MousePress& evt) override;
@@ -211,7 +211,7 @@ class WgSelectList : public GuiWidget {
 class WgDroplist : public GuiWidget {
    public:
     ~WgDroplist();
-    WgDroplist(GuiContext* gui);
+    explicit WgDroplist(GuiContext* gui);
 
     void onArrange(recti r) override;
     void onMousePress(MousePress& evt) override;
@@ -238,7 +238,7 @@ class WgDroplist : public GuiWidget {
 class WgCycleButton : public GuiWidget {
    public:
     ~WgCycleButton();
-    WgCycleButton(GuiContext* gui);
+    explicit WgCycleButton(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -258,7 +258,7 @@ class WgCycleButton : public GuiWidget {
 class WgLineEdit : public GuiWidget {
    public:
     ~WgLineEdit();
-    WgLineEdit(GuiContext* gui);
+    explicit WgLineEdit(GuiContext* gui);
 
     void onKeyPress(KeyPress& evt) override;
     void onKeyRelease(KeyRelease& evt) override;
@@ -298,7 +298,7 @@ class WgLineEdit : public GuiWidget {
 class WgSpinner : public GuiWidget {
    public:
     ~WgSpinner();
-    WgSpinner(GuiContext* gui);
+    explicit WgSpinner(GuiContext* gui);
 
     void onArrange(recti r) override;
     void onMousePress(MousePress& evt) override;
@@ -333,7 +333,7 @@ class WgSpinner : public GuiWidget {
 class WgColorPicker : public GuiWidget {
    public:
     ~WgColorPicker();
-    WgColorPicker(GuiContext* gui);
+    explicit WgColorPicker(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;

@@ -36,7 +36,8 @@ class Reference {
 
     /// Returns the number of references to the current value.
     inline int count() const {
-        return reference_ptr_ ? *((int*)reference_ptr_ - 1) : 0;
+        return reference_ptr_ ? *(reinterpret_cast<int*>(reference_ptr_) - 1)
+                              : 0;
     }
 
     /// Returns a pointer to the current value.
@@ -100,7 +101,7 @@ void Reference<T>::create(const T& v) {
 template <typename T>
 void Reference<T>::destroy() {
     if (reference_ptr_) {
-        int* ref = (int*)reference_ptr_ - 1;
+        int* ref = reinterpret_cast<int*>(reference_ptr_) - 1;
         if (--*ref == 0) {
             reference_ptr_->~T();
             delete ref;
@@ -114,16 +115,16 @@ void Reference<T>::copy(const Reference& o) {
     if (reference_ptr_ != o.reference_ptr_) {
         destroy();
         reference_ptr_ = o.reference_ptr_;
-        ++*((int*)reference_ptr_ - 1);
+        ++*(reinterpret_cast<T*>(reference_ptr_) - 1);
     }
 }
 
 template <typename T>
 void Reference<T>::InitReference() {
     destroy();
-    int* ref = (int*)malloc(sizeof(int) + sizeof(T));
+    int* ref = reinterpret_cast<int*>(malloc(sizeof(int) + sizeof(T)));
     *ref = 1;
-    reference_ptr_ = (T*)(ref + 1);
+    reference_ptr_ = reinterpret_cast<T*>(ref + 1);
 }
 
 };  // namespace Vortex

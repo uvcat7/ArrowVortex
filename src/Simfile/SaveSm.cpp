@@ -302,10 +302,11 @@ static void WriteDisplayBpm(ExportData& data, const Tempo* tempo) {
             WriteTag(data, "DISPLAYBPM", tempo->displayBpmRange.min, ALWAYS,
                      false);
         } else {
-            Str::fmt fmt = "%1:%2";
+            Str::fmt fmt = Str::fmt("%1:%2");
             fmt.arg(tempo->displayBpmRange.min, 6);
             fmt.arg(tempo->displayBpmRange.max, 6);
-            WriteTag(data, "DISPLAYBPM", fmt, ALWAYS, false);
+            WriteTag(data, "DISPLAYBPM", static_cast<std::string>(fmt), ALWAYS,
+                     false);
         }
     } else if (tempo->displayBpmType == BPM_RANDOM) {
         WriteTag(data, "DISPLAYBPM", "*", ALWAYS, false);
@@ -548,7 +549,8 @@ static void WriteChart(ExportData& data) {
     // Make sure each difficulty type is only exported once.
     Difficulty diff = chart->difficulty;
     int sd = chart->style->index * NUM_DIFFICULTIES + chart->difficulty;
-    if (std::find(data.diffs.begin(), data.diffs.end(), sd) != data.diffs.end()) {
+    if (std::find(data.diffs.begin(), data.diffs.end(), sd) !=
+        data.diffs.end()) {
         Difficulty oldDiff = diff;
         std::string oldDesc = chart->description();
         diff = DIFF_EDIT;

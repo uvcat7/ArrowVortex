@@ -26,8 +26,7 @@ static const int IFP_SPACING = 4;
 
 DialogGenerateNotes::~DialogGenerateNotes() = default;
 
-DialogGenerateNotes::DialogGenerateNotes()
-    : footSelectionIndex_(0), spacingValue_(0) {
+DialogGenerateNotes::DialogGenerateNotes() {
     setTitle("GENERATE NOTES");
     myCreateWidgets();
 }

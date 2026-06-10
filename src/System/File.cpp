@@ -18,6 +18,10 @@ std::u8string stringToUtf8(std::string str) {
     return std::u8string(reinterpret_cast<const char8_t*>(str.c_str()));
 }
 
+std::string utf8ToString(std::u8string str) {
+    return std::string(reinterpret_cast<const char*>(str.c_str()));
+}
+
 fs::path utf8ToPath(std::string str) {
     return fs::path(reinterpret_cast<const char8_t*>(str.c_str()));
 }

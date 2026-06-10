@@ -325,9 +325,9 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p,
                 // avoid data loss
                 if (data.quants[col] > 0 && hold->quant > 0) {
                     hold->quant = std::min(
-                        192u,
-                        static_cast<uint32_t>(quantization * hold->quant /
-                                              std::gcd(quantization, hold->quant)));
+                        192u, static_cast<uint32_t>(
+                                  quantization * hold->quant /
+                                  std::gcd(quantization, hold->quant)));
                 } else  // There was some error, so always play safe and use 192
                 {
                     HudError("Bug: couldn't get hold quantization in row %d",

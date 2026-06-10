@@ -163,7 +163,7 @@ void Renderer::destroy() {
 
 void Renderer::startFrame() {
     vec2i view = GuiMain::getViewSize();
-    int menu_height = gMenubar ? gMenubar->getMenubarHeight(): 0;
+    int menu_height = gMenubar ? gMenubar->getMenubarHeight() : 0;
     glLoadIdentity();
     glOrtho(0, view.x, view.y, 0, -1, 1);
     glTranslated(0, menu_height, 0);

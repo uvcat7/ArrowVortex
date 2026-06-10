@@ -212,8 +212,8 @@ struct Str {
 
     /// Helper struct used in string formatting.
     struct fmt {
-        fmt(const std::string& format);
-        fmt(const char* format);
+        explicit fmt(const std::string& format);
+        explicit fmt(const char* format);
 
         fmt& arg(char c);
         fmt& arg(const std::string& s);
@@ -224,8 +224,8 @@ struct Str {
         fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);
         fmt& arg(double v, int minDecimals = 0, int maxDecimals = 6);
 
-        inline operator const char*() { return str.data(); }
-        inline operator std::string&() { return str; }
+        inline explicit operator const char*() { return str.data(); }
+        inline explicit operator std::string&() { return str; }
 
         std::string str;
     };
@@ -242,8 +242,9 @@ struct Str {
     /// "World"}. If trim is true, whitespace surrounding each element is
     /// removed. If skipEmpty is true, empty elements are not added to the list.
     static std::vector<std::string> split(const std::string& s,
-                                     const char* delimiter, bool trim = true,
-                                     bool skipEmpty = true);
+                                          const char* delimiter,
+                                          bool trim = true,
+                                          bool skipEmpty = true);
 
     /// Returns the concatenation of the list of strings, seperated by the given
     /// delimiter.

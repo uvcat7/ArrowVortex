@@ -266,7 +266,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         // Draw Speed Info
         TextStyle textStyle;
-        Text::arrange(Text::MR, textStyle, fmt);
+        Text::arrange(Text::MR, textStyle, static_cast<const char*>(fmt));
         Text::draw(vec2i{myX - 5, myY + guideHeight_});
     }
 

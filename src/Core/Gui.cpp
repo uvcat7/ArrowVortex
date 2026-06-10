@@ -87,8 +87,7 @@ static void handleTooltip() {
             TextStyle style;
 
             int alpha = std::clamp(
-                static_cast<int>(GUI->tooltipTimer * 1000 - 1000),
-                              0, 255);
+                static_cast<int>(GUI->tooltipTimer * 1000 - 1000), 0, 255);
 
             style.textColor = Color32(0, alpha);
             style.shadowColor = Colors::blank;

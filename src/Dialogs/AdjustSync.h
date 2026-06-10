@@ -28,14 +28,14 @@ class DialogAdjustSync : public EditorDialog {
 
     void myResetBPMDetection();
 
-    int mySelectedResult;
-    double myOffset, myInitialBPM;
+    int mySelectedResult = 0;
+    double myOffset = 0.0, myInitialBPM = 0.0;
     WgLabel* myBPMLabel;
     WgButton *myApplyBPM, *myFindBPM;
     WgSelectList* myBPMList;
-    TempoDetector* myTempoDetector;
+    TempoDetector* myTempoDetector = nullptr;
     std::vector<TempoResult> myDetectionResults;
-    int myDetectionRow;
+    int myDetectionRow = 0;
 };
 
 };  // namespace Vortex

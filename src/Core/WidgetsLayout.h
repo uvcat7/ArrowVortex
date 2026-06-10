@@ -23,8 +23,8 @@ class RowLayout : public GuiWidget {
     RowLayout& col(bool expand = false);
     RowLayout& col(int w, bool expand = false);
 
-    GuiWidget** begin();
-    GuiWidget** end();
+    std::vector<GuiWidget*>::const_iterator begin();
+    std::vector<GuiWidget*>::const_iterator end();
 
     template <typename T>
     T* add() {

@@ -37,12 +37,7 @@ SegmentList::~SegmentList() {
     free(mySegs);
 }
 
-SegmentList::SegmentList()
-    : mySegs(nullptr),
-      myNum(0),
-      myStride(Segment::meta[Segment::BPM]->stride),
-      myCap(0),
-      myType(Segment::BPM) {}
+SegmentList::SegmentList() = default;
 
 SegmentList::SegmentList(List&& l)
     : mySegs(l.mySegs),
@@ -55,11 +50,7 @@ SegmentList::SegmentList(List&& l)
 }
 
 SegmentList::SegmentList(const List& list)
-    : mySegs(nullptr),
-      myNum(0),
-      myStride(list.myStride),
-      myCap(0),
-      myType(list.myType) {
+    : myStride(list.myStride), myType(list.myType) {
     assign(list);
 }
 

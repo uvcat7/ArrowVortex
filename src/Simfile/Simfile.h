@@ -42,7 +42,7 @@ struct Simfile : NonCopyable {
 
     std::string dir;
     std::string file;
-    SimFormat format;
+    SimFormat format = SIM_NONE;
 
     std::string title, titleTr;
     std::string subtitle, subtitleTr;
@@ -59,10 +59,10 @@ struct Simfile : NonCopyable {
     std::vector<BgChange> fgChanges;
     std::vector<BgChange> bgChanges[2];
 
-    double previewStart;
-    double previewLength;
+    double previewStart = 0.0;
+    double previewLength = 0.0;
 
-    bool isSelectable;
+    bool isSelectable = false;
 };
 
 // Returns the abbreviation of the given simfile format.

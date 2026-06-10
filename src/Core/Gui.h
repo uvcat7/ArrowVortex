@@ -83,7 +83,7 @@ class GuiWidget : public InputHandler {
 
     virtual ~GuiWidget();
 
-    GuiWidget(GuiContext* gui);
+    explicit GuiWidget(GuiContext* gui);
 
     // Captures mouse over for the current frame.
     void captureMouseOver();
@@ -153,7 +153,7 @@ class GuiDialog {
    public:
     virtual ~GuiDialog();
 
-    GuiDialog(GuiContext* gui);
+    explicit GuiDialog(GuiContext* gui);
 
     virtual void onUpdateSize();
     virtual void onArrange(recti r);

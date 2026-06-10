@@ -7,22 +7,47 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(ArrowVortex)
 
-# -extra-arg=/EHsc only on Windows
 set(CMAKE_CONFIGURATION_TYPES Debug;Release;MinSizeRel)
 if("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
-    set(tidy_flags "--fix-errors;--fix-notes")
+    set(tidy_flags "--fix-errors;--fix-notes;--checks=-google-default-arguments,-modernize-use-override;--exclude-header-filter")
     set(format_flags "-i")
 else()
-    set(tidy_flags "--warnings-as-errors=*")
+    set(tidy_flags "--warnings-as-errors=*;--checks=-google-default-arguments,-modernize-use-override,-modernize-redundant-void-arg,-modernize-use-nullptr;--exclude-header-filter")
     set(format_flags "--dry-run")
 endif()
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags};-p=build")
+if(WIN32)
+    set(tidy_extra "-extra-arg=/EHsc;")
+endif()
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags};${tidy_extra}-p=build")
 
+# Sometimes caching will cause CMAKE_TOOLCHAIN_FILE, build presets, and includes to not update/work, so include by hand.
 include_directories("${PROJECT_SOURCE_DIR}/src")
-include_directories("${PROJECT_SOURCE_DIR}/out/build/linux-debug/vcpkg_installed/x64-linux/include")
 
-# Sometimes caching will cause CMAKE_TOOLCHAIN_FILE to be ignored
-include(/opt/vcpkg/scripts/buildsystems/vcpkg.cmake)
+if(LINUX AND "${PRESET_NAME}" STREQUAL "")
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        set(PRESET_NAME "linux-debug")
+    else()
+        set(PRESET_NAME "linux-release")
+    endif()
+endif()
+
+message(STATUS "Including toolchain includes: ${PROJECT_SOURCE_DIR}/out/build/${PRESET_NAME}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include") 
+include_directories("${PROJECT_SOURCE_DIR}/out/build/${PRESET_NAME}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include")
+
+if("${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
+    if("$ENV{VCPKG_ROOT}" STREQUAL "")
+        message(WARNING "%VCPKG_ROOT% is not defined, attempting fallback generation.") 
+        if (LINUX)
+            include("/opt/vcpkg/scripts/buildsystems/vcpkg.cmake")
+        elseif(WIN32)
+            include("C:\Program Files\Microsoft Visual Studio\18\Community\VC\vcpkg\scripts\buildsystems\vcpkg.cmake")
+        endif()
+    else()
+        message(WARNING "CMAKE_TOOLCHAIN_FILE is not defined, manually including.") 
+        include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    endif()
+endif()
+
 find_package(Aubio CONFIG NAMES aubio Aubio)
 find_package(FFMPEG REQUIRED)
 find_package(Freetype REQUIRED)
@@ -48,10 +73,10 @@ install(DIRECTORY bin/settings DESTINATION bin)
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
 add_custom_target(format ALL)
-#add_custom_command(
-#    TARGET format
-#    POST_BUILD
-#    COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
-#    USES_TERMINAL
-#)
+add_custom_command(
+    TARGET format
+    POST_BUILD
+    COMMAND clang-format ${format_flags} -Werror -style=file ${path_sources}
+    USES_TERMINAL
+)
 add_dependencies(format ArrowVortex)

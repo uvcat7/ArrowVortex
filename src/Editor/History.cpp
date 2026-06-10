@@ -171,6 +171,10 @@ struct HistoryImpl : public History {
     // ================================================================================================
     // HistoryImpl :: adding callbacks.
 
+    EditId addCallback(ApplyFunc apply) override {
+        return addCallback(apply, nullptr);
+    }
+
     EditId addCallback(ApplyFunc apply, ReleaseFunc release) override {
         EditId out = myCallbacks.size();
         myCallbacks.emplace_back(apply, release);
