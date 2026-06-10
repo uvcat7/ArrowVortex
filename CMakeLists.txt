@@ -12,7 +12,6 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
     set(tidy_flags "--fix-errors;--fix-notes;")
     set(format_flags "-i")
 else()
-# Only prevent format/building on Windows, as Linux's clang-format is slightly different
     set(tidy_flags "--warnings-as-errors=*;")
     set(format_flags "--dry-run")
 endif()
@@ -78,6 +77,7 @@ install(DIRECTORY bin/noteskins DESTINATION bin)
 install(DIRECTORY bin/settings DESTINATION bin)
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
+# Only prevent format/building on Windows, as Linux's clang-format is slightly different
 if(WIN32)
     add_custom_target(format ALL)
     add_custom_command(
