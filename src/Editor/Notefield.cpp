@@ -356,7 +356,7 @@ struct NotefieldImpl : public Notefield {
         struct MeasureLabel {
             int measure, y;
         };
-        std::vector<MeasureLabel> labels(8);
+        std::vector<MeasureLabel> labels;
 
         // Determine the first row and last row that should show beat lines.
         int drawBeginRow = std::max(0, gView->offsetToRow(myFirstVisibleTor));

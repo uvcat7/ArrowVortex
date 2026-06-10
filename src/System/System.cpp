@@ -577,6 +577,10 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     using namespace std::chrono;
 
     if (!myInitSuccesful) return SDL_APP_FAILURE;
+    if (myIsTerminated) {
+        Editor::destroy();
+        return SDL_APP_SUCCESS;
+    }
 
 #ifndef NDEBUG
     static long long frames = 0;
@@ -697,11 +701,9 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
     switch (event->type) {
         case SDL_EVENT_QUIT: {
-            if (gEditor->onExitProgram())
-                return SDL_APP_SUCCESS;
-            else
-                return SDL_APP_CONTINUE;
-            break;
+            gEditor->onExitProgram();
+            // myIsTerminated is set to true which actually stops the program
+            return SDL_APP_CONTINUE;
         }
         case SDL_EVENT_WINDOW_MOUSE_ENTER:
         case SDL_EVENT_WINDOW_FOCUS_GAINED: {
