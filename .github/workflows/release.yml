@@ -35,7 +35,6 @@ jobs:
       - name: Add NuGet sources
         shell: pwsh
         run: |
-          dir out/build/windows-release/vcpkg_installed/x64-windows-static-md/include
           .$(vcpkg fetch nuget) `
             sources add `
             -Source "${{ env.FEED_URL }}" `
@@ -52,6 +51,8 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
           -DPRESET_NAME=windows-release
+      - name: Test
+        run: dir out/build/windows-release/vcpkg_installed/x64-windows-static-md/include
       - name: Build AV
         run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
       - name: Collect into a directory
@@ -80,14 +81,14 @@ jobs:
         shell: bash
         run: |
             sudo apt-get install -y mono-devel
-            mono `vcpkg fetch nuget | tail -n 1``
+            mono `vcpkg fetch nuget | tail -n 1` `
             sources add`
             -Source "${{ env.FEED_URL }}"
             -StorePasswordInClearText `
             -Name GitHubPackages `
             -UserName "${{ env.USERNAME }}" `
             -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
-            mono `vcpkg fetch nuget | tail -n 1`
+            mono `vcpkg fetch nuget | tail -n 1` `
             setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
             -Source "${{ env.FEED_URL }}"
       - name: Configure CMake
