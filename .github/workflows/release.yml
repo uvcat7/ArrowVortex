@@ -66,3 +66,45 @@ jobs:
             bin/settings
             bin/ArrowVortex.exe
           if-no-files-found: error
+  linux:
+    name: "Build Linux x64"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Get AV
+        uses: actions/checkout@v6
+      - name: Add NuGet sources
+        shell: pwsh
+        run: |
+          .$(vcpkg fetch nuget) `
+            sources add `
+            -Source "${{ env.FEED_URL }}" `
+            -StorePasswordInClearText `
+            -Name GitHubPackages `
+            -UserName "${{ env.USERNAME }}" `
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          .$(vcpkg fetch nuget) `
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+            -Source "${{ env.FEED_URL }}"
+      - name: Configure CMake
+        run: >
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=x64-linux
+      - name: Build AV
+        run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
+      - name: Collect into a directory
+        if: github.ref_name == 'beta'
+        run: cmake --install build --config Release --prefix ./
+      - name: Upload artifact
+        if: github.ref_name == 'beta'
+        uses: actions/upload-artifact@v5
+        with:
+          name: ArrowVortex-${{ github.sha }}
+          path: |
+            bin/assets
+            bin/noteskins
+            bin/settings
+            bin/ArrowVortex.exe
+          if-no-files-found: error
