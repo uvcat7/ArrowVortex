@@ -33,6 +33,7 @@ endif()
 
 message(STATUS "Including toolchain includes: ${PROJECT_SOURCE_DIR}/out/build/${PRESET_NAME}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include") 
 include_directories("${PROJECT_SOURCE_DIR}/out/build/${PRESET_NAME}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include")
+include_directories("${PROJECT_SOURCE_DIR}/build/${PRESET_NAME}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include")
 
 if("${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
     if("$ENV{VCPKG_ROOT}" STREQUAL "")

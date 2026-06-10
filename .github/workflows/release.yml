@@ -52,7 +52,7 @@ jobs:
           -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
           -DPRESET_NAME=windows-release
       - name: Test
-        run: dir out/build/windows-release/vcpkg_installed/x64-windows-static-md/include
+        run: dir build/windows-release/vcpkg_installed/x64-windows-static-md/include
       - name: Build AV
         run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
       - name: Collect into a directory
@@ -82,8 +82,8 @@ jobs:
         run: |
             sudo apt-get install -y mono-devel
             mono `vcpkg fetch nuget | tail -n 1` `
-            sources add`
-            -Source "${{ env.FEED_URL }}"
+            sources add `
+            -Source "${{ env.FEED_URL }}" `
             -StorePasswordInClearText `
             -Name GitHubPackages `
             -UserName "${{ env.USERNAME }}" `
