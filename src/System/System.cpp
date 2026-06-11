@@ -166,7 +166,7 @@ fs::path ShowFileDialog(std::string title, fs::path path,
 
 #ifdef __linux__
     /* On Fedora, SDL won't run the callback when the dialog is closed since the
-       action triggers a DBus event SDL needs to process first. 
+       action triggers a DBus event SDL needs to process first.
        Only the main thread can pump events so we regularly signal it to do so.
        Yes, it's silly. */
     std::jthread signal([] {
