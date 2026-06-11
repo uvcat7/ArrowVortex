@@ -88,7 +88,8 @@ jobs:
             libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libwayland-dev \
             libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
             libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev fcitx-libs-dev \
-            libasound2-dev libdecor-0-dev python3-venv
+            libasound2-dev libdecor-0-dev python3-venv libthai-dev libpipewire-0.3-dev \
+            liburing-dev
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
@@ -99,8 +100,6 @@ jobs:
           mono `vcpkg fetch nuget | tail -n 1` \
             setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
-      - name: Test
-        run: env
       - name: Configure CMake
         run: >
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
