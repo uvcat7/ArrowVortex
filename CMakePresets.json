@@ -95,13 +95,13 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "VCPKG_ROOT": "/opt/vcpkg"
+        "VCPKG_ROOT": "$env{VCPKG_ROOT}"
       },
       "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/2.0": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [ "Linux" ]
         },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/2.0": {
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
           "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
         }
       }
@@ -121,13 +121,13 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "VCPKG_ROOT": "/opt/vcpkg"
+        "VCPKG_ROOT": "$env{VCPKG_ROOT}"
       },
       "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/2.0": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [ "Linux" ]
         },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/2.0": {
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
           "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
         }
       }

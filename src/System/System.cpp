@@ -163,8 +163,23 @@ fs::path ShowFileDialog(std::string title, fs::path path,
                                filters, num_filters, pathToUtf8(path).c_str(),
                                false);
     }
-    fileDialogCv.wait(lock,
-                      [] { return isDialogClosed || !fileDialogPath.empty(); });
+
+#ifdef __linux__
+    /* On Fedora, SDL won't run the callback when the dialog is closed since the
+       action triggers a DBus event SDL needs to process first. 
+       Only the main thread can pump events so we regularly signal it to do so.
+       Yes, it's silly. */
+    std::jthread signal([] {
+        while (!isDialogClosed) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            fileDialogCv.notify_all();
+        }
+    });
+#endif  // __linux__
+    fileDialogCv.wait(lock, [] {
+        SDL_PumpEvents();
+        return isDialogClosed || !fileDialogPath.empty();
+    });
     if (save) *index = file_extension_index;
     return fileDialogPath;
 }
@@ -488,10 +503,15 @@ struct SystemImpl : public System {
     }
 
     vec2i getWindowSize() const override {
+        vec2i size = mySize;
+#ifdef __linux__
+        size.x = static_cast<int>(size.x * myScale);
+        size.y = static_cast<int>(size.y * myScale);
+#endif
         if (!gMenubar)
-            return mySize;
+            return size;
         else
-            return {mySize.x, mySize.y - gMenubar->getMenubarHeight()};
+            return {size.x, size.y - gMenubar->getMenubarHeight()};
     }
 
     float getScaleFactor() const override { return myScale; }
@@ -611,10 +631,16 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto prevTime = Debug::getElapsedTime();
     auto startTime = Debug::getElapsedTime();
 
+    int x = mySize.x;
+    int y = mySize.y;
+#ifdef __linux__
+    x = static_cast<int>(x * myScale);
+    y = static_cast<int>(y * myScale);
+#endif
     // Set up the OpenGL view.
-    glViewport(0, 0, mySize.x, mySize.y);
+    glViewport(0, 0, x, y);
     glLoadIdentity();
-    glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
+    glOrtho(0, x, y, 0, -1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Reset the mouse cursor.
@@ -734,6 +760,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
             myScale = SDL_GetWindowDisplayScale(window);
             vec2i next = {event->window.data1, event->window.data2};
+            HudWarning("Display scale, %f, size %dx%d", myScale, next.x,
+                       next.y);
             if (next.x > 0 && next.y > 0) mySize = next;
             break;
         }
@@ -741,8 +769,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (myIsInsideMessageLoop) {
                 float x, y;
                 SDL_GetMouseState(&x, &y);
+#ifdef __linux__
+                myMousePos.x = static_cast<int>(x * myScale);
+                myMousePos.y = static_cast<int>(y * myScale - menu_h);
+#else
                 myMousePos.x = static_cast<int>(x);
                 myMousePos.y = static_cast<int>(y - menu_h);
+#endif
                 myEvents.addMouseMove(myMousePos.x, myMousePos.y);
             }
             break;
