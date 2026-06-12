@@ -46,6 +46,7 @@ Vortex::InputEvents myEvents;
 Vortex::vec2i myMousePos = {0, 0};
 Vortex::vec2i mySize = {0, 0};
 SDL_Window* window = nullptr;
+SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
 bool myIsActive = false;
@@ -213,7 +214,6 @@ struct SystemImpl : public System {
     std::map<SDL_Keycode, Key::Code> myKeyMap;
     std::string myTitle;
     SDL_GLContext myHRC = nullptr;
-    SDL_Renderer* renderer = nullptr;
     std::string workingDirectory;
 
     // ================================================================================================
@@ -503,11 +503,7 @@ struct SystemImpl : public System {
     }
 
     vec2i getWindowSize() const override {
-        vec2i size = mySize;
-#ifdef __linux__
-        size.x = static_cast<int>(size.x * myScale);
-        size.y = static_cast<int>(size.y * myScale);
-#endif
+        vec2i size = {mySize.x, mySize.y};
         if (!gMenubar)
             return size;
         else
@@ -633,10 +629,6 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     int x = mySize.x;
     int y = mySize.y;
-#ifdef __linux__
-    x = static_cast<int>(x * myScale);
-    y = static_cast<int>(y * myScale);
-#endif
     // Set up the OpenGL view.
     glViewport(0, 0, x, y);
     glLoadIdentity();
@@ -732,6 +724,17 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     return SDL_APP_CONTINUE;
 }
 
+// Convert SDL window mouse coordinates to the app's OpenGL coordinate space.
+static vec2i windowMouseToApp(float wx, float wy) {
+    int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
+    float rx = wx;
+    float ry = wy;
+    if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
+        HudError("Failed to get render coordinates with error: %s",
+                 SDL_GetError());
+    return {static_cast<int>(rx), static_cast<int>(ry - menu_h)};
+}
+
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     static const Mouse::Code mcodes[4] = {Mouse::NONE, Mouse::LMB, Mouse::MMB,
                                           Mouse::RMB};
@@ -760,20 +763,15 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
             myScale = SDL_GetWindowDisplayScale(window);
             vec2i next = {event->window.data1, event->window.data2};
+            if (!SDL_GetWindowSizeInPixels(window, &next.x, &next.y))
+                HudError("Failed to get SDL window size with error %s",
+                         SDL_GetError());
             if (next.x > 0 && next.y > 0) mySize = next;
             break;
         }
         case SDL_EVENT_MOUSE_MOTION: {
             if (myIsInsideMessageLoop) {
-                float x, y;
-                SDL_GetMouseState(&x, &y);
-#ifdef __linux__
-                myMousePos.x = static_cast<int>(x * myScale);
-                myMousePos.y = static_cast<int>(y * myScale - menu_h);
-#else
-                myMousePos.x = static_cast<int>(x);
-                myMousePos.y = static_cast<int>(y - menu_h);
-#endif
+                myMousePos = windowMouseToApp(event->motion.x, event->motion.y);
                 myEvents.addMouseMove(myMousePos.x, myMousePos.y);
             }
             break;
@@ -806,11 +804,11 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (event->button.button == SDL_BUTTON_LEFT) {
                 SDL_CaptureMouse(true);
                 if (myIsInsideMessageLoop) {
-                    float x, y;
-                    SDL_GetMouseState(&x, &y);
-                    myEvents.addMousePress(Mouse::LMB, static_cast<int>(x),
-                                           static_cast<int>(y - menu_h),
-                                           gSystem->getKeyFlags(), false);
+                    myMousePos =
+                        windowMouseToApp(event->button.x, event->button.y);
+                    myEvents.addMousePress(Mouse::LMB, myMousePos.x,
+                                           myMousePos.y, gSystem->getKeyFlags(),
+                                           false);
                     myMouseState.set(Mouse::LMB);
                 }
             }
@@ -819,10 +817,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (event->button.button == SDL_BUTTON_LEFT) {
                 SDL_CaptureMouse(false);
                 if (myIsInsideMessageLoop) {
-                    float x, y;
-                    SDL_GetMouseState(&x, &y);
-                    myEvents.addMouseRelease(Mouse::LMB, static_cast<int>(x),
-                                             static_cast<int>(y - menu_h),
+                    myMousePos =
+                        windowMouseToApp(event->button.x, event->button.y);
+                    myEvents.addMouseRelease(Mouse::LMB, myMousePos.x,
+                                             myMousePos.y,
                                              gSystem->getKeyFlags());
                     myMouseState.reset(Mouse::LMB);
                 }
@@ -855,9 +853,11 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                 for (const auto& file : droppedFiles) {
                     filePtrs.emplace_back(file.c_str());
                 }
+                vec2i drop_pos =
+                    windowMouseToApp(event->drop.x, event->drop.y);
                 myEvents.addFileDrop(filePtrs.data(),
                                      static_cast<int>(filePtrs.size()),
-                                     event->drop.x, event->drop.y);
+                                     drop_pos.x, drop_pos.y);
             }
             break;
         }
