@@ -853,8 +853,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                 for (const auto& file : droppedFiles) {
                     filePtrs.emplace_back(file.c_str());
                 }
-                vec2i drop_pos =
-                    windowMouseToApp(event->drop.x, event->drop.y);
+                vec2i drop_pos = windowMouseToApp(event->drop.x, event->drop.y);
                 myEvents.addFileDrop(filePtrs.data(),
                                      static_cast<int>(filePtrs.size()),
                                      drop_pos.x, drop_pos.y);

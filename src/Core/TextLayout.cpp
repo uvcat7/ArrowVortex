@@ -187,8 +187,8 @@ static void ReadFontChange(const uint8_t* param, int len) {
 
 static void ReadFgColor(const uint8_t* param, int len) {
     if (LD->fgQuad.enabled) {
-        LD->fgQuads.emplace_back(LD->fgQuad.color, LD->lineIndex, LD->fgQuad.x,
-                                 LD->lineW - LD->fgQuad.x);
+        LD->fgQuads.emplace_back(LD->lineIndex, LD->fgQuad.x,
+                                 LD->lineW - LD->fgQuad.x, LD->fgQuad.color);
         LD->fgQuad.enabled = false;
     }
     union {
@@ -204,8 +204,8 @@ static void ReadFgColor(const uint8_t* param, int len) {
 
 static void ReadBgColor(const uint8_t* param, int len) {
     if (LD->bgQuad.enabled) {
-        LD->bgQuads.emplace_back(LD->bgQuad.color, LD->lineIndex, LD->bgQuad.x,
-                                 LD->lineW - LD->bgQuad.x);
+        LD->bgQuads.emplace_back(LD->lineIndex, LD->bgQuad.x,
+                                 LD->lineW - LD->bgQuad.x, LD->bgQuad.color);
         LD->bgQuad.enabled = false;
     }
     union {
@@ -417,15 +417,15 @@ static void AddEllipsesToLine() {
 static void FinishCurrentLine(bool last) {
     // Finish the current foreground quad.
     if (LD->fgQuad.enabled && LD->lineW > LD->fgQuad.x) {
-        LD->fgQuads.emplace_back(LD->fgQuad.color, LD->lineIndex, LD->fgQuad.x,
-                                 LD->lineW - LD->fgQuad.x);
+        LD->fgQuads.emplace_back(LD->lineIndex, LD->fgQuad.x,
+                                 LD->lineW - LD->fgQuad.x, LD->fgQuad.color);
         LD->fgQuad.x = 0;
     }
 
     // Finish the current background quad.
     if (LD->fgQuad.enabled && LD->lineW > LD->fgQuad.x) {
-        LD->bgQuads.emplace_back(LD->fgQuad.color, LD->lineIndex, LD->fgQuad.x,
-                                 LD->lineW - LD->fgQuad.x);
+        LD->bgQuads.emplace_back(LD->lineIndex, LD->fgQuad.x,
+                                 LD->lineW - LD->fgQuad.x, LD->fgQuad.color);
         LD->fgQuad.x = 0;
     }
 
