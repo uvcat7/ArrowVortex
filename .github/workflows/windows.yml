@@ -19,7 +19,7 @@ jobs:
       contents: read
     steps:
       - name: Get AV
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Check formatting with clang-format
         run: >
           clang-format --dry-run --Werror -style=file $(find src/ -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.hpp' \))
