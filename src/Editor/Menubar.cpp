@@ -41,7 +41,7 @@ struct MenuBarImpl : public Menubar {
     typedef void (*UpdateFunction)();
     typedef MenuItem Item;
 
-#ifndef _WIN32
+#ifdef GL_MENU_BAR
     int menu_height = 0;
 #else
     static constexpr int menu_height = 0;
@@ -687,7 +687,7 @@ struct MenuBarImpl : public Menubar {
     }
 
     void draw() override {
-#ifndef _WIN32
+#ifdef GL_MENU_BAR
         constexpr int menu_color = 77;
         constexpr int menu_highlight_color = 90;
         constexpr int dropdown_color = 64;
@@ -705,7 +705,7 @@ struct MenuBarImpl : public Menubar {
         textStyle.textFlags = Text::MARKUP;
 
         int chevron_space = static_cast<int>(16 * gSystem->getScaleFactor());
-        Text::arrange(Text::MC, textStyle, "✓");
+        Text::arrange(Text::MC, textStyle, utf8ToString(u8"✓").c_str());
         int check_space = Text::getBoundingBox(vec2i{0, 0}).w * 2;
         y = -menu_h;
         int i = 0;
@@ -831,7 +831,8 @@ struct MenuBarImpl : public Menubar {
                 it.active_rect = this_r;
                 textStyle.textColor = Color32(it.is_enabled ? 255 : 128);
                 if (it.is_checked) {
-                    Text::arrange(Text::MC, textStyle, "✓");
+                    Text::arrange(Text::MC, textStyle,
+                                  utf8ToString(u8"✓").c_str());
                     Text::draw({this_r.x, this_r.y, check_space, this_r.h});
                 }
                 this_r.x += check_space;
@@ -860,7 +861,7 @@ struct MenuBarImpl : public Menubar {
     }
 
     void onMousePress(MousePress& evt) override {
-#ifndef _WIN32
+#ifdef GL_MENU_BAR
         if (evt.button != Mouse::LMB || !evt.unhandled()) return;
         auto handle_menu = [&](MenuItem* menu) {
             int i = 0;
@@ -895,7 +896,7 @@ struct MenuBarImpl : public Menubar {
     }
 
     void onKeyPress(KeyPress& evt) override {
-#ifndef _WIN32
+#ifdef GL_MENU_BAR
         if (evt.key == Key::Code::ESCAPE && myTopMenu->getOpen() >= 0) {
             evt.handled = true;
             closeMenus();
@@ -904,7 +905,7 @@ struct MenuBarImpl : public Menubar {
     }
 
     void closeMenus() override {
-#ifndef _WIN32
+#ifdef GL_MENU_BAR
         myTopMenu->close();
 #endif
     }

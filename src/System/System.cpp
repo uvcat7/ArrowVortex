@@ -320,7 +320,7 @@ struct SystemImpl : public System {
     // SystemImpl :: message loop.
 
     void createMenu() override {
-#ifdef _WIN32
+#ifndef GL_MENU_BAR
         HMENU menu = CreateMenu();
         gMenubar->init(reinterpret_cast<MenuItem*>(menu));
         SetMenu(GetActiveWindow(), menu);
@@ -760,8 +760,6 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
             myScale = SDL_GetWindowDisplayScale(window);
             vec2i next = {event->window.data1, event->window.data2};
-            HudWarning("Display scale, %f, size %dx%d", myScale, next.x,
-                       next.y);
             if (next.x > 0 && next.y > 0) mySize = next;
             break;
         }

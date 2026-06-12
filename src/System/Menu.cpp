@@ -5,7 +5,7 @@
 
 namespace Vortex {
 
-#ifdef _WIN32
+#ifndef GL_MENU_BAR
 MenuItem* MenuItem::create() {
     return reinterpret_cast<MenuItem*>(CreatePopupMenu());
 }

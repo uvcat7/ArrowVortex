@@ -2,6 +2,10 @@
 #include <vector>
 #include <Editor/Action.h>
 
+#ifndef _WIN32
+#define GL_MENU_BAR
+#endif
+
 namespace Vortex {
 
 struct MenuItem;
