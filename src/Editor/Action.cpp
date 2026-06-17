@@ -83,6 +83,8 @@ void Action::perform(Type action)
 		gSystem->getEvents().addKeyPress(Key::C, Keyflag::CTRL, false);
 	CASE(EDIT_PASTE)
 		gSystem->getEvents().addKeyPress(Key::V, Keyflag::CTRL, false);
+	CASE(EDIT_PASTE_INSERT)
+		gSystem->getEvents().addKeyPress(Key::V, Keyflag::CTRL | Keyflag::SHIFT, false);		
 	CASE(EDIT_DELETE)
 		gSystem->getEvents().addKeyPress(Key::DELETE, 0, false);
 	CASE(SELECT_ALL)
