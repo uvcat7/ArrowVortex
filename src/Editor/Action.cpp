@@ -9,6 +9,7 @@
 #include <Editor/Statusbar.h>
 #include <Editor/Editing.h>
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/Waveform.h>
 #include <Editor/Selection.h>
 #include <Editor/TextOverlay.h>
@@ -381,5 +382,13 @@ void Action::perform(Type action)
 		gNoteskin->setType(action - SET_NOTESKIN_BEGIN);
 	}
 }
-
-}; // namespace Vortex
+if (action >= SELECT_DENSITY_BEGIN && action < SELECT_DENSITY_END) {
+    gSelection->selectNotes(SelectModifier::SELECT_SET,
+                            action - SELECT_DENSITY_BEGIN + 1);
+}
+if (action >= SET_NOTESKIN_BEGIN && action < SET_NOTESKIN_END) {
+    gNoteskin->setType(action - SET_NOTESKIN_BEGIN);
+}
+}  // namespace Vortex
+}
+;  // namespace Vortex

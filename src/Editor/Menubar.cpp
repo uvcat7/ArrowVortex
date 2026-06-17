@@ -5,13 +5,16 @@
 #include <Core/StringUtils.h>
 
 #include <Managers/NoteskinMan.h>
+#include <Managers/SimfileMan.h>
 #include <Managers/StyleMan.h>
 
 #include <Editor/Action.h>
 #include <Editor/Shortcuts.h>
+#include <Editor/Selection.h>
 #include <Editor/Editor.h>
 #include <Editor/Statusbar.h>
 #include <Editor/Notefield.h>
+#include <Editor/NotefieldPreview.h>
 #include <Editor/View.h>
 #include <Editor/Waveform.h>
 #include <Editor/Editing.h>
@@ -562,15 +565,11 @@ void update(Property prop)
 
 Menubar* gMenubar = nullptr;
 
-void Menubar::create()
-{
-	gMenubar = new MenuBarImpl;
+void Menubar::create() { gMenubar = new MenuBarImpl; }
+
+void Menubar::destroy() {
+    delete static_cast<MenuBarImpl*>(gMenubar);
+    gMenubar = nullptr;
 }
 
-void Menubar::destroy()
-{
-	delete (MenuBarImpl*)gMenubar;
-	gMenubar = nullptr;
-}
-
-}; // namespace Vortex
+};  // namespace Vortex

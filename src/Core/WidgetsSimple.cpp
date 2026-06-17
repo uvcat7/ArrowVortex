@@ -3,274 +3,234 @@
 #include <Core/Xmr.h>
 #include <Core/Utils.h>
 #include <Core/GuiDraw.h>
+#include <System/System.h>
+
+#define CHECK_SIZE static_cast<int>(8 * gSystem->getScaleFactor())
 
 namespace Vortex {
 
 // ================================================================================================
 // WgSeperator
 
-WgSeperator::~WgSeperator()
-{
-}
+WgSeperator::~WgSeperator() = default;
 
-WgSeperator::WgSeperator(GuiContext* gui) : GuiWidget(gui)
-{
-	myHeight = 2;
-}
+WgSeperator::WgSeperator(GuiContext* gui) : GuiWidget(gui) { height_ = 2; }
 
-void WgSeperator::onDraw()
-{
-	recti r = myRect;
-	Draw::fill({r.x, r.y, r.w, r.h/2}, Color32(13));
-	Draw::fill({r.x, r.y + r.h / 2, r.w, r.h / 2}, Color32(77));
+void WgSeperator::onDraw() {
+    recti r = rect_;
+    Draw::fill({r.x, r.y, r.w, r.h / 2}, Color32(13));
+    Draw::fill({r.x, r.y + r.h / 2, r.w, r.h / 2}, Color32(77));
 }
 
 // ================================================================================================
 // WgLabel
 
-WgLabel::~WgLabel()
-{
-}
+WgLabel::~WgLabel() = default;
 
-WgLabel::WgLabel(GuiContext* gui) : GuiWidget(gui)
-{
-}
+WgLabel::WgLabel(GuiContext* gui) : GuiWidget(gui) {}
 
-void WgLabel::onDraw()
-{
-	recti r = myRect;
+void WgLabel::onDraw() {
+    recti r = rect_;
 
-	TextStyle style;
-	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	if(!isEnabled()) style.textColor = Color32(166);
+    TextStyle style;
+    style.textFlags = Text::MARKUP | Text::ELLIPSES;
+    if (!isEnabled()) style.textColor = Color32(166);
 
-	Text::arrange(Text::MC, style, text.get());
-	Text::draw({r.x + 2, r.y, r.w - 4, r.h});
+    Text::arrange(Text::MC, style, text.get());
+    Text::draw({r.x + 2, r.y, r.w - 4, r.h});
 }
 
 // ================================================================================================
 // WgButton
 
-WgButton::~WgButton()
-{
+WgButton::~WgButton() = default;
+
+WgButton::WgButton(GuiContext* gui) : GuiWidget(gui) {}
+
+void WgButton::onMousePress(MousePress& evt) {
+    if (isMouseOver()) {
+        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+            startCapturingMouse();
+            isDown.set(true);
+            counter.set(counter.get() + 1);
+            onPress.call();
+        }
+        evt.setHandled();
+    }
 }
 
-WgButton::WgButton(GuiContext* gui)
-	: GuiWidget(gui)
-{
+void WgButton::onMouseRelease(MouseRelease& evt) {
+    stopCapturingMouse();
+    isDown.set(false);
 }
 
-void WgButton::onMousePress(MousePress& evt)
-{
-	if(isMouseOver())
-	{
-		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
-		{
-			startCapturingMouse();
-			isDown.set(true);
-			counter.set(counter.get() + 1);
-			onPress.call();
-		}
-		evt.setHandled();
-	}
-}
+void WgButton::onDraw() {
+    auto& button = GuiDraw::getButton();
 
-void WgButton::onMouseRelease(MouseRelease& evt)
-{
-	stopCapturingMouse();
-	isDown.set(false);
-}
+    // Draw the button graphic.
+    button.base.draw(rect_);
 
-void WgButton::onDraw()
-{
-	auto& button = GuiDraw::getButton();
+    // Draw the button text.
+    TextStyle style;
+    style.textFlags = Text::MARKUP | Text::ELLIPSES;
+    if (!isEnabled()) style.textColor = GuiDraw::getMisc().colDisabled;
 
-	// Draw the button graphic.
-	button.base.draw(myRect);
+    recti r = rect_;
+    Renderer::pushScissorRect(Shrink(rect_, 2));
+    Text::arrange(Text::MC, style, text.get());
+    Text::draw({r.x + 2, r.y, r.w - 4, r.h});
+    Renderer::popScissorRect();
 
-	// Draw the button text.
-	TextStyle style;
-	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	if(!isEnabled()) style.textColor = GuiDraw::getMisc().colDisabled;
-
-	recti r = myRect;
-	Renderer::pushScissorRect(Shrink(myRect, 2));
-	Text::arrange(Text::MC, style, text.get());
-	Text::draw({r.x + 2, r.y, r.w - 4, r.h});
-	Renderer::popScissorRect();
-
-	// Draw interaction effects.
-	if(isCapturingMouse())
-	{
-		button.pressed.draw(myRect);
-	}
-	else if(isMouseOver())
-	{
-		button.hover.draw(myRect);
-	}	
+    // Draw interaction effects.
+    if (isCapturingMouse()) {
+        button.pressed.draw(rect_);
+    } else if (isMouseOver()) {
+        button.hover.draw(rect_);
+    }
 }
 
 // ================================================================================================
 // WgCheckbox
 
-WgCheckbox::~WgCheckbox()
-{
+WgCheckbox::~WgCheckbox() = default;
+
+WgCheckbox::WgCheckbox(GuiContext* gui) : GuiWidget(gui) {}
+
+void WgCheckbox::onMousePress(MousePress& evt) {
+    if (isMouseOver()) {
+        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+            startCapturingMouse();
+            value.set(!value.get());
+            onChange.call();
+        }
+        evt.setHandled();
+    }
 }
 
-WgCheckbox::WgCheckbox(GuiContext* gui)
-	: GuiWidget(gui)
-{
+void WgCheckbox::onMouseRelease(MouseRelease& evt) {
+    if (isCapturingMouse() && evt.button == Mouse::LMB) {
+        stopCapturingMouse();
+    }
 }
 
-void WgCheckbox::onMousePress(MousePress& evt)
-{
-	if(isMouseOver())
-	{
-		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
-		{
-			startCapturingMouse();
-			value.set(!value.get());
-			onChange.call();
-		}
-		evt.setHandled();
-	}
+void WgCheckbox::onDraw() {
+    auto& icons = GuiDraw::getIcons();
+    auto& textbox = GuiDraw::getTextBox();
+    auto& misc = GuiDraw::getMisc();
+
+    // Draw the checkbox graphic.
+    recti box = GetCheckboxRect();
+    bool checked = value.get();
+    textbox.base.draw(box);
+    if (checked)
+        Draw::sprite(icons.check, {box.x + box.w / 2 - CHECK_SIZE / 2,
+                                   box.y + box.h / 2 - CHECK_SIZE / 2,
+                                   CHECK_SIZE, CHECK_SIZE});
+
+    // Draw the description text.
+    recti r = rect_;
+
+    TextStyle style;
+    style.textFlags = Text::MARKUP | Text::ELLIPSES;
+    if (!isEnabled()) style.textColor = misc.colDisabled;
+
+    Text::arrange(Text::ML, style, text.get());
+    Text::draw({r.x + static_cast<int>(22 * gSystem->getScaleFactor()), r.y,
+                r.w - static_cast<int>(24 * gSystem->getScaleFactor()), r.h});
 }
 
-void WgCheckbox::onMouseRelease(MouseRelease& evt)
-{
-	if(isCapturingMouse() && evt.button == Mouse::LMB)
-	{
-		stopCapturingMouse();
-	}
+recti WgCheckbox::GetCheckboxRect() const {
+    recti r = rect_;
+    int size = static_cast<int>(16 * gSystem->getScaleFactor());
+    return {r.x + 2, r.y + r.h / 2 - size / 2, size, size};
 }
-
-void WgCheckbox::onDraw()
-{
-	auto& icons = GuiDraw::getIcons();
-	auto& textbox = GuiDraw::getTextBox();
-	auto& misc = GuiDraw::getMisc();
-
-	// Draw the checkbox graphic.
-	recti box = myBoxRect();
-	bool checked = value.get();
-	textbox.base.draw(box);
-	if(checked) Draw::sprite(icons.check, {box.x + box.w / 2, box.y + box.h / 2});
-
-	// Draw the description text.
-	recti r = myRect;
-
-	TextStyle style;
-	style.textFlags = Text::MARKUP | Text::ELLIPSES;
-	if(!isEnabled()) style.textColor = misc.colDisabled;
-
-	Text::arrange(Text::ML, style, text.get());
-	Text::draw({r.x + 22, r.y, r.w - 24, r.h});
-}
-
-recti WgCheckbox::myBoxRect() const
-{
-	recti r = myRect;
-	return {r.x + 2, r.y + r.h / 2 - 8, 16, 16};
-}
-
 
 // ================================================================================================
 // WgSlider
 
-WgSlider::~WgSlider()
-{
+WgSlider::~WgSlider() = default;
+
+WgSlider::WgSlider(GuiContext* gui) : GuiWidget(gui) {
+    slider_begin_ = 0.0;
+    slider_end_ = 1.0;
 }
 
-WgSlider::WgSlider(GuiContext* gui)
-	: GuiWidget(gui)
-{
-	myBegin = 0.0;
-	myEnd = 1.0;
+void WgSlider::setRange(double begin, double end) {
+    slider_begin_ = begin, slider_end_ = end;
 }
 
-void WgSlider::setRange(double begin, double end)
-{
-	myBegin = begin, myEnd = end;
+void WgSlider::onMousePress(MousePress& evt) {
+    if (isMouseOver()) {
+        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+            startCapturingMouse();
+            SliderDrag(evt.x, evt.y);
+        }
+        evt.setHandled();
+    }
 }
 
-void WgSlider::onMousePress(MousePress& evt)
-{
-	if(isMouseOver())
-	{
-		if(isEnabled() && evt.button == Mouse::LMB && evt.unhandled())
-		{
-			startCapturingMouse();
-			myDrag(evt.x, evt.y);
-		}
-		evt.setHandled();
-	}
+void WgSlider::onMouseRelease(MouseRelease& evt) {
+    if (evt.button == Mouse::LMB && isCapturingMouse()) {
+        SliderDrag(evt.x, evt.y);
+        stopCapturingMouse();
+    }
 }
 
-void WgSlider::onMouseRelease(MouseRelease& evt)
-{
-	if(evt.button == Mouse::LMB && isCapturingMouse())
-	{
-		myDrag(evt.x, evt.y);
-		stopCapturingMouse();
-	}
+void WgSlider::onTick() {
+    GuiWidget::onTick();
+
+    if (isCapturingMouse()) {
+        vec2i mpos = gui_->getMousePos();
+        SliderDrag(mpos.x, mpos.y);
+    }
 }
 
-void WgSlider::onTick()
-{
-	GuiWidget::onTick();
+void WgSlider::onDraw() {
+    recti r = rect_;
 
-	if(isCapturingMouse())
-	{
-		vec2i mpos = myGui->getMousePos();
-		myDrag(mpos.x, mpos.y);
-	}
+    auto& button = GuiDraw::getButton();
+
+    int bar_size = static_cast<int>(16 * gSystem->getScaleFactor());
+    int line_thickness = static_cast<int>(gSystem->getScaleFactor());
+    // Draw the the entire bar graphic.
+    recti bar = {r.x + 3, r.y + r.h / 2 - line_thickness / 2, r.w - 6,
+                 line_thickness};
+    Draw::fill(bar, Color32(0, 255));
+    bar.y += line_thickness;
+    Draw::fill(bar, Color32(77, 255));
+
+    // Draw the draggable button graphic.
+    if (slider_begin_ != slider_end_) {
+        int boxX = static_cast<int>(static_cast<double>(bar.w) *
+                                    (value.get() - slider_begin_) /
+                                    (slider_end_ - slider_begin_));
+        recti box = {bar.x + min(max(boxX, 0), bar.w) - 4, bar.y - bar_size / 2,
+                     bar_size / 2, bar_size};
+
+        button.base.draw(box, 0);
+        if (isCapturingMouse()) {
+            button.pressed.draw(box, 0);
+        } else if (isMouseOver()) {
+            button.hover.draw(box, 0);
+        }
+    }
 }
 
-void WgSlider::onDraw()
-{
-	recti r = myRect;
-
-	auto& button = GuiDraw::getButton();
-
-	// Draw the the entire bar graphic.
-	recti bar = {r.x + 3, r.y + r.h / 2 - 1, r.w - 6, 1};
-	Draw::fill(bar, Color32(0, 255));
-	bar.y += 1;
-	Draw::fill(bar, Color32(77, 255));
-
-	// Draw the draggable button graphic.
-	if(myBegin != myEnd)
-	{
-		int boxX = (int)((double)bar.w * (value.get() - myBegin) / (myEnd - myBegin));
-		recti box = {bar.x + min(max(boxX, 0), bar.w) - 4, bar.y - 8, 8, 16};
-		
-		button.base.draw(box, 0);
-		if(isCapturingMouse())
-		{
-			button.pressed.draw(box, 0);
-		}
-		else if(isMouseOver())
-		{
-			button.hover.draw(box, 0);
-		}
-	}
+void WgSlider::SliderUpdateValue(double v) {
+    double prev = value.get();
+    v = min(v, max(slider_begin_, slider_end_));
+    v = max(v, min(slider_begin_, slider_end_));
+    value.set(v);
+    if (value.get() != prev) onChange.call();
 }
 
-void WgSlider::myUpdateValue(double v)
-{
-	double prev = value.get();
-	v = min(v, max(myBegin, myEnd));
-	v = max(v, min(myBegin, myEnd));
-	value.set(v);
-	if(value.get() != prev) onChange.call();
+void WgSlider::SliderDrag(int x, int y) {
+    recti r = rect_;
+    r.w = max(r.w, 1);
+    double val = slider_begin_ +
+                 (slider_end_ - slider_begin_) *
+                     (static_cast<double>(x - r.x) / static_cast<double>(r.w));
+    SliderUpdateValue(val);
 }
 
-void WgSlider::myDrag(int x, int y)
-{
-	recti r = myRect;
-	r.w = max(r.w, 1);
-	double val = myBegin + (myEnd - myBegin) * ((double)(x - r.x) / (double)r.w);
-	myUpdateValue(val);
-}
-
-}; // namespace Vortex
+};  // namespace Vortex

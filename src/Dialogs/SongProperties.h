@@ -7,52 +7,61 @@
 #include <Core/Draw.h>
 
 #include <Simfile/Tempo.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Vortex {
 
-class DialogSongProperties : public EditorDialog
-{
-public:
-	~DialogSongProperties();
-	DialogSongProperties();
+class DialogSongProperties : public EditorDialog {
+   public:
+    ~DialogSongProperties();
+    DialogSongProperties();
 
-	void onChanges(int changes) override;
+    void onChanges(int changes) override;
 
-	void onSetPreview();
-	void onPlayPreview();
+    void onSetPreview();
+    void onPlayPreview();
 
-	void onFindMusic();
-	void onFindBanner();
-	void onFindBG();
+    void onFindMusic(bool open);
+    void onFindBanner(bool open);
+    void onFindBG(bool open);
+    void onFindCdTitle(bool open);
 
-private:
-	struct BannerWidget;
+   private:
+    struct BannerWidget;
+    struct CdTitleWidget;
 
-	void myCreateWidgets();
-	void myUpdateWidgets();
+    void myCreateWidgets();
+    void myUpdateWidgets();
 
-	void myUpdateProperties();
-	void myUpdateBanner();
+    void myUpdateProperties();
+    void myUpdateBanner();
+    void myUpdateCdTitle();
 
-	void mySetProperty(int p);
-	void mySetDisplayBpm();
+    void mySetProperty(int p);
+    void mySetDisplayBpm();
 
-	String myTitle;
-	String mySubtitle;
-	String myArtist;
-	String myCredit;
-	String myMusic;
-	String myBackground;
-	String myBanner;
-	String myCdTitle;
-	
-	int myDisplayBpmType;
-	BpmRange myDisplayBpmRange;
+    std::vector<Texture> extractSpriteSheet(fs::path path);
 
-	BannerWidget* myBannerWidget;
-	WgCycleButton* myBpmTypeList;
-	WgSpinner* mySpinMinBPM, *mySpinMaxBPM;
-	String myPreviewStart, myPreviewEnd;
+    fs::path fileDlgPath(const std::string& title);
+
+    std::string myTitle;
+    std::string mySubtitle;
+    std::string myArtist;
+    std::string myCredit;
+    std::string myMusic;
+    std::string myBackground;
+    std::string myBanner;
+    std::string myCdTitle;
+
+    int myDisplayBpmType;
+    BpmRange myDisplayBpmRange;
+
+    BannerWidget* myBannerWidget;
+    CdTitleWidget* myCdTitleWidget;
+    WgCycleButton* myBpmTypeList;
+    WgSpinner *mySpinMinBPM, *mySpinMaxBPM;
+    std::string myPreviewStart, myPreviewEnd;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

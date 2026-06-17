@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "arrowvortex",
+  "version": "2025-03-04",
+  "vcpkg-configuration": {
+    "default-registry": {
+      "kind": "git",
+      "repository": "https://github.com/microsoft/vcpkg",
+      "baseline": "a62ce77d56ee07513b4b67de1ec2daeaebfae51a"
+    }
+  },
+  "dependencies": [
+    "freetype",
+    "iir1",
+    "aubio",
+    "stb",
+    {
+      "name": "ffmpeg",
+      "features": [ "ffmpeg", "vorbis" ]
+    },
+    "libmad",
+    "libogg",
+    "libvorbis",
+    "opengl",
+    "sdl3"
+  ]
+}

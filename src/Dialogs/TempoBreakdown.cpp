@@ -6,141 +6,166 @@
 #include <Managers/TempoMan.h>
 #include <Managers/SimfileMan.h>
 
+#include <Editor/View.h>
+
 #include <Simfile/SegmentList.h>
 #include <Simfile/SegmentGroup.h>
 
-#define Dlg DialogTempoBreakdown
+#include <System/System.h>
+
+#define ITEM_H static_cast<int>(16 * gSystem->getScaleFactor())
+#define ITEM_HEADER static_cast<int>(20 * gSystem->getScaleFactor())
 
 namespace Vortex {
 
 // ================================================================================================
 // ChartList
 
-static int GetTempoListH()
-{
-	auto segments = gTempo->getSegments();
-	int h = 0;
-	if(segments)
-	{
-		for(auto list = segments->begin(), listEnd = segments->end(); list != listEnd; ++list)
-		{
-			if(list->size())
-			{
-				h += 26 + list->size() * 16;
-			}
-		}
-	}
-	return max(h, 16);
+static int GetTempoListH() {
+    auto segments = gTempo->getSegments();
+    int h = 0;
+    if (segments) {
+        for (const auto& segment : *segments) {
+            if (segment.size()) {
+                h += ITEM_HEADER + 6 + segment.size() * ITEM_H;
+            }
+        }
+    }
+    return max(h, ITEM_H);
 }
 
-struct Dlg::TempoList : public WgScrollRegion {
+struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
+    ~TempoList() override = default;
 
-~TempoList()
-{
-}
+    explicit TempoList(GuiContext* gui) : WgScrollRegion(gui) {
+        setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
+    }
 
-TempoList(GuiContext* gui)
-	: WgScrollRegion(gui)
-{
-	setScrollType(SCROLL_NEVER, SCROLL_WHEN_NEEDED);
-}
+    void onUpdateSize() override {
+        scroll_height_ = GetTempoListH();
+        ClampScrollPositions();
+    }
 
-void onUpdateSize() override
-{
-	myScrollH = GetTempoListH();
-	myClampScrollValues();
-}
+    const Segment* getSegmentUnderMouse(vec2i position) {
+        int my = position.y - ITEM_H;
+        int y = rect_.y - scroll_position_y_;
 
-void onDraw() override
-{
-	if(gSimfile->isClosed()) return;
+        if (!isMouseOver() || my < y || position.x > rect_.x + getViewWidth())
+            return nullptr;
 
-	int x = myRect.x;
-	int y = myRect.y - myScrollY;
-	recti view = {myRect.x, myRect.y, getViewWidth(), getViewHeight()};
-	
-	TextStyle style;
-	style.textFlags = 0;
+        auto segments = gTempo->getSegments();
+        for (const auto& segment : *segments) {
+            if (segment.size()) {
+                y += ITEM_HEADER + 2;
+                auto seg = segment.begin(), segEnd = segment.end();
+                while (seg != segEnd && y < my) {
+                    y += ITEM_H, ++seg;
+                }
+                y += 4;
+                if (y >= my) return seg.ptr;
+            }
+        }
 
-	Renderer::pushScissorRect(view);
+        return nullptr;
+    }
 
-	Draw::fill({view.x + view.w / 2, view.y, 1, view.h}, Color32(26));
+    void onMousePress(MousePress& evt) override {
+        if (isMouseOver()) {
+            if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+                auto seg = getSegmentUnderMouse(gui_->getMousePos());
+                if (seg) {
+                    gView->setCursorRow(seg->row);
+                    evt.setHandled();
+                }
+            }
+        }
+        WgScrollRegion::onMousePress(evt);
+    }
 
-	auto segments = gTempo->getSegments();
-	for(auto list = segments->begin(), listEnd = segments->end(); list != listEnd; ++list)
-	{
-		if(list->size())
-		{
-			auto meta = Segment::meta[list->type()];
-			auto seg = list->begin(), segEnd = list->end();
+    void onDraw() override {
+        if (gSimfile->isClosed()) return;
 
-			Draw::fill({x, y, view.w, 20}, Color32(26));
-			Text::arrange(Text::MC, style, meta->plural);
-			Text::draw({x, y, view.w, 20});
-			y += 26;
+        int x = rect_.x;
+        int y = rect_.y - scroll_position_y_;
+        recti view = {rect_.x, rect_.y, getViewWidth(), getViewHeight()};
 
-			while(seg != segEnd && y < view.y - 20)
-			{
-				y += 16, ++seg;
-			}
-			while(seg != segEnd && y < view.y + view.h + 20)
-			{
-				String str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
-				Text::arrange(Text::MR, style, str.str());
-				Text::draw(vec2i{x + view.w / 2 - 6, y + 8});
+        TextStyle style;
+        style.textFlags = 0;
 
-				str = meta->getDescription(seg.ptr);
-				Text::arrange(Text::ML, style, str.str());
-				Text::draw(vec2i{x + view.w / 2 + 6, y + 8});
+        Renderer::pushScissorRect(view);
 
-				y += 16, ++seg;
-			}
-		}
-	}
+        Draw::fill({view.x + view.w / 2, view.y, 1, view.h}, Color32(26));
 
-	Renderer::popScissorRect();
+        vec2i m = gui_->getMousePos();
+        auto segments = gTempo->getSegments();
+        for (const auto& segment : *segments) {
+            if (segment.size()) {
+                auto meta = Segment::meta[segment.type()];
+                auto seg = segment.begin(), segEnd = segment.end();
 
-	WgScrollRegion::onDraw();
-}
+                Draw::fill({x, y, view.w, ITEM_HEADER}, Color32(26));
+                Text::arrange(Text::MC, style, meta->plural);
+                Text::draw({x, y, view.w, ITEM_HEADER});
+                y += ITEM_HEADER + 2;
 
-}; // TimingData
+                while (seg != segEnd && y < view.y - ITEM_HEADER) {
+                    y += ITEM_H, ++seg;
+                }
+                while (seg != segEnd && y < view.y + view.h + ITEM_HEADER) {
+                    if (isMouseOver() && m.y >= y && m.y < y + ITEM_H)
+                        Draw::fill({x, y - 1, view.w, ITEM_HEADER},
+                                   Color32(34));
+
+                    std::string str = Str::val(seg->row * BEATS_PER_ROW, 3, 3);
+                    Text::arrange(Text::MR, style, str.c_str());
+                    Text::draw(vec2i{x + view.w / 2 - 6, y + ITEM_H / 2});
+
+                    str = meta->getDescription(seg.ptr);
+                    Text::arrange(Text::ML, style, str.c_str());
+                    Text::draw(vec2i{x + view.w / 2 + 6, y + ITEM_H / 2});
+
+                    y += ITEM_H, ++seg;
+                }
+
+                y += 4;
+            }
+        }
+
+        Renderer::popScissorRect();
+
+        WgScrollRegion::onDraw();
+    }
+
+};  // TimingData
 
 // ================================================================================================
 // DialogTempoBreakdown
 
-Dlg::~Dlg()
-{
-	delete myList;
+DialogTempoBreakdown::~DialogTempoBreakdown() { delete myList; }
+
+DialogTempoBreakdown::DialogTempoBreakdown() {
+    setTitle("TEMPO BREAKDOWN");
+    float scale = gSystem->getScaleFactor();
+    setWidth(static_cast<int>(scale * 200));
+
+    setMinimumHeight(static_cast<int>(scale * 32));
+    setResizeable(false, true);
+
+    myList = new TempoList(getGui());
 }
 
-Dlg::Dlg()
-{
-	setTitle("TEMPO BREAKDOWN");
-	setWidth(200);
-
-	setMinimumHeight(32);
-	setResizeable(false, true);
-
-	myList = new TempoList(getGui());
+void DialogTempoBreakdown::onUpdateSize() {
+    myList->updateSize();
+    int h = myList->getScrollHeight();
+    setMinimumHeight(min(64, h));
+    setMaximumHeight(min(1024, h));
 }
 
-void Dlg::onUpdateSize()
-{
-	myList->updateSize();
-	int h = myList->getScrollHeight();
-	setMinimumHeight(min(64, h));
-	setMaximumHeight(min(1024, h));
+void DialogTempoBreakdown::onTick() {
+    myList->arrange(getInnerRect());
+    myList->tick();
 }
 
-void Dlg::onTick()
-{
-	myList->arrange(getInnerRect());
-	myList->tick();
-}
+void DialogTempoBreakdown::onDraw() { myList->draw(); }
 
-void Dlg::onDraw()
-{
-	myList->draw();
-}
-
-}; // namespace Vortex
+};  // namespace Vortex

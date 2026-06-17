@@ -1,19 +1,35 @@
+#include <Editor/Editor.h>
 #include <Editor/Selection.h>
 
-#include <Core/Utils.h>
-#include <Core/StringUtils.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+
+#include <Core/Core.h>
 #include <Core/Draw.h>
+#include <Core/Input.h>
+#include <Core/StringUtils.h>
+#include <Core/Texture.h>
+#include <Core/Utils.h>
+#include <Core/Vector.h>
+#include <Core/Xmr.h>
+
+#include <Editor/Common.h>
+#include <Editor/Menubar.h>
+#include <Editor/TempoBoxes.h>
+#include <Editor/View.h>
+
+#include <Managers/ChartMan.h>
+#include <Managers/NoteMan.h>
+#include <Managers/StyleMan.h>
+#include <Managers/TempoMan.h>
+
+#include <Simfile/Common.h>
+#include <Simfile/NoteList.h>
+#include <Simfile/Notes.h>
+#include <Simfile/Tempo.h>
 
 #include <System/System.h>
-
-#include <Editor/View.h>
-#include <Editor/Common.h>
-#include <Editor/Editor.h>
-#include <Editor/TempoBoxes.h>
-
-#include <Managers/NoteMan.h>
-#include <Managers/TempoMan.h>
-#include <Managers/StyleMan.h>
 
 namespace Vortex {
 
@@ -21,454 +37,401 @@ namespace Vortex {
 // SelectionImpl :: member data.
 
 struct SelectionImpl : public Selection {
+    Texture myAddIcon, mySubIcon;
 
-Texture myAddIcon, mySubIcon;
+    int myDragSelectionX;
+    double myDragSelectionTor;
+    bool myIsDraggingSelection;
 
-int myDragSelectionX;
-double myDragSelectionTor;
-bool myIsDraggingSelection;
+    SelectionRegion myRegion;
+    bool myIsSelectingRegion;
+    bool myOpenTempoEditor;
 
-SelectionRegion myRegion;
-bool myIsSelectingRegion;
-Type myType;
+    // ================================================================================================
+    // SelectionImpl :: constructor and destructor.
 
-// ================================================================================================
-// SelectionImpl :: constructor and destructor.
+    ~SelectionImpl() = default;
 
-~SelectionImpl()
-{
-}
+    SelectionImpl() {
+        myDragSelectionX = 0;
+        myDragSelectionTor = 0;
+        myIsDraggingSelection = false;
+        myRegion = {0, 0};
+        myIsSelectingRegion = false;
+        myOpenTempoEditor = true;
 
-SelectionImpl()
-{
-	myDragSelectionX = 0;
-	myDragSelectionTor = 0;
-	myIsDraggingSelection = false;
-	myRegion = {0, 0};
-	myIsSelectingRegion = false;
+        Texture icons[2];
+        Texture::createTiles("assets/icons selection.png", 16, 16, 2, icons,
+                             false, Texture::RGBA);
+        myAddIcon = icons[0];
+        mySubIcon = icons[1];
+    }
 
-	Texture icons[2];
-	Texture::createTiles("assets/icons selection.png", 16, 16, 2, icons, false, Texture::RGBA);
-	myAddIcon = icons[0];
-	mySubIcon = icons[1];
+    // ================================================================================================
+    // SelectionImpl :: load / save settings.
 
-	myType = NONE;
-}
+    void loadSettings(XmrNode& settings) {
+        XmrNode* selection = settings.child("selection");
+        if (selection) {
+            selection->get("openTempoEditor", &myOpenTempoEditor);
+        }
+    }
 
-// ================================================================================================
-// SelectionImpl :: event handling.
+    void saveSettings(XmrNode& settings) override {
+        XmrNode* selection = settings.child("selection");
+        if (!selection) selection = settings.addChild("selection");
 
-void onMousePress(MousePress& evt) override
-{
-	// Start dragging a selection box.
-	if(evt.button == Mouse::LMB && evt.unhandled())
-	{
-		myIsDraggingSelection = true;
-		myDragSelectionX = evt.x;
-		myDragSelectionTor = gView->yToOffset(evt.y);
-		evt.setHandled();
-	}
+        selection->addAttrib("openTempoEditor", myOpenTempoEditor);
+    }
 
-	// Clear selection.
-	if(myType != NONE && evt.button == Mouse::RMB && evt.unhandled())
-	{
-		setType(NONE);
-		evt.setHandled();
-	}
-}
+    // ================================================================================================
+    // SelectionImpl :: event handling.
 
-void onMouseRelease(MouseRelease& evt) override
-{
-	// Finish dragging a selection box (note selection).
-	if(evt.button == Mouse::LMB && myIsDraggingSelection)
-	{
-		// Determine the selection boolean operation.
-		SelectModifier mod = SELECT_SET;
-		if(evt.keyflags & Keyflag::SHIFT) mod = SELECT_ADD;
-		else if(evt.keyflags & Keyflag::ALT) mod = SELECT_SUB;
+    void onMousePress(MousePress& evt) override {
+        // Start dragging a selection box.
+        if (evt.button == Mouse::LMB && evt.unhandled()) {
+            myIsDraggingSelection = true;
+            myDragSelectionX = evt.x;
+            myDragSelectionTor = gView->yToOffset(evt.y);
+            evt.setHandled();
+        }
 
-		// Determine the selected area.
-		double t = myDragSelectionTor;
-		double b = gView->yToOffset(evt.y);
-		int l = evt.x;
-		int r = myDragSelectionX;
+        // Clear selection.
+        if (evt.button == Mouse::RMB && evt.unhandled()) {
+            gNotes->deselectAll();
+            gTempoBoxes->deselectAll();
+            this->setRegion(0, 0);
+            evt.setHandled();
+        }
+    }
 
-		if(t > b) swapValues(t, b);
-		if(l > r) swapValues(l, r);
+    void onMouseRelease(MouseRelease& evt) override {
+        // Finish dragging a selection box (note selection).
+        if (evt.button == Mouse::LMB && myIsDraggingSelection) {
+            // Determine the selection boolean operation.
+            SelectModifier mod = SELECT_SET;
+            if (evt.keyflags & Keyflag::SHIFT)
+                mod = SELECT_ADD;
+            else if (evt.keyflags & Keyflag::ALT)
+                mod = SELECT_SUB;
 
-		if(myType == TEMPO && mod != SELECT_SET)
-		{
-			selectTempoBoxes(mod, t, b, l, r);
-		}
-		else if(myType == NOTES && mod != SELECT_SET)
-		{
-			selectNotes(mod, t, b, l, r);
-		}
-		else
-		{
-			bool done = selectNotes(mod, t, b, l, r);
-			if(!done) selectTempoBoxes(mod, t, b, l, r);
-		}
-			
-		myIsDraggingSelection = false;
-	}
-}
+            // Determine the selected area.
+            double t = myDragSelectionTor;
+            double b = gView->yToOffset(evt.y);
+            int l = evt.x;
+            int r = myDragSelectionX;
 
-void onKeyPress(KeyPress& evt) override
-{
-	if(evt.key == Key::A && (evt.keyflags & Keyflag::CTRL) && !evt.handled)
-	{
-		if(gChart->isOpen())
-		{
-			gNotes->selectAll();
-		}
-		else
-		{
-			gTempoBoxes->selectAll();
-		}
-		evt.handled = true;
-	}
-}
+            if (t > b) swapValues(t, b);
+            if (l > r) swapValues(l, r);
 
-// ================================================================================================
-// SelectionImpl :: member functions.
+            auto tempos = selectTempoBoxes(mod, t, b, l, r);
+            auto notes = selectNotes(mod, t, b, l, r);
 
-static bool SegmentsIntersect(int l1, int r1, int l2, int r2)
-{
-	return r1 >= l2 && r2 >= l1;
-}
+            if (mod == SELECT_SET) {
+                // Clear the selection region if we didn't select anything.
+                if (notes == 0 && tempos == 0) {
+                    setRegion(0, 0);
+                    gEditor->reportChanges(VCM_SELECTION_CHANGED);
+                }
 
-void selectTempoBoxes(SelectModifier mod, double t, double b, int l, int r)
-{
-	if(gView->getScaleLevel() >= 2)
-	{
-		if(gView->isTimeBased())
-		{
-			gTempoBoxes->selectTime(mod, t, b, l, r);
-		}
-		else
-		{
-			gTempoBoxes->selectRows(mod, (int)(t + 0.5), (int)(b + 0.5), l, r);
-		}
-	}
-}
+                // Single tempo selection opens dialog editor.
+                if (myOpenTempoEditor && notes == 0 && tempos == 1) {
+                    for (auto& box : gTempoBoxes->getBoxes()) {
+                        if (box.isSelected) {
+                            gEditor->openSegmentDialog(box.type, box.row);
+                            break;
+                        }
+                    }
+                }
+            }
 
-bool selectNotes(SelectModifier mod, double torT, double torB, int xl, int xr)
-{
-	// If the selection rectangle is empty, we will select a single note under the mouse.
-	bool timeBased = gView->isTimeBased();
-	if(xl == xr && torT == torB)
-	{
-		double clickY = gView->offsetToY(torT);
-		const ExpandedNote* closest = nullptr;
-		int mindist = gView->applyZoom(32);
-		mindist *= mindist;
+            myIsDraggingSelection = false;
+        }
+    }
 
-		for(auto& note : *gNotes)
-		{
-			double tor = timeBased ? note.time : (double)note.row;
-			int dx = xl - gView->columnToX(note.col);
-			int dy = (int)(clickY - gView->offsetToY(tor));
-			if(abs(dy) < mindist)
-			{
-				int sqrdist = dx * dx + dy * dy;
-				if(sqrdist < mindist)
-				{
-					mindist = sqrdist;
-					closest = &note;
-				}
-			}
-		}
-		if(closest)
-		{
-			selectNotes(mod, Vector<RowCol>(1, {closest->row, closest->col}));
-			return true;
-		}
-		else
-		{
-			selectNotes(mod, {0, 0}, {0, 0});
-		}
-	}
-	else // The selection rectangle is non-empty.
-	{
-		RowCol begin{0, 0}, end{0, 0};
+    void onKeyPress(KeyPress& evt) override {
+        if (evt.key == Key::A && (evt.keyflags & Keyflag::CTRL) &&
+            !evt.handled) {
+            if ((evt.keyflags & Keyflag::SHIFT)) {
+                gTempoBoxes->selectAll();
+                if (gChart->isOpen())
+                    showSelectionResult(SELECT_SET, gNotes->selectAll());
+            } else if (!gChart->isOpen() || (evt.keyflags & Keyflag::ALT)) {
+                gTempoBoxes->selectAll();
+            } else {
+                showSelectionResult(SELECT_SET, gNotes->selectAll());
+            }
+            evt.handled = true;
+        }
+    }
 
-		// Determine the columns that fall within the selection.
-		int cols = gStyle->getNumCols();
-		for(; begin.col < cols && gView->columnToX(begin.col) < xl; ++begin.col);
-		for(end.col = begin.col; end.col < cols && gView->columnToX(end.col) < xr; ++end.col);
+    // ================================================================================================
+    // SelectionImpl :: member functions.
 
-		// Determine the rows that fall within the selection.
-		if(timeBased)
-		{
-			begin.row = gTempo->timeToRow(torT);
-			end.row = gTempo->timeToRow(torB);
-		}
-		else
-		{
-			begin.row = (int)torT;
-			end.row = (int)torB + 1;
-		}
-		return selectNotes(mod, begin, end) > 0;
-	}
-	return false;
-}
+    static bool SegmentsIntersect(int l1, int r1, int l2, int r2) {
+        return r1 >= l2 && r2 >= l1;
+    }
 
-void setType(Type type)
-{
-	myType = type;
+    int selectTempoBoxes(SelectModifier mod, double t, double b, int l, int r) {
+        if (gView->getScaleLevel() >= 2) {
+            return gTempoBoxes->select(mod, t, b, l, r);
+        }
+    }
 
-	// Region selection.
-	if(myType == REGION)
-	{
-		if(myRegion.beginRow == myRegion.endRow)
-		{
-			myRegion = {0, 0};
-			myType = NONE;
-		}
-	}
-	else
-	{
-		myRegion = {0, 0};
-	}
+    int selectNotes(SelectModifier mod, double torT, double torB, int xl,
+                    int xr) {
+        // If the selection rectangle is empty, we will select a single note
+        // under the mouse.
+        bool timeBased = gView->isTimeBased();
+        int count = 0;
 
-	// Note selection.
-	if(myType == NOTES)
-	{
-		if(gNotes->noneSelected())
-		{
-			myType = NONE;
-		}
-	}
-	else
-	{
-		gNotes->deselectAll();
-	}
+        // For this particular case, since this is done via mouse selection, we
+        // allow notes to be selected outside the region.
+        if (xl == xr && torT == torB) {
+            double clickY = gView->offsetToY(torT);
+            const ExpandedNote* closest = nullptr;
+            int mindist = gView->applyZoom(32);
+            mindist *= mindist;
 
-	// Tempo box selection.
-	if(myType == TEMPO)
-	{
-		if(gTempoBoxes->noneSelected())
-		{
-			myType = NONE;
-		}
-	}
-	else
-	{
-		gTempoBoxes->deselectAll();
-	}
+            for (auto& note : *gNotes) {
+                double tor =
+                    timeBased ? note.time : static_cast<double>(note.row);
+                int dx = xl - gView->columnToX(note.col);
+                int dy = static_cast<int>(clickY - gView->offsetToY(tor));
+                if (abs(dy) < mindist) {
+                    int sqrdist = dx * dx + dy * dy;
+                    if (sqrdist < mindist) {
+                        mindist = sqrdist;
+                        closest = &note;
+                    }
+                }
+            }
+            if (closest) {
+                count = selectNotes(
+                    mod, Vector<RowCol>(1, {closest->row, closest->col}), true);
+            } else {
+                count = selectNotes(mod, {0, 0}, {0, 0}, true);
+            }
+        }
+        // The selection rectangle is non-empty.
+        else {
+            RowCol begin{0, 0}, end{0, 0};
 
-	gEditor->reportChanges(VCM_SELECTION_CHANGED);
-}
+            // Determine the columns that fall within the selection.
+            int cols = gStyle->getNumCols();
+            for (; begin.col < cols && gView->columnToX(begin.col) < xl;
+                 ++begin.col);
+            for (end.col = begin.col;
+                 end.col < cols && gView->columnToX(end.col) < xr; ++end.col);
 
-Type getType() const
-{
-	return myType;
-}
+            // Determine the rows that fall within the selection.
+            if (timeBased) {
+                begin.row = gTempo->timeToRow(torT);
+                end.row = gTempo->timeToRow(torB);
+            } else {
+                begin.row = static_cast<int>(torT);
+                end.row = static_cast<int>(torB) + 1;
+            }
+            count = selectNotes(mod, begin, end, true);
+        }
+        gEditor->reportChanges(VCM_SELECTION_CHANGED);
+        return count;
+    }
 
-void drawRegionSelection()
-{
-	// Draw area selection box.
-	if(myIsSelectingRegion || myRegion.beginRow != myRegion.endRow)
-	{
-		color32 outline = COLOR32(153, 255, 153, 153);
-		auto coords = gView->getReceptorCoords();
-		int x = coords.xl, w = coords.xr - coords.xl;
-		if(myIsSelectingRegion)
-		{
-			int y = gView->rowToY(myRegion.beginRow);
-			Draw::fill({x, y - 1, w, 2}, outline);
-		}
-		else if(myRegion.beginRow != myRegion.endRow)
-		{
-			int t = gView->rowToY(myRegion.beginRow);
-			int b = gView->rowToY(myRegion.endRow);
-			Draw::fill({x, t, w, b - t}, COLOR32(153, 255, 153, 90));
-			Draw::outline({x, t, w, b - t}, outline);
-		}
-	}
-}
+    void drawRegionSelection() override {
+        // Draw area selection box.
+        if (myIsSelectingRegion || !myRegion.isEmpty()) {
+            uint32_t outline = RGBAtoColor32(153, 255, 153, 153);
+            auto coords = gView->getReceptorCoords();
+            int x = coords.xl, w = coords.xr - coords.xl;
+            if (myIsSelectingRegion) {
+                int y = gView->rowToY(myRegion.beginRow);
+                Draw::fill({x, y - 1, w, 2}, outline);
+            } else if (!myRegion.isEmpty()) {
+                int t = gView->rowToY(myRegion.beginRow);
+                int b = gView->rowToY(myRegion.endRow);
+                Draw::fill({x, t, w, b - t}, RGBAtoColor32(153, 255, 153, 90));
+                Draw::outline({x, t, w, b - t}, outline);
+            }
+        }
+    }
 
-void drawSelectionBox()
-{
-	// Draw dragging selection box (for note/tempo selection).
-	if(myIsDraggingSelection)
-	{
-		vec2i mpos = gSystem->getMousePos();
-		vec2i start = {myDragSelectionX, gView->offsetToY(myDragSelectionTor)};
+    void drawSelectionBox() override {
+        // Draw dragging selection box (for note/tempo selection).
+        if (myIsDraggingSelection) {
+            vec2i mpos = gSystem->getMousePos();
+            vec2i start = {myDragSelectionX,
+                           gView->offsetToY(myDragSelectionTor)};
 
-		// Selection rectangle.
-		color32 outline = COLOR32(255, 191, 128, 128);
-		color32 fill = COLOR32(255, 191, 128, 89);
+            // Selection rectangle.
+            uint32_t outline = RGBAtoColor32(255, 191, 128, 128);
+            uint32_t fill = RGBAtoColor32(255, 191, 128, 89);
 
-		int x = start.x, x2 = mpos.x;
-		int y = start.y, y2 = mpos.y;
-		if(x > x2) swapValues(x, x2);
-		if(y > y2) swapValues(y, y2);
+            int x = start.x, x2 = mpos.x;
+            int y = start.y, y2 = mpos.y;
+            if (x > x2) swapValues(x, x2);
+            if (y > y2) swapValues(y, y2);
 
-		Draw::fill({x, y, x2 - x, y2 - y}, fill);
-		Draw::outline({x, y, x2 - x, y2 - y}, outline);
+            Draw::fill({x, y, x2 - x, y2 - y}, fill);
+            Draw::outline({x, y, x2 - x, y2 - y}, outline);
 
-		// Hotkey tips for subtractive/additive selection.
-		int keyFlags = gSystem->getKeyFlags();
-		if(keyFlags & (Keyflag::SHIFT | Keyflag::ALT))
-		{
-			Texture& tex = (keyFlags & Keyflag::SHIFT) ? myAddIcon : mySubIcon;
-			Draw::sprite(tex, {start.x, start.y});
-		}
-	}
-}
+            // Hotkey tips for subtractive/additive selection.
+            int keyFlags = gSystem->getKeyFlags();
+            if (keyFlags & (Keyflag::SHIFT | Keyflag::ALT)) {
+                Texture& tex =
+                    (keyFlags & Keyflag::SHIFT) ? myAddIcon : mySubIcon;
+                Draw::sprite(tex, {start.x, start.y, mpos.x - start.x,
+                                   mpos.y - start.y});
+            }
+        }
+    }
 
-// ================================================================================================
-// Note selection.
+    // ================================================================================================
+    // Note selection.
 
-static void showSelectionResult(SelectModifier mod, int numSelected, const char* noteName = nullptr)
-{
-	if(numSelected == 0 && noteName)
-	{
-		const char* typeName = (mod == SELECT_SUB ? "deselect" : "select");
-		HudNote("There are no %ss to %s.", noteName, typeName);
-	}
-	else if(numSelected >= 1)
-	{
-		if(!noteName) noteName = "note";
+    static void showSelectionResult(SelectModifier mod, int numSelected,
+                                    const char* noteName = nullptr) {
+        if (numSelected == 0 && noteName) {
+            const char* typeName = (mod == SELECT_SUB ? "deselect" : "select");
+            HudNote("There are no %ss to %s.", noteName, typeName);
+        } else if (numSelected >= 1) {
+            if (!noteName) noteName = "note";
 
-		const char* typeName = (mod == SELECT_SUB ? "Deselected" : "Selected");
+            const char* typeName =
+                (mod == SELECT_SUB ? "Deselected" : "Selected");
 
-		if(numSelected == 1)
-		{
-			HudNote("%s 1 %s.", typeName, noteName);
-		}
-		else
-		{
-			HudNote("%s %i %ss.", typeName, numSelected, noteName);
-		}
-	}
-}
+            if (numSelected == 1) {
+                HudNote("%s 1 %s.", typeName, noteName);
+            } else {
+                HudNote("%s %i %ss.", typeName, numSelected, noteName);
+            }
+        }
+        gEditor->reportChanges(VCM_SELECTION_CHANGED);
+    }
 
-void selectAllNotes()
-{
-	showSelectionResult(SELECT_SET, gNotes->selectAll());
-}
+    void selectAllNotes() override {
+        showSelectionResult(SELECT_SET, gNotes->selectAll());
+    }
 
-int selectNotes(NotesMan::Filter filter)
-{
-	const char* names[NotesMan::NUM_FILTERS] =
-	{
-		"step", "jump note", "mine", "hold", "roll", "warped note"
-	};
-	int numSelected = gNotes->select(SELECT_SET, filter);
-	showSelectionResult(SELECT_SET, numSelected, names[filter]);
-	return numSelected;
-}
+    int selectNotes(NotesMan::Filter filter, bool ignoreRegion) override {
+        const char* names[NotesMan::NUM_FILTERS] = {
+            "step", "jump note", "mine", "hold", "roll", "warped note"};
+        int numSelected = gNotes->select(SELECT_SET, filter, ignoreRegion);
+        showSelectionResult(SELECT_SET, numSelected, names[filter]);
+        return numSelected;
+    }
 
-int selectNotes(RowType rowType)
-{
-	int numSelected = gNotes->selectQuant(rowType);
-	showSelectionResult(SELECT_SET, numSelected);
-	return numSelected;
-}
+    int selectNotes(RowType rowType, bool ignoreRegion) override {
+        int numSelected = gNotes->selectQuant(rowType, ignoreRegion);
+        showSelectionResult(SELECT_SET, numSelected);
+        return numSelected;
+    }
 
-int selectNotes(SelectModifier mod, RowCol begin, RowCol end)
-{
-	int numSelected = gNotes->selectRows(mod, begin.col, end.col, begin.row, end.row);
-	showSelectionResult(mod, numSelected);
-	return numSelected;
-}
+    int selectNotes(SelectModifier mod, int density,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->selectDensity(mod, density, ignoreRegion);
+        showSelectionResult(mod, numSelected);
+        return numSelected;
+    }
 
-int selectNotes(SelectModifier mod, const Vector<RowCol>& indices)
-{
-	int numSelected = gNotes->select(mod, indices);
-	showSelectionResult(mod, numSelected);
-	return numSelected;
-}
+    int selectNotes(SelectModifier mod, RowCol begin, RowCol end,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->selectRows(mod, begin.col, end.col, begin.row,
+                                             end.row, ignoreRegion);
+        showSelectionResult(mod, numSelected);
+        return numSelected;
+    }
 
-int getSelectedNotes(NoteList& out)
-{
-	if(myRegion.beginRow == myRegion.endRow)
-	{
-		for(auto& note : *gNotes)
-		{
-			if(note.isSelected) out.append(CompressNote(note));
-		}
-	}
-	else
-	{
-		auto note = gNotes->begin(), end = gNotes->end();
-		for(; note != end && note->row < myRegion.beginRow; ++note);
-		for(; note != end && note->row <= myRegion.endRow; ++note)
-		{
-			out.append(CompressNote(*note));
-		}
-	}
-	return out.size();
-}
+    int selectNotes(SelectModifier mod, const Vector<RowCol>& indices,
+                    bool ignoreRegion) override {
+        int numSelected = gNotes->select(mod, indices, ignoreRegion);
+        showSelectionResult(mod, numSelected);
+        return numSelected;
+    }
 
-// ================================================================================================
-// Region selection.
+    int getSelectedNotes(NoteList& out) override {
+        // Get both manually selected notes and the region, since they're
+        // independent now
+        if (!myRegion.isEmpty()) {
+            auto note = gNotes->begin(), end = gNotes->end();
+            for (; note != end && note->row < myRegion.beginRow; ++note);
+            for (; note != end && note->row <= myRegion.endRow; ++note) {
+                if (!note->isSelected) out.append(CompressNote(*note));
+            }
+        }
+        for (auto& note : *gNotes) {
+            if (note.isSelected) out.append(CompressNote(note));
+        }
+        if (!std::is_sorted(out.begin(), out.end(),
+                            LessThanRowCol<Note, Note>)) {
+            std::sort(out.begin(), out.end(), LessThanRowCol<Note, Note>);
+        }
+        return out.size();
+    }
 
-void selectRegion()
-{
-	if(!myIsSelectingRegion)
-	{
-		gTempoBoxes->deselectAll();
-		gNotes->deselectAll();
-		
-		int row = gView->getCursorRow();
-		myRegion = {row, row};
-		myIsSelectingRegion = true;
-	}
-	else
-	{
-		myIsSelectingRegion = false;
-		selectRegion(myRegion.beginRow, gView->getCursorRow());
-	}
-}
+    // ================================================================================================
+    // Region selection.
 
-void selectRegion(int row, int endrow)
-{
-	if(row != endrow)
-	{
-		if(row > endrow) swapValues(row, endrow);
-		myRegion = {row, endrow};
+    void selectRegion() override {
+        if (!myIsSelectingRegion) {
+            int row = gView->getCursorRow();
+            setRegion(row, row);
+            myIsSelectingRegion = true;
+        } else {
+            myIsSelectingRegion = false;
+            selectRegion(myRegion.beginRow, gView->getCursorRow());
+        }
+    }
 
-		double m1 = gTempo->beatToMeasure(row * BEATS_PER_ROW);
-		double m2 = gTempo->beatToMeasure(endrow * BEATS_PER_ROW);
+    void selectRegion(int row, int endRow) override {
+        setRegion(row, endRow);
 
-		Str::fmt fmt("Selected measure %1 to %2 (%3 measures)");
-		fmt.arg(m1, 0, 2).arg(m2, 0, 2).arg(m2 - m1, 0, 2);
-		HudNote("%s", fmt);
+        auto firstRow = min(row, endRow);
+        auto lastRow = max(row, endRow);
+        if (row != endRow) {
+            double m1 = gTempo->beatToMeasure(firstRow * BEATS_PER_ROW);
+            double m2 = gTempo->beatToMeasure(lastRow * BEATS_PER_ROW);
 
-		setType(REGION);
-	}
-	else
-	{
-		setType(NONE);
-	}
-}
+            Str::fmt fmt("Selected measure %1 to %2 (%3 measures)");
+            fmt.arg(m1, 0, 2).arg(m2, 0, 2).arg(m2 - m1, 0, 2);
+            HudNote("%s", static_cast<const char*>(fmt));
+        }
+    }
 
-SelectionRegion getSelectedRegion()
-{
-	return myRegion;
-}
+    SelectionRegion getSelectedRegion() override { return myRegion; }
 
-}; // SelectionImpl
+    void setRegion(int row, int endRow) {
+        if (row < endRow) {
+            myRegion = {row, endRow};
+        } else {
+            myRegion = {endRow, row};
+        }
+    }
+
+    // ================================================================================================
+    // Setting toggles.
+
+    void toggleTempoEditor() override {
+        myOpenTempoEditor = !myOpenTempoEditor;
+        gMenubar->update(Menubar::SELECTION_TEMPO_EDITOR);
+    }
+    bool getTempoEditor() override { return myOpenTempoEditor; }
+
+};  // SelectionImpl
 
 // ================================================================================================
 // Selection API.
 
-
 Selection* gSelection = nullptr;
 
-void Selection::create()
-{
-	gSelection = new SelectionImpl;
+void Selection::create(XmrNode& settings) {
+    gSelection = new SelectionImpl;
+    static_cast<SelectionImpl*>(gSelection)->loadSettings(settings);
 }
 
-void Selection::destroy()
-{
-	delete (SelectionImpl*)gSelection;
-	gSelection = nullptr;
+void Selection::destroy() {
+    delete static_cast<SelectionImpl*>(gSelection);
+    gSelection = nullptr;
 }
 
-}; // namespace Vortex
+};  // namespace Vortex

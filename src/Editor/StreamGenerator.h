@@ -4,18 +4,17 @@
 
 namespace Vortex {
 
-struct StreamGenerator
-{
-	StreamGenerator();
+struct StreamGenerator {
+    StreamGenerator();
 
-	vec2i feetCols;
-	int maxColRep;
-	int maxBoxRep;
-	bool allowBoxes;
-	bool startWithRight;
-	float patternDifficulty;
+    vec2i feetCols;
+    int maxColRep;
+    int maxBoxRep;
+    bool allowBoxes;
+    bool startWithRight;
+    float patternDifficulty;
 
-	void generate(int startRow, int endRow, SnapType spacing);
+    void generate(int startRow, int endRow, SnapType spacing);
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

@@ -27,15 +27,7 @@ style {
 style {
 	id = dance-couple
 	name = Dance Couple
-	numCols = 8
-	pad {
-		row = -C--G-
-		row = A-DE-H
-		row = -B--F-
-	}
-	feetPos = DE
-	mirrorH = CG, AH, DE, BF
-	mirrorV = CB, GF
+	source = dance-double
 }
 style {
 	id = dance-routine
@@ -63,6 +55,19 @@ style {
 	feetPos = AF
 	mirrorH = BE, AF
 	mirrorV = CD
+}
+style {
+	id = dance-threepanel
+	name = Dance 3 Panel
+	numCols = 3
+	pad {
+		row = A-C
+		row = ---
+		row = -B-
+	}
+	feetPos = AC
+	mirrorH = AC
+	mirrorV = 
 }
 style {
 	id = pump-single
@@ -106,13 +111,77 @@ style {
 style {
 	id = pump-couple
 	name = Pump Couple
-	numCols = 10
+	source = pump-double
+}
+style {
+	id = techno-single4
+	name = Techno Single (4)
+	source = dance-single
+}
+style {
+	id = techno-single5
+	name = Techno Single (5)
+	source = pump-single
+}
+style {
+	id = techno-single8
+	name = Techno Single (8)
+	numCols = 8
 	pad {
-		row = B-DG-I
-		row = -C--H-
-		row = A-EF-J
+		row = CEF
+		row = B-G
+		row = ADH
 	}
-	feetPos = CH
-	mirrorH = BI, DG, CH, AJ, EF
-	mirrorV = BA, DE, GF, IJ
+	feetPos = BG
+	mirrorH = AH, BG, CF
+	mirrorV = AC, DE, FH
+}
+style {
+	id = techno-single9
+	name = Techno Single (9)
+	numCols = 9
+	pad {
+		row = CFG
+		row = BEH
+		row = ADI
+	}
+	feetPos = BH
+	mirrorH = AI, BH, CG
+	mirrorV = AC, DF, IG
+}
+style {
+	id = techno-double4
+	name = Techno Double (8)
+	source = dance-double
+}
+style {
+	id = techno-double5
+	name = Techno Double (10)
+	source = pump-double
+}
+style {
+	id = techno-double8
+	name = Techno Double (16)
+	numCols = 16
+	pad {
+		row = CEFKMN
+		row = B-GJ-O
+		row = ADHILP
+	}
+	feetPos = GJ
+	mirrorH = AP, BO, CN, DL, EM, HI, GJ, FK
+	mirrorV = CA, ED, FH, KI, ML, NP
+}
+style {
+	id = techno-double9
+	name = Techno Double (18)
+	numCols = 18
+	pad {
+		row = CFGLOP
+		row = BEHKNQ
+		row = ADIJMR
+	}
+	feetPos = HK
+	mirrorH = AR, BQ, CP, DM, EN, FO, IJ, HK, GL
+	mirrorV = CA, FD, GI, LJ, OM, PR
 }
