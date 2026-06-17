@@ -57,6 +57,7 @@
 #include <Dialogs/EditSegment.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 
 #include <SDL3/SDL.h>
@@ -135,6 +136,20 @@ static SimFormat ToSimFormat(const std::string& str) {
     return SIM_NONE;
 }
 
+static std::string getSettingsDir() {
+    const char* xdg = std::getenv("XDG_CONFIG_HOME");
+    if (xdg && xdg[0] == '/')
+        return std::string(xdg) + "/arrowvortex/";
+    const char* home = std::getenv("HOME");
+    if (home) return std::string(home) + "/.config/arrowvortex/";
+    return "settings/";
+}
+
+static void ensureSettingsDirExists() {
+    std::error_code ec;
+    fs::create_directories(utf8ToPath(getSettingsDir()), ec);
+}
+
 // ================================================================================================
 // EditorImpl :: member data.
 
@@ -188,11 +203,12 @@ struct EditorImpl : public Editor, public InputHandler {
     // EditorImpl :: initialization / shutdown.
 
     void init() {
+        ensureSettingsDirExists();
         loadRecentFiles();
 
         // Load the editor settings.
         XmrDoc settings;
-        settings.loadFile(fs::path("settings/settings.txt"));
+        settings.loadFile(fs::path(getSettingsDir() + "settings.txt"));
         loadSettings(settings);
 
         // Disable v-sync if requested.
@@ -307,7 +323,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Export the editor settings.
         XmrSaveSettings xmrSaveSettings;
-        settings.saveFile("settings/settings.txt", xmrSaveSettings);
+        settings.saveFile((getSettingsDir() + "settings.txt").c_str(),
+                          xmrSaveSettings);
     }
 
     // ================================================================================================
@@ -414,13 +431,15 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void loadRecentFiles() {
         bool success;
-        myRecentFiles = File::getLines("settings/recent files.txt", &success);
+        myRecentFiles =
+            File::getLines(fs::path(getSettingsDir() + "recent files.txt"),
+                           &success);
         std::erase(myRecentFiles, "");
         myRecentFiles.resize(std::min(MAX_RECENT_FILES, myRecentFiles.size()));
     }
 
     void saveRecentFiles() {
-        std::ofstream out("settings/recent files.txt");
+        std::ofstream out((getSettingsDir() + "recent files.txt").c_str());
         if (out.good()) {
             for (int i = 0; i < myRecentFiles.size(); ++i) {
                 auto& file = myRecentFiles[i];
