@@ -283,7 +283,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols,
                     break;
                 default:
                     n = ReadNoteRow(n, chart->notes, row, map, holds,
-                                    quantization);
+                                    192 / quantization);
                     row += quantization;
                     break;
             };
