@@ -586,16 +586,16 @@ struct EditorImpl : public Editor, public InputHandler {
             switch (saveFmt) {
                 default:
                 case SIM_SM:
-                    filterIndex = 1;
+                    filterIndex = 0;
                     break;
                 case SIM_SSC:
-                    filterIndex = 2;
+                    filterIndex = 1;
                     break;
                 case SIM_OSU:
-                    filterIndex = 3;
+                    filterIndex = 2;
                     break;
                 case SIM_DWI:
-                    filterIndex = 4;
+                    filterIndex = 3;
                     break;
             };
 
@@ -610,17 +610,18 @@ struct EditorImpl : public Editor, public InputHandler {
             if (save_path.empty()) return false;
 
             // Update the save format based on the selected filter index.
+            // SDL3 returns 0-based filter indices (getFilterIndex subtracts 1).
             switch (filterIndex) {
-                case 1:
+                case 0:
                     saveFmt = SIM_SM;
                     break;
-                case 2:
+                case 1:
                     saveFmt = SIM_SSC;
                     break;
-                case 3:
+                case 2:
                     saveFmt = SIM_OSU;
                     break;
-                case 4:
+                case 3:
                     saveFmt = SIM_DWI;
                     break;
                 default:
