@@ -408,7 +408,5 @@ out
 enc_temp_folder
 
 # Build outputs and user-specific files
-bin/*.exe
-bin/settings/settings.txt
-bin/settings/recent files.txt
+bin/
 /path_sources
