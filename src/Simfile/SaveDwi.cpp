@@ -466,8 +466,17 @@ bool SaveDwi(const Simfile* sim, bool backup)
 	}
 
 	// Charts. DWI supports at most one chart per (style, difficulty) combination.
+	// Sort beginner to expert, grouped by style.
+	std::vector<const Chart*> sortedCharts(sim->charts.begin(), sim->charts.end());
+	std::sort(sortedCharts.begin(), sortedCharts.end(), [](const Chart* a, const Chart* b)
+	{
+		if(a->style->index != b->style->index)
+			return a->style->index < b->style->index;
+		return a->difficulty < b->difficulty;
+	});
+
 	Vector<int> writtenDiffs;
-	for(const Chart* chart : sim->charts)
+	for(const Chart* chart : sortedCharts)
 	{
 		const char* dwiTag;
 		int numPads;
