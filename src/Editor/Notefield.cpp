@@ -349,7 +349,7 @@ struct NotefieldImpl : public Notefield {
         Renderer::resetColor();
         Renderer::bindShader(Renderer::SH_COLOR);
 
-        bool zoomedIn = (gView->getScaleLevel() >= 2);
+        bool zoomedIn = (gView->getZoomLevel() >= 4);
         int viewH = gView->getHeight();
 
         // We keep track of the measure labels to render them afterwards.
