@@ -371,8 +371,8 @@ struct TempoBoxesImpl : public TempoBoxes {
         }
 
         // Display detailed info of the mouse over box.
-        if (myMouseOverBox >= 0 && myShowHelp &&
-            !gSystem->isMouseDown(Mouse::LMB)) {
+        if (myMouseOverBox >= 0 && myMouseOverBox < myBoxes.size() &&
+            myShowHelp && !gSystem->isMouseDown(Mouse::LMB)) {
             drawBoxHelp(myBoxes[myMouseOverBox]);
         }
     }
