@@ -56,7 +56,7 @@ static void Merge(std::vector<MergedTS>& out, const SegmentList& in) {
             continue;
         }
 
-        while (ins != insEnd && ins->row > read->seg->row) {
+        while (ins != insEnd && ins->row >= read->seg->row) {
             write->type = in.type();
             write->seg = ins.ptr;
             --ins, --write;
@@ -64,11 +64,11 @@ static void Merge(std::vector<MergedTS>& out, const SegmentList& in) {
         if (ins == insEnd) break;
 
         // Move existing segments.
-        while (read != readEnd && read->seg->row >= ins->row) {
+        while (read != readEnd && read->seg->row > ins->row) {
             *write = *read;
             --read;
-            if (read == readEnd) goto exit_loop;
             --write;
+            if (read == readEnd) goto exit_loop;
         }
     }
 
