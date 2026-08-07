@@ -550,7 +550,7 @@ struct TempoManImpl : public TempoMan {
     void startTweakingOffset() override {
         if (myTweakMode == TWEAK_OFFSET || !myTempo) return;
 
-        stopTweaking(false);
+        stopTweaking(true);
         myTweakTempo = new Tempo;
         myTweakTempo->copy(myTempo);
         myTweakMode = TWEAK_OFFSET;
@@ -563,7 +563,7 @@ struct TempoManImpl : public TempoMan {
 
         if ((myTweakMode == TWEAK_BPM && myTweakRow == row) || !myTempo) return;
 
-        stopTweaking(false);
+        stopTweaking(true);
         myTweakTempo = new Tempo;
         myTweakTempo->copy(myTempo);
         myTweakMode = TWEAK_BPM;
@@ -575,7 +575,7 @@ struct TempoManImpl : public TempoMan {
         if ((myTweakMode == TWEAK_STOP && myTweakRow == row) || !myTempo)
             return;
 
-        stopTweaking(false);
+        stopTweaking(true);
         myTweakTempo = new Tempo;
         myTweakTempo->copy(myTempo);
         myTweakMode = TWEAK_STOP;
