@@ -138,8 +138,7 @@ static SimFormat ToSimFormat(const std::string& str) {
 
 static std::string getSettingsDir() {
     const char* xdg = std::getenv("XDG_CONFIG_HOME");
-    if (xdg && xdg[0] == '/')
-        return std::string(xdg) + "/arrowvortex/";
+    if (xdg && xdg[0] == '/') return std::string(xdg) + "/arrowvortex/";
     const char* home = std::getenv("HOME");
     if (home) return std::string(home) + "/.config/arrowvortex/";
     return "settings/";
@@ -431,9 +430,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void loadRecentFiles() {
         bool success;
-        myRecentFiles =
-            File::getLines(fs::path(getSettingsDir() + "recent files.txt"),
-                           &success);
+        myRecentFiles = File::getLines(
+            fs::path(getSettingsDir() + "recent files.txt"), &success);
         std::erase(myRecentFiles, "");
         myRecentFiles.resize(std::min(MAX_RECENT_FILES, myRecentFiles.size()));
     }
