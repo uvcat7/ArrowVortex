@@ -78,7 +78,7 @@ jobs:
       - name: Add NuGet sources
         shell: bash
         run: |
-          sudo apt-get install -qq -y mono-devel nasm libltdl-dev \
+          sudo apt-get install -qq -y mono-devel nasm \
             autoconf autoconf-archive automake libtool \
             libx11-dev libxft-dev libxext-dev \
             libwayland-dev libxkbcommon-dev libegl1-mesa-dev \
