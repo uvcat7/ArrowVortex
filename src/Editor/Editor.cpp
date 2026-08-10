@@ -526,13 +526,14 @@ struct EditorImpl : public Editor, public InputHandler {
         if (gSimfile->isClosed()) return false;
 
         // Make a list of all simfiles in the current pack.
-        fs::path packDir = fs::path(gSimfile->getDir());
+        fs::path this_dir = fs::path(gSimfile->getDir());
+        fs::path packDir = this_dir.parent_path();
         auto songDirs = File::findDirs(packDir, false);
 
         // Find the current simfile.
         int index = -1;
         for (int i = 0; i < songDirs.size(); ++i) {
-            if (songDirs[i].u8string() == packDir.u8string()) {
+            if (fs::equivalent(songDirs[i], this_dir)) {
                 index = i;
             }
         }
@@ -543,28 +544,33 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Find the previous/next simfile with a different directory.
         fs::path path;
+        int start_index = index;
         if (iterateForward) {
-            while (++index < songDirs.size()) {
+            while (++index != start_index) {
+                if (index == songDirs.size()) {
+                    HudInfo("Looping to the first simfile.");
+                    index = -1;
+                    continue;
+                }
                 path = findSimfile(songDirs[index], true);
-                if (path.empty()) break;
-            }
-            if (index == songDirs.size()) {
-                HudInfo("This is the last simfile.");
-                return false;
+                if (!path.empty()) break;
             }
         } else {
-            while (--index >= 0) {
+            while (--index != start_index) {
+                if (index < 0) {
+                    HudInfo("Looping to the last simfile.");
+                    index = songDirs.size();
+                    continue;
+                }
                 path = findSimfile(songDirs[index], true);
-                if (path.empty()) break;
-            }
-            if (index < 0) {
-                HudInfo("This is the first simfile.");
-                return false;
+                if (!path.empty()) break;
             }
         }
-
-        // Open the simfile.
-        return openSimfile(path);
+        if (index == start_index) {
+            HudInfo("No valid simfiles found.");
+            return false;
+        } else
+            return openSimfile(path);
     }
 
     bool saveSimfile(bool showSaveAsDialog) override {
