@@ -108,10 +108,6 @@ void Action::perform(Type action) {
         gEditing->setVisualSyncAnchor(Editing::EditingAnchor::RECEPTORS);
         CASE(INJECT_BOUNDING_BPM_CHANGE)
         gEditing->injectBoundingBpmChange();
-        CASE(SHIFT_ROW_NONDESTRUCTIVE)
-        gEditing->shiftAnchorRowToMousePosition(false);
-        CASE(SHIFT_ROW_DESTRUCTIVE)
-        gEditing->shiftAnchorRowToMousePosition(true);
 
         CASE(REQUANTIZE_NOTES)
         gEditing->requantizeNotes();
