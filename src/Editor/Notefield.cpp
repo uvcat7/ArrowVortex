@@ -50,7 +50,9 @@ static int RoundUp(int value, int multiple) {
 
 struct TweakInfoBox : public InfoBox {
     void draw(recti r) override;
-    int height() override { return 100; }
+    int height() override {
+        return static_cast<int>(100 * gSystem->getScaleFactor());
+    }
 };
 
 struct DrawPosHelper {
@@ -866,8 +868,11 @@ void TweakInfoBox::draw(recti r) {
     Str::fmt str("Tweak %1 :: %2");
     str.arg(name[mode]).arg(gTempo->getTweakValue(), 3, 3);
 
+    const int init_off_h = static_cast<int>(16 * gSystem->getScaleFactor());
+    const int text_row_h = static_cast<int>(14 * gSystem->getScaleFactor());
+
     Text::arrange(Text::MC, str);
-    Text::draw(vec2i{r.x, r.y + 16});
+    Text::draw(vec2i{r.x, r.y + init_off_h});
 
     const char* keys[] = {
         "scrollwheel + shift",
@@ -886,11 +891,11 @@ void TweakInfoBox::draw(recti r) {
     for (int i = 0; i < 4; ++i) {
         textStyle.textColor = RGBAtoColor32(255, 255, 255, 128);
         Text::arrange(Text::TR, textStyle, keys[i]);
-        Text::draw(vec2i{r.x - 8, r.y + 32 + i * 14});
+        Text::draw(vec2i{r.x - 8, r.y + init_off_h * 2 + i * text_row_h});
 
         textStyle.textColor = Colors::white;
         Text::arrange(Text::TL, textStyle, desc[i]);
-        Text::draw(vec2i{r.x + 8, r.y + 32 + i * 14});
+        Text::draw(vec2i{r.x + 8, r.y + init_off_h * 2 + i * text_row_h});
     }
 }
 

@@ -408,7 +408,8 @@ struct TextOverlayImpl : public TextOverlay {
         vec2i view = gSystem->getWindowSize();
         int x = view.x / 2, y = 8;
         for (auto& box : infoBoxes_) {
-            vec2i size = {280, box->height()};
+            vec2i size = {static_cast<int>(280 * gSystem->getScaleFactor()),
+                          box->height()};
             recti r = {x - size.x / 2, y, size.x, size.y};
             recti r2 = {r.x - 4, r.y - 4, r.w + 8, r.h + 8};
 
@@ -417,7 +418,7 @@ struct TextOverlayImpl : public TextOverlay {
 
             box->draw(r);
 
-            y += size.y + 12;
+            y += size.y + static_cast<int>(280 * gSystem->getScaleFactor());
         }
 
         x = 4, y = 4;

@@ -50,6 +50,7 @@ enum Type {
     EDIT_CUT,
     EDIT_COPY,
     EDIT_PASTE,
+    EDIT_PASTE_INSERT,
     EDIT_DELETE,
 
     TOGGLE_JUMP_TO_NEXT_NOTE,
