@@ -154,17 +154,24 @@ struct TempoMan {
         modify(edit);
     }
 
-    /// Add a (normally redundant) BPM change at `target_row` equal to BPM at
+    /// Add a (normally redundant) BPM change at `targetRow` equal to BPM at
     /// that row
-    virtual void injectBoundingBpmChange(const int target_row) = 0;
-    /// Add BPM changes in the beat such that `target_row` will be shifted to
-    /// `target_time` without affecting other BPM changes
-    virtual void nonDestructiveShiftRowToTime(const int target_row,
-                                              const double target_time) = 0;
-    /// Adjust previous BPM change such that `target_row` will be shifted to
-    /// `target_time`.
-    virtual void destructiveShiftRowToTime(const int target_row,
-                                           const double target_time) = 0;
+    virtual void injectBoundingBpmChange(const int targetRow) = 0;
+    /// Enable destructive visual sync so that calls to `tickVisualSync` will
+    ///   shift `targetRow`, starting a history chain so it can be undone in one
+    ///   action
+    virtual void startDestructiveVisualSync(const int targetRow) = 0;
+    /// Enable non-destructive visual sync
+    ///   so that calls to `tickVisualSync` will
+    ///   shift `targetRow`, starting a history chain so it can be undone in one
+    ///   action
+    virtual void startNondestructiveVisualSync(const int targetRow) = 0;
+    /// Shift previously configured target row to `targetTime`
+    virtual void tickVisualSync(const double targetTime) = 0;
+    /// Record BPM changes to history and disable visual sync
+    virtual void endVisualSync() = 0;
+    /// Return whether we're currently visually syncing a row
+    virtual bool isInVisualSync() = 0;
 };
 
 extern TempoMan* gTempo;
