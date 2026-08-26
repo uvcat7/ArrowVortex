@@ -38,6 +38,7 @@
 #include <Editor/Action.h>
 #include <Editor/Waveform.h>
 #include <Editor/TempoBoxes.h>
+#include <string>
 
 namespace Vortex {
 
@@ -125,6 +126,7 @@ struct NotefieldImpl : public Notefield {
     bool myShowBeatLinesSnap;
     bool myShowBeatLinesColor;
     bool myShowBeatLinesHover;
+    bool myVisualSyncBeatlinesPreset;
     bool myShowNotes;
     bool myShowSongPreview;
 
@@ -142,6 +144,7 @@ struct NotefieldImpl : public Notefield {
         myShowBeatLinesSnap = false;
         myShowBeatLinesColor = false;
         myShowBeatLinesHover = false;
+        myVisualSyncBeatlinesPreset = false;
         myShowNotes = true;
         myShowSongPreview = false;
 
@@ -282,7 +285,7 @@ struct NotefieldImpl : public Notefield {
 
         gNotefieldPreview->draw();
 
-        if (myShowBeatLines) drawBeatLines();
+        if (myShowBeatLines || myVisualSyncBeatlinesPreset) drawBeatLines();
         if (drawWaveform) gWaveform->drawPeaks();
         if (gTempoBoxes->hasShowBoxes()) drawStopsAndWarps();
 
@@ -385,12 +388,15 @@ struct NotefieldImpl : public Notefield {
         // Start drawing measures and beat lines.
         auto batch = Renderer::batchC();
         uint32_t halfColor = ToColor32({1, 1, 1, 0.5f});
-        uint32_t fullColor = myShowBeatLinesColor ? ToRowTypeColor(0)
-                                                  : ToColor32({1, 1, 1, 0.7f});
+        uint32_t fullColor = myShowBeatLinesColor || myVisualSyncBeatlinesPreset
+                                 ? ToRowTypeColor(0)
+                                 : ToColor32({1, 1, 1, 0.7f});
 
-        double snapStep = myShowBeatLinesSnap && gView->getSnapType() > ST_4TH
-                              ? 192.0f / gView->getSnapQuant()
-                              : ROWS_PER_BEAT;
+        double snapStep =
+            myShowBeatLinesSnap ||
+                    myVisualSyncBeatlinesPreset && gView->getSnapType() > ST_4TH
+                ? 192.0f / gView->getSnapQuant()
+                : ROWS_PER_BEAT;
 
         DrawPosHelper drawPos;
         while (it != end && row < drawEndRow) {
@@ -411,7 +417,7 @@ struct NotefieldImpl : public Notefield {
 
                         int r = static_cast<int>(round(beatRow));
                         uint32_t color =
-                            myShowBeatLinesColor
+                            myShowBeatLinesColor || myVisualSyncBeatlinesPreset
                                 ? (ToRowTypeColor(ToRowType(r)) & halfColor)
                                 : halfColor;
 
@@ -428,7 +434,7 @@ struct NotefieldImpl : public Notefield {
         }
 
         // Draw Hovered Row
-        if (myShowBeatLinesHover) {
+        if (myShowBeatLinesHover || myVisualSyncBeatlinesPreset) {
             int hoverRow = gView->getHoveredRow();
             if (hoverRow >= 0) {
                 uint32_t hoverColor =
@@ -812,6 +818,14 @@ struct NotefieldImpl : public Notefield {
         gMenubar->update(Menubar::BEATLINE_HOVER);
     }
 
+    void clearVisualSyncBeatlinePreset() override {
+        myVisualSyncBeatlinesPreset = false;
+    }
+
+    void setVisualSyncBeatlinePreset() override {
+        myVisualSyncBeatlinesPreset = true;
+    }
+
     void toggleShowNotes() override {
         myShowNotes = !myShowNotes;
         gMenubar->update(Menubar::SHOW_NOTES);
@@ -830,6 +844,12 @@ struct NotefieldImpl : public Notefield {
     bool hasShowBeatLinesColor() override { return myShowBeatLinesColor; }
 
     bool hasShowBeatLinesHover() override { return myShowBeatLinesHover; }
+
+    bool hasVisualSyncBeatlinePreset() override {
+        return myVisualSyncBeatlinesPreset ||
+               (myShowBeatLines && myShowBeatLinesColor &&
+                myShowBeatLinesHover && myShowBeatLinesSnap);
+    }
 
     bool hasShowNotes() override { return myShowNotes; }
 

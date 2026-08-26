@@ -25,6 +25,8 @@ struct Notefield {
     virtual void toggleShowBeatLinesSnap() = 0;
     virtual void toggleShowBeatLinesColor() = 0;
     virtual void toggleShowBeatLinesHover() = 0;
+    virtual void clearVisualSyncBeatlinePreset() = 0;
+    virtual void setVisualSyncBeatlinePreset() = 0;
     virtual void toggleShowNotes() = 0;
     virtual void toggleShowSongPreview() = 0;
 
@@ -33,6 +35,7 @@ struct Notefield {
     virtual bool hasShowBeatLinesSnap() = 0;
     virtual bool hasShowBeatLinesColor() = 0;
     virtual bool hasShowBeatLinesHover() = 0;
+    virtual bool hasVisualSyncBeatlinePreset() = 0;
     virtual bool hasShowNotes() = 0;
     virtual bool hasShowSongPreview() = 0;
 };
