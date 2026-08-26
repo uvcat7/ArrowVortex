@@ -36,7 +36,7 @@ bool SaveOsu(SAVE_ARGS);  // Defined in SaveOsu.cpp
 namespace Dwi {
 bool LoadDwi(LOAD_ARGS);  // Defined in LoadDwi.cpp
 bool SaveDwi(SAVE_ARGS);  // Defined in SaveDwi.cpp
-};
+};  // namespace Dwi
 
 // ================================================================================================
 // Parsing utilities.
