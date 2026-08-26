@@ -87,10 +87,8 @@ static SDL_DialogFileFilter loadFilters[] = {
 
 #define SAVE_FILTERS_COUNT 5
 static SDL_DialogFileFilter saveFilters[] = {
-    {"Stepmania/ITG (*.sm)", "sm"},
-    {"Stepmania 5 (*.ssc)", "ssc"},
-    {"Osu!mania (*.osu)", "osu"},
-    {"Dance With Intensity (*.dwi)", "dwi"},
+    {"Stepmania/ITG (*.sm)", "sm"}, {"Stepmania 5 (*.ssc)", "ssc"},
+    {"Osu!mania (*.osu)", "osu"},   {"Dance With Intensity (*.dwi)", "dwi"},
     {"All Files (*.*)", "*"},
 };
 struct DialogSegment {
