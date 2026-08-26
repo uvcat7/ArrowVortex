@@ -522,8 +522,8 @@ struct TextOverlayImpl : public TextOverlay {
             gSystem->setCursor(Cursor::HAND);
             MousePress* mp = nullptr;
             if (gSystem->getEvents().next(mp)) {
-                if (mp->unhandled()) {
-                    mp->setHandled();
+                if (!mp->handled) {
+                    mp->handled = true;
                     gSystem->openWebpage(
                         reinterpret_cast<const char*>(supportLink));
                 }
@@ -534,8 +534,8 @@ struct TextOverlayImpl : public TextOverlay {
             gSystem->setCursor(Cursor::HAND);
             MousePress* mp = nullptr;
             if (gSystem->getEvents().next(mp)) {
-                if (mp->unhandled()) {
-                    mp->setHandled();
+                if (!mp->handled) {
+                    mp->handled = true;
                     gSystem->openWebpage(
                         reinterpret_cast<const char*>(githubLink));
                 }

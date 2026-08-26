@@ -40,7 +40,7 @@ void WgSelectList::clearItems() { selectlist_items_.clear(); }
 
 void WgSelectList::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             startCapturingMouse();
 
             // Handle interaction with the item list.
@@ -53,7 +53,7 @@ void WgSelectList::onMousePress(MousePress& evt) {
                 }
             }
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 
@@ -181,12 +181,12 @@ void WgDroplist::onMousePress(MousePress& evt) {
         recti r = selectlist_widget_->getRect();
         if (evt.button == Mouse::RMB || !IsInside(r, evt.x, evt.y)) {
             CloseDroplist();
-            evt.setHandled();
+            evt.handled = true;
         }
     } else if (isMouseOver()) {
         int numItems = droplist_items_.size();
         if (isEnabled() && numItems && evt.button == Mouse::LMB &&
-            evt.unhandled()) {
+            !evt.handled) {
             int h = min(
                 numItems * static_cast<int>(18 * gSystem->getScaleFactor()) + 8,
                 static_cast<int>(128 * gSystem->getScaleFactor()));
@@ -206,7 +206,7 @@ void WgDroplist::onMousePress(MousePress& evt) {
             startCapturingMouse();
             startCapturingFocus();
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 
@@ -317,7 +317,7 @@ void WgCycleButton::onMousePress(MousePress& evt) {
     int numItems = cycle_items_.size();
     if (isMouseOver()) {
         if (numItems > 1 && isEnabled() && evt.button == Mouse::LMB &&
-            evt.unhandled()) {
+            !evt.handled) {
             stopCapturingText();
             startCapturingMouse();
             if (evt.x > CenterX(rect_)) {
@@ -327,7 +327,7 @@ void WgCycleButton::onMousePress(MousePress& evt) {
             }
             onChange.call();
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 

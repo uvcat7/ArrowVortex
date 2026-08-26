@@ -129,23 +129,23 @@ struct ViewImpl : public View, public InputHandler {
     void onMousePress(MousePress& evt) override {
         // Dragging the preview receptors.
         if (evt.button == Mouse::LMB &&
-            isMouseOverReceptorsPreview(evt.x, evt.y) && evt.unhandled()) {
+            isMouseOverReceptorsPreview(evt.x, evt.y) && !evt.handled) {
             myIsDraggingReceptorsPreview = true;
-            evt.setHandled();
+            evt.handled = true;
         }
         // Dragging the receptors.
         else if (evt.button == Mouse::LMB &&
-                 isMouseOverReceptors(evt.x, evt.y) && evt.unhandled()) {
+                 isMouseOverReceptors(evt.x, evt.y) && !evt.handled) {
             myIsDraggingReceptors = true;
-            evt.setHandled();
+            evt.handled = true;
         }
 
-        if (evt.unhandled() && evt.button == Mouse::MMB) {
+        if (!evt.handled && evt.button == Mouse::MMB) {
             Vortex::vec2i mouse_pos = gSystem->getMousePos();
             Vortex::ChartOffset ofs = gView->yToOffset(mouse_pos.y);
 
             setCursorRow(snapRow(offsetToRow(ofs), SnapDir::SNAP_CLOSEST));
-            evt.setHandled();
+            evt.handled = true;
         }
     }
 

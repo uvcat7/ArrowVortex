@@ -71,11 +71,11 @@ struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
 
     void onMousePress(MousePress& evt) override {
         if (isMouseOver()) {
-            if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+            if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
                 auto seg = getSegmentUnderMouse(gui_->getMousePos());
                 if (seg) {
                     gView->setCursorRow(seg->row);
-                    evt.setHandled();
+                    evt.handled = true;
                 }
             }
         }

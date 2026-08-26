@@ -313,11 +313,11 @@ struct MinimapImpl : public Minimap {
 
     void onMousePress(MousePress& evt) override {
         if (evt.button == Mouse::LMB && !gTextOverlay->isOpen() &&
-            evt.unhandled()) {
+            !evt.handled) {
             if (IsInside(rect_, evt.x, evt.y)) {
                 gView->setCursorOffset(myGetMapOffset(evt.y));
                 myIsDragging = true;
-                evt.setHandled();
+                evt.handled = true;
             }
         }
     }

@@ -230,21 +230,21 @@ void WgColorPicker::onMousePress(MousePress& evt) {
             evt.button == Mouse::LMB) {
             colorpicker_expanded_->startDrag(evt.x, evt.y);
             startCapturingMouse();
-            evt.setHandled();
+            evt.handled = true;
         } else {
             delete colorpicker_expanded_;
             colorpicker_expanded_ = nullptr;
             stopCapturingFocus();
         }
     } else if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             startCapturingMouse();
             startCapturingFocus();
 
             colorpicker_expanded_ = new Expanded;
             colorpicker_expanded_->tick(rect_, gui_);
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 

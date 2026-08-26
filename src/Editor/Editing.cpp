@@ -296,9 +296,9 @@ struct EditingImpl : public Editing {
         // Finish tweaking.
         int mode = gTempo->getTweakMode();
         if ((evt.button == Mouse::LMB || evt.button == Mouse::RMB) && mode &&
-            evt.unhandled()) {
+            !evt.handled) {
             gTempo->stopTweaking(evt.button == Mouse::LMB);
-            evt.setHandled();
+            evt.handled = true;
         }
     }
 

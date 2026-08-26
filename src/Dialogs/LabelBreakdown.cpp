@@ -33,11 +33,11 @@ struct DialogLabelBreakdown::LabelButton : public GuiWidget {
 
     void onMousePress(MousePress& evt) override {
         if (isMouseOver()) {
-            if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+            if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
                 startCapturingMouse();
                 gView->setCursorRow(myRow);
             }
-            evt.setHandled();
+            evt.handled = true;
         }
     }
 

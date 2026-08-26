@@ -28,11 +28,11 @@ struct DialogChartList::ChartButton : public GuiWidget {
 
     void onMousePress(MousePress& evt) override {
         if (isMouseOver()) {
-            if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+            if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
                 startCapturingMouse();
                 gSimfile->openChart(myChartIndex);
             }
-            evt.setHandled();
+            evt.handled = true;
         }
     }
 

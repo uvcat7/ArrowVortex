@@ -184,18 +184,12 @@ struct MouseMove {
 
 /// Contains data from a mouse button press event.
 struct MousePress {
-    MousePress(Mouse::Code code, int x, int y, int keyflags, bool doubleClick,
-               bool handled);
     Mouse::Code button;  ///< The mouse button that was pressed.
     int x, y;            ///< The position of the mouse cursor.
     int keyflags;        ///< Keyflag values of modifier keys that were down.
     bool doubleClick;    ///< True if the press is the second press of a double
                          ///< click.
-    bool unhandled() const { return !handled; }
-    void setHandled();
-
-   private:
-    bool handled;  ///< Used to track if the event is handled.
+    bool handled;        ///< Used to track if the event is handled.
 };
 
 /// Contains data from a mouse button release event.
