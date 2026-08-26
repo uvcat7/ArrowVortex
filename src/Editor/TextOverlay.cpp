@@ -15,6 +15,7 @@
 #include <Editor/Common.h>
 #include <Editor/Shortcuts.h>
 #include <Editor/Action.h>
+#include <string>
 
 namespace Vortex {
 
@@ -155,10 +156,8 @@ struct TextOverlayImpl : public TextOverlay {
                     "Set to target nearby row of snap");
         addShortcut(Action::SET_VISUAL_SYNC_RECEPTOR_ANCHOR,
                     "Set to target receptor's row");
-        addShortcut(Action::SHIFT_ROW_NONDESTRUCTIVE,
-                    "Shift to cursor, non-destructive");
-        addShortcut(Action::SHIFT_ROW_DESTRUCTIVE,
-                    "Shift to cursor, destructive");
+        addShortcut("Non-destructive row shift", "B");
+        addShortcut("Destructive row shift", "Alt-B");
         addShortcut(Action::INJECT_BOUNDING_BPM_CHANGE,
                     "Add bounding BPM change");
 

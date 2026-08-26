@@ -22,6 +22,13 @@
 #include <Simfile/SegmentList.h>
 #include <Simfile/TimingData.h>
 
+#include <optional>
+#include <utility>
+#include <format>
+#include <string>
+#include <tuple>
+#include <algorithm>
+
 #define TEMPO_MAN ((TempoManImpl*)gTempo)
 
 namespace Vortex {
@@ -30,6 +37,16 @@ namespace Vortex {
 // TempoManImpl :: member data.
 
 const char* TempoMan::clipboardTag = "tempo";
+
+enum class VisualSyncMode { DESTRUCTIVE, NON_DESTRUCTIVE, OFFSET };
+
+struct VisualSyncData {
+    const int targetRow;
+    const VisualSyncMode mode;
+    const int leftLimitRow;
+    const int rightLimitRow;
+    const double initialBpm;
+};
 
 struct TempoManImpl : public TempoMan {
     Tempo* myTempo = nullptr;
@@ -43,6 +60,8 @@ struct TempoManImpl : public TempoMan {
     Tempo* myTweakTempo = nullptr;
     TweakMode myTweakMode = TWEAK_NONE;
     double myTweakValue;
+
+    std::optional<VisualSyncData> myVisualSync = std::nullopt;
 
     History::EditId myApplyOffsetId;
     History::EditId myApplySegmentsId;
@@ -462,7 +481,7 @@ struct TempoManImpl : public TempoMan {
     // TempoManImpl :: clipboard functions.
 
     int minSelectionRow() const override {
-        auto boxes = gTempoBoxes->getBoxes();
+        auto& boxes = gTempoBoxes->getBoxes();
         for (auto& box : boxes) {
             if (box.isSelected) return box.row;
         }
@@ -473,7 +492,7 @@ struct TempoManImpl : public TempoMan {
         SegmentGroup clipboard;
 
         // Copy all the selected segments.
-        auto boxes = gTempoBoxes->getBoxes();
+        auto& boxes = gTempoBoxes->getBoxes();
         for (auto& segment : *myTempo->segments) {
             auto type = segment.type();
             auto seg = segment.begin(), end = segment.end();
@@ -740,170 +759,294 @@ struct TempoManImpl : public TempoMan {
 
     // ================================================================================================
     // TempoManImpl :: visual sync
+    bool isInVisualSync() override { return myVisualSync != std::nullopt; }
 
-    void injectBoundingBpmChange(const int target_row) override {
-        if (target_row <= 0) {
+    void injectBoundingBpmChange(const int targetRow) override {
+        if (targetRow <= 0) {
             return;
         }
 
         const BpmChange cur_bpm =
-            this->myTempo->segments->getRecent<BpmChange>(target_row);
+            this->myTempo->segments->getRecent<BpmChange>(targetRow);
 
-        if (cur_bpm.row == target_row) {
+        if (cur_bpm.row == targetRow) {
             return;
         }
 
         SegmentEdit edit;
-        edit.add.append(BpmChange(target_row, cur_bpm.bpm));
+        edit.add.append(BpmChange(targetRow, cur_bpm.bpm));
 
-        modify(edit);
+        gHistory->startChain();
+        modify(edit, false);
+        gHistory->finishChain("Injected bounding BPM change");
     }
 
-    void destructiveShiftRowToTime(const int target_row,
-                                   const double target_time) override {
-        if (target_row <= 0) {
-            this->setOffset(-target_time);
-            return;
-        }
-
-        const BpmChange prev_bpm_change =
-            this->myTempo->segments->getRecent<BpmChange>(target_row - 1);
-        const int prev_bpm_row = prev_bpm_change.row;
-        const double prev_bpm_time = rowToTime(prev_bpm_row);
-        const double beat_delta = (target_row - prev_bpm_row) / 48.0;
-        const double new_bpm = 60 * beat_delta / (target_time - prev_bpm_time);
-
-        SegmentEdit edit;
-        edit.add.append(BpmChange(prev_bpm_change.row, new_bpm));
-
-        modify(edit);
+    const double calculateBpmChangeForShift(const int rowDifference,
+                                            const double timeDifference) {
+        return 60.0 * (static_cast<double>(rowDifference) / 48.) /
+               timeDifference;
     }
 
-    void nonDestructiveShiftRowToTime(const int target_row,
-                                      const double target_time) override {
-        if (target_row <= 0) {
-            this->setOffset(-target_time);
-            return;
-        }
+    std::pair<int, int> getBeatBounds(const int targetRow) {
+        return std::pair(48 * ((targetRow - 1) / 48),
+                         48 * (targetRow / 48) + 48);
+    }
 
-        BpmChange prev_bpm_change;
-        BpmChange central_bpm_change;
-        BpmChange next_bpm_change;
-        bool has_central = false;
-        bool has_next = false;
+    std::pair<int, int> findClosestBoundingRows(const Chart* chart,
+                                                const int targetRow) const {
+        int closestBoundingLeftRow = INT32_MIN;
+        int closestBoundingRightRow = INT32_MAX;
 
-        {
-            auto it = this->myTempo->segments->begin<BpmChange>();
-            decltype(it) end = this->myTempo->segments->end<BpmChange>();
+        auto segmentIt = chart->getTempo(mySimfile)->segments->begin();
+        decltype(segmentIt) segmentItEnd =
+            chart->getTempo(mySimfile)->segments->end();
 
-            for (; it != end; ++it) {
-                if (it->row < target_row) {
-                    prev_bpm_change = *it;
-                } else if (it->row == target_row) {
-                    central_bpm_change = *it;
-                    has_central = true;
-                } else {
-                    next_bpm_change = *it;
-                    has_next = true;
-                    break;
+        for (; segmentIt != segmentItEnd; ++segmentIt) {
+            auto objIt = segmentIt->begin();
+            decltype(objIt) objItEnd = segmentIt->end();
+
+            for (; objIt != objItEnd; ++objIt) {
+                const int row = objIt->row;
+
+                if (closestBoundingLeftRow < row && row < targetRow) {
+                    closestBoundingLeftRow = row;
+                }
+                if (targetRow < row && row < closestBoundingRightRow) {
+                    closestBoundingRightRow = row;
                 }
             }
         }
 
-        const double target_row_time = rowToTime(target_row);
-        // 4th moves require special care
-        const bool is_beat_move = target_row % 48 == 0;
-
-        const int changed_left_beat_number = (target_row - 1) / 48;
-        const int changed_left_beat_start_row = 48 * changed_left_beat_number;
-        const int changed_right_beat_number = target_row / 48;
-        const int changed_right_beat_start_row = 48 * changed_right_beat_number;
-        const int changed_right_beat_end_row =
-            changed_right_beat_start_row + 48;
-
-        // Beat boundaries form implicit BPM changes if unspecified
-        if (!has_central) {
-            central_bpm_change = prev_bpm_change;
-            central_bpm_change.row = target_row;
-        }
-        if (!has_next) {
-            next_bpm_change = BpmChange(
-                changed_right_beat_end_row,
-                has_central ? central_bpm_change.bpm : prev_bpm_change.bpm);
-        }
-
-        const bool is_left_bound_by_beat_boundary =
-            prev_bpm_change.row < changed_left_beat_start_row;
-        const int left_boundary_row = is_left_bound_by_beat_boundary
-                                          ? changed_left_beat_start_row
-                                          : prev_bpm_change.row;
-        const double left_boundary_time = rowToTime(left_boundary_row);
-
-        const bool is_right_bound_by_beat_boundary =
-            !has_next || next_bpm_change.row > changed_right_beat_end_row;
-        const int right_boundary_row = is_right_bound_by_beat_boundary
-                                           ? changed_right_beat_end_row
-                                           : next_bpm_change.row;
-        const double right_boundary_time = rowToTime(right_boundary_row);
-
-        if (left_boundary_time > target_time) {
-            const bool is_previous_beat_affected = target_row % 48 == 0;
-            HudError("%s",
-                     is_left_bound_by_beat_boundary
-                         ? is_previous_beat_affected
-                               ? "Cannot move this row before previous beat"
-                               : "Cannot move this row before current beat"
-                         : "Cannot move this row past previous BPM change");
-            return;
-        }
-
-        if (!is_right_bound_by_beat_boundary &&
-            target_time >= right_boundary_time) {
-            HudError("%s", "Cannot move row past next BPM change");
-            return;
-        }
-
-        const double left_beat_delta = (target_row - left_boundary_row) / 48.0;
-        const double right_beat_delta =
-            (right_boundary_row - target_row) / 48.0;
-        const double left_bpm =
-            60 * left_beat_delta / (target_time - left_boundary_time);
-        const double right_bpm =
-            60 * right_beat_delta / (right_boundary_time - target_time);
-
-        SegmentEdit edit;
-        if (has_central) {
-            edit.rem.append(central_bpm_change);
-        }
-
-        edit.add.append(BpmChange(left_boundary_row, left_bpm));
-
-        if (right_boundary_row != target_row) {
-            edit.add.append(BpmChange(target_row, right_bpm));
-        } else {
-            edit.rem.append(next_bpm_change);
-            edit.add.append(BpmChange(target_row, central_bpm_change.bpm));
-        }
-        // If we're editing a beat for the first time, we should copy BPM over
-        if (is_right_bound_by_beat_boundary) {
-            const BpmChange right_boundary_bpm_change(right_boundary_row,
-                                                      central_bpm_change.bpm);
-            edit.add.append(right_boundary_bpm_change);
-        }
-
-        gHistory->startChain();
-        modify(edit);
-        if (has_central) {
-            if (is_beat_move) {
-                gHistory->finishChain("Moved beat");
-            } else {
-                gHistory->finishChain("Moved sub-beat");
+        for (auto& note : chart->notes) {
+            if (closestBoundingLeftRow < note.row && note.row < targetRow) {
+                closestBoundingLeftRow = note.row;
             }
-        } else {
-            gHistory->finishChain("Placed sub-beat");
+            if (targetRow < note.row && note.row < closestBoundingRightRow) {
+                closestBoundingRightRow = note.row;
+            }
+            if (closestBoundingLeftRow < note.endrow &&
+                note.endrow < targetRow) {
+                closestBoundingLeftRow = note.endrow;
+            }
+            if (targetRow < note.endrow &&
+                note.endrow < closestBoundingRightRow) {
+                closestBoundingRightRow = note.endrow;
+            }
         }
+
+        return std::pair(closestBoundingLeftRow, closestBoundingRightRow);
     }
 
+    std::pair<int, int> calculateVisualSyncBoundaries(const int targetRow) {
+        if (myChart == nullptr) {
+            HudError(
+                "Somehow reached visual sync boundary check without an active "
+                "chart. Report this.");
+            return std::pair(0, 0);
+        }
+
+        int closestBoundingLeftRow, closestBoundingRightRow;
+        int candidateLeftBound, candidateRightBound;
+
+        std::tie(closestBoundingLeftRow, closestBoundingRightRow) =
+            this->getBeatBounds(targetRow);
+
+        // We must go through ourselves first so that sameChartFlag message
+        //   only appears if a different chart genuinely triggered the message
+        std::tie(candidateLeftBound, candidateRightBound) =
+            findClosestBoundingRows(myChart, targetRow);
+        closestBoundingLeftRow =
+            std::max(closestBoundingLeftRow, candidateLeftBound);
+        closestBoundingRightRow =
+            std::min(closestBoundingRightRow, candidateRightBound);
+
+        bool sameChartFlag = true;
+        const bool areWeSplitTimed = myChart->hasTempo();
+        for (const Chart* chart : mySimfile->charts) {
+            if (chart == nullptr) {
+                HudError(
+                    "There was a nullptr chart in simfile charts list. Report "
+                    "this.");
+                continue;
+            }
+            if (chart == myChart) {
+                continue;
+            }
+            const bool isSplitTimed = chart->hasTempo();
+            const bool isValidTarget = !areWeSplitTimed && !isSplitTimed;
+
+            if (!isValidTarget) {
+                continue;
+            }
+
+            std::tie(candidateLeftBound, candidateRightBound) =
+                findClosestBoundingRows(chart, targetRow);
+
+            if (closestBoundingLeftRow < candidateLeftBound) {
+                closestBoundingLeftRow = candidateLeftBound;
+                sameChartFlag = false;
+            }
+            if (candidateRightBound < closestBoundingRightRow) {
+                closestBoundingRightRow = candidateRightBound;
+                sameChartFlag = false;
+            }
+        }
+
+        if (!sameChartFlag) {
+            HudWarning(
+                "A different chart in this simfile causes the visual sync to "
+                "be bound this way.");
+        }
+
+        return std::pair(closestBoundingLeftRow, closestBoundingRightRow);
+    }
+
+    void startDestructiveVisualSync(const int targetRow) override {
+        if (this->isInVisualSync()) {
+            return;
+        }
+
+        if (targetRow <= 0) {
+            myVisualSync.emplace(
+                VisualSyncData{.mode = VisualSyncMode::OFFSET});
+            gHistory->startChain();
+            return;
+        }
+
+        BpmChange adjustedBpmChange;
+        if (myChart) {
+            adjustedBpmChange =
+                myChart->getTempo(mySimfile)->segments->getRecent<BpmChange>(
+                    targetRow - 1);
+        } else {
+            adjustedBpmChange =
+                mySimfile->tempo->segments->getRecent<BpmChange>(targetRow - 1);
+        }
+
+        VisualSyncData syncData{
+            .targetRow = targetRow,
+            .mode = VisualSyncMode::DESTRUCTIVE,
+            .leftLimitRow = adjustedBpmChange.row,
+            .initialBpm = adjustedBpmChange.bpm,
+        };
+
+        myVisualSync.emplace(syncData);
+
+        gHistory->startChain();
+    }
+
+    void startNondestructiveVisualSync(const int targetRow) override {
+        if (this->isInVisualSync()) {
+            return;
+        }
+
+        if (targetRow <= 0) {
+            myVisualSync.emplace(
+                VisualSyncData{.mode = VisualSyncMode::OFFSET});
+            gHistory->startChain();
+            return;
+        }
+
+        int leftLimitRow, rightLimitRow;
+        std::tie(leftLimitRow, rightLimitRow) =
+            calculateVisualSyncBoundaries(targetRow);
+        const double replicatedBpm = this->getBpm(rightLimitRow);
+
+        VisualSyncData syncData{.targetRow = targetRow,
+                                .mode = VisualSyncMode::NON_DESTRUCTIVE,
+                                .leftLimitRow = leftLimitRow,
+                                .rightLimitRow = rightLimitRow,
+                                .initialBpm = replicatedBpm};
+
+        myVisualSync.emplace(syncData);
+
+        gHistory->startChain();
+    }
+
+    void tickVisualSync(const double targetTime) override {
+        static bool shouldWarn = true;
+
+        if (!this->isInVisualSync()) {
+            return;
+        }
+
+        // NOTE: deliberately if-else chain because C++'s switch statement suck
+        //   and add indentation.
+        if (myVisualSync->mode == VisualSyncMode::DESTRUCTIVE) {
+            const double bpmChangeTime = rowToTime(myVisualSync->leftLimitRow);
+            if (targetTime < bpmChangeTime) {
+                if (shouldWarn) {
+                    HudWarning(
+                        "Cannot move past previous BPM change in "
+                        "destructive shift.");
+                    shouldWarn = false;
+                }
+                return;
+            }
+            shouldWarn = true;
+            const double newBpm = calculateBpmChangeForShift(
+                myVisualSync->targetRow - myVisualSync->leftLimitRow,
+                targetTime - bpmChangeTime);
+            SegmentEdit edit;
+            edit.add.append(BpmChange(myVisualSync->leftLimitRow, newBpm));
+            modify(edit, false);
+        } else if (myVisualSync->mode == VisualSyncMode::NON_DESTRUCTIVE) {
+            const double leftTime = rowToTime(myVisualSync->leftLimitRow);
+            const double rightTime = rowToTime(myVisualSync->rightLimitRow);
+
+            if (targetTime < leftTime || targetTime > rightTime) {
+                if (shouldWarn) {
+                    HudWarning(
+                        "Cannot move outside the bounding area in "
+                        "non-destructive shifts.");
+                    shouldWarn = false;
+                }
+                return;
+            }
+            shouldWarn = true;
+
+            const double newLeftBpm = calculateBpmChangeForShift(
+                myVisualSync->targetRow - myVisualSync->leftLimitRow,
+                targetTime - leftTime);
+            const double newCentralBpm = calculateBpmChangeForShift(
+                myVisualSync->rightLimitRow - myVisualSync->targetRow,
+                rightTime - targetTime);
+
+            SegmentEdit edit;
+            edit.add.append(BpmChange(myVisualSync->leftLimitRow, newLeftBpm));
+            edit.add.append(BpmChange(myVisualSync->targetRow, newCentralBpm));
+            edit.add.append(BpmChange(myVisualSync->rightLimitRow,
+                                      myVisualSync->initialBpm));
+            modify(edit, false);
+        } else if (myVisualSync->mode == VisualSyncMode::OFFSET) {
+            this->setOffset(-targetTime);
+        }
+        gHistory->updateChain();
+        return;
+    }
+
+    void endVisualSync() override {
+        if (!this->isInVisualSync()) {
+            return;
+        }
+
+        // NOTE: deliberately if-else chain because C++'s switch statement suck
+        //   and add indentation.
+        std::string msg;
+        if (myVisualSync->mode == VisualSyncMode::DESTRUCTIVE) {
+            const double newBpm = this->getBpm(myVisualSync->leftLimitRow);
+            msg = std::format(
+                "Shifted anchor row destructively, modifying BPM "
+                "at row {0} from {1} to {2}",
+                myVisualSync->leftLimitRow, myVisualSync->initialBpm, newBpm);
+        } else if (myVisualSync->mode == VisualSyncMode::NON_DESTRUCTIVE) {
+            msg = "Shifted anchor row non-destructively";
+        } else if (myVisualSync->mode == VisualSyncMode::OFFSET) {
+            msg = "Offset change completed";
+        }
+        gHistory->finishChain(msg);
+        myVisualSync.reset();
+    }
 };  // TempoManImpl
 
 // ================================================================================================

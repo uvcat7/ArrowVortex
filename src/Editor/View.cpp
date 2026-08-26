@@ -236,11 +236,7 @@ struct ViewImpl : public View, public InputHandler {
 
     double getHoveredBeat() const override { return myHoveredBeat; }
 
-    void onChanges(int changes) override {
-        if (changes & VCM_TEMPO_CHANGED) {
-            myCursorTime = gTempo->rowToTime(myCursorRow);
-        }
-    }
+    void onChanges(int changes) override {}
 
     void tick() override {
         vec2i mpos = gSystem->getMousePos();
