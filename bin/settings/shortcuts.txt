@@ -1,6 +1,6 @@
 FILE_OPEN    = ctrl + o
 FILE_SAVE    = ctrl + s
-FILE_SAVE_AS =
+FILE_SAVE_AS = 
 FILE_CLOSE   =
 
 OPEN_DIALOG_SONG_PROPERTIES   = shift + p
