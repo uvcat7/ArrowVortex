@@ -150,6 +150,7 @@ struct EditingImpl : public Editing {
 
     void onKeyPress(KeyPress& evt) override {
         if (evt.handled) return;
+        if (!gChart->isOpen()) return;
         Key::Code kc = evt.key;
 
         // Copy/pasting.
@@ -176,7 +177,7 @@ struct EditingImpl : public Editing {
         }
 
         // Modal visual sync
-        if (gChart->isOpen() && !gTempo->isInVisualSync() && kc == Key::B) {
+        if (!gTempo->isInVisualSync() && kc == Key::B) {
             switch (evt.keyflags) {
                 case (0):
                     this->enableVisualSync(false);
@@ -192,8 +193,7 @@ struct EditingImpl : public Editing {
         }
 
         // Placing notes.
-        if (gChart->isOpen() && kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 &&
-            !evt.repeated) {
+        if (kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 && !evt.repeated) {
             disableTemporaryBeatlines();
             int col = KeyToCol(kc);
             int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
@@ -242,68 +242,22 @@ struct EditingImpl : public Editing {
         }
     }
 
-    void turnIntoTriplets() {
-        /* TODO?
-        // h/h/h/k/k/h/h/h/k/k/
-
-        int delta[5] = {24, 24, 24, 12, 12};
-        int deltaIdx = 0;
-
-        std::vector<RowCol> rem;
-        NoteList add = gSelection->getSelectedNotes();
-        for(auto& note : add) rem.emplace_back({note.row, (int)note.col});
-
-        if(add.empty())
-        {
-                HudNote("There are no notes selected.");
-                return;
-        }
-
-        // Scale the rows of the selected notes.
-        int row = add[0].row;
-        for(Note& n : add)
-        {
-                n.row = n.endrow = row;
-                row += delta[deltaIdx];
-                deltaIdx = (deltaIdx + 1) % 5;
-        }
-
-        // If we are using row selection, we remove all expanded notes outside
-        the selection range. auto region = gSelection->getSelectedRegion();
-        if(region.beginRow != region.endRow)
-        {
-                int i = 0;
-                while(i != add.size() && (int)add[i].row <= region.endRow) ++i;
-                add.erase(i, add.size());
-        }
-
-        // Perform the scale operation.
-        static const NotesMan::EditDescription tag = {"Expanded %1 note.",
-        "Expanded %1 notes."}; gNotes->modify(add, rem,
-        NotesMan::OVERWRITE_REGION, &tag);
-
-        // Reselect the scaled notes.
-        if(gSelection->isNotes())
-        {
-                gNotes->select(SELECT_SET, add.begin(), add.size());
-        }*/
-    }
-
     void onKeyRelease(KeyRelease& evt) override {
         if (evt.handled) return;
+        if (!gChart->isOpen()) return;
+        Key::Code kc = evt.key;
 
         // Modal visual sync
-        if (gChart->isOpen() && evt.key == Key::B) {
+        if (kc == Key::B) {
             gTempo->endVisualSync();
             evt.handled = true;
             return;
         }
 
-        if (gChart->isOpen() && evt.key >= Key::DIGIT_0 &&
-            evt.key <= Key::DIGIT_9) {
+        if (kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9) {
             // Finish placing notes.
             int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
-            int col = KeyToCol(evt.key);
+            int col = KeyToCol(kc);
             if (evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
             if (col >= 0 && col < gStyle->getNumCols()) {
                 noteKeysHeld--;
