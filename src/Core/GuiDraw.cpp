@@ -188,6 +188,12 @@ static void CreateIcons() {
     c.polygon(arrow, arrow + 3, 3);
     GD->icons.arrow = c.createTexture();
 
+    // Chevron : right pointing > symbol
+    c.clear(1.0f);
+    c.line(24, 12, 40, 32, 8);
+    c.line(40, 32, 24, 52, 8);
+    GD->icons.chevron = c.createTexture();
+
     // Check : checkmark.
     c = Canvas(80, 80, 1.f);
     float check[12] = {56, 80, 40, 0, 16, 32, 0, 8, 80, 40, 24, 48};

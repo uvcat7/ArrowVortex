@@ -48,7 +48,7 @@ struct WavLoader : public SoundSource {
 };
 
 int WavLoader::readFrames(int frames, short* buffer) {
-    int numFramesToRead = min(numFramesLeft, frames);
+    int numFramesToRead = std::min(numFramesLeft, frames);
     numFramesLeft -= numFramesToRead;
 
     std::streamsize bytesPerFrame =

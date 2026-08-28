@@ -15,6 +15,7 @@ struct GuiDraw {
         Texture grab, arrow;
         Texture plus, minus, cross;
         Texture check;
+        Texture chevron;
     };
 
     struct Button {

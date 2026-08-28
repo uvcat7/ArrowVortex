@@ -4,6 +4,7 @@
 #include <Core/StringUtils.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <Simfile/Chart.h>
 
@@ -36,12 +37,7 @@ SegmentList::~SegmentList() {
     free(mySegs);
 }
 
-SegmentList::SegmentList()
-    : mySegs(nullptr),
-      myNum(0),
-      myStride(Segment::meta[Segment::BPM]->stride),
-      myCap(0),
-      myType(Segment::BPM) {}
+SegmentList::SegmentList() = default;
 
 SegmentList::SegmentList(List&& l)
     : mySegs(l.mySegs),
@@ -54,11 +50,7 @@ SegmentList::SegmentList(List&& l)
 }
 
 SegmentList::SegmentList(const List& list)
-    : mySegs(nullptr),
-      myNum(0),
-      myStride(list.myStride),
-      myCap(0),
-      myType(list.myType) {
+    : myStride(list.myStride), myType(list.myType) {
     assign(list);
 }
 
@@ -512,7 +504,7 @@ const Segment* SegmentList::find(int row) const {
 void SegmentList::myReserve(int num) {
     int numBytes = num * myStride;
     if (myCap < numBytes) {
-        myCap = max(numBytes, myCap << 1);
+        myCap = std::max(numBytes, myCap << 1);
         mySegs = static_cast<uint8_t*>(realloc(mySegs, myCap));
     }
 }

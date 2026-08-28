@@ -1,5 +1,7 @@
 ﻿#include <Core/Core.h>
 
+#include <cmath>
+#include <cstring>
 #include <map>
 #include <algorithm>
 #include <numeric>
@@ -175,7 +177,7 @@ static void ParseAttacks(PARSE_ARGS) {
     for (char* v[2]; ParseNextItem(str, v, 2, ':');) {
         if (Str::equal(v[0], "MODS")) {
             attack.mods = v[1];
-            data.tempo()->attacks.push_back(attack);
+            data.tempo()->attacks.emplace_back(attack);
             attack.mods.clear();
         } else if (ParseVal(v[1], tmp)) {
             if (Str::equal(v[0], "TIME")) {
@@ -193,7 +195,7 @@ static void ParseAttacks(PARSE_ARGS) {
 
 static void ParseKeySounds(PARSE_ARGS) {
     for (char* v; ParseNextItem(str, v);) {
-        data.tempo()->keysounds.push_back(v);
+        data.tempo()->keysounds.emplace_back(v);
     }
 }
 
@@ -206,7 +208,7 @@ static void ParseDisplayBpm(PARSE_ARGS) {
         tempo->displayBpmType = BPM_RANDOM;
         tempo->displayBpmRange = {0, 0};
     } else {
-        char* colon = strstr(str, ":");
+        char* colon = std::strstr(str, ":");
         double min, max;
         if (colon) {
             *colon = 0;
@@ -251,11 +253,11 @@ static void ParseBgChanges(PARSE_ARGS) {
         ParseVal(v[0], change.startBeat);
 
         if (tag == "FGCHANGES") {
-            data.sim->fgChanges.push_back(change);
+            data.sim->fgChanges.emplace_back(change);
         } else if (tag == "BGCHANGES2") {
-            data.sim->bgChanges[1].push_back(change);
+            data.sim->bgChanges[1].emplace_back(change);
         } else {
-            data.sim->bgChanges[0].push_back(change);
+            data.sim->bgChanges[0].emplace_back(change);
         }
     }
 }
@@ -267,7 +269,7 @@ static void ParseRadar(Chart* chart, char* str) {
     double val;
     for (char* v; ParseNextItem(str, v);) {
         if (ParseVal(v, val)) {
-            chart->radar.push_back(val);
+            chart->radar.emplace_back(val);
         }
     }
 }
@@ -290,9 +292,9 @@ Difficulty ToDiff(const char* str) {
 struct ReadNoteData {
     int player, numCols;
     NoteList* notes;
-    Vector<int> holdPos;
-    Vector<NoteType> holdType;
-    Vector<int> quants;
+    std::vector<int> holdPos;
+    std::vector<NoteType> holdType;
+    std::vector<int> quants;
 };
 
 static void ReadNoteRow(ReadNoteData& data, int row, char* p,
@@ -322,10 +324,10 @@ static void ReadNoteRow(ReadNoteData& data, int row, char* p,
                 // Make sure we set the note to its largest quantization to
                 // avoid data loss
                 if (data.quants[col] > 0 && hold->quant > 0) {
-                    hold->quant = min(
-                        192u,
-                        static_cast<uint32_t>(quantization * hold->quant /
-                                              gcd(quantization, hold->quant)));
+                    hold->quant = std::min(
+                        192u, static_cast<uint32_t>(
+                                  quantization * hold->quant /
+                                  std::gcd(quantization, hold->quant)));
                 } else  // There was some error, so always play safe and use 192
                 {
                     HudError("Bug: couldn't get hold quantization in row %d",
@@ -359,11 +361,11 @@ static bool IsQuantizationCompressionValid(char* measureText, int quantization,
     char* line = measureText;
     float mod = static_cast<float>(ROWS_PER_NOTE_SECTION) / quantization;
     for (int j = 0; j < ROWS_PER_NOTE_SECTION; ++j, line += numCols) {
-        float rem = round(fmod(j, mod));
+        float rem = std::round(std::fmod(j, mod));
         // Check all the compressed rows and make sure they are
         // empty
         if (rem > 0 && rem < static_cast<int>(mod) &&
-            memcmp(line, emptyline, numCols) != 0) {
+            std::memcmp(line, emptyline, numCols) != 0) {
             return false;
             break;
         }
@@ -431,7 +433,7 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
         }
 
         // Read notes in the current section.
-        Vector<int> holds(numCols, 0);
+        std::vector<int> holds(numCols, 0);
         int numLines = numSymbols / numCols;
         int quantization = numLines;
         if (numLines > 0) {
@@ -477,15 +479,15 @@ static void ParseNotes(ParseData& data, Chart* chart, const std::string& style,
             line = measureText;
             int ofs = ROWS_PER_NOTE_SECTION / numLines;
             for (int i = 0; i < numLines; ++i) {
-                if (memcmp(line, emptyline, numCols) != 0) {
+                if (std::memcmp(line, emptyline, numCols) != 0) {
                     ReadNoteRow(readNoteData, row, line, quantization);
                 }
 
                 // Handle abnormal numbers of lines loading
                 if (ROWS_PER_NOTE_SECTION % numLines != 0) {
-                    ofs =
-                        (static_cast<int>(round(192.0f / numLines * (i + 1))) -
-                         static_cast<int>(round(192.0f / numLines * i)));
+                    ofs = (static_cast<int>(
+                               std::round(192.0f / numLines * (i + 1))) -
+                           static_cast<int>(std::round(192.0f / numLines * i)));
                 }
                 line += numCols;
                 row += ofs;
@@ -541,7 +543,7 @@ static void ParseNotes(PARSE_ARGS) {
     ParseNotes(data, data.chart, data.styleId, notes);
 
     // Add the chart to the chart list.
-    data.sim->charts.push_back(data.chart);
+    data.sim->charts.emplace_back(data.chart);
     data.chart = nullptr;
     data.styleId.clear();
 }

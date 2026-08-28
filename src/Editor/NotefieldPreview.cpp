@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <Core/Draw.h>
 #include <Core/Gui.h>
@@ -265,7 +266,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         // Draw Speed Info
         TextStyle textStyle;
-        Text::arrange(Text::MR, textStyle, fmt);
+        Text::arrange(Text::MR, textStyle, static_cast<const char*>(fmt));
         Text::draw(vec2i{myX - 5, myY + guideHeight_});
     }
 
@@ -277,10 +278,11 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         // Determine the first row and last row that should show beat lines.
         int drawBeginRow =
-            max(0, static_cast<int>(currentRow) - ROWS_PER_BEAT * 4);
-        int drawEndRow = min(static_cast<int>(currentRow) + ROWS_PER_BEAT * 20,
-                             gSimfile->getEndRow()) +
-                         1;
+            std::max(0, static_cast<int>(currentRow) - ROWS_PER_BEAT * 4);
+        int drawEndRow =
+            std::min(static_cast<int>(currentRow) + ROWS_PER_BEAT * 20,
+                     gSimfile->getEndRow()) +
+            1;
 
         auto& sigs = gTempo->getTimingData().sigs;
         auto it = sigs.begin(), end = sigs.end();
@@ -308,7 +310,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         DrawPosHelper drawPos = DrawPosHelper(drawMode_, reverse_);
         while (it != end && row < drawEndRow) {
             int endRow = drawEndRow;
-            if (next != end) endRow = min(endRow, next->row);
+            if (next != end) endRow = std::min(endRow, next->row);
             while (row < endRow) {
                 // Measure line and measure label.
                 int y = myY - drawPos.advance(row);
@@ -359,7 +361,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
         double beat = gTempo->timeToBeat(gView->getCursorTime());
         float beatfrac = static_cast<float>(beat - floor(beat));
         uint8_t beatpulse = static_cast<uint8_t>(
-            min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
+            std::clamp(static_cast<int>((2 - beatfrac * 4) * 255), 0, 255));
 
         // Draw the receptors.
         auto batch = Renderer::batchTC();
@@ -388,7 +390,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
             if (!note) continue;
             double lum = 1.5 - (time - note->endtime) * 6.0;
             uint8_t alpha = static_cast<uint8_t>(
-                clamp(static_cast<int>(lum * 255.0), 0, 255));
+                std::clamp(static_cast<int>(lum * 255.0), 0, 255));
             if (alpha > 0) {
                 noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
             }
@@ -435,7 +437,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
             by = myY + ((by - myY) * speed);
 
             // Don't show notes off the screen
-            if (max(y, by) < -32 || min(y, by) > maxY) continue;
+            if (std::max(y, by) < -32 || std::min(y, by) > maxY) continue;
 
             int rowtype = ToRowType(note.row);
             int col = note.col, x = myColX[col];

@@ -4,6 +4,7 @@
 #include <Simfile/Simfile.h>
 #include <Simfile/Segments.h>
 #include <filesystem>
+#include <vector>
 namespace fs = std::filesystem;
 
 namespace Vortex {

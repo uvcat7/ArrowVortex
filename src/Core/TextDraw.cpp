@@ -258,16 +258,14 @@ void Text::draw(vec2i textPos) {
     RD->shadowColor = style.shadowColor;
 
     // Render the text.
-    auto* markup = layout.markup.begin();
     int markupIndex = 0, numMarkup = layout.markup.size();
-    auto* glyphs = layout.glyphs.begin();
     for (auto& line : layout.lines) {
         int glyphIndex = line.beginGlyph, lineEnd = line.endGlyph;
         while (glyphIndex != lineEnd) {
             // Apply markup until the current glyph index is reached.
             while (markupIndex < numMarkup &&
-                   markup[markupIndex].glyphIndex <= glyphIndex) {
-                ApplyMarkup(markup[markupIndex]);
+                   layout.markup[markupIndex].glyphIndex <= glyphIndex) {
+                ApplyMarkup(layout.markup[markupIndex]);
                 ++markupIndex;
             }
 
@@ -275,13 +273,13 @@ void Text::draw(vec2i textPos) {
             // or the line end.
             int drawEnd = lineEnd;
             if (markupIndex < numMarkup &&
-                markup[markupIndex].glyphIndex < lineEnd) {
-                drawEnd = markup[markupIndex].glyphIndex;
+                layout.markup[markupIndex].glyphIndex < lineEnd) {
+                drawEnd = layout.markup[markupIndex].glyphIndex;
             }
 
             // Draw said glyphs.
             for (; glyphIndex < drawEnd; ++glyphIndex) {
-                auto& item = glyphs[glyphIndex];
+                auto& item = layout.glyphs[glyphIndex];
                 if (item.glyph->hasPixels) {
                     PushGlyph(textPos.x + line.x + item.x, textPos.y + line.y,
                               *item.glyph);

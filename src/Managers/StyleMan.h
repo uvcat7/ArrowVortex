@@ -2,6 +2,8 @@
 
 #include <Core/Core.h>
 
+#include <vector>
+
 namespace Vortex {
 
 /// Holds data that determines the play style of a chart.

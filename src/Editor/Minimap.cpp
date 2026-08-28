@@ -51,19 +51,19 @@ struct SetPixelData {
 
 static void SetPixels(const SetPixelData& spd, int x, double tor,
                       uint32_t color) {
-    int y = clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs), 0,
-                  MAP_HEIGHT - 1);
+    int y = std::clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs),
+                       0, MAP_HEIGHT - 1);
     uint32_t* dst = spd.pixels + y * MAP_WIDTH + x;
     for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
 }
 
 static void SetPixels(const SetPixelData& spd, int x, double tor, double end,
                       uint32_t color) {
-    int cx = clamp(x, 0, MAP_WIDTH);
-    int yt = clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs), 0,
-                   MAP_HEIGHT - 1);
-    int yb = clamp(static_cast<int>((end - spd.startOfs) * spd.pixPerOfs), 0,
-                   MAP_HEIGHT - 1);
+    int cx = std::clamp(x, 0, MAP_WIDTH);
+    int yt = std::clamp(static_cast<int>((tor - spd.startOfs) * spd.pixPerOfs),
+                        0, MAP_HEIGHT - 1);
+    int yb = std::clamp(static_cast<int>((end - spd.startOfs) * spd.pixPerOfs),
+                        0, MAP_HEIGHT - 1);
     for (int y = yt; y <= yb; ++y) {
         uint32_t* dst = spd.pixels + y * MAP_WIDTH + cx;
         for (int i = 0; i < spd.noteW; ++i, ++dst) *dst = color;
@@ -154,7 +154,7 @@ struct MinimapImpl : public Minimap {
             64, 192, 192, 128, 255, 64, 255, 64, 64, 128, 128, 255,
         };
         density = round(density * 10.0) * (512.0 * 0.1 / 16.0);
-        int coloring = clamp(static_cast<int>(density), 0, 511);
+        int coloring = std::clamp(static_cast<int>(density), 0, 511);
         int ci = coloring >> 8;
         ci *= 3;
         int bf = coloring & 255;
@@ -163,7 +163,7 @@ struct MinimapImpl : public Minimap {
         int b = BlendI32(colors[ci + 2], colors[ci + 5], bf);
         uint32_t col = Color32(r, g, b);
 
-        int w = clamp(static_cast<int>(density * 0.05), 4, MAP_WIDTH) / 2;
+        int w = std::clamp(static_cast<int>(density * 0.05), 4, MAP_WIDTH) / 2;
         uint32_t* dst = pixels + y * MAP_WIDTH + MAP_WIDTH / 2 - w;
         for (int i = -w; i < w; ++i, ++dst) *dst = col;
     }
@@ -186,7 +186,8 @@ struct MinimapImpl : public Minimap {
                         (it > first) ? (it - 1)->time : (it->time - 1.0);
                     double post =
                         (it < last) ? (it + 1)->time : (it->time + 1.0);
-                    if (post > pre) density = max(density, 2.0 / (post - pre));
+                    if (post > pre)
+                        density = std::max(density, 2.0 / (post - pre));
                 }
                 if (density > 0.0) SetDensityRow(spd.pixels, y, density);
                 sec += secPerPix;
@@ -204,7 +205,8 @@ struct MinimapImpl : public Minimap {
                         (it > first) ? (it - 1)->time : (it->time - 1.0);
                     double post =
                         (it < last) ? (it + 1)->time : (it->time + 1.0);
-                    if (post > pre) density = max(density, 2.0 / (post - pre));
+                    if (post > pre)
+                        density = std::max(density, 2.0 / (post - pre));
                 }
                 if (density > 0.0) SetDensityRow(spd.pixels, y, density);
                 row += rowPerPix;
@@ -227,7 +229,7 @@ struct MinimapImpl : public Minimap {
 
         // If the vertical size has changed, update the minimap
         if (rect.h != myNotesH) {
-            myNotesH = min(MAP_HEIGHT, rect.h);
+            myNotesH = std::min(MAP_HEIGHT, rect.h);
             onChanges(VCM_VIEW_CHANGED);
             return true;
         }
@@ -244,9 +246,9 @@ struct MinimapImpl : public Minimap {
             topY = chartRect.y;
             bottomY = chartRect.y + chartRect.h;
 
-            double t = clamp(static_cast<double>(y - topY) /
-                                 static_cast<double>(bottomY - topY),
-                             0.0, 1.0);
+            double t = std::clamp(static_cast<double>(y - topY) /
+                                      static_cast<double>(bottomY - topY),
+                                  0.0, 1.0);
             if (gView->hasReverseScroll()) t = 1.0 - t;
 
             tor = myChartBeginOfs + (myChartEndOfs - myChartBeginOfs) * t;
@@ -262,7 +264,7 @@ struct MinimapImpl : public Minimap {
 
         if ((changes & bits) == 0) return;
 
-        Vector<uint32_t> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
+        std::vector<uint32_t> buffer(MAP_HEIGHT * MAP_WIDTH, 0);
 
         // The height of the chart region is based on the time elapsed between
         // the first and last row.
@@ -352,9 +354,9 @@ struct MinimapImpl : public Minimap {
                  static_cast<int>((ofsA - myChartBeginOfs) * pixPerOfs + 0.5);
         int y2 = baseY +
                  static_cast<int>((ofsB - myChartBeginOfs) * pixPerOfs + 0.5);
-        if (y1 > y2) swapValues(y1, y2);
+        if (y1 > y2) std::swap(y1, y2);
 
-        Draw::fill({x, y1, w, max(y2 - y1, 1)}, color);
+        Draw::fill({x, y1, w, std::max(y2 - y1, 1)}, color);
     }
 
     void draw() override {

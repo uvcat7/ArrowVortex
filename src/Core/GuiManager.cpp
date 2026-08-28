@@ -2,6 +2,8 @@
 
 #include <Core/MapUtils.h>
 
+#include <vector>
+
 namespace Vortex {
 
 struct GuiManagerData {
@@ -9,7 +11,7 @@ struct GuiManagerData {
     GuiWidget* mouseCapture;
     GuiWidget* textCapture;
 
-    Vector<GuiWidget*> mouseBlockers;
+    std::vector<GuiWidget*> mouseBlockers;
 
     std::map<GuiWidget*, std::string> widgetToIdMap;
     std::multimap<std::string, GuiWidget*> idToWidgetMap;
@@ -72,7 +74,7 @@ void GuiManager::removeWidget(GuiWidget* w) {
     GM->tooltipMap.erase(w);
     Map::eraseVals(GM->idToWidgetMap, w);
     GM->widgetToIdMap.erase(w);
-    GM->mouseBlockers.erase_values(w);
+    std::erase(GM->mouseBlockers, w);
 }
 
 void GuiManager::setWidgetId(GuiWidget* w, const std::string& id) {
@@ -104,11 +106,11 @@ std::string GuiManager::getTooltip(const GuiWidget* w) {
 }
 
 void GuiManager::blockMouseOver(GuiWidget* w) {
-    GM->mouseBlockers.push_back(w);
+    GM->mouseBlockers.emplace_back(w);
 }
 
 void GuiManager::unblockMouseOver(GuiWidget* w) {
-    GM->mouseBlockers.erase_values(w);
+    std::erase(GM->mouseBlockers, w);
 }
 
 void GuiManager::makeMouseOver(GuiWidget* w) {

@@ -10,8 +10,14 @@ namespace Vortex {
 // Segment iterators.
 
 struct SegmentIter {
-    inline void operator--() { ptr = (Segment*)(((uint8_t*)ptr) - stride); }
-    inline void operator++() { ptr = (Segment*)(((uint8_t*)ptr) + stride); }
+    inline void operator--() {
+        ptr = reinterpret_cast<Segment*>(reinterpret_cast<uint8_t*>(ptr) -
+                                         stride);
+    }
+    inline void operator++() {
+        ptr = reinterpret_cast<Segment*>(reinterpret_cast<uint8_t*>(ptr) +
+                                         stride);
+    }
     inline bool operator!=(const SegmentIter& other) {
         return (ptr != other.ptr);
     }
@@ -25,10 +31,12 @@ struct SegmentIter {
 
 struct SegmentConstIter {
     inline void operator--() {
-        ptr = (const Segment*)(((const uint8_t*)ptr) - stride);
+        ptr = reinterpret_cast<const Segment*>(
+            reinterpret_cast<const uint8_t*>(ptr) - stride);
     }
     inline void operator++() {
-        ptr = (const Segment*)(((const uint8_t*)ptr) + stride);
+        ptr = reinterpret_cast<const Segment*>(
+            reinterpret_cast<const uint8_t*>(ptr) + stride);
     }
     inline bool operator!=(const SegmentConstIter& other) {
         return (ptr != other.ptr);
@@ -142,9 +150,9 @@ class SegmentList {
    private:
     void myReserve(int num);
 
-    uint8_t* mySegs;
-    int myNum, myStride, myCap;
-    Segment::Type myType;
+    uint8_t* mySegs = nullptr;
+    int myNum = 0, myStride = Segment::meta[Segment::BPM]->stride, myCap = 0;
+    Segment::Type myType = Segment::BPM;
 };
 
 };  // namespace Vortex

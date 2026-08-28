@@ -235,7 +235,7 @@ void WarpEditor::onTick() {
 }
 
 void WarpEditor::onChange(int id) {
-    int numRows = max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
+    int numRows = std::max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
     switch (id) {
         HALVE(ACT_HALVE, numRows);
         DOUBLE(ACT_DOUBLE, numRows);
@@ -309,8 +309,8 @@ void TimeSignatureEditor::onTick() {
 }
 
 void TimeSignatureEditor::onChange(int id) {
-    int rowsPerMeasure = ROWS_PER_BEAT * max(1, myRowsPerMeasure);
-    int beatNote = max(1, myBeatNote);
+    int rowsPerMeasure = ROWS_PER_BEAT * std::max(1, myRowsPerMeasure);
+    int beatNote = std::max(1, myBeatNote);
     switch (id) {
         HALVE(ACT_HALVE, rowsPerMeasure);
         DOUBLE(ACT_DOUBLE, rowsPerMeasure);
@@ -363,7 +363,7 @@ void TickCountEditor::onTick() {
 }
 
 void TickCountEditor::onChange(int id) {
-    int ticks = max(0, myTicks);
+    int ticks = std::max(0, myTicks);
     switch (id) {
         HALVE(ACT_HALVE, ticks);
         DOUBLE(ACT_DOUBLE, ticks);
@@ -436,8 +436,8 @@ void ComboEditor::onTick() {
 }
 
 void ComboEditor::onChange(int id) {
-    int hit = max(1, myHit);
-    int miss = max(1, myMiss);
+    int hit = std::max(1, myHit);
+    int miss = std::max(1, myMiss);
     switch (id) {
         HALVE(ACT_HALVE, hit);
         DOUBLE(ACT_DOUBLE, hit);
@@ -525,8 +525,8 @@ void SpeedEditor::onTick() {
 
 void SpeedEditor::onChange(int id) {
     double ratio = myRatio;
-    double delay = max(0.0, myDelay);
-    int unit = clamp(myUnit, 0, 1);
+    double delay = std::max(0.0, myDelay);
+    int unit = std::clamp(myUnit, 0, 1);
     switch (id) {
         HALVE(ACT_HALVE, ratio);
         DOUBLE(ACT_DOUBLE, ratio);
@@ -630,7 +630,7 @@ void FakeEditor::onTick() {
 }
 
 void FakeEditor::onChange(int id) {
-    int numRows = max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
+    int numRows = std::max(0, static_cast<int>(ROWS_PER_BEAT * myBeats));
     switch (id) {
         HALVE(ACT_HALVE, numRows);
         DOUBLE(ACT_DOUBLE, numRows);
@@ -725,7 +725,7 @@ static std::string createTitle(Segment::Type type) {
 
 DialogEditSegment::~DialogEditSegment() = default;
 
-DialogEditSegment::DialogEditSegment() : myType(Segment::BPM) {
+DialogEditSegment::DialogEditSegment() {
     setMinimumHeight(HEIGHT_1_ROW);
     setMinimumWidth(FULL);
     setPinnable(false);

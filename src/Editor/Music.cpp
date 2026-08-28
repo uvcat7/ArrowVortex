@@ -3,10 +3,11 @@
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/Reference.h>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
@@ -34,7 +35,7 @@ namespace Vortex {
 
 struct TickData {
     Sound sound;
-    Vector<int> frames;
+    std::vector<int> frames;
     bool enabled;
 };
 
@@ -77,7 +78,7 @@ struct MusicImpl : public Music, public MixSource {
     LoadState myLoadState;
     Reference<InfoBoxWithProgress> myInfoBox;
 
-    Vector<short> myMixBuffer;
+    std::vector<short> myMixBuffer;
 
     OggConversionThread* myAudioConversionThread;
 
@@ -198,10 +199,10 @@ struct MusicImpl : public Music, public MixSource {
         const short* srcR = tick.sound.samplesR() + startFrame;
 
         if (rate == 100) {
-            int n = min(numFrames, tick.sound.getNumFrames() - startFrame);
+            int n = std::min(numFrames, tick.sound.getNumFrames() - startFrame);
             for (int i = 0; i < n; ++i) {
-                *dst++ = min(max(*dst + *srcL++, SHRT_MIN), SHRT_MAX);
-                *dst++ = min(max(*dst + *srcR++, SHRT_MIN), SHRT_MAX);
+                *dst++ = std::clamp(*dst + *srcL++, SHRT_MIN, SHRT_MAX);
+                *dst++ = std::clamp(*dst + *srcR++, SHRT_MIN, SHRT_MAX);
             }
         } else {
             int idx = 0;
@@ -216,10 +217,12 @@ struct MusicImpl : public Music, public MixSource {
                 float sampleR = lerp(static_cast<float>(srcR[idx]),
                                      static_cast<float>(srcR[idx + 1]), frac);
 
-                *dst++ = min(max(*dst + static_cast<short>(sampleL), SHRT_MIN),
-                             SHRT_MAX);
-                *dst++ = min(max(*dst + static_cast<short>(sampleR), SHRT_MIN),
-                             SHRT_MAX);
+                *dst++ = std::min(
+                    std::max(*dst + static_cast<short>(sampleL), SHRT_MIN),
+                    SHRT_MAX);
+                *dst++ = std::min(
+                    std::max(*dst + static_cast<short>(sampleR), SHRT_MIN),
+                    SHRT_MAX);
 
                 srcPos += srcDelta;
                 idx = static_cast<int>(srcPos);
@@ -245,8 +248,8 @@ struct MusicImpl : public Music, public MixSource {
                 continue;  // avoid double ticks for jumps.
             if (beginFrame > frames) break;
 
-            int srcPos = max(0, -beginFrame);
-            int dstPos = max(0, beginFrame);
+            int srcPos = std::max(0, -beginFrame);
+            int dstPos = std::max(0, beginFrame);
             short* dst = buf + dstPos * 2;
             int dstFrames = frames - dstPos;
 
@@ -264,9 +267,9 @@ struct MusicImpl : public Music, public MixSource {
         // silence.
         int framesLeft = frames;
         if (srcPos < 0) {
-            int n = min(
-                framesLeft,
-                static_cast<int>(max(-srcPos, static_cast<int64_t> INT_MIN)));
+            int n = std::min(framesLeft,
+                             static_cast<int>(std::max(
+                                 -srcPos, static_cast<int64_t> INT_MIN)));
             memset(dst, 0, sizeof(short) * MIX_CHANNELS * n);
             dst += n * MIX_CHANNELS;
             framesLeft -= n;
@@ -276,9 +279,9 @@ struct MusicImpl : public Music, public MixSource {
         // Fill the remaining buffer with music samples.
         if (framesLeft > 0 && mySamples.isAllocated() && musicVolume > 0 &&
             !myIsMuted) {
-            int n = static_cast<int>(min(
-                max(mySamples.getNumFrames() - srcPos, static_cast<int64_t>(0)),
-                static_cast<int64_t>(framesLeft)));
+            int n = static_cast<int>(std::clamp(
+                static_cast<int64_t>(mySamples.getNumFrames() - srcPos),
+                static_cast<int64_t>(0L), static_cast<int64_t>(framesLeft)));
             const short* srcL = mySamples.samplesL() + srcPos;
             const short* srcR = mySamples.samplesR() + srcPos;
             if (musicVolume == 100) {
@@ -321,7 +324,7 @@ struct MusicImpl : public Music, public MixSource {
             // buffer.
             int64_t srcPos = static_cast<int64_t>(myPlayPosition);
             int tmpFrames = frames * myMusicSpeed / 100;
-            myMixBuffer.grow(tmpFrames * 2);
+            myMixBuffer.resize(tmpFrames * 2);
             WriteSourceFrames(myMixBuffer.data(), tmpFrames, srcPos);
 
             // Interpolate to the target samplerate.
@@ -332,8 +335,8 @@ struct MusicImpl : public Music, public MixSource {
 
             short* dst = buffer;
             for (int i = 0; i < frames; ++i) {
-                int index0 = min(static_cast<int>(tmpPos), tmpEnd);
-                int index1 = min(index0 + 1, tmpEnd);
+                int index0 = std::min(static_cast<int>(tmpPos), tmpEnd);
+                int index1 = std::min(index0 + 1, tmpEnd);
                 index0 *= MIX_CHANNELS;
                 index1 *= MIX_CHANNELS;
 
@@ -345,10 +348,10 @@ struct MusicImpl : public Music, public MixSource {
                 float r = static_cast<float>(tmpR[index0]) * w0 +
                           static_cast<float>(tmpR[index1]) * w1;
 
-                *dst++ = static_cast<short>(
-                    min(max(static_cast<int>(l), SHRT_MIN), SHRT_MAX));
-                *dst++ = static_cast<short>(
-                    min(max(static_cast<int>(r), SHRT_MIN), SHRT_MAX));
+                *dst++ = static_cast<short>(std::min(
+                    std::max(static_cast<int>(l), SHRT_MIN), SHRT_MAX));
+                *dst++ = static_cast<short>(std::min(
+                    std::max(static_cast<int>(r), SHRT_MIN), SHRT_MAX));
 
                 tmpPos += rate;
             }
@@ -532,7 +535,7 @@ struct MusicImpl : public Music, public MixSource {
 
     void tick() override {
         if (myAudioConversionThread) {
-            if (myInfoBox) {
+            if (static_cast<InfoBoxWithProgress*>(myInfoBox)) {
                 myInfoBox->setProgress(myAudioConversionThread->progress *
                                        0.01f);
             }
@@ -544,7 +547,8 @@ struct MusicImpl : public Music, public MixSource {
 
         if (!gSimfile->isOpen()) return;
 
-        if (myLoadState != LOADING_DONE && myInfoBox) {
+        if (myLoadState != LOADING_DONE &&
+            static_cast<InfoBoxWithProgress*>(myInfoBox)) {
             if (mySamples.getLoadingProgress() > 0) {
                 myInfoBox->setProgress(mySamples.getLoadingProgress() * 0.01f);
             } else {
@@ -609,7 +613,7 @@ struct MusicImpl : public Music, public MixSource {
     const Sound& getSamples() override { return mySamples; }
 
     void setSpeed(int speed) override {
-        speed = min(max(speed, 10), 400);
+        speed = std::clamp(speed, 10, 400);
         if (myMusicSpeed != speed) {
             interruptStream();
             myMusicSpeed = speed;
@@ -621,7 +625,7 @@ struct MusicImpl : public Music, public MixSource {
     int getSpeed() override { return myMusicSpeed; }
 
     void setVolume(int vol) override {
-        vol = min(max(vol, 0), 100);
+        vol = std::clamp(vol, 0, 100);
         if (myMusicVolume != vol) {
             interruptStream();
             myMusicVolume = vol;
@@ -676,7 +680,7 @@ struct MusicImpl : public Music, public MixSource {
              row += ROWS_PER_BEAT) {
             double time = tracker.advance(row);
             int frame = static_cast<int>((time + ofs) * freq);
-            myBeatTick.frames.push_back(frame);
+            myBeatTick.frames.emplace_back(frame);
         }
     }
 
@@ -686,10 +690,10 @@ struct MusicImpl : public Music, public MixSource {
         double freq = static_cast<double>(mySamples.getFrequency());
         double ofs = myTickOffsetMs / 1000.0;
 
-        for (auto& note : *gNotes) {
-            if (!(note.isMine | note.isWarped | note.isFake)) {
-                int frame = static_cast<int>((note.time + ofs) * freq);
-                myNoteTick.frames.push_back(frame);
+        for (auto note = gNotes->begin(); note < gNotes->end(); note++) {
+            if (!(note->isMine | note->isWarped | note->isFake)) {
+                int frame = static_cast<int>((note->time + ofs) * freq);
+                myNoteTick.frames.emplace_back(frame);
             }
         }
     }

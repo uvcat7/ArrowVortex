@@ -67,7 +67,7 @@ struct Segment {
     static const SegmentMeta* meta[NUM_TYPES];
 
     Segment();
-    Segment(int row);
+    explicit Segment(int row);
 
     int row;
 };

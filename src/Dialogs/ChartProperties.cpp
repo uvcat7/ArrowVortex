@@ -17,6 +17,7 @@
 #include <Managers/TempoMan.h>
 
 #include <System/System.h>
+#include <cmath>
 
 namespace Vortex {
 
@@ -40,8 +41,7 @@ static const char* noteItemLabels[] = {"steps", "jumps", "mines",
 
 DialogChartProperties::~DialogChartProperties() = default;
 
-DialogChartProperties::DialogChartProperties()
-    : myDifficulty(0), myRating(1), myStyle(0) {
+DialogChartProperties::DialogChartProperties() {
     setTitle("CHART PROPERTIES");
 
     myCreateChartProperties();
@@ -209,8 +209,9 @@ void DialogChartProperties::myUpdateNoteInfo() {
 
     double density = 0.0;
     if (gNotes->begin() < gNotes->end()) {
-        density = static_cast<double>(gNotes->getNumJudge()) /
-                  max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
+        density =
+            static_cast<double>(gNotes->getNumJudge()) /
+            std::max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
     }
 
     myNoteDensity->text.set(
@@ -290,7 +291,7 @@ void DialogChartProperties::GraphWidget::updateGraph() {
     }
     endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
-    scale = endMeasure / width_;
+    scale = endMeasure / static_cast<int>(width_ * gSystem->getScaleFactor());
     if (scale < 1) scale = 1;
     int buckets = endMeasure;
     peak = 0;
@@ -315,8 +316,9 @@ void DialogChartProperties::GraphWidget::updateGraph() {
             notes += data[i + slices];
             slices++;
         }
-        peak = max(peak, static_cast<double>(notes / (measure_time(i + slices) -
-                                                      measure_time(i))));
+        peak = std::max(
+            peak, static_cast<double>(
+                      notes / (measure_time(i + slices) - measure_time(i))));
     }
 }
 void DialogChartProperties::GraphWidget::onDraw() {
@@ -331,9 +333,10 @@ void DialogChartProperties::GraphWidget::onDraw() {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
+    int scale_width = static_cast<int>(width_ * gSystem->getScaleFactor());
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     int buckets = data.size();
-    double barWidth = (static_cast<double>(width_) / buckets);
+    double barWidth = (static_cast<double>(scale_width) / buckets);
     int w = barWidth + 1;
     auto batch = Renderer::batchC();
     Draw::fill(rect_, Color32(20, 20, 20, 255));
@@ -341,9 +344,10 @@ void DialogChartProperties::GraphWidget::onDraw() {
 
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
-        int x = rect_.x + static_cast<int>(measure_time(i) / endTime * width_);
+        int x =
+            rect_.x + static_cast<int>(measure_time(i) / endTime * scale_width);
         int notes = data[i];
-        while (delta_measure_time(i, slices + 1) <= endTime / width_ &&
+        while (delta_measure_time(i, slices + 1) <= endTime / scale_width &&
                // Averaging looks bad beyond 30 seconds
                delta_measure_time(i, slices + 1) <= 30.f &&
                i + slices < buckets) {
@@ -352,15 +356,16 @@ void DialogChartProperties::GraphWidget::onDraw() {
         }
         int h = std::min(
             height_,
-            static_cast<int>(
-                round(notes / delta_measure_time(i, slices) / peak * height_)));
+            static_cast<int>(std::round(notes / delta_measure_time(i, slices) /
+                                        peak * height_)));
         w = rect_.x +
-            static_cast<int>(measure_time(i + slices) / endTime * width_) - x;
+            static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
+            x;
         int y = rect_.y + height_ - h;
         Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
     }
-    double time = min(endTime, gView->getCursorTime());
-    int x = static_cast<int>(time / endTime * width_);
+    double time = std::min(endTime, gView->getCursorTime());
+    int x = static_cast<int>(time / endTime * scale_width);
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
     batch.flush();
@@ -399,7 +404,7 @@ class DialogChartProperties::BreakdownWidget : public GuiWidget {
 
    private:
     DialogChartProperties* myDialog;
-    Vector<WgButton*> myButtons;
+    std::vector<WgButton*> myButtons;
 };
 
 DialogChartProperties::BreakdownWidget::~BreakdownWidget() {
@@ -419,10 +424,10 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
         auto& item = breakdown[i];
 
         Text::arrange(Text::TL, TextStyle(), item.text.c_str());
-        int w = max(16, Text::getSize().x + 8);
+        int w = std::max(16, Text::getSize().x + 8);
 
         if (i >= myButtons.size()) {
-            myButtons.push_back(new WgButton(getGui()));
+            myButtons.emplace_back(new WgButton(getGui()));
         }
 
         WgButton* button = myButtons[i];
@@ -509,7 +514,7 @@ void DialogChartProperties::myUpdateBreakdown() {
 }
 
 void DialogChartProperties::myCopyBreakdown() {
-    auto breakdown = gChart->getStreamBreakdown();
+    auto breakdown = gChart->getStreamBreakdown(nullptr);
     if (breakdown.empty()) {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {

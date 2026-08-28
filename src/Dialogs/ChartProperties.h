@@ -2,7 +2,7 @@
 
 #include <Dialogs/Dialog.h>
 
-#include <Core/WidgetsLayout.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -44,7 +44,7 @@ class DialogChartProperties : public EditorDialog {
     WgDroplist* myStyleList;
     std::string myStepArtist;
 
-    int myRating, myDifficulty, myStyle;
+    int myRating = 1, myDifficulty = 0, myStyle = 0;
 };
 
 };  // namespace Vortex

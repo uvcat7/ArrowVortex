@@ -2,6 +2,9 @@
 
 #include <Core/WideString.h>
 #include <Core/Utils.h>
+#include <Core/Draw.h>
+#include <Core/GuiDraw.h>
+#include <Core/Text.h>
 #include <Core/StringUtils.h>
 
 #include <Managers/NoteskinMan.h>
@@ -23,6 +26,7 @@
 
 #include <System/System.h>
 #include <System/Debug.h>
+#include <System/File.h>
 
 namespace Vortex {
 
@@ -35,8 +39,15 @@ namespace {
 
 struct MenuBarImpl : public Menubar {
     typedef void (*UpdateFunction)();
-    typedef System::MenuItem Item;
+    typedef MenuItem Item;
 
+#ifdef GL_MENU_BAR
+    int menu_height = 0;
+#else
+    static constexpr int menu_height = 0;
+#endif
+
+    Item* myTopMenu;
     Item* myFileMenu;
     Item* myEditMenu;
     Item* myVisualSyncMenu;
@@ -62,7 +73,7 @@ struct MenuBarImpl : public Menubar {
     // ================================================================================================
     // MenuBarImpl :: menu construction functions.
 
-    static Item* newMenu() { return System::MenuItem::create(); }
+    static Item* newMenu() { return MenuItem::create(); }
 
     static void sep(Item* menu) { menu->addSeperator(); }
 
@@ -78,29 +89,23 @@ struct MenuBarImpl : public Menubar {
         }
     }
 
-    static void add(Item* menu, Action::Type action, const wchar_t* str) {
-        add(menu, action, Narrow(str).c_str());
-    }
-
-    static void add(Item* menu, int item, const wchar_t* str) {
-        menu->addItem(item, Narrow(str).c_str());
-    }
-
     static void add(Item* menu, int item, const char* str) {
-        menu->addItem(item, str);
+        menu->addItem(static_cast<Action::Type>(item), str);
     }
 
     static void sub(Item* menu, Item* sub, const char* str) {
-        menu->addSubmenu(sub, str);
+        menu->addSubmenu(sub, str, false);
     }
 
     void init(Item* menu) override {
         using namespace Action;
 
+        myTopMenu = menu;
+
         // File menu.
         Item* hFile = myFileMenu = newMenu();
         add(hFile, FILE_OPEN, "Open...");
-        add(hFile, 0 /*dummy*/, "Recent files");
+        add(hFile, NONE, "Recent files");
         add(hFile, FILE_CLOSE, "Close");
         sep(hFile);
         add(hFile, FILE_SAVE, "Save");
@@ -133,9 +138,9 @@ struct MenuBarImpl : public Menubar {
         // Chart > Convert menu.
         Item* hChartConvert = newMenu();
         add(hChartConvert, CHART_CONVERT_ROUTINE_TO_COUPLES,
-            L"Routine \x2192 ITG Couple");
+            utf8ToString(u8"Routine → ITG Couple").c_str());
         add(hChartConvert, CHART_CONVERT_COUPLES_TO_ROUTINE,
-            L"ITG Couple \x2192 Routine");
+            utf8ToString(u8"ITG Couple → Routine").c_str());
 
         // Chart menu.
         Item* hChart = newMenu();
@@ -167,7 +172,7 @@ struct MenuBarImpl : public Menubar {
         // Notes > Select menu.
         Item* hSelection = myNotesSelectMenu = newMenu();
         sub(hSelection, hSelectQuant, "Quantization");
-        add(hSelection, 0 /*dummy*/, "Density");
+        add(hSelection, NONE /*dummy*/, "Density");
         sep(hSelection);
         add(hSelection, SELECT_ALL_STEPS, "Steps");
         add(hSelection, SELECT_ALL_MINES, "Mines");
@@ -181,30 +186,40 @@ struct MenuBarImpl : public Menubar {
 
         // Notes > Convert menu.
         Item* hNoteConvert = newMenu();
-        add(hNoteConvert, CHANGE_NOTES_TO_MINES, L"Notes \x2192 Mines");
-        add(hNoteConvert, CHANGE_NOTES_TO_FAKES, L"Notes \x2192 Fakes");
-        add(hNoteConvert, CHANGE_NOTES_TO_LIFTS, L"Notes \x2192 Lifts");
+        add(hNoteConvert, CHANGE_NOTES_TO_MINES,
+            utf8ToString(u8"Notes → Mines").c_str());
+        add(hNoteConvert, CHANGE_NOTES_TO_FAKES,
+            utf8ToString(u8"Notes → Fakes").c_str());
+        add(hNoteConvert, CHANGE_NOTES_TO_LIFTS,
+            utf8ToString(u8"Notes → Lifts").c_str());
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_MINES_TO_NOTES, L"Mines \x2192 Notes");
-        add(hNoteConvert, CHANGE_MINES_TO_FAKES, L"Mines \x2192 Fakes");
-        add(hNoteConvert, CHANGE_MINES_TO_LIFTS, L"Mines \x2192 Lifts");
+        add(hNoteConvert, CHANGE_MINES_TO_NOTES,
+            utf8ToString(u8"Mines → Notes").c_str());
+        add(hNoteConvert, CHANGE_MINES_TO_FAKES,
+            utf8ToString(u8"Mines → Fakes").c_str());
+        add(hNoteConvert, CHANGE_MINES_TO_LIFTS,
+            utf8ToString(u8"Mines → Lifts").c_str());
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_FAKES_TO_NOTES, L"Fakes \x2192 Notes");
-        add(hNoteConvert, CHANGE_LIFTS_TO_NOTES, L"Lifts \x2192 Notes");
+        add(hNoteConvert, CHANGE_FAKES_TO_NOTES,
+            utf8ToString(u8"Fakes → Notes").c_str());
+        add(hNoteConvert, CHANGE_LIFTS_TO_NOTES,
+            utf8ToString(u8"Lifts → Notes").c_str());
         sep(hNoteConvert);
         add(hNoteConvert, CHANGE_BETWEEN_HOLDS_AND_ROLLS,
-            L"Holds \x2194 Rolls");
-        add(hNoteConvert, CHANGE_HOLDS_TO_STEPS, L"Holds \x2192 Steps");
-        add(hNoteConvert, CHANGE_HOLDS_TO_MINES, L"Holds \x2192 Mines");
+            utf8ToString(u8"Holds → Rolls").c_str());
+        add(hNoteConvert, CHANGE_HOLDS_TO_STEPS,
+            utf8ToString(u8"Holds → Steps").c_str());
+        add(hNoteConvert, CHANGE_HOLDS_TO_MINES,
+            utf8ToString(u8"Holds → Mines").c_str());
         sep(hNoteConvert);
-        add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, L"Switch Player");
-        add(hNoteConvert, CHANGE_NOTE_SIDE, L"Switch Sides");
+        add(hNoteConvert, CHANGE_BETWEEN_PLAYER_NUMBERS, "Switch Player");
+        add(hNoteConvert, CHANGE_NOTE_SIDE, "Switch Sides");
 
         // Notes > Mirror menu.
         Item* hNoteMirror = newMenu();
-        add(hNoteMirror, MIRROR_NOTES_HORIZONTALLY, L"Horizontally");
-        add(hNoteMirror, MIRROR_NOTES_VERTICALLY, L"Vertically");
-        add(hNoteMirror, MIRROR_NOTES_FULL, L"Both");
+        add(hNoteMirror, MIRROR_NOTES_HORIZONTALLY, "Horizontally");
+        add(hNoteMirror, MIRROR_NOTES_VERTICALLY, "Vertically");
+        add(hNoteMirror, MIRROR_NOTES_FULL, "Both");
 
         // Notes > Expand menu.
         Item* hNoteExpand = newMenu();
@@ -399,7 +414,7 @@ struct MenuBarImpl : public Menubar {
         add(myViewMenu, USE_ROW_BASED_VIEW, "Row based (X-mod)");
         sep(myViewMenu);
         add(myViewMenu, OPEN_DIALOG_WAVEFORM_SETTINGS, "Waveform...");
-        add(myViewMenu, 0 /*dummy*/, "Noteskins");
+        add(myViewMenu, NONE /*dummy*/, "Noteskins");
         sub(myViewMenu, myBeatlineMenu, "Beatlines");
         sub(myViewMenu, myPreviewMenu, "Preview");
         sub(myViewMenu, myMinimapMenu, "Minimap");
@@ -443,14 +458,15 @@ struct MenuBarImpl : public Menubar {
         };
         myUpdateFunctions[RECENT_FILES] = [] {
             Item* recent = newMenu();
-            int numFiles = min(gEditor->getNumRecentFiles(),
-                               static_cast<int>(Action::MAX_RECENT_FILES));
+            int numFiles = std::min(gEditor->getNumRecentFiles(),
+                                    static_cast<int>(Action::MAX_RECENT_FILES));
             if (numFiles > 0) {
                 recent->addItem(FILE_CLEAR_RECENT_FILES, "Clear list");
                 recent->addSeperator();
                 for (int i = 0; i < numFiles; ++i) {
-                    recent->addItem(FILE_OPEN_RECENT_BEGIN + i,
-                                    gEditor->getRecentFile(i));
+                    recent->addItem(
+                        static_cast<Action::Type>(FILE_OPEN_RECENT_BEGIN + i),
+                        gEditor->getRecentFile(i));
                 }
             }
             MENU->myFileMenu->replaceSubmenu(1, recent, "Recent files",
@@ -590,15 +606,16 @@ struct MenuBarImpl : public Menubar {
                                             bg == BG_STYLE_CROP);
         };
         myUpdateFunctions[VIEW_NOTESKIN] = [] {
-            Item* hSkins = System::MenuItem::create();
+            Item* hSkins = MenuItem::create();
             int numValid = 0;
-            int numTypes = min(gNoteskin->getNumTypes(),
-                               static_cast<int>(Action::MAX_NOTESKINS));
+            int numTypes = std::min(gNoteskin->getNumTypes(),
+                                    static_cast<int>(Action::MAX_NOTESKINS));
             int activeType = gNoteskin->getType();
             for (int type = 0; type < numTypes; ++type) {
                 if (gNoteskin->isSupported(type)) {
-                    hSkins->addItem(SET_NOTESKIN_BEGIN + type,
-                                    gNoteskin->getName(type));
+                    hSkins->addItem(
+                        static_cast<Action::Type>(SET_NOTESKIN_BEGIN + type),
+                        gNoteskin->getName(type));
                     if (type == activeType) {
                         hSkins->setChecked(static_cast<Action::Type>(
                                                SET_NOTESKIN_BEGIN + type),
@@ -669,6 +686,232 @@ struct MenuBarImpl : public Menubar {
             myUpdateFunctions[prop]();
         }
     }
+
+    void draw() override {
+#ifdef GL_MENU_BAR
+        constexpr int menu_color = 77;
+        constexpr int menu_highlight_color = 90;
+        constexpr int dropdown_color = 64;
+        constexpr int dropdown_highlight_color = 85;
+        int window_w = gSystem->getWindowSize().x;
+        int menu_h = static_cast<int>(24 * gSystem->getScaleFactor());
+        int entry_h = static_cast<int>(20 * gSystem->getScaleFactor());
+        int box_padding = static_cast<int>(4 * gSystem->getScaleFactor());
+        int separator_h =
+            std::max(1, static_cast<int>(2 * gSystem->getScaleFactor()));
+        int separator_padding = static_cast<int>(6 * gSystem->getScaleFactor());
+
+        int x = 0, y = 0;
+        TextStyle textStyle;
+        textStyle.textFlags = Text::MARKUP;
+
+        int chevron_space = static_cast<int>(16 * gSystem->getScaleFactor());
+        Text::arrange(Text::MC, textStyle, utf8ToString(u8"✓").c_str());
+        int check_space = Text::getBoundingBox(vec2i{0, 0}).w * 2;
+        y = -menu_h;
+        int i = 0;
+
+        // Figure how big the top level menu is
+        for (auto& it : myTopMenu->getMenuData()) {
+            std::string str = it.item_text;
+            Text::arrange(Text::MC, textStyle, str.c_str());
+            int w = Text::getBoundingBox(vec2i{x, y}).w +
+                    12 * gSystem->getScaleFactor();
+            if (x + w > window_w && x > 0) {
+                y -= menu_h;
+                x = 0;
+            }
+            recti this_r = {x, y, w, menu_h};
+            it.active_rect = this_r;
+            x += w;
+            i++;
+        }
+
+        menu_height = std::abs(y);
+        recti r = {0, y, window_w, menu_height};
+        Draw::fill(r, Color32(menu_color));
+
+        // Draw the fixed top level menu
+        i = 0;
+        for (auto& it : myTopMenu->getMenuData()) {
+            it.active_rect.y = y - it.active_rect.y - menu_h;
+            Text::arrange(Text::MC, textStyle, it.item_text.c_str());
+            int open_menu = myTopMenu->getOpen();
+            if (IsInside(it.active_rect, gSystem->getMousePos()) &&
+                open_menu >= 0 &&
+                gSystem->getMousePos().y <=
+                    myTopMenu->getMenuData()[open_menu].active_rect.y +
+                        myTopMenu->getMenuData()[open_menu].active_rect.h &&
+                myTopMenu->getMenuData()[i].is_enabled &&
+                myTopMenu->getMenuData()[i].submenu)
+                myTopMenu->setOpen(i);
+            if (myTopMenu->getOpen() == i ||
+                IsInside(it.active_rect, gSystem->getMousePos()) &&
+                    myTopMenu->getOpen() == -1) {
+                Draw::fill(it.active_rect, Color32(menu_highlight_color));
+            }
+            Text::draw(it.active_rect);
+            i++;
+        }
+
+        // Now draw any open submenus (can't render outside the main window)
+        if (myTopMenu->getOpen() == -1) return;
+
+        MenuItem* this_menu = myTopMenu;
+        while (this_menu && this_menu->getOpen() >= 0) {
+            int this_box_w = 0;
+            int this_box_h = 0;
+            MenuEntry* sub_entry =
+                &this_menu->getMenuData()[this_menu->getOpen()];
+            if (this_menu == myTopMenu) {
+                x = sub_entry->active_rect.x;
+                y = sub_entry->active_rect.y + menu_h;
+            } else {
+                x = sub_entry->active_rect.x + sub_entry->active_rect.w;
+                y = sub_entry->active_rect.y;
+            }
+            this_menu = sub_entry->submenu;
+            if (!this_menu) return;
+
+            // Get the size of the bounding submenu box
+            for (auto it : this_menu->getMenuData()) {
+                if (it.is_separator) {
+                    this_box_h += entry_h / 2;
+                    continue;
+                }
+                if (it.item_text.empty()) continue;
+                this_box_h += entry_h;
+                Text::arrange(Text::MC, textStyle, it.item_text.c_str());
+                this_box_w =
+                    std::max(this_box_w, Text::getBoundingBox(vec2i{x, y}).w +
+                                             chevron_space + check_space +
+                                             box_padding * 2);
+            }
+            if (this_box_w == 0) continue;
+            this_box_h += box_padding * 2;
+            this_box_w += box_padding * 2;
+            recti box_r = {x, y, this_box_w, this_box_h};
+            Draw::roundedBox(box_r, Color32(dropdown_highlight_color));
+            box_r = Shrink(box_r, 1);
+            Draw::roundedBox(box_r, Color32(dropdown_color));
+
+            // Now draw the submenu items
+            i = 0;
+            for (auto& it : this_menu->getMenuData()) {
+                if (it.is_separator) {
+                    recti this_r = {
+                        x + separator_padding, y + entry_h / 2 - separator_h,
+                        this_box_w - 2 * separator_padding, separator_h};
+                    it.active_rect = this_r;
+                    Draw::fill(this_r, Color32(dropdown_highlight_color));
+                    y += entry_h / 2;
+                    i++;
+                    continue;
+                }
+
+                if (it.item_text.empty()) continue;
+
+                std::string line_string;
+                int delim = it.item_text.find('\t');
+                if (delim != std::string::npos) {
+                    line_string = it.item_text.substr(0, delim);
+                } else {
+                    line_string = it.item_text;
+                }
+                recti this_r = {x + box_padding, y + box_padding,
+                                this_box_w - box_padding * 2, entry_h};
+
+                if (IsInside(this_r, gSystem->getMousePos()) && it.is_enabled) {
+                    if (it.submenu)
+                        this_menu->setOpen(i);
+                    else if (this_menu->getOpen() != i) {
+                        this_menu->close();
+                    }
+                    Draw::fill(this_r, Color32(dropdown_highlight_color));
+                }
+                it.active_rect = this_r;
+                textStyle.textColor = Color32(it.is_enabled ? 255 : 128);
+                if (it.is_checked) {
+                    Text::arrange(Text::MC, textStyle,
+                                  utf8ToString(u8"✓").c_str());
+                    Text::draw({this_r.x, this_r.y, check_space, this_r.h});
+                }
+                this_r.x += check_space;
+                this_r.w -= chevron_space;
+                Text::arrange(Text::ML, textStyle, line_string.c_str());
+                Text::draw(this_r);
+                std::string shortcut = "";
+                if (delim != std::string::npos) {
+                    shortcut += it.item_text.substr(delim + 1) + "\t";
+                    Text::arrange(Text::MR, textStyle, shortcut.c_str());
+                    Text::draw(this_r);
+                }
+                if (it.submenu) {
+                    int text_h = Text::getBoundingBox(vec2i{0, 0}).h * 3 / 4;
+                    Draw::sprite(
+                        GuiDraw::getIcons().chevron,
+                        {this_r.x + this_r.w - chevron_space / 2 - text_h / 2,
+                         this_r.y + this_r.h / 2 - text_h / 2, text_h, text_h},
+                        textStyle.textColor);
+                }
+                y += entry_h;
+                i++;
+            }
+        }
+#endif
+    }
+
+    void onMousePress(MousePress& evt) override {
+#ifdef GL_MENU_BAR
+        if (evt.button != Mouse::LMB || !evt.unhandled()) return;
+        auto handle_menu = [&](MenuItem* menu) {
+            int i = 0;
+            for (auto it : menu->getMenuData()) {
+                if (!IsInside(it.active_rect, evt.x, evt.y) ||
+                    it.is_separator || !it.is_enabled) {
+                    i++;
+                    continue;
+                }
+                if (it.submenu)
+                    menu->setOpen(i);
+                else {
+                    Action::perform(it.action);
+                }
+                evt.setHandled();
+                return false;
+            }
+            return true;
+        };
+
+        if (!handle_menu(myTopMenu)) return;
+        MenuItem* this_menu = myTopMenu;
+        while (this_menu && this_menu->getOpen() >= 0) {
+            this_menu = this_menu->getMenuData()[this_menu->getOpen()].submenu;
+        }
+        if (this_menu != myTopMenu)
+            if (!handle_menu(this_menu)) return;
+
+        // If we clicked outside the menu, close all menus
+        if (myTopMenu->getOpen() >= 0) closeMenus();
+#endif
+    }
+
+    void onKeyPress(KeyPress& evt) override {
+#ifdef GL_MENU_BAR
+        if (evt.key == Key::Code::ESCAPE && myTopMenu->getOpen() >= 0) {
+            evt.handled = true;
+            closeMenus();
+        }
+#endif
+    }
+
+    void closeMenus() override {
+#ifdef GL_MENU_BAR
+        myTopMenu->close();
+#endif
+    }
+
+    int getMenubarHeight() override { return menu_height; }
 
 };  // MenuBarImpl
 };  // anonymous namespace.

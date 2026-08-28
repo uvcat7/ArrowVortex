@@ -56,6 +56,7 @@
 #include <Dialogs/EditSegment.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 
 #include <SDL3/SDL.h>
@@ -103,7 +104,7 @@ struct DialogFocus {
     bool requestFocus = false;
 };
 
-static const int MAX_RECENT_FILES = 10;
+static const size_t MAX_RECENT_FILES = 10;
 
 static std::string ClipboardGet() { return gSystem->getClipboardText(); }
 
@@ -135,6 +136,19 @@ static SimFormat ToSimFormat(const std::string& str) {
     return SIM_NONE;
 }
 
+static std::string getSettingsDir() {
+    const char* xdg = std::getenv("XDG_CONFIG_HOME");
+    if (xdg && xdg[0] == '/') return std::string(xdg) + "/arrowvortex/";
+    const char* home = std::getenv("HOME");
+    if (home) return std::string(home) + "/.config/arrowvortex/";
+    return "settings/";
+}
+
+static void ensureSettingsDirExists() {
+    std::error_code ec;
+    fs::create_directories(utf8ToPath(getSettingsDir()), ec);
+}
+
 // ================================================================================================
 // EditorImpl :: member data.
 
@@ -145,7 +159,7 @@ struct EditorImpl : public Editor, public InputHandler {
     DialogSegment mySegmentEditor;
     int myChanges;
     Texture myLogo;
-    Vector<std::string> myRecentFiles;
+    std::vector<std::string> myRecentFiles;
 
     int myFontSize;
     std::string myFontPath;
@@ -188,11 +202,12 @@ struct EditorImpl : public Editor, public InputHandler {
     // EditorImpl :: initialization / shutdown.
 
     void init() {
+        ensureSettingsDirExists();
         loadRecentFiles();
 
         // Load the editor settings.
         XmrDoc settings;
-        settings.loadFile(fs::path("settings/settings.txt"));
+        settings.loadFile(fs::path(getSettingsDir() + "settings.txt"));
         loadSettings(settings);
 
         // Disable v-sync if requested.
@@ -242,6 +257,7 @@ struct EditorImpl : public Editor, public InputHandler {
         Statusbar::create(settings);
         Minimap::create();
         Menubar::create();
+        gSystem->createMenu();
 
         // Load the editor logo.
         myLogo = Texture("assets/arrow vortex logo.png", false, Texture::ALPHA);
@@ -306,7 +322,8 @@ struct EditorImpl : public Editor, public InputHandler {
 
         // Export the editor settings.
         XmrSaveSettings xmrSaveSettings;
-        settings.saveFile("settings/settings.txt", xmrSaveSettings);
+        settings.saveFile((getSettingsDir() + "settings.txt").c_str(),
+                          xmrSaveSettings);
     }
 
     // ================================================================================================
@@ -413,12 +430,14 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void loadRecentFiles() {
         bool success;
-        myRecentFiles = File::getLines("settings/recent files.txt", &success);
-        myRecentFiles.truncate(MAX_RECENT_FILES);
+        myRecentFiles = File::getLines(
+            fs::path(getSettingsDir() + "recent files.txt"), &success);
+        std::erase(myRecentFiles, "");
+        myRecentFiles.resize(std::min(MAX_RECENT_FILES, myRecentFiles.size()));
     }
 
     void saveRecentFiles() {
-        std::ofstream out("settings/recent files.txt");
+        std::ofstream out((getSettingsDir() + "recent files.txt").c_str());
         if (out.good()) {
             for (int i = 0; i < myRecentFiles.size(); ++i) {
                 auto& file = myRecentFiles[i];
@@ -471,8 +490,7 @@ struct EditorImpl : public Editor, public InputHandler {
         if (gHistory->hasUnsavedChanges()) {
             std::string title = gSimfile->get()->title;
             if (title.empty()) title = "the current file";
-            Str::fmt msg("Do you want to save changes to %1?");
-            msg.arg(title);
+            std::string msg = "Do you want to save changes to " + title + "?";
 
             int res = gSystem->showMessageDlg(
                 "ArrowVortex", msg, System::T_YES_NO_CANCEL, System::I_NONE);
@@ -675,9 +693,9 @@ struct EditorImpl : public Editor, public InputHandler {
 
     void addToRecentfiles(fs::path path) {
         std::string spath = pathToUtf8(path);
-        myRecentFiles.erase_values(spath);
-        myRecentFiles.insert(0, spath, 1);
-        myRecentFiles.truncate(MAX_RECENT_FILES);
+        std::erase(myRecentFiles, spath);
+        myRecentFiles.insert(myRecentFiles.begin(), 1, spath);
+        myRecentFiles.resize(std::min(MAX_RECENT_FILES, myRecentFiles.size()));
         gMenubar->update(Menubar::RECENT_FILES);
     }
 
@@ -957,14 +975,17 @@ struct EditorImpl : public Editor, public InputHandler {
         handleInputs(events);
         notifyChanges();
 
+        int menu_h = gMenubar->getMenubarHeight();
+
         vec2i windowSize = gSystem->getWindowSize();
         float scale = gSystem->getScaleFactor();
         recti r = {0, 0, windowSize.x, windowSize.y};
 
-        gTextOverlay->handleInputs(events);
-
-        GuiMain::setViewSize(r.w, r.h);
+        GuiMain::setViewSize(r.w, r.h + menu_h);
         GuiMain::frameStart(deltaTime.count(), events);
+
+        gMenubar->handleInputs(events);
+        gTextOverlay->handleInputs(events);
 
         vec2i view = gSystem->getWindowSize();
 
@@ -1037,6 +1058,8 @@ struct EditorImpl : public Editor, public InputHandler {
         gui_->draw();
 
         gTextOverlay->draw();
+
+        gMenubar->draw();
 
         GuiMain::frameEnd();
     }

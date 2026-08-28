@@ -6,7 +6,7 @@
 #include <Core/Draw.h>
 #include <Core/Gui.h>
 #include <Core/Reference.h>
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/Utils.h>
 #include <Core/StringUtils.h>
 #include <Core/QuadBatch.h>
@@ -229,7 +229,7 @@ struct NotefieldImpl : public Notefield {
     }
 
     void setBgAlpha(int percent) override {
-        percent = min(max(percent, 0), 100);
+        percent = std::clamp(percent, 0, 100);
         if (myBgBrightness != percent) {
             myBgBrightness = percent;
             HudNote("BG Brightness: %i%%", percent);
@@ -249,9 +249,11 @@ struct NotefieldImpl : public Notefield {
 
         // Update the tweak info box if necessary.
         TempoMan::TweakMode mode = gTempo->getTweakMode();
-        if (mode == TempoMan::TWEAK_NONE && myTweakInfoBox) {
+        if (mode == TempoMan::TWEAK_NONE &&
+            static_cast<TweakInfoBox*>(myTweakInfoBox)) {
             myTweakInfoBox.destroy();
-        } else if (mode != TempoMan::TWEAK_NONE && !myTweakInfoBox) {
+        } else if (mode != TempoMan::TWEAK_NONE &&
+                   !static_cast<TweakInfoBox*>(myTweakInfoBox)) {
             myTweakInfoBox.create();
         }
 
@@ -277,7 +279,7 @@ struct NotefieldImpl : public Notefield {
         myFirstVisibleTor = gView->yToOffset(-20);
         myLastVisibleTor = gView->yToOffset(gView->getHeight() + 20);
         if (myFirstVisibleTor > myLastVisibleTor) {
-            swapValues(myFirstVisibleTor, myLastVisibleTor);
+            std::swap(myFirstVisibleTor, myLastVisibleTor);
         }
 
         // Draw stuff.
@@ -358,13 +360,13 @@ struct NotefieldImpl : public Notefield {
         struct MeasureLabel {
             int measure, y;
         };
-        Vector<MeasureLabel> labels(8);
+        std::vector<MeasureLabel> labels;
 
         // Determine the first row and last row that should show beat lines.
-        int drawBeginRow = max(0, gView->offsetToRow(myFirstVisibleTor));
-        int drawEndRow =
-            min(gView->offsetToRow(myLastVisibleTor), gSimfile->getEndRow()) +
-            1;
+        int drawBeginRow = std::max(0, gView->offsetToRow(myFirstVisibleTor));
+        int drawEndRow = std::min(gView->offsetToRow(myLastVisibleTor),
+                                  gSimfile->getEndRow()) +
+                         1;
 
         auto& sigs = gTempo->getTimingData().sigs;
         auto it = sigs.begin(), end = sigs.end();
@@ -401,7 +403,7 @@ struct NotefieldImpl : public Notefield {
         DrawPosHelper drawPos;
         while (it != end && row < drawEndRow) {
             int endRow = drawEndRow;
-            if (next != end) endRow = min(endRow, next->row);
+            if (next != end) endRow = std::min(endRow, next->row);
             while (row < endRow) {
                 // Measure line and measure label.
                 int y = drawPos.advance(row);
@@ -430,7 +432,9 @@ struct NotefieldImpl : public Notefield {
                 ++measure;
                 row += it->rowsPerMeasure;
             }
-            it = next, ++next;
+            it = next;
+            if (next == end) break;
+            ++next;
         }
 
         // Draw Hovered Row
@@ -467,8 +471,8 @@ struct NotefieldImpl : public Notefield {
             (t > viewTop && t < viewBtm) || (b > viewTop && b < viewBtm) ||
             (t > viewTop && b < viewBtm) || (b > viewTop && t < viewBtm);
         if (draw) {
-            t = clamp(t, viewTop, viewBtm);
-            b = clamp(b, viewTop, viewBtm);
+            t = std::clamp(t, viewTop, viewBtm);
+            b = std::clamp(b, viewTop, viewBtm);
             return true;
         }
         return false;
@@ -535,7 +539,7 @@ struct NotefieldImpl : public Notefield {
             double beat = gTempo->timeToBeat(gView->getCursorTime());
             float beatfrac = static_cast<float>(beat - floor(beat));
             uint8_t beatpulse = static_cast<uint8_t>(
-                min(max(static_cast<int>((2 - beatfrac * 4) * 255), 0), 255));
+                std::clamp(static_cast<int>((2 - beatfrac * 4) * 255), 0, 255));
 
             // Draw the receptors.
             auto batch = Renderer::batchTC();
@@ -574,7 +578,7 @@ struct NotefieldImpl : public Notefield {
 
             double lum = 1.5 - (time - note->endtime) * 6.0;
             uint8_t alpha = static_cast<uint8_t>(
-                clamp(static_cast<int>(lum * 255.0), 0, 255));
+                std::clamp(static_cast<int>(lum * 255.0), 0, 255));
             if (alpha > 0) {
                 noteskin->recepGlow[c].draw(&batch, myColX[c], myY, alpha);
             }
@@ -653,7 +657,7 @@ struct NotefieldImpl : public Notefield {
             }
 
             // Don't show notes off the screen
-            if (max(y, by) < -32 || min(y, by) > maxY) continue;
+            if (std::max(y, by) < -32 || std::min(y, by) > maxY) continue;
 
             int rowtype = ToRowType(note.row);
             int col = note.col, x = myColX[col];
@@ -778,8 +782,8 @@ struct NotefieldImpl : public Notefield {
         double start = gSimfile->get()->previewStart;
         double end = start + gSimfile->get()->previewLength;
         if (end > start) {
-            int yt = max(0, gView->timeToY(start));
-            int yb = min(gView->getHeight(), gView->timeToY(end));
+            int yt = std::max(0, gView->timeToY(start));
+            int yb = std::min(gView->getHeight(), gView->timeToY(end));
             Draw::fill({myX, yt, myW, yb - yt},
                        RGBAtoColor32(255, 255, 255, 64));
             if (gView->getScaleLevel() > 2) {
@@ -871,7 +875,7 @@ void TweakInfoBox::draw(recti r) {
     const int init_off_h = static_cast<int>(16 * gSystem->getScaleFactor());
     const int text_row_h = static_cast<int>(14 * gSystem->getScaleFactor());
 
-    Text::arrange(Text::MC, str);
+    Text::arrange(Text::MC, static_cast<const char*>(str));
     Text::draw(vec2i{r.x, r.y + init_off_h});
 
     const char* keys[] = {

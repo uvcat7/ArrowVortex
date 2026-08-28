@@ -6,6 +6,8 @@ namespace fs = std::filesystem;
 
 namespace Vortex {
 
+static const char* NO_ERROR = "no error";
+
 /// For-loop macro to iterate over node attributes.
 /// it: name of iterator, node: pointer to root node.
 #define ForXmrAttribs(it, node)                                   \
@@ -54,12 +56,15 @@ enum XmrQuoteSetting {
 // Save settings, used when saving XMR documents.
 struct XmrSaveSettings {
     XmrSaveSettings();
-    const char* headerComment;    ///< Default is nullptr.
-    bool useTabsInsteadOfSpaces;  ///< Default is false.
-    XmrQuoteSetting quoteNodes;   ///< Default is XMR_QUOTE_WHEN_NECESSARY.
-    XmrQuoteSetting quoteNames;   ///< Default is XMR_QUOTE_WHEN_NECESSARY.
-    XmrQuoteSetting quoteValues;  ///< Default is XMR_QUOTE_WHEN_NECESSARY.
-    int spacesPerIndent;          ///< Default is 2.
+    const char* headerComment = nullptr;  ///< Default is nullptr.
+    bool useTabsInsteadOfSpaces = false;  ///< Default is false.
+    XmrQuoteSetting quoteNodes =
+        XMR_QUOTE_WHEN_NECESSARY;  ///< Default is XMR_QUOTE_WHEN_NECESSARY.
+    XmrQuoteSetting quoteNames =
+        XMR_QUOTE_WHEN_NECESSARY;  ///< Default is XMR_QUOTE_WHEN_NECESSARY.
+    XmrQuoteSetting quoteValues =
+        XMR_QUOTE_WHEN_NECESSARY;  ///< Default is XMR_QUOTE_WHEN_NECESSARY.
+    int spacesPerIndent = 2;       ///< Default is 2.
 };
 
 /// XmrAttrib contains the name and value of an XMR attribute.
@@ -195,7 +200,7 @@ struct XmrDoc : public XmrNode {
     std::string saveString(XmrSaveSettings settings);
 
     /// Description of the last occured error.
-    const char* lastError;
+    const char* lastError = NO_ERROR;
 };
 
 };  // namespace Vortex

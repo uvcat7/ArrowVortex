@@ -225,7 +225,7 @@ void FontManager::startFrame(float dt) {
 }
 
 const Glyph& FontManager::getPlaceholderGlyph(int size) {
-    int i = max(0, min(size / 8, 7));
+    int i = std::max(0, std::min(size / 8, 7));
     return FM->placeholderGlyphs[i];
 }
 

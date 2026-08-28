@@ -17,6 +17,8 @@
 #include <Editor/Action.h>
 #include <string>
 
+#include <algorithm>
+
 namespace Vortex {
 
 namespace {
@@ -57,10 +59,10 @@ static const char* iconNames[NUM_ICONS] = {
 // TextOverlayImpl :: member data.
 
 struct TextOverlayImpl : public TextOverlay {
-    Vector<HudEntry> hudEntries_;
-    Vector<InfoBox*> infoBoxes_;
-    Vector<std::string> logEntries_;
-    Vector<Shortcut> displayShortcuts_;
+    std::vector<HudEntry> hudEntries_;
+    std::vector<InfoBox*> infoBoxes_;
+    std::vector<std::string> logEntries_;
+    std::vector<Shortcut> displayShortcuts_;
     std::string debugLog_;
 
     int textOverlayScrollPos_, textOverlayScrollEnd_, textOverlayPageSize_;
@@ -92,16 +94,13 @@ struct TextOverlayImpl : public TextOverlay {
     // TextOverlayImpl :: shortcuts.
 
     void addShortcutHeader(const char* name) {
-        Shortcut& shortcut = displayShortcuts_.append();
-        shortcut.isHeader = true;
-        shortcut.a = name;
+        Shortcut shortcut = {std::string(name), "", true};
+        displayShortcuts_.emplace_back(shortcut);
     }
 
     void addShortcut(const char* name, const char* keys) {
-        Shortcut& shortcut = displayShortcuts_.append();
-        shortcut.isHeader = false;
-        shortcut.a = name;
-        shortcut.b = keys;
+        Shortcut shortcut = {std::string(name), std::string(keys), false};
+        displayShortcuts_.emplace_back(shortcut);
     }
 
     void addShortcut(Action::Type action, const char* name) {
@@ -206,9 +205,9 @@ struct TextOverlayImpl : public TextOverlay {
         int height = static_cast<int>(18 * gSystem->getScaleFactor());
         int height_header = static_cast<int>(24 * gSystem->getScaleFactor());
         if (textOverlayMode_ == MESSAGE_LOG) {
-            textOverlayPageSize_ = max(0, (size.y - TEXT_Y_START) / 16);
-            textOverlayScrollEnd_ =
-                max(0, logEntries_.size() - textOverlayPageSize_);
+            textOverlayPageSize_ = std::max(0, (size.y - TEXT_Y_START) / 16);
+            textOverlayScrollEnd_ = std::max(
+                0, static_cast<int>(logEntries_.size() - textOverlayPageSize_));
         } else if (textOverlayMode_ == SHORTCUTS) {
             textOverlayPageSize_ = size.y;
             textOverlayScrollEnd_ = TEXT_Y_START;
@@ -216,14 +215,14 @@ struct TextOverlayImpl : public TextOverlay {
                 textOverlayScrollEnd_ += e.isHeader ? height_header : height;
             }
             textOverlayScrollEnd_ =
-                max(0, textOverlayScrollEnd_ - textOverlayPageSize_);
+                std::max(0, textOverlayScrollEnd_ - textOverlayPageSize_);
         } else {
             textOverlayPageSize_ = size.y;
             textOverlayScrollEnd_ = 0;
         }
 
         textOverlayScrollPos_ =
-            min(max(0, textOverlayScrollPos_), textOverlayScrollEnd_);
+            std::clamp(textOverlayScrollPos_, 0, textOverlayScrollEnd_);
     }
 
     void tick() override {
@@ -250,7 +249,7 @@ struct TextOverlayImpl : public TextOverlay {
     void onKeyPress(KeyPress& evt) override {
         if (textOverlayMode_ == MESSAGE_LOG && evt.key == Key::DELETE &&
             !evt.handled) {
-            logEntries_.release();
+            logEntries_.clear();
             evt.handled = true;
         }
         if (textOverlayMode_ != HUD && evt.key == Key::ESCAPE && !evt.handled) {
@@ -262,9 +261,10 @@ struct TextOverlayImpl : public TextOverlay {
     void onMouseScroll(MouseScroll& evt) override {
         if (textOverlayMode_ != HUD && !evt.handled) {
             int delta = evt.up ? -1 : +1;
-            textOverlayScrollPos_ += delta * max(1, textOverlayPageSize_ / 10);
+            textOverlayScrollPos_ +=
+                delta * std::max(1, textOverlayPageSize_ / 10);
             textOverlayScrollPos_ =
-                min(max(0, textOverlayScrollPos_), textOverlayScrollEnd_);
+                std::clamp(textOverlayScrollPos_, 0, textOverlayScrollEnd_);
             evt.handled = true;
         }
     }
@@ -366,22 +366,22 @@ struct TextOverlayImpl : public TextOverlay {
         if (type == NOTE) {
             hudEntries_.push_back({msg, type, 0.5f});
         } else if (type == INFO) {
-            logEntries_.push_back(msg);
+            logEntries_.emplace_back(msg);
             hudEntries_.push_back({msg, type, 3.0f});
         } else if (type == WARNING) {
             Str::insert(msg, 0, "{tc:FF0}WARNING:{tc} ");
-            logEntries_.push_back(msg);
+            logEntries_.emplace_back(msg);
             hudEntries_.push_back({msg, type, 6.0f});
         } else if (type == ERROR) {
             Str::insert(msg, 0, "{tc:F44}ERROR:{tc} ");
-            logEntries_.push_back(msg);
+            logEntries_.emplace_back(msg);
             hudEntries_.push_back({msg, type, 6.0f});
         }
     }
 
-    void addInfoBox(InfoBox* box) { infoBoxes_.push_back(box); }
+    void addInfoBox(InfoBox* box) { infoBoxes_.emplace_back(box); }
 
-    void removeInfoBox(InfoBox* box) { infoBoxes_.erase_values(box); }
+    void removeInfoBox(InfoBox* box) { std::erase(infoBoxes_, box); }
 
     // ================================================================================================
     // TextOverlayImpl :: hud.
@@ -394,10 +394,11 @@ struct TextOverlayImpl : public TextOverlay {
             } else {
                 fade += 0.5f;
             }
-            float delta = clamp(deltaTime.count() * fade, 0.0, 1.0);
+            float delta = std::clamp(deltaTime.count() * fade, 0.0, 1.0);
 
             hudEntries_[i].timeLeft -= delta;
-            if (hudEntries_[i].timeLeft <= -0.5f) hudEntries_.erase(i);
+            if (hudEntries_[i].timeLeft <= -0.5f)
+                hudEntries_.erase(hudEntries_.begin() + i);
         }
     }
 
@@ -423,8 +424,8 @@ struct TextOverlayImpl : public TextOverlay {
 
         x = 4, y = 4;
         for (auto& m : hudEntries_) {
-            int a =
-                clamp(static_cast<int>(m.timeLeft * 512.0f + 256.0f), 0, 255);
+            int a = std::clamp(static_cast<int>(m.timeLeft * 512.0f + 256.0f),
+                               0, 255);
 
             textStyle.textColor = Color32a(textStyle.textColor, a);
             textStyle.shadowColor = Color32a(textStyle.shadowColor, a);
@@ -436,7 +437,7 @@ struct TextOverlayImpl : public TextOverlay {
         }
 
         // Speed up the message removal if we have too many.
-        if (y > view.y) hudEntries_.erase(0);
+        if (y > view.y) hudEntries_.erase(hudEntries_.begin());
     }
 
     // ================================================================================================
@@ -600,9 +601,9 @@ struct TextOverlayImpl : public TextOverlay {
 
         DrawTitleText("ABOUT", "[ESC] close", nullptr);
 
-        auto fps =
-            Str::fmt("%1 FPS").arg(1.0f / max(deltaTime.count(), 0.0001), 0, 0);
-        Text::arrange(Text::TR, fps);
+        auto fps = Str::fmt("%1 FPS").arg(
+            1.0f / std::max(deltaTime.count(), 0.0001), 0, 0);
+        Text::arrange(Text::TR, static_cast<const char*>(fps));
         Text::draw(vec2i{size.x - 4, 4});
     }
 
@@ -632,7 +633,7 @@ void InfoBoxWithProgress::draw(recti r) {
 }
 
 void InfoBoxWithProgress::setProgress(double rate) {
-    int progress = clamp(static_cast<int>(rate * 100.0f + 0.5f), 0, 100);
+    int progress = std::clamp(static_cast<int>(rate * 100.0f + 0.5f), 0, 100);
     right = Str::val(progress) + '%';
 }
 

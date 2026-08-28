@@ -5,6 +5,7 @@
 #include <Core/StringUtils.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <Simfile/Chart.h>
 #include <Simfile/TimingData.h>
@@ -13,6 +14,7 @@
 
 #include <Editor/Common.h>
 
+#include <cmath>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -38,16 +40,14 @@ NoteList::~NoteList() {
     free(myNotes);
 }
 
-NoteList::NoteList() : myNotes(nullptr), myNum(0), myCap(0) {}
+NoteList::NoteList() = default;
 
 NoteList::NoteList(List&& list)
     : myNotes(list.myNotes), myNum(list.myNum), myCap(list.myCap) {
     list.myNotes = nullptr;
 }
 
-NoteList::NoteList(const List& list) : myNotes(nullptr), myNum(0), myCap(0) {
-    assign(list);
-}
+NoteList::NoteList(const List& list) { assign(list); }
 
 NoteList& NoteList::operator=(List&& list) {
     myNotes = list.myNotes;
@@ -197,7 +197,7 @@ void NoteList::sanitize(const Chart* chart) {
     int numUnsorted = 0;
     int numInvalidQuant = 0;
 
-    Vector<int> endrowVec(numCols, -1);
+    std::vector<int> endrowVec(numCols, -1);
     int* endrows = endrowVec.data();
     uint32_t col = -1;
     int row = -1;
@@ -382,7 +382,7 @@ void NoteList::prepareEdit(const NoteEdit& in, NoteEditResult& out,
         // Check if the tail of this note intersects the upcoming added note.
         if (nextAddRows[col] <= it->endrow && !removeNote) {
             Note trimmed = *it;
-            trimmed.endrow = max(trimmed.row, nextAddRows[col] - 24);
+            trimmed.endrow = std::max(trimmed.row, nextAddRows[col] - 24);
             out.add.append(trimmed);
             VerifyAdd(trimmed, prevPos, prevEndRows);
             removeNote = true;
@@ -454,14 +454,14 @@ static void ApplyQuantOffset(Note& out, int offsetRows) {
     // (int) round(192.0f / out.quant * (above) then make this the new measure
     // offset
     if (192 % out.quant > 0 && startingOffset != endingOffset) {
-        out.row =
-            out.row - endingOffset +
-            static_cast<int>(round(192.0f / out.quant *
-                                   round(endingOffset / 192.0f * out.quant)));
+        out.row = out.row - endingOffset +
+                  static_cast<int>(std::round(
+                      192.0f / out.quant *
+                      std::round(endingOffset / 192.0f * out.quant)));
         out.endrow = out.endrow - endingRowOffset +
-                     static_cast<int>(
-                         round(192.0f / out.quant *
-                               round(endingRowOffset / 192.0f * out.quant)));
+                     static_cast<int>(std::round(
+                         192.0f / out.quant *
+                         std::round(endingRowOffset / 192.0f * out.quant)));
     }
 }
 
@@ -514,7 +514,7 @@ void NoteList::encode(WriteStream& out, bool removeOffset, int rowStart) const {
     int offsetRows = 0;
     out.writeNum(myNum);
     if (removeOffset && myNum > 0) {
-        offsetRows = -min(myNotes[0].row, rowStart);
+        offsetRows = -std::min(myNotes[0].row, rowStart);
     }
     for (int i = 0; i < myNum; ++i) {
         EncodeNote(out, myNotes[i], offsetRows);
@@ -560,7 +560,7 @@ void NoteList::decode(ReadStream& in, const TimingData& timing,
 void NoteList::myReserve(int num) {
     int numBytes = num * sizeof(Note);
     if (myCap < numBytes) {
-        myCap = max(numBytes, myCap << 1);
+        myCap = std::max(numBytes, myCap << 1);
         myNotes = static_cast<Note*>(realloc(myNotes, myCap));
     }
 }

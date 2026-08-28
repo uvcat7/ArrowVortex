@@ -7,7 +7,7 @@
 #include <Core/Text.h>
 #include <Core/Texture.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/Xmr.h>
 
 #include <Simfile/SegmentGroup.h>
@@ -26,6 +26,7 @@
 
 #include <algorithm>
 
+#define BOX_Y static_cast<int>(32 * gSystem->getScaleFactor())
 namespace Vortex {
 
 // ================================================================================================
@@ -35,7 +36,7 @@ static const int MAX_WIDTH = 400;
 
 struct TempoBoxesImpl : public TempoBoxes {
     TextStyle textStyle;
-    Vector<TempoBox> myBoxes;
+    std::vector<TempoBox> myBoxes;
     int myMouseOverBox;
     TileRect myBoxBar;
     TileRect myBoxHl;
@@ -94,7 +95,7 @@ struct TempoBoxesImpl : public TempoBoxes {
             for (auto seg = segment.begin(), segEnd = segment.end();
                  seg != segEnd; ++seg) {
                 std::string desc = meta->getDescription(seg.ptr);
-                myBoxes.push_back(TempoBox{desc, seg->row, type, 0, 0, 0});
+                myBoxes.emplace_back(TempoBox{desc, seg->row, type, 0, 0, 0});
             }
         }
 
@@ -111,7 +112,7 @@ struct TempoBoxesImpl : public TempoBoxes {
             vec2i bounds = Text::arrange(Text::MC, textStyle,
                                          MAX_WIDTH * gSystem->getScaleFactor(),
                                          box.str.c_str());
-            int width = max(32, bounds.x + 24);
+            int width = std::max(32, bounds.x + 24);
             box.width = width;
             box.height = bounds.y + 16;
 
@@ -204,19 +205,19 @@ struct TempoBoxesImpl : public TempoBoxes {
         auto end = myBoxes.end();
         if (mod == SELECT_SET) {
             for (; box != end; ++box) {
-                uint32_t set = pred(box);
+                uint32_t set = pred(&(*box));
                 numSelected += set;
                 box->isSelected = set;
             }
         } else if (mod == SELECT_ADD) {
             for (; box != end; ++box) {
-                uint32_t set = pred(box);
+                uint32_t set = pred(&(*box));
                 numSelected += set & (box->isSelected ^ 1);
                 box->isSelected |= set;
             }
         } else if (mod == SELECT_SUB) {
             for (; box != end; ++box) {
-                uint32_t set = pred(box);
+                uint32_t set = pred(&(*box));
                 numSelected += set & box->isSelected;
                 box->isSelected &= set ^ 1;
             }
@@ -293,9 +294,9 @@ struct TempoBoxesImpl : public TempoBoxes {
                                          : static_cast<double>(box.row)));
                 int side = Segment::meta[box.type]->side;
                 int x = baseX[side] + box.x;
-                if (IsInside(
-                        recti{x, y - box.height / 2, box.width, box.height},
-                        mpos.x, mpos.y)) {
+                if (IsInside(recti{x, y - box.height / 2,
+                                   static_cast<int>(box.width), BOX_Y},
+                             mpos.x, mpos.y)) {
                     myMouseOverBox = i;
                     break;
                 }
@@ -339,7 +340,8 @@ struct TempoBoxesImpl : public TempoBoxes {
             int x = baseX[side] + box.x;
 
             int flags = side * TileBar::FLIP_H;
-            recti r = {x, y - box.height / 2, box.width, box.height};
+            recti r = {x, y - box.height / 2, static_cast<int>(box.width),
+                       box.height};
 
             uint32_t color = Segment::meta[box.type]->color;
             myBoxBar.draw(&batch, r, color, flags);
@@ -364,7 +366,8 @@ struct TempoBoxesImpl : public TempoBoxes {
             Text::arrange(Text::MC, textStyle,
                           MAX_WIDTH * gSystem->getScaleFactor(),
                           box.str.c_str());
-            Text::draw(recti{x, y - box.height / 2 - 1, box.width, box.height});
+            Text::draw(recti{x, y - box.height / 2 - 1,
+                             static_cast<int>(box.width), box.height});
         }
 
         // Display detailed info of the mouse over box.
@@ -392,7 +395,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         Text::arrange(Text::TC, style, meta->help);
         vec2i helpSize = Text::getSize();
 
-        int w = max(nameSize.x, helpSize.x) + 12;
+        int w = std::max(nameSize.x, helpSize.x) + 12;
         int h = nameSize.y + helpSize.y + 8;
         recti r = recti{x - w / 2, y, w, h};
 
@@ -408,14 +411,15 @@ struct TempoBoxesImpl : public TempoBoxes {
         Text::draw(vec2i{x, y + 10});
     }
 
-    const Vector<TempoBox>& getBoxes() override { return myBoxes; }
+    const std::vector<TempoBox>& getBoxes() override { return myBoxes; }
 
     int getStackWidth(int side, int row) override {
         int width = 0;
         for (const TempoBox& box : myBoxes) {
             if (box.row > row) break;
             if (box.row == row && side == Segment::meta[box.type]->side)
-                width = max(width, side == 0 ? abs(box.x) : box.x + box.width);
+                width =
+                    std::max(width, side == 0 ? abs(box.x) : box.x + box.width);
         }
         return width;
     }

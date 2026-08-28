@@ -1,6 +1,9 @@
 #pragma once
 
 #include <Core/Core.h>
+#ifdef DELETE
+#undef DELETE
+#endif
 
 namespace Vortex {
 
@@ -328,7 +331,8 @@ class InputEvents {
     void operator=(const InputEvents& other);
 
    private:
-    void* data_;  // TODO: replace with a more descriptive variable name.
+    void* data_ =
+        nullptr;  // TODO: replace with a more descriptive variable name.
     friend class InputHandler;
 };
 

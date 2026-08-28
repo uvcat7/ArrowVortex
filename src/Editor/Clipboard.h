@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 
 #include <Simfile/Common.h>
 
@@ -9,8 +9,8 @@ namespace Vortex {
 struct ClipboardData {
     uint8_t version = 0;
     uint8_t count = 0;
-    Vector<uint8_t> notes;
-    Vector<uint8_t> tempos;
+    std::vector<uint8_t> notes;
+    std::vector<uint8_t> tempos;
 };
 
 // Returns true clipboard has ArrowVortex data.
@@ -28,6 +28,6 @@ ClipboardData GetClipboardData();
 void Base64Encode(std::string& out, const uint8_t* in, int size);
 
 // Decodes Base64- data into StreamData.
-void Base64Decode(Vector<uint8_t>& out, const char* in);
+void Base64Decode(std::vector<uint8_t>& out, const char* in);
 
 }  // namespace Vortex

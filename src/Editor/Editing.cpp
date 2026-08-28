@@ -1,16 +1,17 @@
 #include <Editor/Editing.h>
 
 #include <algorithm>
+#include <numeric>
 #include <cmath>
 #include <cstdint>
 #include <set>
 #include <string>
+#include <vector>
 
 #include <Core/Core.h>
 #include <Core/Input.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
 #include <Core/Xmr.h>
 
 #include <Editor/Clipboard.h>
@@ -67,8 +68,8 @@ static bool IsActive(const PlacingNote& n) {
 static Note PlacingNoteToNote(const PlacingNote& pnote, int col) {
     Note out;
     out.col = col;
-    out.row = min(pnote.startRow, pnote.endRow);
-    out.endrow = max(pnote.startRow, pnote.endRow);
+    out.row = std::min(pnote.startRow, pnote.endRow);
+    out.endrow = std::max(pnote.startRow, pnote.endRow);
     out.player = pnote.player;
     out.type = NOTE_STEP_OR_HOLD;
     out.quant = pnote.quant;
@@ -212,19 +213,19 @@ struct EditingImpl : public Editing {
                                                PLACE_AFTER_REMOVE, quant};
                     }
                     edit.rem.append(CompressNote(*note));
-                    gNotes->modify(edit, false);
+                    gNotes->modify(edit, false, nullptr);
                 } else {
                     edit.add.append({row, row, static_cast<uint32_t>(col),
                                      static_cast<uint32_t>(myCurPlayer),
                                      NOTE_STEP_OR_HOLD, quant});
                     if (evt.keyflags & Keyflag::SHIFT) {
                         edit.add.begin()->type = NOTE_MINE;
-                        gNotes->modify(edit, false);
+                        gNotes->modify(edit, false, nullptr);
                     } else if (gMusic->isPaused()) {
                         myPlacingNotes[col] = {myCurPlayer, row, row, PLACE_NEW,
                                                quant};
                     } else {
-                        gNotes->modify(edit, false);
+                        gNotes->modify(edit, false, nullptr);
                     }
                 }
             }
@@ -248,9 +249,9 @@ struct EditingImpl : public Editing {
         int delta[5] = {24, 24, 24, 12, 12};
         int deltaIdx = 0;
 
-        Vector<RowCol> rem;
+        std::vector<RowCol> rem;
         NoteList add = gSelection->getSelectedNotes();
-        for(auto& note : add) rem.push_back({note.row, (int)note.col});
+        for(auto& note : add) rem.emplace_back({note.row, (int)note.col});
 
         if(add.empty())
         {
@@ -372,20 +373,6 @@ struct EditingImpl : public Editing {
     // ================================================================================================
     // EditingImpl :: member functions.
 
-    static int gcd(int a, int b) {
-        if (a == 0) {
-            return b;
-        }
-        if (b == 0) {
-            return a;
-        }
-        if (a > b) {
-            return gcd(a - b, b);
-        } else {
-            return gcd(a, b - a);
-        }
-    }
-
     void finishNotePlacement(int col) {
         auto& pnote = myPlacingNotes[col];
         pnote.endRow = gView->getCursorRow();
@@ -405,16 +392,16 @@ struct EditingImpl : public Editing {
             }
 
             if (note.quant > 0 && note.quant <= 192) {
-                note.quant =
-                    min(192u, static_cast<uint32_t>(
-                                  note.quant * gView->getSnapQuant() /
-                                  gcd(note.quant, gView->getSnapQuant())));
+                note.quant = std::min(
+                    192u, static_cast<uint32_t>(
+                              note.quant * gView->getSnapQuant() /
+                              std::gcd(note.quant, gView->getSnapQuant())));
             } else {
                 note.quant = 192;
             }
             NoteEdit edit;
             edit.add.append(note);
-            gNotes->modify(edit, false);
+            gNotes->modify(edit, false, nullptr);
         }
         pnote.mode = PLACE_NONE;
     }
@@ -621,7 +608,7 @@ struct EditingImpl : public Editing {
             {"Converted %1 note to P3.", "Converted %1 notes to P3."},
             {"Switched player for %1 note.", "Switched player for %1 notes."},
         };
-        auto* desc = descs + (samePlayer ? min(newPlayer, 3) : 3);
+        auto* desc = descs + (samePlayer ? std::min(newPlayer, 3) : 3);
         gNotes->modify(edit, false, desc);
     }
 
@@ -680,7 +667,7 @@ struct EditingImpl : public Editing {
     }
 
     template <typename T>
-    static T readFromBuffer(Vector<uint8_t>& buffer, int& pos) {
+    static T readFromBuffer(std::vector<uint8_t>& buffer, int& pos) {
         if (pos + sizeof(T) <= buffer.size()) {
             pos += sizeof(T);
             return *static_cast<T*>(buffer.data() + pos - sizeof(T));
@@ -693,7 +680,7 @@ struct EditingImpl : public Editing {
         /* TODO?
         NoteList out = gSelection->getSelectedNotes();
 
-        Vector<uint8_t> buffer = GetClipboardData("notes");
+        std::vector<uint8_t> buffer = GetClipboardData("notes");
         if(buffer.empty()) return;
 
         int readPos = 0;
@@ -929,7 +916,7 @@ struct EditingImpl : public Editing {
                 notesEdit.rem.append(*note);
                 notesEdit.add.append({lastSnap, lastSnap, note->col,
                                       note->player, note->type, 192});
-                gNotes->modify(notesEdit, false);
+                gNotes->modify(notesEdit, false, nullptr);
                 gHistory->updateChain();
                 continue;
             }
@@ -953,18 +940,18 @@ struct EditingImpl : public Editing {
                 for (auto seg = segment.begin(), segEnd = segment.end();
                      seg != segEnd; ++seg) {
                     if (seg->row < note->row) {
-                        before = max(before, seg->row);
+                        before = std::max(before, seg->row);
                     } else if (seg->row > note->row) {
-                        after = min(after, seg->row);
+                        after = std::min(after, seg->row);
                         break;
                     }
                 }
             }
 
             // Store previous values.
-            auto boundStart = max(before, note->row - ROWS_PER_BEAT);
+            auto boundStart = std::max(before, note->row - ROWS_PER_BEAT);
             auto boundMid = note->row;
-            auto boundEnd = min(after, note->row + ROWS_PER_BEAT);
+            auto boundEnd = std::min(after, note->row + ROWS_PER_BEAT);
 
             int range[] = {boundStart, boundMid, boundEnd};
             double time[] = {gTempo->rowToTime(boundStart),
@@ -1036,7 +1023,7 @@ struct EditingImpl : public Editing {
             tempoEdit.add.append(Scroll(boundEnd, scrolls[2]));
             tempoEdit.rem.append(Scroll(boundMid, scrolls[1]));
 
-            gNotes->modify(notesEdit, false);
+            gNotes->modify(notesEdit, false, nullptr);
             gTempo->modify(tempoEdit, false);
             gHistory->updateChain();
 
@@ -1063,7 +1050,7 @@ struct EditingImpl : public Editing {
             {
                     Note n = rem[colI];
                     n.row = n.endrow = rem[rowI].row;
-                    add.push_back(n);
+                    add.emplace_back(n);
                     if(colI % 3 == 2) ++rowI;
             }
 
@@ -1088,11 +1075,11 @@ struct EditingImpl : public Editing {
         const char* title = "Convert Routine to ITG Couples";
 
         // Find all routine charts.
-        Vector<const Chart*> charts;
+        std::vector<const Chart*> charts;
         for (int i = 0; i < gSimfile->getNumCharts(); ++i) {
             auto chart = gSimfile->getChart(i);
             if (chart->style->id == "dance-routine") {
-                charts.push_back(chart);
+                charts.emplace_back(chart);
             }
         }
         if (charts.empty()) {
@@ -1157,11 +1144,11 @@ struct EditingImpl : public Editing {
         auto segments = gTempo->getSegments();
 
         // Find all doubles charts.
-        Vector<const Chart*> charts;
+        std::vector<const Chart*> charts;
         for (int i = 0; i < gSimfile->getNumCharts(); ++i) {
             auto chart = gSimfile->getChart(i);
             if (chart->style->id == "dance-double") {
-                charts.push_back(chart);
+                charts.emplace_back(chart);
             }
         }
         if (charts.empty()) {
@@ -1272,9 +1259,9 @@ struct EditingImpl : public Editing {
             // Find starting row.
             int minRow = INT_MAX;
             if (hasSelectedSegments)
-                minRow = min(minRow, gTempo->minSelectionRow());
+                minRow = std::min(minRow, gTempo->minSelectionRow());
             if (hasSelectedNotes)
-                minRow = min(minRow, gNotes->minSelectionRow());
+                minRow = std::min(minRow, gNotes->minSelectionRow());
 
             // Notes
             if (hasSelectedNotes) {
@@ -1291,7 +1278,7 @@ struct EditingImpl : public Editing {
 
         } else {
             std::string time = Str::formatTime(gView->getCursorTime());
-            gSystem->setClipboardText(Str::fmt("%1").arg(time));
+            gSystem->setClipboardText(time);
             HudNote("Copied timestamp to Clipboard.");
         }
     }

@@ -4,8 +4,9 @@
 
 #include <Core/QuadBatch.h>
 #include <Core/Draw.h>
-#include <Core/Vector.h>
 #include <Core/WidgetsLayout.h>
+
+#include <vector>
 
 namespace Vortex {
 
@@ -31,8 +32,8 @@ class DialogDancingBot : public EditorDialog {
     void myAssignFeetToNotes();
     void myGetFeetPositions(vec3f* out, int player);
 
-    Vector<int> myPadLayout;
-    Vector<uint32_t> myFeetBits;
+    std::vector<int> myPadLayout;
+    std::vector<uint32_t> myFeetBits;
     BatchSprite myPadSpr[6];
     BatchSprite myFeetSpr[2];
     Texture myPadTex, myFeetTex;

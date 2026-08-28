@@ -20,8 +20,8 @@ class DialogGenerateNotes : public EditorDialog, public InputHandler {
 
     StreamGenerator streamGenerator_;
     WgDroplist* spacingDroplist_;
-    int footSelectionIndex_;
-    int spacingValue_;
+    int footSelectionIndex_ = 0;
+    int spacingValue_ = 0;
 };
 
 };  // namespace Vortex

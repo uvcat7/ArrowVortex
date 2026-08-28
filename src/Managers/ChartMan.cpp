@@ -193,13 +193,14 @@ struct ChartManImpl : public ChartMan {
         bool isBreak;
     };
 
-    static Vector<BreakdownItem> ToBreakdown(const Vector<StreamItem>& items) {
-        Vector<BreakdownItem> out;
+    static std::vector<BreakdownItem> ToBreakdown(
+        const std::vector<StreamItem>& items) {
+        std::vector<BreakdownItem> out;
         BreakdownItem item = {-1, -1};
         for (auto& it : items) {
             if (it.isBreak) {
                 if (it.endrow - it.row > (ROWS_PER_BEAT * 4)) {
-                    out.push_back(item);
+                    out.emplace_back(item);
                     item.row = item.endrow = -1;
                     item.text.clear();
                 } else {
@@ -212,42 +213,42 @@ struct ChartManImpl : public ChartMan {
                 item.endrow = it.endrow;
             }
         }
-        if (item.row != -1) out.push_back(item);
+        if (item.row != -1) out.emplace_back(item);
         return out;
     }
 
-    static void MergeItems(Vector<StreamItem>& items) {
+    static void MergeItems(std::vector<StreamItem>& items) {
         // Merge successive streams and breaks into a single item.
         for (int i = items.size() - 1; i > 0; --i) {
             if (items[i].isBreak == items[i - 1].isBreak) {
                 items[i - 1].endrow = items[i].endrow;
-                items.erase(i);
+                items.erase(items.begin() + i);
             }
         }
 
         // Remove breaks at the front and back of the list.
         if (items.size() && items.back().isBreak) items.pop_back();
-        if (items.size() && items[0].isBreak) items.erase(0);
+        if (items.size() && items[0].isBreak) items.erase(items.begin());
     }
 
-    static void RemoveItems(Vector<StreamItem>& items, int minRows,
+    static void RemoveItems(std::vector<StreamItem>& items, int minRows,
                             bool breaks) {
         for (int i = items.size() - 1; i >= 0; --i) {
             if ((items[i].endrow - items[i].row) < minRows &&
                 items[i].isBreak == breaks) {
-                items.erase(i);
+                items.erase(items.begin());
             }
         }
         MergeItems(items);
     }
 
-    Vector<BreakdownItem> getStreamBreakdown(
+    std::vector<BreakdownItem> getStreamBreakdown(
         int* totalMeasures) const override {
         int dummy;
         if (!totalMeasures) totalMeasures = &dummy;
 
         *totalMeasures = 0;
-        Vector<BreakdownItem> out;
+        std::vector<BreakdownItem> out;
         if (gNotes->empty()) return out;
 
         // Skip mines at the start and end.
@@ -258,7 +259,7 @@ struct ChartManImpl : public ChartMan {
         if (last == first) return out;
 
         // Build a list of streams and breaks.
-        Vector<StreamItem> items;
+        std::vector<StreamItem> items;
         const ExpandedNote *prevStreamEnd = nullptr, *streamBegin = nullptr;
         for (const ExpandedNote *n = first, *next; n != last; n = next) {
             next = n + 1;

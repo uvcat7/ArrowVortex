@@ -1,11 +1,13 @@
 #ifndef NDEBUG
-#define CRTDBG_MAP_ALLOC
 #include <stdlib.h>
+#ifdef _WIN32
+#define CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
+#include <System/Resources.h>
+#endif
 #endif
 
 #include <System/System.h>
-#include <System/Resources.h>
 #include <System/File.h>
 #include <System/Debug.h>
 
@@ -20,17 +22,13 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_video.h>
-#ifdef _WIN32
-#define _UNICODE
 #include <System/OpenGL.h>
-#include <gl/gl.h>
-#endif
-#undef ERROR
 
 #include <chrono>
 #include <thread>
+#include <algorithm>
+#include <cmath>
 #include <numeric>
-#include <stdio.h>
 #include <ctime>
 #include <bitset>
 #include <list>
@@ -48,6 +46,7 @@ Vortex::InputEvents myEvents;
 Vortex::vec2i myMousePos = {0, 0};
 Vortex::vec2i mySize = {0, 0};
 SDL_Window* window = nullptr;
+SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
 bool myIsActive = false;
@@ -63,9 +62,6 @@ namespace Vortex {
 std::chrono::duration<double> deltaTime;  // Defined in <Core/Core.h>
 
 namespace {
-
-static wchar_t sRunDir[MAX_PATH + 1] = {};
-static wchar_t sExeDir[MAX_PATH + 1] = {};
 
 static int wglSwapInterval;
 
@@ -122,14 +118,6 @@ static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
                                 SDLK_LCTRL,        Key::CTRL_L,
                                 SDLK_RCTRL,        Key::CTRL_R};
 
-// Translates a dialog button type to a windows message box type.
-static int sDlgType[System::NUM_BUTTONS] = {MB_OK, MB_OKCANCEL, MB_YESNO,
-                                            MB_YESNOCANCEL};
-
-// Translates a dialog icon type to a windows message box icon.
-static int sDlgIcon[System::NUM_ICONS] = {0, MB_ICONASTERISK, MB_ICONWARNING,
-                                          MB_ICONHAND};
-
 static void SDLCALL FileDialogOpenCallback(void* userdata,
                                            const char* const* filelist,
                                            int filter) {
@@ -176,8 +164,23 @@ fs::path ShowFileDialog(std::string title, fs::path path,
                                filters, num_filters, pathToUtf8(path).c_str(),
                                false);
     }
-    fileDialogCv.wait(lock,
-                      [] { return isDialogClosed || !fileDialogPath.empty(); });
+
+#ifdef __linux__
+    /* On Fedora, SDL won't run the callback when the dialog is closed since the
+       action triggers a DBus event SDL needs to process first.
+       Only the main thread can pump events so we regularly signal it to do so.
+       Yes, it's silly. */
+    std::jthread signal([] {
+        while (!isDialogClosed) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            fileDialogCv.notify_all();
+        }
+    });
+#endif  // __linux__
+    fileDialogCv.wait(lock, [] {
+        SDL_PumpEvents();
+        return isDialogClosed || !fileDialogPath.empty();
+    });
     if (save) *index = file_extension_index;
     return fileDialogPath;
 }
@@ -201,44 +204,6 @@ static bool LogCheckpoint(bool result, const char* description) {
 
 };  // anonymous namespace
 
-typedef System::MenuItem MItem;
-
-MItem* MItem::create() {
-    return reinterpret_cast<MenuItem*>(CreatePopupMenu());
-}
-
-void MItem::addSeperator() {
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_SEPARATOR, 0, nullptr);
-}
-void MItem::addItem(int item, const std::string& text) {
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING, item,
-                Widen(text).c_str());
-}
-
-void MItem::addSubmenu(MItem* submenu, const std::string& text, bool grayed) {
-    int flags = MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    AppendMenuW(reinterpret_cast<HMENU>(this), MF_STRING | MF_POPUP,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
-}
-
-void MItem::replaceSubmenu(int pos, MItem* submenu, const std::string& text,
-                           bool grayed) {
-    int flags = MF_BYPOSITION | MF_STRING | MF_POPUP | (grayed * MF_GRAYED);
-    DeleteMenu(reinterpret_cast<HMENU>(this), pos, MF_BYPOSITION);
-    InsertMenuW(reinterpret_cast<HMENU>(this), pos, flags,
-                reinterpret_cast<UINT_PTR>(submenu), Widen(text).c_str());
-}
-
-void MItem::setChecked(int item, bool state) {
-    CheckMenuItem(reinterpret_cast<HMENU>(this), item,
-                  state ? MF_CHECKED : MF_UNCHECKED);
-}
-
-void MItem::setEnabled(int item, bool state) {
-    EnableMenuItem(reinterpret_cast<HMENU>(this), item,
-                   state ? MF_ENABLED : MF_GRAYED);
-}
-
 namespace {
 
 // ================================================================================================
@@ -249,7 +214,6 @@ struct SystemImpl : public System {
     std::map<SDL_Keycode, Key::Code> myKeyMap;
     std::string myTitle;
     SDL_GLContext myHRC = nullptr;
-    SDL_Renderer* renderer = nullptr;
     std::string workingDirectory;
 
     // ================================================================================================
@@ -314,7 +278,7 @@ struct SystemImpl : public System {
         myHRC = SDL_GL_CreateContext(window);
         if (LogCheckpoint(myHRC != nullptr, "creating OpenGL context")) return;
 
-        BOOL mc = SDL_GL_MakeCurrent(window, myHRC);
+        bool mc = SDL_GL_MakeCurrent(window, myHRC);
         if (LogCheckpoint(mc != 0, "activating OpenGL context")) return;
 
         VortexCheckGlError();
@@ -330,11 +294,10 @@ struct SystemImpl : public System {
 
         // Enable vsync for now, we will disable it later if the settings
         // require it.
-        int interval_supported = 1;
-        interval_supported = SDL_GL_GetSwapInterval(&wglSwapInterval);
+        bool interval_supported = SDL_GL_GetSwapInterval(&wglSwapInterval);
         Debug::log("swap interval support :: %s\n",
-                   interval_supported != -1 ? "OK" : "MISSING");
-        if (interval_supported != -1) {
+                   interval_supported ? "OK" : "MISSING");
+        if (interval_supported) {
             if (!SDL_GL_SetSwapInterval(1))
                 Debug::log("Failed to set V-sync state: %s\n", SDL_GetError());
         }
@@ -357,7 +320,7 @@ struct SystemImpl : public System {
     // SystemImpl :: message loop.
 
     void createMenu() override {
-#ifdef _WIN32
+#ifndef GL_MENU_BAR
         HMENU menu = CreateMenu();
         gMenubar->init(reinterpret_cast<MenuItem*>(menu));
         SetMenu(GetActiveWindow(), menu);
@@ -370,6 +333,8 @@ struct SystemImpl : public System {
                 return true;
             },
             nullptr);
+#else
+        gMenubar->init(new MenuItem);
 #endif
     }
 
@@ -507,19 +472,17 @@ struct SystemImpl : public System {
     }
 
     void disableVsync() override {
-        if (wglSwapInterval != -1) {
-            if (SDL_GL_SetSwapInterval(0))
-                HudError("Failed to disable V-sync: %s", SDL_GetError());
-        }
+        if (!SDL_GL_SetSwapInterval(0))
+            HudError("Failed to disable V-sync: %s", SDL_GetError());
     }
 
     double getElapsedTime() const override {
         return Debug::getElapsedTime(myApplicationStartTime);
     }
 
-    std::string getExeDir() const override { return Narrow(sExeDir); }
-
-    std::string getRunDir() const override { return Narrow(sRunDir); }
+    std::string getRunDir() const override {
+        return std::string(SDL_GetBasePath());
+    }
 
     Cursor::Icon getCursor() const override { return myCursor; }
 
@@ -539,7 +502,15 @@ struct SystemImpl : public System {
         SDL_SetWindowTitle(window, text.c_str());
     }
 
-    vec2i getWindowSize() const override { return mySize; }
+    vec2i getWindowSize() const override {
+        vec2i size = {mySize.x, mySize.y};
+        if (!gMenubar)
+            return size;
+        else
+            return {size.x, size.y - gMenubar->getMenubarHeight()};
+    }
+
+    float getScaleFactor() const override { return myScale; }
 
     void setWindowSize(vec2i size) override {
         mySize = {std::clamp(size.x, 100, 32768),
@@ -548,8 +519,6 @@ struct SystemImpl : public System {
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
     }
-
-    float getScaleFactor() const override { return myScale; }
 
     bool getWindowState() const override {
         auto temp = SDL_GetWindowFlags(window);
@@ -620,9 +589,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
     Debug::openConsole();
 #endif
     gSystem = new SystemImpl;
-
     Editor::create();
-    gSystem->createMenu();  // TODO: multiplatform
     SDL_StartTextInput(window);
     SDL_SetWindowResizable(window, true);
 
@@ -657,14 +624,15 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto frameTarget = duration<double>(1.0 / 960.0);
 
     // Enter the message loop.
-    MSG message;
     auto prevTime = Debug::getElapsedTime();
     auto startTime = Debug::getElapsedTime();
 
+    int x = mySize.x;
+    int y = mySize.y;
     // Set up the OpenGL view.
-    glViewport(0, 0, mySize.x, mySize.y);
+    glViewport(0, 0, x, y);
     glLoadIdentity();
-    glOrtho(0, mySize.x, mySize.y, 0, -1, 1);
+    glOrtho(0, x, y, 0, -1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Reset the mouse cursor.
@@ -698,8 +666,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     // End of frame
     auto curTime = Debug::getElapsedTime();
-    deltaTime = duration<double>(static_cast<float> min(
-        max(0, duration<double>(curTime - prevTime).count()), 0.25));
+    deltaTime = duration<double>(static_cast<float>(std::min(
+        std::max(0.0, duration<double>(curTime - prevTime).count()), 0.25)));
     prevTime = curTime;
 
 #ifndef NDEBUG
@@ -730,7 +698,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto varianceFunc = [&avg, &siz](double accumulator, double val) {
         return accumulator + (val - avg) * (val - avg);
     };
-    auto std = sqrt(
+    auto std = std::sqrt(
         std::accumulate(fpsList.begin(), fpsList.end(), 0.0, varianceFunc) /
         siz);
     auto frameAvg = std::accumulate(frameList.begin(), frameList.end(), 0.0) /
@@ -756,10 +724,22 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     return SDL_APP_CONTINUE;
 }
 
+// Convert SDL window mouse coordinates to the app's OpenGL coordinate space.
+static vec2i windowMouseToApp(float wx, float wy) {
+    int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
+    float rx = wx;
+    float ry = wy;
+    if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
+        HudError("Failed to get render coordinates with error: %s",
+                 SDL_GetError());
+    return {static_cast<int>(rx), static_cast<int>(ry - menu_h)};
+}
+
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     static const Mouse::Code mcodes[4] = {Mouse::NONE, Mouse::LMB, Mouse::MMB,
                                           Mouse::RMB};
     int mc = 0;
+    int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
     switch (event->type) {
         case SDL_EVENT_QUIT: {
             gEditor->onExitProgram();
@@ -783,15 +763,15 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
             myScale = SDL_GetWindowDisplayScale(window);
             vec2i next = {event->window.data1, event->window.data2};
+            if (!SDL_GetWindowSizeInPixels(window, &next.x, &next.y))
+                HudError("Failed to get SDL window size with error %s",
+                         SDL_GetError());
             if (next.x > 0 && next.y > 0) mySize = next;
             break;
         }
         case SDL_EVENT_MOUSE_MOTION: {
             if (myIsInsideMessageLoop) {
-                float x, y;
-                SDL_GetMouseState(&x, &y);
-                myMousePos.x = static_cast<int>(x);
-                myMousePos.y = static_cast<int>(y);
+                myMousePos = windowMouseToApp(event->motion.x, event->motion.y);
                 myEvents.addMouseMove(myMousePos.x, myMousePos.y);
             }
             break;
@@ -824,11 +804,11 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (event->button.button == SDL_BUTTON_LEFT) {
                 SDL_CaptureMouse(true);
                 if (myIsInsideMessageLoop) {
-                    float x, y;
-                    SDL_GetMouseState(&x, &y);
-                    myEvents.addMousePress(Mouse::LMB, static_cast<int>(x),
-                                           static_cast<int>(y),
-                                           gSystem->getKeyFlags(), false);
+                    myMousePos =
+                        windowMouseToApp(event->button.x, event->button.y);
+                    myEvents.addMousePress(Mouse::LMB, myMousePos.x,
+                                           myMousePos.y, gSystem->getKeyFlags(),
+                                           false);
                     myMouseState.set(Mouse::LMB);
                 }
             }
@@ -837,10 +817,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (event->button.button == SDL_BUTTON_LEFT) {
                 SDL_CaptureMouse(false);
                 if (myIsInsideMessageLoop) {
-                    float x, y;
-                    SDL_GetMouseState(&x, &y);
-                    myEvents.addMouseRelease(Mouse::LMB, static_cast<int>(x),
-                                             static_cast<int>(y),
+                    myMousePos =
+                        windowMouseToApp(event->button.x, event->button.y);
+                    myEvents.addMouseRelease(Mouse::LMB, myMousePos.x,
+                                             myMousePos.y,
                                              gSystem->getKeyFlags());
                     myMouseState.reset(Mouse::LMB);
                 }
@@ -863,7 +843,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         }
         case SDL_EVENT_DROP_FILE: {
             if (myIsInsideMessageLoop) {
-                droppedFiles.push_back(event->drop.data);
+                droppedFiles.emplace_back(event->drop.data);
             }
             break;
         }
@@ -871,11 +851,12 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (myIsInsideMessageLoop && !droppedFiles.empty()) {
                 std::vector<const char*> filePtrs;
                 for (const auto& file : droppedFiles) {
-                    filePtrs.push_back(file.c_str());
+                    filePtrs.emplace_back(file.c_str());
                 }
+                vec2i drop_pos = windowMouseToApp(event->drop.x, event->drop.y);
                 myEvents.addFileDrop(filePtrs.data(),
                                      static_cast<int>(filePtrs.size()),
-                                     event->drop.x, event->drop.y);
+                                     drop_pos.x, drop_pos.y);
             }
             break;
         }

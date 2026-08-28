@@ -3,6 +3,8 @@
 #include <Core/GuiContext.h>
 #include <Core/WidgetsLayout.h>
 
+#include <vector>
+
 namespace Vortex {
 
 struct WidgetMapping {

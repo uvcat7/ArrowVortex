@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <cstdio>
+#include <vector>
 #include <stdint.h>
 #include <math.h>
 #include <algorithm>
@@ -462,9 +464,9 @@ static const int DBL_BUFLEN = 64;
 static int PrintInt(char* buf, int v, int minDig, bool hex) {
     int len;
     if (minDig <= 0) {
-        len = _snprintf(buf, INT_BUFLEN, hex ? "%X" : "%i", v);
+        len = std::snprintf(buf, INT_BUFLEN, hex ? "%X" : "%i", v);
     } else {
-        len = _snprintf(buf, INT_BUFLEN, hex ? "%0*X" : "%0*i", minDig, v);
+        len = std::snprintf(buf, INT_BUFLEN, hex ? "%0*X" : "%0*i", minDig, v);
     }
     return (len < 0) ? DBL_BUFLEN : len;
 }
@@ -472,19 +474,19 @@ static int PrintInt(char* buf, int v, int minDig, bool hex) {
 static int PrintUint(char* buf, uint32_t v, int minDig, bool hex) {
     int len;
     if (minDig <= 0) {
-        len = _snprintf(buf, INT_BUFLEN, hex ? "%X" : "%u", v);
+        len = std::snprintf(buf, INT_BUFLEN, hex ? "%X" : "%u", v);
     } else {
-        len = _snprintf(buf, INT_BUFLEN, hex ? "%0*X" : "%0*u", minDig, v);
+        len = std::snprintf(buf, INT_BUFLEN, hex ? "%0*X" : "%0*u", minDig, v);
     }
     return (len < 0) ? INT_BUFLEN : len;
 }
 
 static int PrintDouble(char* buf, double v, int minDec, int maxDec) {
-    minDec = min(max(minDec, 0), 16);
-    maxDec = min(max(minDec, maxDec), 16);
+    minDec = std::clamp(minDec, 0, 16);
+    maxDec = std::clamp(maxDec, minDec, 16);
 
     // Print the value.
-    int len = _snprintf(buf, DBL_BUFLEN, "%.*f", maxDec, v);
+    int len = std::snprintf(buf, DBL_BUFLEN, "%.*f", maxDec, v);
     if (len < 0) len = DBL_BUFLEN;
 
     // Cap the number of decimal digits.
@@ -731,8 +733,8 @@ bool Str::parse(const char* expr, double& out) {
 // ================================================================================================
 // Str :: string splitting and joining.
 
-Vector<std::string> Str::split(const std::string& s) {
-    Vector<std::string> out;
+std::vector<std::string> Str::split(const std::string& s) {
+    std::vector<std::string> out;
     if (s.empty()) {
         return out;
     }
@@ -742,15 +744,16 @@ Vector<std::string> Str::split(const std::string& s) {
     while (it != s.end()) {
         auto cur = it;
         while (cur != s.end() && !IsWhiteSpace(*cur)) ++cur;
-        out.push_back(std::string(it, cur));
+        std::string new_string = std::string(it, cur);
+        out.emplace_back(new_string);
         while (it != s.end() && IsWhiteSpace(*it)) ++it;
     }
     return out;
 }
 
-Vector<std::string> Str::split(const std::string& s, const char* lim, bool trim,
-                               bool skip) {
-    Vector<std::string> out;
+std::vector<std::string> Str::split(const std::string& s, const char* lim,
+                                    bool trim, bool skip) {
+    std::vector<std::string> out;
     auto limlen = strlen(lim);
     auto slen = s.length() - limlen;
     size_t start = 0;
@@ -758,18 +761,18 @@ Vector<std::string> Str::split(const std::string& s, const char* lim, bool trim,
         if (memcmp(s.data() + i, lim, limlen) == 0) {
             std::string sub = Str::substr(s, start, i - start);
             if (trim) Str::trim(sub);
-            if (sub.length() || !skip) out.push_back(sub);
+            if (sub.length() || !skip) out.emplace_back(sub);
             i += limlen, start = i;
         } else
             ++i;
     }
     std::string sub = Str::substr(s, start, std::string::npos);
     if (trim) Str::trim(sub);
-    if (sub.length() || !skip) out.push_back(sub);
+    if (sub.length() || !skip) out.emplace_back(sub);
     return out;
 }
 
-std::string Str::join(const Vector<std::string>& list, const char* lim) {
+std::string Str::join(const std::vector<std::string>& list, const char* lim) {
     if (list.empty()) return {};
 
     // Determine the total String length and allocate the output string.
@@ -807,9 +810,10 @@ std::string Str::formatTime(double seconds, bool precise) {
     t -= min * (60 * 1000);
     int64_t sec = t / 1000;
 
-    auto fmt = Str::fmt("%1:%2.")
-                   .arg(static_cast<int>(min), 2)
-                   .arg(static_cast<int>(sec), 2);
+    std::string fmt =
+        static_cast<std::string>(Str::fmt("%1:%2.")
+                                     .arg(static_cast<int>(min), 2)
+                                     .arg(static_cast<int>(sec), 2));
 
     if (precise) {
         t -= sec * 1000;
