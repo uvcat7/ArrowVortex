@@ -1,9 +1,8 @@
 ﻿#include <Editor/Shortcuts.h>
 
+#include <Core/Input.h>
 #include <Core/Xmr.h>
 #include <Core/StringUtils.h>
-
-#include <System/Debug.h>
 
 #include <Editor/Common.h>
 
@@ -521,6 +520,14 @@ struct ShortcutsImpl : public Shortcuts {
 
     // ================================================================================================
     // ShortcutsImpl :: API functions.
+
+    bool isAction(KeyPress* press, Action::Type action) override {
+        return getAction(press->keyflags, press->key) == action;
+    }
+
+    bool isAction(MouseScroll* scroll, Action::Type action) override {
+        return getAction(scroll->keyflags, scroll->up) == action;
+    }
 
     std::string getNotation(Action::Type action, bool fullList) override {
         std::string out;

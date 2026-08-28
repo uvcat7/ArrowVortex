@@ -18,8 +18,8 @@
 #include <Managers/NoteskinMan.h>
 #include <Managers/SimfileMan.h>
 
-#include "Common.h"
-#include "ConvertAudio.h"
+#include <Common.h>
+#include <ConvertAudio.h>
 #include <Core/Input.h>
 #include <Dialogs/Dialog.h>
 #include <Managers/ChartMan.h>
@@ -30,432 +30,807 @@
 
 namespace Vortex {
 
-void Action::perform(Type action) {
+bool Action::perform(Type action) {
     gMenubar->closeMenus();
-#define FIRST_CASE(x) case x: {
-#define CASE(x) \
-    }           \
-    break;      \
-    case x: {
-    switch (action) {
-        FIRST_CASE(EXIT_PROGRAM)
-        gEditor->onExitProgram();
 
-        CASE(FILE_OPEN)
-        gEditor->openSimfile();
-        CASE(FILE_SAVE)
-        gEditor->saveSimfile(false);
-        CASE(FILE_SAVE_AS)
-        gEditor->saveSimfile(true);
-        CASE(FILE_CLOSE)
-        gEditor->closeSimfile();
+    bool handled = true;
 
-        CASE(FILE_CLEAR_RECENT_FILES)
-        gEditor->clearRecentFiles();
-
-        CASE(OPEN_DIALOG_SONG_PROPERTIES)
-        gEditor->openDialog(DIALOG_SONG_PROPERTIES);
-        CASE(OPEN_DIALOG_CHART_PROPERTIES)
-        gEditor->openDialog(DIALOG_CHART_PROPERTIES);
-        CASE(OPEN_DIALOG_CHART_LIST)
-        gEditor->openDialog(DIALOG_CHART_LIST);
-        CASE(OPEN_DIALOG_NEW_CHART)
-        gEditor->openDialog(DIALOG_NEW_CHART);
-        CASE(OPEN_DIALOG_ADJUST_SYNC)
-        gEditor->openDialog(DIALOG_ADJUST_SYNC);
-        CASE(OPEN_DIALOG_ADJUST_TEMPO)
-        gEditor->openDialog(DIALOG_ADJUST_TEMPO);
-        CASE(OPEN_DIALOG_ADJUST_TEMPO_SM5)
-        gEditor->openDialog(DIALOG_ADJUST_TEMPO_SM5);
-        CASE(OPEN_DIALOG_DANCING_BOT)
-        gEditor->openDialog(DIALOG_DANCING_BOT);
-        CASE(OPEN_DIALOG_GENERATE_NOTES)
-        gEditor->openDialog(DIALOG_GENERATE_NOTES);
-        CASE(OPEN_DIALOG_TEMPO_BREAKDOWN)
-        gEditor->openDialog(DIALOG_TEMPO_BREAKDOWN);
-        CASE(OPEN_DIALOG_LABEL_BREAKDOWN)
-        gEditor->openDialog(DIALOG_LABEL_BREAKDOWN);
-        CASE(OPEN_DIALOG_WAVEFORM_SETTINGS)
-        gEditor->openDialog(DIALOG_WAVEFORM_SETTINGS);
-        CASE(OPEN_DIALOG_ZOOM)
-        gEditor->openDialog(DIALOG_ZOOM);
-        CASE(OPEN_DIALOG_CUSTOM_SNAP)
-        gEditor->openDialog(DIALOG_CUSTOM_SNAP);
-        CASE(OPEN_DIALOG_PREVIEW_SETTINGS)
-        gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
-
-        CASE(EDIT_UNDO)
-        gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
-        CASE(EDIT_REDO)
-        gSystem->getEvents().addKeyPress(Key::Y, Keyflag::CTRL, false);
-        CASE(EDIT_CUT)
-        gSystem->getEvents().addKeyPress(Key::X, Keyflag::CTRL, false);
-        CASE(EDIT_COPY)
-        gSystem->getEvents().addKeyPress(Key::C, Keyflag::CTRL, false);
-        CASE(EDIT_PASTE)
-        gSystem->getEvents().addKeyPress(Key::V, Keyflag::CTRL, false);
-        CASE(EDIT_PASTE_INSERT)
-        gSystem->getEvents().addKeyPress(Key::V, Keyflag::CTRL | Keyflag::SHIFT,
-                                         false);
-        CASE(EDIT_DELETE)
-        gSystem->getEvents().addKeyPress(Key::DELETE, 0, false);
-        CASE(SELECT_ALL)
-        gSystem->getEvents().addKeyPress(Key::A, Keyflag::CTRL, false);
-
-        CASE(TOGGLE_JUMP_TO_NEXT_NOTE)
-        gEditing->toggleJumpToNextNote();
-        CASE(TOGGLE_UNDO_REDO_JUMP)
-        gEditing->toggleUndoRedoJump();
-        CASE(TOGGLE_TIME_BASED_COPY)
-        gEditing->toggleTimeBasedCopy();
-
-        CASE(SET_VISUAL_SYNC_CURSOR_ANCHOR)
-        gEditing->setVisualSyncAnchor(Editing::EditingAnchor::CURSOR);
-        CASE(SET_VISUAL_SYNC_RECEPTOR_ANCHOR)
-        gEditing->setVisualSyncAnchor(Editing::EditingAnchor::RECEPTORS);
-        CASE(INJECT_BOUNDING_BPM_CHANGE)
-        gEditing->injectBoundingBpmChange();
-
-        CASE(REQUANTIZE_NOTES)
-        gEditing->requantizeNotes();
-
-        CASE(SELECT_REGION)
-        gSelection->selectRegion();
-        CASE(SELECT_ALL_STEPS)
-        gSelection->selectNotes(NotesMan::SELECT_STEPS);
-        CASE(SELECT_ALL_MINES)
-        gSelection->selectNotes(NotesMan::SELECT_MINES);
-        CASE(SELECT_ALL_HOLDS)
-        gSelection->selectNotes(NotesMan::SELECT_HOLDS);
-        CASE(SELECT_ALL_ROLLS)
-        gSelection->selectNotes(NotesMan::SELECT_ROLLS);
-        CASE(SELECT_ALL_FAKES)
-        gSelection->selectNotes(NotesMan::SELECT_FAKES);
-        CASE(SELECT_ALL_LIFTS)
-        gSelection->selectNotes(NotesMan::SELECT_LIFTS);
-        CASE(SELECT_REGION_BEFORE_CURSOR)
-        gSelection->selectRegion(0, gView->getCursorRow());
-        CASE(SELECT_REGION_AFTER_CURSOR)
-        gSelection->selectRegion(gView->getCursorRow(), gSimfile->getEndRow());
-
-        CASE(SELECT_QUANT_4)
-        gSelection->selectNotes(RT_4TH);
-        CASE(SELECT_QUANT_8)
-        gSelection->selectNotes(RT_8TH);
-        CASE(SELECT_QUANT_12)
-        gSelection->selectNotes(RT_12TH);
-        CASE(SELECT_QUANT_16)
-        gSelection->selectNotes(RT_16TH);
-        CASE(SELECT_QUANT_24)
-        gSelection->selectNotes(RT_24TH);
-        CASE(SELECT_QUANT_32)
-        gSelection->selectNotes(RT_32ND);
-        CASE(SELECT_QUANT_48)
-        gSelection->selectNotes(RT_48TH);
-        CASE(SELECT_QUANT_64)
-        gSelection->selectNotes(RT_64TH);
-        CASE(SELECT_QUANT_192)
-        gSelection->selectNotes(RT_192TH);
-
-        CASE(SELECT_TEMPO_BPM)
-        gTempoBoxes->selectType(Segment::BPM);
-        CASE(SELECT_TEMPO_STOP)
-        gTempoBoxes->selectType(Segment::STOP);
-        CASE(SELECT_TEMPO_DELAY)
-        gTempoBoxes->selectType(Segment::DELAY);
-        CASE(SELECT_TEMPO_WARP)
-        gTempoBoxes->selectType(Segment::WARP);
-        CASE(SELECT_TEMPO_TIME_SIG)
-        gTempoBoxes->selectType(Segment::TIME_SIG);
-        CASE(SELECT_TEMPO_TICK_COUNT)
-        gTempoBoxes->selectType(Segment::TICK_COUNT);
-        CASE(SELECT_TEMPO_COMBO)
-        gTempoBoxes->selectType(Segment::COMBO);
-        CASE(SELECT_TEMPO_SPEED)
-        gTempoBoxes->selectType(Segment::SPEED);
-        CASE(SELECT_TEMPO_SCROLL)
-        gTempoBoxes->selectType(Segment::SCROLL);
-        CASE(SELECT_TEMPO_FAKE)
-        gTempoBoxes->selectType(Segment::FAKE);
-        CASE(SELECT_TEMPO_LABEL)
-        gTempoBoxes->selectType(Segment::LABEL);
-
-        CASE(SET_TEMPO_EDIT_CURSOR_ANCHOR)
-        gEditing->setTempoEditAnchor(Editing::EditingAnchor::CURSOR);
-        CASE(SET_TEMPO_EDIT_RECEPTOR_ANCHOR)
-        gEditing->setTempoEditAnchor(Editing::EditingAnchor::RECEPTORS);
-        CASE(EDIT_TEMPO_BPM)
-        gEditing->openTempoEdit(Segment::BPM);
-        CASE(EDIT_TEMPO_STOP)
-        gEditing->openTempoEdit(Segment::STOP);
-        CASE(EDIT_TEMPO_DELAY)
-        gEditing->openTempoEdit(Segment::DELAY);
-        CASE(EDIT_TEMPO_WARP)
-        gEditing->openTempoEdit(Segment::WARP);
-        CASE(EDIT_TEMPO_TIME_SIG)
-        gEditing->openTempoEdit(Segment::TIME_SIG);
-        CASE(EDIT_TEMPO_TICK_COUNT)
-        gEditing->openTempoEdit(Segment::TICK_COUNT);
-        CASE(EDIT_TEMPO_COMBO)
-        gEditing->openTempoEdit(Segment::COMBO);
-        CASE(EDIT_TEMPO_SPEED)
-        gEditing->openTempoEdit(Segment::SPEED);
-        CASE(EDIT_TEMPO_SCROLL)
-        gEditing->openTempoEdit(Segment::SCROLL);
-        CASE(EDIT_TEMPO_FAKE)
-        gEditing->openTempoEdit(Segment::FAKE);
-        CASE(EDIT_TEMPO_LABEL)
-        gEditing->openTempoEdit(Segment::LABEL);
-        CASE(SELECTION_TOGGLE_TEMPO_EDITOR)
-        gSelection->toggleTempoEditor();
-
-        CASE(CHART_PREVIOUS)
-        gSimfile->previousChart();
-        CASE(CHART_NEXT)
-        gSimfile->nextChart();
-        CASE(CHART_DELETE)
-        gSimfile->removeChart(gChart->get());
-
-        CASE(SIMFILE_PREVIOUS)
-        gEditor->openNextSimfile(false);
-        CASE(SIMFILE_NEXT)
-        gEditor->openNextSimfile(true);
-
-        CASE(CHART_CONVERT_COUPLES_TO_ROUTINE)
-        gEditing->convertCouplesToRoutine();
-        CASE(CHART_CONVERT_ROUTINE_TO_COUPLES)
-        gEditing->convertRoutineToCouples();
-
-        CASE(CHANGE_NOTES_TO_MINES)
-        gEditing->changeNotesToType(NoteType::NOTE_MINE);
-        CASE(CHANGE_NOTES_TO_FAKES)
-        gEditing->changeNotesToType(NoteType::NOTE_FAKE);
-        CASE(CHANGE_NOTES_TO_LIFTS)
-        gEditing->changeNotesToType(NoteType::NOTE_LIFT);
-        CASE(CHANGE_MINES_TO_NOTES)
-        gEditing->changeMinesToType(NoteType::NOTE_STEP_OR_HOLD);
-        CASE(CHANGE_MINES_TO_FAKES)
-        gEditing->changeMinesToType(NoteType::NOTE_FAKE);
-        CASE(CHANGE_MINES_TO_LIFTS)
-        gEditing->changeMinesToType(NoteType::NOTE_LIFT);
-        CASE(CHANGE_FAKES_TO_NOTES)
-        gEditing->changeFakesToType(NoteType::NOTE_STEP_OR_HOLD);
-        CASE(CHANGE_LIFTS_TO_NOTES)
-        gEditing->changeLiftsToType(NoteType::NOTE_STEP_OR_HOLD);
-        CASE(CHANGE_HOLDS_TO_STEPS)
-        gEditing->changeHoldsToType(NoteType::NOTE_STEP_OR_HOLD);
-        CASE(CHANGE_HOLDS_TO_MINES)
-        gEditing->changeHoldsToType(NoteType::NOTE_MINE);
-        CASE(CHANGE_BETWEEN_HOLDS_AND_ROLLS)
-        gEditing->changeHoldsToRolls();
-        CASE(CHANGE_BETWEEN_PLAYER_NUMBERS)
-        gEditing->changePlayerNumber();
-        CASE(CHANGE_NOTE_SIDE)
-        gEditing->changeNoteSide();
-
-        CASE(MIRROR_NOTES_VERTICALLY)
-        gEditing->mirrorNotes(Editing::MIRROR_V);
-        CASE(MIRROR_NOTES_HORIZONTALLY)
-        gEditing->mirrorNotes(Editing::MIRROR_H);
-        CASE(MIRROR_NOTES_FULL)
-        gEditing->mirrorNotes(Editing::MIRROR_HV);
-
-        CASE(EXPORT_NOTES_AS_LUA_TABLE)
-        gEditing->exportNotesAsLuaTable();
-
-        CASE(SCALE_NOTES_2_TO_1)
-        gEditing->scaleNotes(2, 1);
-        CASE(SCALE_NOTES_3_TO_2)
-        gEditing->scaleNotes(3, 2);
-        CASE(SCALE_NOTES_4_TO_3)
-        gEditing->scaleNotes(4, 3);
-        CASE(SCALE_NOTES_1_TO_2)
-        gEditing->scaleNotes(1, 2);
-        CASE(SCALE_NOTES_2_TO_3)
-        gEditing->scaleNotes(2, 3);
-        CASE(SCALE_NOTES_3_TO_4)
-        gEditing->scaleNotes(3, 4);
-
-        CASE(SWITCH_TO_SYNC_MODE)
-        gSimfile->openChart(-1);
-
-        CASE(VOLUME_RESET)
-        gMusic->setVolume(100);
-        CASE(VOLUME_INCREASE)
-        gMusic->setVolume(gMusic->getVolume() + 10);
-        CASE(VOLUME_DECREASE)
-        gMusic->setVolume(gMusic->getVolume() - 10);
-        CASE(VOLUME_MUTE)
-        gMusic->setMuted(!gMusic->isMuted());
-
-        CASE(CONVERT_MUSIC)
-        gMusic->startAudioConversion();
-        CASE(CONVERT_MUSIC_TO_OGG)
-        gMusic->startAudioConversion(AudioFormat::OGG);
-        CASE(CONVERT_MUSIC_TO_MP3)
-        gMusic->startAudioConversion(AudioFormat::MP3);
-        CASE(CONVERT_MUSIC_TO_WAV)
-        gMusic->startAudioConversion(AudioFormat::WAV);
-
-        CASE(SPEED_RESET)
-        gMusic->setSpeed(100);
-        CASE(SPEED_INCREASE)
-        gMusic->setSpeed(gMusic->getSpeed() + 10);
-        CASE(SPEED_DECREASE)
-        gMusic->setSpeed(gMusic->getSpeed() - 10);
-
-        CASE(TOGGLE_BEAT_TICK)
-        gMusic->toggleBeatTick();
-        CASE(TOGGLE_NOTE_TICK)
-        gMusic->toggleNoteTick();
-
-        CASE(TOGGLE_SHOW_WAVEFORM)
-        gNotefield->toggleShowWaveform();
-        CASE(BEATLINE_TOGGLE_ENABLED)
-        gNotefield->toggleShowBeatLines();
-        CASE(BEATLINE_TOGGLE_SNAP)
-        gNotefield->toggleShowBeatLinesSnap();
-        CASE(BEATLINE_TOGGLE_COLOR)
-        gNotefield->toggleShowBeatLinesColor();
-        CASE(BEATLINE_TOGGLE_HOVER)
-        gNotefield->toggleShowBeatLinesHover();
-        CASE(TOGGLE_SHOW_NOTES)
-        gNotefield->toggleShowNotes();
-        CASE(TOGGLE_SHOW_TEMPO_BOXES)
-        gTempoBoxes->toggleShowBoxes();
-        CASE(TOGGLE_SHOW_TEMPO_HELP)
-        gTempoBoxes->toggleShowHelp();
-        CASE(TOGGLE_REVERSE_SCROLL)
-        gView->toggleReverseScroll();
-        CASE(TOGGLE_CHART_PREVIEW)
-        gView->toggleChartPreview();
-
-        CASE(PREVIEW_TOGGLE_ENABLED)
-        gNotefieldPreview->toggleEnabled();
-        CASE(PREVIEW_TOGGLE_SHOW_BEAT_LINES)
-        gNotefieldPreview->toggleShowBeatLines();
-        CASE(PREVIEW_TOGGLE_REVERSE_SCROLL)
-        gNotefieldPreview->toggleReverseScroll();
-        CASE(PREVIEW_VIEW_CMOD)
-        gNotefieldPreview->setMode(NotefieldPreview::CMOD);
-        CASE(PREVIEW_VIEW_XMOD)
-        gNotefieldPreview->setMode(NotefieldPreview::XMOD);
-        CASE(PREVIEW_VIEW_VARIABLE)
-        gNotefieldPreview->setMode(NotefieldPreview::VARIABLE);
-
-        CASE(MINIMAP_SET_NOTES)
-        gMinimap->setMode(Minimap::NOTES);
-        CASE(MINIMAP_SET_DENSITY)
-        gMinimap->setMode(Minimap::DENSITY);
-
-        CASE(BACKGROUND_HIDE)
-        gNotefield->setBgAlpha(0);
-        CASE(BACKGROUND_INCREASE_ALPHA)
-        gNotefield->setBgAlpha(gNotefield->getBgAlpha() + 10);
-        CASE(BACKGROUND_DECREASE_ALPHA)
-        gNotefield->setBgAlpha(gNotefield->getBgAlpha() - 10);
-        CASE(BACKGROUND_SET_STRETCH)
-        gEditor->setBackgroundStyle(BG_STYLE_STRETCH);
-        CASE(BACKGROUND_SET_LETTERBOX)
-        gEditor->setBackgroundStyle(BG_STYLE_LETTERBOX);
-        CASE(BACKGROUND_SET_CROP)
-        gEditor->setBackgroundStyle(BG_STYLE_CROP);
-
-        CASE(USE_TIME_BASED_VIEW)
-        gView->setTimeBased(true);
-        CASE(USE_ROW_BASED_VIEW)
-        gView->setTimeBased(false);
-
-        CASE(ZOOM_RESET)
-        gView->setZoomLevel(8);
-        gView->setScaleLevel(4);
-        CASE(ZOOM_IN)
-        gView->setZoomLevel(gView->getZoomLevel() + 0.25);
-        CASE(ZOOM_OUT)
-        gView->setZoomLevel(gView->getZoomLevel() - 0.25);
-        CASE(SCALE_INCREASE)
-        gView->setScaleLevel(gView->getScaleLevel() + 0.25);
-        CASE(SCALE_DECREASE)
-        gView->setScaleLevel(gView->getScaleLevel() - 0.25);
-
-        CASE(SNAP_NEXT)
-        gView->setSnapType(gView->getSnapType() + 1);
-        CASE(SNAP_PREVIOUS)
-        gView->setSnapType(gView->getSnapType() - 1);
-        CASE(SNAP_RESET)
-        gView->setSnapType(0);
-
-        CASE(CURSOR_UP)
-        gView->setCursorRow(
-            gView->snapRow(gView->getCursorRow(), View::SNAP_UP));
-        CASE(CURSOR_DOWN)
-        gView->setCursorRow(
-            gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
-        CASE(CURSOR_PREVIOUS_BEAT)
-        gView->setCursorToNextInterval(-48);
-        CASE(CURSOR_NEXT_BEAT)
-        gView->setCursorToNextInterval(48);
-        CASE(CURSOR_PREVIOUS_MEASURE)
-        gView->setCursorToNextInterval(-192);
-        CASE(CURSOR_NEXT_MEASURE)
-        gView->setCursorToNextInterval(192);
-        CASE(CURSOR_STREAM_START)
-        gView->setCursorToStream(true);
-        CASE(CURSOR_STREAM_END)
-        gView->setCursorToStream(false);
-        CASE(CURSOR_SELECTION_START)
-        gView->setCursorToSelection(true);
-        CASE(CURSOR_SELECTION_END)
-        gView->setCursorToSelection(false);
-        CASE(CURSOR_CHART_START)
-        gView->setCursorRow(0);
-        CASE(CURSOR_CHART_END)
-        gView->setCursorRow(gSimfile->getEndRow());
-
-        CASE(TOGGLE_STATUS_CHART)
-        gStatusbar->toggleChart();
-        CASE(TOGGLE_STATUS_SNAP)
-        gStatusbar->toggleSnap();
-        CASE(TOGGLE_STATUS_BPM)
-        gStatusbar->toggleBpm();
-        CASE(TOGGLE_STATUS_ROW)
-        gStatusbar->toggleRow();
-        CASE(TOGGLE_STATUS_BEAT)
-        gStatusbar->toggleBeat();
-        CASE(TOGGLE_STATUS_MEASURE)
-        gStatusbar->toggleMeasure();
-        CASE(TOGGLE_STATUS_HOVER)
-        gStatusbar->toggleHover();
-        CASE(TOGGLE_STATUS_TIME)
-        gStatusbar->toggleTime();
-        CASE(TOGGLE_STATUS_TIMING_MODE)
-        gStatusbar->toggleTimingMode();
-        CASE(TOGGLE_STATUS_SCROLL)
-        gStatusbar->toggleScroll();
-        CASE(TOGGLE_STATUS_SPEED)
-        gStatusbar->toggleSpeed();
-
-        CASE(SHOW_SHORTCUTS)
-        gTextOverlay->show(TextOverlay::SHORTCUTS);
-        CASE(SHOW_MESSAGE_LOG)
-        gTextOverlay->show(TextOverlay::MESSAGE_LOG);
-        CASE(SHOW_DEBUG_LOG)
-        gTextOverlay->show(TextOverlay::DEBUG_LOG);
-        CASE(SHOW_ABOUT)
-        gTextOverlay->show(TextOverlay::ABOUT);
+    // Range Actions
+    if (action >= FILE_OPEN_RECENT_BEGIN && action < FILE_OPEN_RECENT_END) {
+        gEditor->openSimfile(action - FILE_OPEN_RECENT_BEGIN);
+        return handled;
+    } else if (action >= SELECT_DENSITY_BEGIN && action < SELECT_DENSITY_END) {
+        gSelection->selectNotes(SelectModifier::SELECT_SET,
+                                action - SELECT_DENSITY_BEGIN + 1);
+        return handled;
+    } else if (action >= SET_NOTESKIN_BEGIN && action < SET_NOTESKIN_END) {
+        gNoteskin->setType(action - SET_NOTESKIN_BEGIN);
+        return handled;
     }
+
+    // Standard Actions
+    switch (action) {
+        case EXIT_PROGRAM: {
+            gEditor->onExitProgram();
+            break;
+        }
+
+        case FILE_OPEN: {
+            gEditor->openSimfile();
+            break;
+        }
+        case FILE_SAVE: {
+            gEditor->saveSimfile(false);
+            break;
+        }
+        case FILE_SAVE_AS: {
+            gEditor->saveSimfile(true);
+            break;
+        }
+        case FILE_CLOSE: {
+            gEditor->closeSimfile();
+            break;
+        }
+
+        case FILE_CLEAR_RECENT_FILES: {
+            gEditor->clearRecentFiles();
+            break;
+        }
+
+        case OPEN_DIALOG_SONG_PROPERTIES: {
+            gEditor->openDialog(DIALOG_SONG_PROPERTIES);
+            break;
+        }
+        case OPEN_DIALOG_CHART_PROPERTIES: {
+            gEditor->openDialog(DIALOG_CHART_PROPERTIES);
+            break;
+        }
+        case OPEN_DIALOG_CHART_LIST: {
+            gEditor->openDialog(DIALOG_CHART_LIST);
+            break;
+        }
+        case OPEN_DIALOG_NEW_CHART: {
+            gEditor->openDialog(DIALOG_NEW_CHART);
+            break;
+        }
+        case OPEN_DIALOG_ADJUST_SYNC: {
+            gEditor->openDialog(DIALOG_ADJUST_SYNC);
+            break;
+        }
+        case OPEN_DIALOG_ADJUST_TEMPO: {
+            gEditor->openDialog(DIALOG_ADJUST_TEMPO);
+            break;
+        }
+        case OPEN_DIALOG_ADJUST_TEMPO_SM5: {
+            gEditor->openDialog(DIALOG_ADJUST_TEMPO_SM5);
+            break;
+        }
+        case OPEN_DIALOG_DANCING_BOT: {
+            gEditor->openDialog(DIALOG_DANCING_BOT);
+            break;
+        }
+        case OPEN_DIALOG_GENERATE_NOTES: {
+            gEditor->openDialog(DIALOG_GENERATE_NOTES);
+            break;
+        }
+        case OPEN_DIALOG_TEMPO_BREAKDOWN: {
+            gEditor->openDialog(DIALOG_TEMPO_BREAKDOWN);
+            break;
+        }
+        case OPEN_DIALOG_LABEL_BREAKDOWN: {
+            gEditor->openDialog(DIALOG_LABEL_BREAKDOWN);
+            break;
+        }
+        case OPEN_DIALOG_WAVEFORM_SETTINGS: {
+            gEditor->openDialog(DIALOG_WAVEFORM_SETTINGS);
+            break;
+        }
+        case OPEN_DIALOG_ZOOM: {
+            gEditor->openDialog(DIALOG_ZOOM);
+            break;
+        }
+        case OPEN_DIALOG_CUSTOM_SNAP: {
+            gEditor->openDialog(DIALOG_CUSTOM_SNAP);
+            break;
+        }
+        case OPEN_DIALOG_PREVIEW_SETTINGS: {
+            gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
+            break;
+        }
+
+        case EDIT_UNDO: {
+            gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
+            break;
+        }
+        case EDIT_REDO: {
+            gSystem->getEvents().addKeyPress(Key::Y, Keyflag::CTRL, false);
+            break;
+        }
+        case EDIT_CUT: {
+            gSystem->getEvents().addKeyPress(Key::X, Keyflag::CTRL, false);
+            break;
+        }
+        case EDIT_COPY: {
+            gSystem->getEvents().addKeyPress(Key::C, Keyflag::CTRL, false);
+            break;
+        }
+        case EDIT_PASTE: {
+            gSystem->getEvents().addKeyPress(Key::V, Keyflag::CTRL, false);
+            break;
+        }
+        case EDIT_PASTE_INSERT: {
+            gSystem->getEvents().addKeyPress(
+                Key::V, Keyflag::CTRL | Keyflag::SHIFT, false);
+            break;
+        }
+        case EDIT_DELETE: {
+            gSystem->getEvents().addKeyPress(Key::DELETE, 0, false);
+            break;
+        }
+        case SELECT_ALL: {
+            gSystem->getEvents().addKeyPress(Key::A, Keyflag::CTRL, false);
+            break;
+        }
+
+        case TOGGLE_JUMP_TO_NEXT_NOTE: {
+            gEditing->toggleJumpToNextNote();
+            break;
+        }
+        case TOGGLE_UNDO_REDO_JUMP: {
+            gEditing->toggleUndoRedoJump();
+            break;
+        }
+        case TOGGLE_TIME_BASED_COPY: {
+            gEditing->toggleTimeBasedCopy();
+            break;
+        }
+
+        case SET_VISUAL_SYNC_CURSOR_ANCHOR: {
+            gEditing->setVisualSyncAnchor(Editing::EditingAnchor::CURSOR);
+            break;
+        }
+        case SET_VISUAL_SYNC_RECEPTOR_ANCHOR: {
+            gEditing->setVisualSyncAnchor(Editing::EditingAnchor::RECEPTORS);
+            break;
+        }
+        case INJECT_BOUNDING_BPM_CHANGE: {
+            gEditing->injectBoundingBpmChange();
+            break;
+        }
+
+        case REQUANTIZE_NOTES: {
+            gEditing->requantizeNotes();
+            break;
+        }
+
+        case SELECT_REGION: {
+            gSelection->selectRegion();
+            break;
+        }
+        case SELECT_ALL_STEPS: {
+            gSelection->selectNotes(NotesMan::SELECT_STEPS);
+            break;
+        }
+        case SELECT_ALL_MINES: {
+            gSelection->selectNotes(NotesMan::SELECT_MINES);
+            break;
+        }
+        case SELECT_ALL_HOLDS: {
+            gSelection->selectNotes(NotesMan::SELECT_HOLDS);
+            break;
+        }
+        case SELECT_ALL_ROLLS: {
+            gSelection->selectNotes(NotesMan::SELECT_ROLLS);
+            break;
+        }
+        case SELECT_ALL_FAKES: {
+            gSelection->selectNotes(NotesMan::SELECT_FAKES);
+            break;
+        }
+        case SELECT_ALL_LIFTS: {
+            gSelection->selectNotes(NotesMan::SELECT_LIFTS);
+            break;
+        }
+        case SELECT_REGION_BEFORE_CURSOR: {
+            gSelection->selectRegion(0, gView->getCursorRow());
+            break;
+        }
+        case SELECT_REGION_AFTER_CURSOR: {
+            gSelection->selectRegion(gView->getCursorRow(),
+                                     gSimfile->getEndRow());
+            break;
+        }
+
+        case SELECT_QUANT_4: {
+            gSelection->selectNotes(RT_4TH);
+            break;
+        }
+        case SELECT_QUANT_8: {
+            gSelection->selectNotes(RT_8TH);
+            break;
+        }
+        case SELECT_QUANT_12: {
+            gSelection->selectNotes(RT_12TH);
+            break;
+        }
+        case SELECT_QUANT_16: {
+            gSelection->selectNotes(RT_16TH);
+            break;
+        }
+        case SELECT_QUANT_24: {
+            gSelection->selectNotes(RT_24TH);
+            break;
+        }
+        case SELECT_QUANT_32: {
+            gSelection->selectNotes(RT_32ND);
+            break;
+        }
+        case SELECT_QUANT_48: {
+            gSelection->selectNotes(RT_48TH);
+            break;
+        }
+        case SELECT_QUANT_64: {
+            gSelection->selectNotes(RT_64TH);
+            break;
+        }
+        case SELECT_QUANT_192: {
+            gSelection->selectNotes(RT_192TH);
+            break;
+        }
+
+        case SELECT_TEMPO_BPM: {
+            gTempoBoxes->selectType(Segment::BPM);
+            break;
+        }
+        case SELECT_TEMPO_STOP: {
+            gTempoBoxes->selectType(Segment::STOP);
+            break;
+        }
+        case SELECT_TEMPO_DELAY: {
+            gTempoBoxes->selectType(Segment::DELAY);
+            break;
+        }
+        case SELECT_TEMPO_WARP: {
+            gTempoBoxes->selectType(Segment::WARP);
+            break;
+        }
+        case SELECT_TEMPO_TIME_SIG: {
+            gTempoBoxes->selectType(Segment::TIME_SIG);
+            break;
+        }
+        case SELECT_TEMPO_TICK_COUNT: {
+            gTempoBoxes->selectType(Segment::TICK_COUNT);
+            break;
+        }
+        case SELECT_TEMPO_COMBO: {
+            gTempoBoxes->selectType(Segment::COMBO);
+            break;
+        }
+        case SELECT_TEMPO_SPEED: {
+            gTempoBoxes->selectType(Segment::SPEED);
+            break;
+        }
+        case SELECT_TEMPO_SCROLL: {
+            gTempoBoxes->selectType(Segment::SCROLL);
+            break;
+        }
+        case SELECT_TEMPO_FAKE: {
+            gTempoBoxes->selectType(Segment::FAKE);
+            break;
+        }
+        case SELECT_TEMPO_LABEL: {
+            gTempoBoxes->selectType(Segment::LABEL);
+            break;
+        }
+
+        case SET_TEMPO_EDIT_CURSOR_ANCHOR: {
+            gEditing->setTempoEditAnchor(Editing::EditingAnchor::CURSOR);
+            break;
+        }
+        case SET_TEMPO_EDIT_RECEPTOR_ANCHOR: {
+            gEditing->setTempoEditAnchor(Editing::EditingAnchor::RECEPTORS);
+            break;
+        }
+        case EDIT_TEMPO_BPM: {
+            gEditing->openTempoEdit(Segment::BPM);
+            break;
+        }
+        case EDIT_TEMPO_STOP: {
+            gEditing->openTempoEdit(Segment::STOP);
+            break;
+        }
+        case EDIT_TEMPO_DELAY: {
+            gEditing->openTempoEdit(Segment::DELAY);
+            break;
+        }
+        case EDIT_TEMPO_WARP: {
+            gEditing->openTempoEdit(Segment::WARP);
+            break;
+        }
+        case EDIT_TEMPO_TIME_SIG: {
+            gEditing->openTempoEdit(Segment::TIME_SIG);
+            break;
+        }
+        case EDIT_TEMPO_TICK_COUNT: {
+            gEditing->openTempoEdit(Segment::TICK_COUNT);
+            break;
+        }
+        case EDIT_TEMPO_COMBO: {
+            gEditing->openTempoEdit(Segment::COMBO);
+            break;
+        }
+        case EDIT_TEMPO_SPEED: {
+            gEditing->openTempoEdit(Segment::SPEED);
+            break;
+        }
+        case EDIT_TEMPO_SCROLL: {
+            gEditing->openTempoEdit(Segment::SCROLL);
+            break;
+        }
+        case EDIT_TEMPO_FAKE: {
+            gEditing->openTempoEdit(Segment::FAKE);
+            break;
+        }
+        case EDIT_TEMPO_LABEL: {
+            gEditing->openTempoEdit(Segment::LABEL);
+            break;
+        }
+        case SELECTION_TOGGLE_TEMPO_EDITOR: {
+            gSelection->toggleTempoEditor();
+            break;
+        }
+
+        case CHART_PREVIOUS: {
+            gSimfile->previousChart();
+            break;
+        }
+        case CHART_NEXT: {
+            gSimfile->nextChart();
+            break;
+        }
+        case CHART_DELETE: {
+            gSimfile->removeChart(gChart->get());
+            break;
+        }
+
+        case SIMFILE_PREVIOUS: {
+            gEditor->openNextSimfile(false);
+            break;
+        }
+        case SIMFILE_NEXT: {
+            gEditor->openNextSimfile(true);
+            break;
+        }
+
+        case CHART_CONVERT_COUPLES_TO_ROUTINE: {
+            gEditing->convertCouplesToRoutine();
+            break;
+        }
+        case CHART_CONVERT_ROUTINE_TO_COUPLES: {
+            gEditing->convertRoutineToCouples();
+            break;
+        }
+
+        case CHANGE_NOTES_TO_MINES: {
+            gEditing->changeNotesToType(NoteType::NOTE_MINE);
+            break;
+        }
+        case CHANGE_NOTES_TO_FAKES: {
+            gEditing->changeNotesToType(NoteType::NOTE_FAKE);
+            break;
+        }
+        case CHANGE_NOTES_TO_LIFTS: {
+            gEditing->changeNotesToType(NoteType::NOTE_LIFT);
+            break;
+        }
+        case CHANGE_MINES_TO_NOTES: {
+            gEditing->changeMinesToType(NoteType::NOTE_STEP_OR_HOLD);
+            break;
+        }
+        case CHANGE_MINES_TO_FAKES: {
+            gEditing->changeMinesToType(NoteType::NOTE_FAKE);
+            break;
+        }
+        case CHANGE_MINES_TO_LIFTS: {
+            gEditing->changeMinesToType(NoteType::NOTE_LIFT);
+            break;
+        }
+        case CHANGE_FAKES_TO_NOTES: {
+            gEditing->changeFakesToType(NoteType::NOTE_STEP_OR_HOLD);
+            break;
+        }
+        case CHANGE_LIFTS_TO_NOTES: {
+            gEditing->changeLiftsToType(NoteType::NOTE_STEP_OR_HOLD);
+            break;
+        }
+        case CHANGE_HOLDS_TO_STEPS: {
+            gEditing->changeHoldsToType(NoteType::NOTE_STEP_OR_HOLD);
+            break;
+        }
+        case CHANGE_HOLDS_TO_MINES: {
+            gEditing->changeHoldsToType(NoteType::NOTE_MINE);
+            break;
+        }
+        case CHANGE_BETWEEN_HOLDS_AND_ROLLS: {
+            gEditing->changeHoldsToRolls();
+            break;
+        }
+        case CHANGE_BETWEEN_PLAYER_NUMBERS: {
+            gEditing->changePlayerNumber();
+            break;
+        }
+        case CHANGE_NOTE_SIDE: {
+            gEditing->changeNoteSide();
+            break;
+        }
+
+        case MIRROR_NOTES_VERTICALLY: {
+            gEditing->mirrorNotes(Editing::MIRROR_V);
+            break;
+        }
+        case MIRROR_NOTES_HORIZONTALLY: {
+            gEditing->mirrorNotes(Editing::MIRROR_H);
+            break;
+        }
+        case MIRROR_NOTES_FULL: {
+            gEditing->mirrorNotes(Editing::MIRROR_HV);
+            break;
+        }
+
+        case EXPORT_NOTES_AS_LUA_TABLE: {
+            gEditing->exportNotesAsLuaTable();
+            break;
+        }
+
+        case SCALE_NOTES_2_TO_1: {
+            gEditing->scaleNotes(2, 1);
+            break;
+        }
+        case SCALE_NOTES_3_TO_2: {
+            gEditing->scaleNotes(3, 2);
+            break;
+        }
+        case SCALE_NOTES_4_TO_3: {
+            gEditing->scaleNotes(4, 3);
+            break;
+        }
+        case SCALE_NOTES_1_TO_2: {
+            gEditing->scaleNotes(1, 2);
+            break;
+        }
+        case SCALE_NOTES_2_TO_3: {
+            gEditing->scaleNotes(2, 3);
+            break;
+        }
+        case SCALE_NOTES_3_TO_4: {
+            gEditing->scaleNotes(3, 4);
+            break;
+        }
+
+        case SWITCH_TO_SYNC_MODE: {
+            gSimfile->openChart(-1);
+            break;
+        }
+
+        case VOLUME_RESET: {
+            gMusic->setVolume(100);
+            break;
+        }
+        case VOLUME_INCREASE: {
+            gMusic->setVolume(gMusic->getVolume() + 10);
+            break;
+        }
+        case VOLUME_DECREASE: {
+            gMusic->setVolume(gMusic->getVolume() - 10);
+            break;
+        }
+        case VOLUME_MUTE: {
+            gMusic->setMuted(!gMusic->isMuted());
+            break;
+        }
+
+        case CONVERT_MUSIC: {
+            gMusic->startAudioConversion();
+            break;
+        }
+        case CONVERT_MUSIC_TO_OGG: {
+            gMusic->startAudioConversion(AudioFormat::OGG);
+            break;
+        }
+        case CONVERT_MUSIC_TO_MP3: {
+            gMusic->startAudioConversion(AudioFormat::MP3);
+            break;
+        }
+        case CONVERT_MUSIC_TO_WAV: {
+            gMusic->startAudioConversion(AudioFormat::WAV);
+            break;
+        }
+
+        case SPEED_RESET: {
+            gMusic->setSpeed(100);
+            break;
+        }
+        case SPEED_INCREASE: {
+            gMusic->setSpeed(gMusic->getSpeed() + 10);
+            break;
+        }
+        case SPEED_DECREASE: {
+            gMusic->setSpeed(gMusic->getSpeed() - 10);
+            break;
+        }
+
+        case TOGGLE_BEAT_TICK: {
+            gMusic->toggleBeatTick();
+            break;
+        }
+        case TOGGLE_NOTE_TICK: {
+            gMusic->toggleNoteTick();
+            break;
+        }
+
+        case TOGGLE_SHOW_WAVEFORM: {
+            gNotefield->toggleShowWaveform();
+            break;
+        }
+        case BEATLINE_TOGGLE_ENABLED: {
+            gNotefield->toggleShowBeatLines();
+            break;
+        }
+        case BEATLINE_TOGGLE_SNAP: {
+            gNotefield->toggleShowBeatLinesSnap();
+            break;
+        }
+        case BEATLINE_TOGGLE_COLOR: {
+            gNotefield->toggleShowBeatLinesColor();
+            break;
+        }
+        case BEATLINE_TOGGLE_HOVER: {
+            gNotefield->toggleShowBeatLinesHover();
+            break;
+        }
+        case TOGGLE_SHOW_NOTES: {
+            gNotefield->toggleShowNotes();
+            break;
+        }
+        case TOGGLE_SHOW_TEMPO_BOXES: {
+            gTempoBoxes->toggleShowBoxes();
+            break;
+        }
+        case TOGGLE_SHOW_TEMPO_HELP: {
+            gTempoBoxes->toggleShowHelp();
+            break;
+        }
+        case TOGGLE_REVERSE_SCROLL: {
+            gView->toggleReverseScroll();
+            break;
+        }
+        case TOGGLE_CHART_PREVIEW: {
+            gView->toggleChartPreview();
+            break;
+        }
+
+        case PREVIEW_TOGGLE_ENABLED: {
+            gNotefieldPreview->toggleEnabled();
+            break;
+        }
+        case PREVIEW_TOGGLE_SHOW_BEAT_LINES: {
+            gNotefieldPreview->toggleShowBeatLines();
+            break;
+        }
+        case PREVIEW_TOGGLE_REVERSE_SCROLL: {
+            gNotefieldPreview->toggleReverseScroll();
+            break;
+        }
+        case PREVIEW_VIEW_CMOD: {
+            gNotefieldPreview->setMode(NotefieldPreview::CMOD);
+            break;
+        }
+        case PREVIEW_VIEW_XMOD: {
+            gNotefieldPreview->setMode(NotefieldPreview::XMOD);
+            break;
+        }
+        case PREVIEW_VIEW_VARIABLE: {
+            gNotefieldPreview->setMode(NotefieldPreview::VARIABLE);
+            break;
+        }
+
+        case MINIMAP_SET_NOTES: {
+            gMinimap->setMode(Minimap::NOTES);
+            break;
+        }
+        case MINIMAP_SET_DENSITY: {
+            gMinimap->setMode(Minimap::DENSITY);
+            break;
+        }
+
+        case BACKGROUND_HIDE: {
+            gNotefield->setBgAlpha(0);
+            break;
+        }
+        case BACKGROUND_INCREASE_ALPHA: {
+            gNotefield->setBgAlpha(gNotefield->getBgAlpha() + 10);
+            break;
+        }
+        case BACKGROUND_DECREASE_ALPHA: {
+            gNotefield->setBgAlpha(gNotefield->getBgAlpha() - 10);
+            break;
+        }
+        case BACKGROUND_SET_STRETCH: {
+            gEditor->setBackgroundStyle(BG_STYLE_STRETCH);
+            break;
+        }
+        case BACKGROUND_SET_LETTERBOX: {
+            gEditor->setBackgroundStyle(BG_STYLE_LETTERBOX);
+            break;
+        }
+        case BACKGROUND_SET_CROP: {
+            gEditor->setBackgroundStyle(BG_STYLE_CROP);
+            break;
+        }
+
+        case USE_TIME_BASED_VIEW: {
+            gView->setTimeBased(true);
+            break;
+        }
+        case USE_ROW_BASED_VIEW: {
+            gView->setTimeBased(false);
+            break;
+        }
+
+        case ZOOM_RESET: {
+            gView->setZoomLevel(8);
+            gView->setScaleLevel(4);
+            break;
+        }
+        case ZOOM_IN: {
+            gView->setZoomLevel(gView->getZoomLevel() + 0.25);
+            break;
+        }
+        case ZOOM_OUT: {
+            gView->setZoomLevel(gView->getZoomLevel() - 0.25);
+            break;
+        }
+        case SCALE_INCREASE: {
+            gView->setScaleLevel(gView->getScaleLevel() + 0.25);
+            break;
+        }
+        case SCALE_DECREASE: {
+            gView->setScaleLevel(gView->getScaleLevel() - 0.25);
+            break;
+        }
+
+        case SNAP_NEXT: {
+            gView->setSnapType(gView->getSnapType() + 1);
+            break;
+        }
+        case SNAP_PREVIOUS: {
+            gView->setSnapType(gView->getSnapType() - 1);
+            break;
+        }
+        case SNAP_RESET: {
+            gView->setSnapType(0);
+            break;
+        }
+
+        case CURSOR_UP: {
+            gView->setCursorRow(
+                gView->snapRow(gView->getCursorRow(), View::SNAP_UP));
+            break;
+        }
+        case CURSOR_DOWN: {
+            gView->setCursorRow(
+                gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
+            break;
+        }
+        case CURSOR_PREVIOUS_BEAT: {
+            gView->setCursorToNextInterval(-48);
+            break;
+        }
+        case CURSOR_NEXT_BEAT: {
+            gView->setCursorToNextInterval(48);
+            break;
+        }
+        case CURSOR_PREVIOUS_MEASURE: {
+            gView->setCursorToNextInterval(-192);
+            break;
+        }
+        case CURSOR_NEXT_MEASURE: {
+            gView->setCursorToNextInterval(192);
+            break;
+        }
+        case CURSOR_STREAM_START: {
+            gView->setCursorToStream(true);
+            break;
+        }
+        case CURSOR_STREAM_END: {
+            gView->setCursorToStream(false);
+            break;
+        }
+        case CURSOR_SELECTION_START: {
+            gView->setCursorToSelection(true);
+            break;
+        }
+        case CURSOR_SELECTION_END: {
+            gView->setCursorToSelection(false);
+            break;
+        }
+        case CURSOR_CHART_START: {
+            gView->setCursorRow(0);
+            break;
+        }
+        case CURSOR_CHART_END: {
+            gView->setCursorRow(gSimfile->getEndRow());
+            break;
+        }
+
+        case TOGGLE_STATUS_CHART: {
+            gStatusbar->toggleChart();
+            break;
+        }
+        case TOGGLE_STATUS_SNAP: {
+            gStatusbar->toggleSnap();
+            break;
+        }
+        case TOGGLE_STATUS_BPM: {
+            gStatusbar->toggleBpm();
+            break;
+        }
+        case TOGGLE_STATUS_ROW: {
+            gStatusbar->toggleRow();
+            break;
+        }
+        case TOGGLE_STATUS_BEAT: {
+            gStatusbar->toggleBeat();
+            break;
+        }
+        case TOGGLE_STATUS_MEASURE: {
+            gStatusbar->toggleMeasure();
+            break;
+        }
+        case TOGGLE_STATUS_HOVER: {
+            gStatusbar->toggleHover();
+            break;
+        }
+        case TOGGLE_STATUS_TIME: {
+            gStatusbar->toggleTime();
+            break;
+        }
+        case TOGGLE_STATUS_TIMING_MODE: {
+            gStatusbar->toggleTimingMode();
+            break;
+        }
+        case TOGGLE_STATUS_SCROLL: {
+            gStatusbar->toggleScroll();
+            break;
+        }
+        case TOGGLE_STATUS_SPEED: {
+            gStatusbar->toggleSpeed();
+            break;
+        }
+
+        case SHOW_SHORTCUTS: {
+            gTextOverlay->show(TextOverlay::SHORTCUTS);
+            break;
+        }
+        case SHOW_MESSAGE_LOG: {
+            gTextOverlay->show(TextOverlay::MESSAGE_LOG);
+            break;
+        }
+        case SHOW_DEBUG_LOG: {
+            gTextOverlay->show(TextOverlay::DEBUG_LOG);
+            break;
+        }
+        case SHOW_ABOUT: {
+            gTextOverlay->show(TextOverlay::ABOUT);
+            break;
+        }
+
+        default: {
+            handled = false;
+            break;
+        }
+    }
+    return handled;
 };
 
-if (action >= FILE_OPEN_RECENT_BEGIN && action < FILE_OPEN_RECENT_END) {
-    gEditor->openSimfile(action - FILE_OPEN_RECENT_BEGIN);
-}
-if (action >= SELECT_DENSITY_BEGIN && action < SELECT_DENSITY_END) {
-    gSelection->selectNotes(SelectModifier::SELECT_SET,
-                            action - SELECT_DENSITY_BEGIN + 1);
-}
-if (action >= SET_NOTESKIN_BEGIN && action < SET_NOTESKIN_END) {
-    gNoteskin->setType(action - SET_NOTESKIN_BEGIN);
-}
-}  // namespace Vortex
-}
-;  // namespace Vortex
+};  // namespace Vortex
