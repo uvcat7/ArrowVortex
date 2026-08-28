@@ -166,14 +166,6 @@ struct ViewImpl : public View, public InputHandler {
         if (evt.handled) return;
         Key::Code kc = evt.key;
 
-        // Switching row snap type.
-        if (kc == Key::LEFT || kc == Key::RIGHT) {
-            int delta = (kc == Key::RIGHT) ? 1 : -1;
-            setSnapType(mySnapType + delta);
-            evt.handled = true;
-            return;
-        }
-
         // Starting/pausing the song.
         if (kc == Key::SPACE) {
             if (gMusic->isPaused())
