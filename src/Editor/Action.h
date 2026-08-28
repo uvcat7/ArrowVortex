@@ -250,7 +250,7 @@ enum Type {
 };
 
 // Performs the action associated with the action type.
-void perform(Type action);
+bool perform(Type action);
 };  // namespace Action
 
 };  // namespace Vortex
