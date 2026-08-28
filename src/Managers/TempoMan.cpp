@@ -1,6 +1,7 @@
 #include <Managers/TempoMan.h>
 
 #include <algorithm>
+#include <climits>
 #include <math.h>
 #include <cfloat>
 

@@ -8,6 +8,7 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #include <System/OpenGL.h>
 #include <System/System.h>
@@ -34,16 +35,22 @@ double getElapsedTime(steady_clock::time_point startTime) {
 // ================================================================================================
 // Debug :: log file and console.
 
-static const char sLogPath[] = "ArrowVortex.log";
+static std::filesystem::path sLogPath = "ArrowVortex.log";
 
 static bool sHasConsole = false;
 static bool sHasLogFile = false;
 
+void setLogDirectory(const std::filesystem::path& directory) {
+    std::error_code error;
+    std::filesystem::create_directories(directory, error);
+    sLogPath = directory / "ArrowVortex.log";
+}
+
 void openLogFile() {
     if (sHasLogFile) return;
 
-    std::FILE* fp = nullptr;
-    if (fp = std::fopen(&sLogPath[0], "w")) {
+    std::FILE* fp = std::fopen(sLogPath.string().c_str(), "w");
+    if (fp) {
         std::fwrite("\xEF\xBB\xBF", 1, 3, fp);  // UTF-8 BOM.
         std::fclose(fp);
     }
@@ -92,8 +99,8 @@ static const int sBufsize = 1024;
 static bool sLogBlankLine = false;
 
 static void WriteToLogAndConsole(const char* msg) {
-    FILE* fp = nullptr;
-    if (fp = std::fopen(&sLogPath[0], "a")) {
+    FILE* fp = std::fopen(sLogPath.string().c_str(), "a");
+    if (fp) {
         std::fwrite(msg, 1, std::strlen(msg), fp);
         std::fclose(fp);
     }
@@ -143,7 +150,7 @@ void blockEnd() { sLogBlankLine = true; }
 
 namespace DebugPrivate {
 
-#define MAX_IGNORE_ID_LEN (MAX_PATH + 16)
+#define MAX_IGNORE_ID_LEN (4096)
 #define MAX_DEBUG_MSG_LEN (1024)
 #define MAX_NUM_IGNORES (32)
 

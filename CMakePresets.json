@@ -8,129 +8,112 @@
     {
       "name": "windows-debug",
       "displayName": "Windows x64 Debug",
-      "description": "Sets Ninja generator, compilers, x64 architecture, build and install directory, debug build type",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "PRESET_NAME": "${presetName}",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
       },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Windows"
-          ]
-        }
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
       "name": "windows-release",
       "displayName": "Windows x64 Release",
-      "description": "Sets Ninja generator, compilers, x64 architecture, build and install directory, debug build type",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
+      "inherits": "windows-debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "PRESET_NAME": "${presetName}",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Windows"
-          ]
-        }
-      }
-    },
-    {
-      "name": "windows-reformat",
-      "displayName": "Windows x64 Release/Reformat",
-      "description": "Sets Ninja generator, compilers, x64 architecture, build and install directory, debug build type",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "PRESET_NAME": "${presetName}",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Windows"
-          ]
-        }
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
       "name": "linux-debug",
-      "displayName": "Linux Debug",
-      "description": "Target the Windows Subsystem for Linux (WSL) or a remote system.",
+      "displayName": "Linux x64 Debug",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "environment": {
-        "VCPKG_ROOT": "/opt/vcpkg"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "PRESET_NAME": "${presetName}",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "VCPKG_ROOT": "$env{VCPKG_ROOT}"
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
       },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [ "Linux" ]
-        },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-        }
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
       "name": "linux-release",
-      "displayName": "Linux Release",
-      "description": "Target the Windows Subsystem for Linux (WSL) or a remote system.",
+      "displayName": "Linux x64 Release",
+      "inherits": "linux-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "macos-local-debug",
+      "displayName": "macOS Local Debug (system packages)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "environment": {
-        "VCPKG_ROOT": "/opt/vcpkg"
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+        "CMAKE_PREFIX_PATH": "/opt/homebrew"
       },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "macos-arm64-release",
+      "displayName": "macOS Apple Silicon Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "PRESET_NAME": "${presetName}",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "VCPKG_ROOT": "$env{VCPKG_ROOT}"
+        "VCPKG_TARGET_TRIPLET": "arm64-osx"
       },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [ "Linux" ]
-        },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-        }
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "macos-x64-release",
+      "displayName": "macOS Intel Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "x86_64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-osx"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
       }
     }
+  ],
+  "buildPresets": [
+    {"name": "windows-debug", "configurePreset": "windows-debug"},
+    {"name": "windows-release", "configurePreset": "windows-release"},
+    {"name": "linux-debug", "configurePreset": "linux-debug"},
+    {"name": "linux-release", "configurePreset": "linux-release"},
+    {"name": "macos-local-debug", "configurePreset": "macos-local-debug"},
+    {"name": "macos-arm64-release", "configurePreset": "macos-arm64-release"},
+    {"name": "macos-x64-release", "configurePreset": "macos-x64-release"}
   ]
 }

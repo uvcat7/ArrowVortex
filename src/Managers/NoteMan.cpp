@@ -1,6 +1,7 @@
 #include <Managers/NoteMan.h>
 
 #include <algorithm>
+#include <climits>
 #include <cstdint>
 #include <string>
 

@@ -114,8 +114,10 @@ struct MenuBarImpl : public Menubar {
         add(hFile, OPEN_DIALOG_SONG_PROPERTIES, "Properties...");
         sep(hFile);
         add(hFile, CONVERT_MUSIC, "Convert audio...");
+#ifndef __APPLE__
         sep(hFile);
         add(hFile, EXIT_PROGRAM, "Exit");
+#endif
 
         // Edit menu.
         Item* hEdit = myEditMenu = newMenu();
@@ -429,8 +431,10 @@ struct MenuBarImpl : public Menubar {
         add(hHelp, SHOW_SHORTCUTS, "Shortcuts...");
         add(hHelp, SHOW_MESSAGE_LOG, "Message Log...");
         add(hHelp, SHOW_DEBUG_LOG, "Debug Log...");
+#ifndef __APPLE__
         sep(hHelp);
         add(hHelp, SHOW_ABOUT, "About...");
+#endif
 
         // Top level menu.
         sub(menu, hFile, "File");

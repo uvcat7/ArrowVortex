@@ -6,6 +6,25 @@
 
 namespace Vortex {
 
+/// A lightweight cancellation token that remains available on every supported
+/// standard library, including the libc++ shipped with the macOS 12 SDK.
+class ThreadStopToken {
+   public:
+    ThreadStopToken() = default;
+
+    bool stop_requested() const {
+        return requested != nullptr &&
+               requested->load(std::memory_order_acquire);
+    }
+
+   private:
+    friend class BackgroundThread;
+    explicit ThreadStopToken(const std::atomic_bool* requested)
+        : requested(requested) {}
+
+    const std::atomic_bool* requested = nullptr;
+};
+
 /// A thread that performs a task, running in the background.
 class BackgroundThread {
    public:
@@ -26,7 +45,7 @@ class BackgroundThread {
     /// Waits until the thread has terminated, after which the function returns.
     void waitUntilDone();
 
-    std::stop_token getStopToken();
+    ThreadStopToken getStopToken();
 
     /// Returns true if the thread has terminated, false if the thread is still
     /// running.
@@ -36,8 +55,9 @@ class BackgroundThread {
     virtual void exec() = 0;
 
    private:
-    std::jthread thread;
-    std::atomic_bool done;
+    std::thread thread;
+    std::atomic_bool stopRequested = false;
+    std::atomic_bool done = false;
 };
 
 };  // namespace Vortex

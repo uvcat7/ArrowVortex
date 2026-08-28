@@ -14,6 +14,7 @@
 
 #include <Editor/Common.h>
 
+#include <climits>
 #include <cmath>
 #include <stdlib.h>
 #include <stdint.h>

@@ -403,17 +403,30 @@ void DialogSongProperties::onPlayPreview() {
     }
 }
 
-fs::path DialogSongProperties::fileDlgPath(const std::string& title) {
-    fs::path path = gSystem->openFileDlg(title, loadFilter, 1, std::string());
-    // Hack: FileDlg eats the mouse release event, stop mouse capture directly.
-    GuiManager::stopCapturingMouse(GuiManager::getMouseCapture());
-    if (path.empty()) return path;
-    return fs::relative(path, utf8ToPath(gSimfile->getDir()));
+void DialogSongProperties::fileDlgPath(const std::string& title,
+                                       std::function<void(fs::path)> callback) {
+    gSystem->openFileDlg(
+        title, loadFilter, 1, std::string(),
+        [callback = std::move(callback)](fs::path path, int) {
+            GuiManager::stopCapturingMouse(GuiManager::getMouseCapture());
+            if (!path.empty()) {
+                std::error_code error;
+                fs::path relative =
+                    fs::relative(path, utf8ToPath(gSimfile->getDir()), error);
+                if (!error) path = std::move(relative);
+            }
+            callback(std::move(path));
+        });
 }
 
 void DialogSongProperties::onFindMusic(bool open) {
-    auto path =
-        open ? fileDlgPath("Open audio file") : gMetadata->findMusicFile();
+    if (open) {
+        fileDlgPath("Open audio file", [](fs::path path) {
+            if (!path.empty()) gMetadata->setMusicPath(pathToUtf8(path));
+        });
+        return;
+    }
+    auto path = gMetadata->findMusicFile();
     if (path.empty()) {
         HudNote("Could not find any audio files...");
     } else {
@@ -422,8 +435,13 @@ void DialogSongProperties::onFindMusic(bool open) {
 }
 
 void DialogSongProperties::onFindBanner(bool open) {
-    auto path =
-        open ? fileDlgPath("Open banner file") : gMetadata->findBannerFile();
+    if (open) {
+        fileDlgPath("Open banner file", [](fs::path path) {
+            if (!path.empty()) gMetadata->setBannerPath(pathToUtf8(path));
+        });
+        return;
+    }
+    auto path = gMetadata->findBannerFile();
     if (path.empty()) {
         HudNote("Could not find any banner art...");
     } else {
@@ -432,8 +450,13 @@ void DialogSongProperties::onFindBanner(bool open) {
 }
 
 void DialogSongProperties::onFindBG(bool open) {
-    auto path = open ? fileDlgPath("Open background file")
-                     : gMetadata->findBackgroundFile();
+    if (open) {
+        fileDlgPath("Open background file", [](fs::path path) {
+            if (!path.empty()) gMetadata->setBackgroundPath(pathToUtf8(path));
+        });
+        return;
+    }
+    auto path = gMetadata->findBackgroundFile();
     if (path.empty()) {
         HudNote("Could not find any background art...");
     } else {
@@ -442,8 +465,13 @@ void DialogSongProperties::onFindBG(bool open) {
 }
 
 void DialogSongProperties::onFindCdTitle(bool open) {
-    auto path =
-        open ? fileDlgPath("Open CD Title file") : gMetadata->findCdTitleFile();
+    if (open) {
+        fileDlgPath("Open CD Title file", [](fs::path path) {
+            if (!path.empty()) gMetadata->setCdTitlePath(pathToUtf8(path));
+        });
+        return;
+    }
+    auto path = gMetadata->findCdTitleFile();
     if (path.empty()) {
         HudNote("Could not find any CD Title art...");
     } else {

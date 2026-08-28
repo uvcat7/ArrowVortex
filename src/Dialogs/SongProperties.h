@@ -8,6 +8,7 @@
 
 #include <Simfile/Tempo.h>
 #include <filesystem>
+#include <functional>
 #include <vector>
 namespace fs = std::filesystem;
 
@@ -44,7 +45,8 @@ class DialogSongProperties : public EditorDialog {
 
     std::vector<Texture> extractSpriteSheet(fs::path path);
 
-    fs::path fileDlgPath(const std::string& title);
+    void fileDlgPath(const std::string& title,
+                     std::function<void(fs::path)> callback);
 
     std::string myTitle;
     std::string mySubtitle;

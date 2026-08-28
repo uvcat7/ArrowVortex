@@ -2,7 +2,7 @@
 #include <vector>
 #include <Editor/Action.h>
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 #define GL_MENU_BAR
 #endif
 
@@ -40,6 +40,9 @@ struct MenuItem {
     std::vector<MenuEntry>& getMenuData();
 
    private:
+#ifdef __APPLE__
+    void* native_menu = nullptr;
+#endif
     std::vector<MenuEntry> menu_data;
     int open_entry = -1;
     bool is_top_level = false;

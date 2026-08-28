@@ -1,6 +1,7 @@
 #include <Core/Widgets.h>
 #include <Core/Gui.h>
 
+#include <climits>
 #include <math.h>
 
 #include <Core/Xmr.h>

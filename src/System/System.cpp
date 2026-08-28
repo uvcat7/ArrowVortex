@@ -35,7 +35,8 @@
 #include <vector>
 #include <map>
 #include <mutex>
-#include <condition_variable>
+#include <functional>
+#include <string_view>
 
 #undef DELETE
 
@@ -46,7 +47,6 @@ Vortex::InputEvents myEvents;
 Vortex::vec2i myMousePos = {0, 0};
 Vortex::vec2i mySize = {0, 0};
 SDL_Window* window = nullptr;
-SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
 bool myIsActive = false;
@@ -56,6 +56,8 @@ std::vector<std::string> droppedFiles;
 std::bitset<Vortex::Key::MAX_VALUE> myKeyState;
 std::bitset<Vortex::Mouse::MAX_VALUE> myMouseState;
 float myScale = 1.0f;
+int smokeFramesRemaining = 0;
+std::string smokeFixturePath;
 
 namespace Vortex {
 
@@ -65,12 +67,17 @@ namespace {
 
 static int wglSwapInterval;
 
-static std::string outPath;
-std::mutex fileDialogMutex;
-std::condition_variable fileDialogCv;
-fs::path fileDialogPath;
-int file_extension_index = 0;
-bool isDialogClosed = false;
+struct FileDialogState {
+    std::mutex mutex;
+    bool active = false;
+    bool completed = false;
+    fs::path path;
+    int filter = -1;
+    std::string error;
+    System::FileDialogCallback callback;
+};
+
+FileDialogState fileDialog;
 
 // Mapping of windows virtual keys to vortex key codes.
 static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
@@ -118,71 +125,67 @@ static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
                                 SDLK_LCTRL,        Key::CTRL_L,
                                 SDLK_RCTRL,        Key::CTRL_R};
 
-static void SDLCALL FileDialogOpenCallback(void* userdata,
-                                           const char* const* filelist,
-                                           int filter) {
+static void SDLCALL FileDialogCallback(void*, const char* const* filelist,
+                                       int filter) {
+    std::scoped_lock lock(fileDialog.mutex);
+    fileDialog.path.clear();
+    fileDialog.filter = filter;
+    fileDialog.error.clear();
     if (!filelist) {
-        HudError("Failed to open the file dialog: \"%s\".", SDL_GetError());
-        return;
+        fileDialog.error = SDL_GetError();
+    } else if (filelist[0]) {
+        fileDialog.path = utf8ToPath(filelist[0]);
     }
-    if (filelist[0]) {
-        fileDialogPath = utf8ToPath(filelist[0]);
-    }
-    isDialogClosed = true;
-    fileDialogCv.notify_all();
-    return;
+    fileDialog.completed = true;
 }
 
-static void SDLCALL FileDialogSaveCallback(void* userdata,
-                                           const char* const* filelist,
-                                           int filter) {
-    if (!filelist) {
-        HudError("Failed to open the file dialog: \"%s\".", SDL_GetError());
-        return;
-    }
-    if (filelist[0]) {
-        fileDialogPath = utf8ToPath(filelist[0]);
-    }
-    file_extension_index = filter;
-    isDialogClosed = true;
-    fileDialogCv.notify_all();
-    return;
-}
+static bool ShowFileDialog(const std::string& title, fs::path path,
+                           const SDL_DialogFileFilter filters[],
+                           int num_filters, bool save,
+                           System::FileDialogCallback callback) {
+    std::scoped_lock lock(fileDialog.mutex);
+    if (fileDialog.active) return false;
 
-// Shows an open/save message box and returns the path selected by the user.
-fs::path ShowFileDialog(std::string title, fs::path path,
-                        SDL_DialogFileFilter filters[], int num_filters,
-                        int* index, bool save) {
-    fileDialogPath.clear();
-    isDialogClosed = false;
-    std::unique_lock<std::mutex> lock(fileDialogMutex);
+    fileDialog.active = true;
+    fileDialog.completed = false;
+    fileDialog.path.clear();
+    fileDialog.filter = -1;
+    fileDialog.error.clear();
+    fileDialog.callback = std::move(callback);
+
+    const std::string location = pathToUtf8(path);
+    const char* initial_location =
+        location.empty() ? nullptr : location.c_str();
     if (save) {
-        SDL_ShowSaveFileDialog(FileDialogSaveCallback, nullptr, nullptr,
-                               filters, num_filters, pathToUtf8(path).c_str());
+        SDL_ShowSaveFileDialog(FileDialogCallback, nullptr, window, filters,
+                               num_filters, initial_location);
     } else {
-        SDL_ShowOpenFileDialog(FileDialogOpenCallback, nullptr, nullptr,
-                               filters, num_filters, pathToUtf8(path).c_str(),
-                               false);
+        SDL_ShowOpenFileDialog(FileDialogCallback, nullptr, window, filters,
+                               num_filters, initial_location, false);
     }
+    (void)title;
+    return true;
+}
 
-#ifdef __linux__
-    /* On Fedora, SDL won't run the callback when the dialog is closed since the
-       action triggers a DBus event SDL needs to process first.
-       Only the main thread can pump events so we regularly signal it to do so.
-       Yes, it's silly. */
-    std::jthread signal([] {
-        while (!isDialogClosed) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            fileDialogCv.notify_all();
-        }
-    });
-#endif  // __linux__
-    fileDialogCv.wait(lock, [] {
-        SDL_PumpEvents();
-        return isDialogClosed || !fileDialogPath.empty();
-    });
-    if (save) *index = file_extension_index;
-    return fileDialogPath;
+static void ProcessFileDialogCompletion() {
+    System::FileDialogCallback callback;
+    fs::path path;
+    std::string error;
+    int filter = -1;
+    {
+        std::scoped_lock lock(fileDialog.mutex);
+        if (!fileDialog.active || !fileDialog.completed) return;
+        callback = std::move(fileDialog.callback);
+        path = std::move(fileDialog.path);
+        error = std::move(fileDialog.error);
+        filter = fileDialog.filter;
+        fileDialog.active = false;
+        fileDialog.completed = false;
+    }
+    if (!error.empty()) {
+        HudError("Failed to open the file dialog: \"%s\".", error.c_str());
+    }
+    if (callback) callback(std::move(path), filter);
 }
 
 // ================================================================================================
@@ -214,7 +217,8 @@ struct SystemImpl : public System {
     std::map<SDL_Keycode, Key::Code> myKeyMap;
     std::string myTitle;
     SDL_GLContext myHRC = nullptr;
-    std::string workingDirectory;
+    std::string resourceDirectory;
+    std::string preferenceDirectory;
 
     // ================================================================================================
     // SystemImpl :: constructor and destructor.
@@ -232,7 +236,31 @@ struct SystemImpl : public System {
 
         if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
             SDL_Log("Couldn't initialize SDL subsystems: %s", SDL_GetError());
+            return;
         }
+
+        const char* base_path = SDL_GetBasePath();
+        resourceDirectory = base_path ? base_path : fs::current_path().string();
+#ifdef __APPLE__
+        if (char* pref_path = SDL_GetPrefPath("ArrowVortex", "ArrowVortex")) {
+            preferenceDirectory = pref_path;
+            SDL_free(pref_path);
+        }
+#elif defined(__linux__)
+        if (const char* xdg = std::getenv("XDG_CONFIG_HOME");
+            xdg && xdg[0] == '/') {
+            preferenceDirectory = std::string(xdg) + "/arrowvortex/";
+        } else if (const char* home = std::getenv("HOME")) {
+            preferenceDirectory = std::string(home) + "/.config/arrowvortex/";
+        }
+#endif
+        if (preferenceDirectory.empty()) {
+            preferenceDirectory = resourceDirectory + "settings/";
+        }
+        std::error_code path_error;
+        fs::create_directories(preferenceDirectory, path_error);
+        fs::current_path(resourceDirectory, path_error);
+        Debug::setLogDirectory(preferenceDirectory);
 
         // Initialize the keymap, which maps windows virtual keys to vortex key
         // codes.
@@ -263,13 +291,18 @@ struct SystemImpl : public System {
         myCursorMap.insert({Cursor::SIZE_NESW, SDL_SYSTEM_CURSOR_NESW_RESIZE});
         myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
-        // Create a window handle.
-        if (!SDL_CreateWindowAndRenderer("ArrowVortex", 800, 600,
-                                         SDL_WINDOW_OPENGL |
-                                             SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                             SDL_WINDOW_RESIZABLE,
-                                         &window, &renderer)) {
-            SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+        // Create one SDL window and one legacy OpenGL context. Avoid creating
+        // an SDL_Renderer alongside it: the editor owns the OpenGL pipeline.
+        window =
+            SDL_CreateWindow("ArrowVortex", 800, 600,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                 SDL_WINDOW_RESIZABLE);
+        if (!window) {
+            SDL_Log("Couldn't create window: %s", SDL_GetError());
         }
 
         if (LogCheckpoint(window != nullptr, "creating window")) return;
@@ -320,7 +353,7 @@ struct SystemImpl : public System {
     // SystemImpl :: message loop.
 
     void createMenu() override {
-#ifndef GL_MENU_BAR
+#ifdef _WIN32
         HMENU menu = CreateMenu();
         gMenubar->init(reinterpret_cast<MenuItem*>(menu));
         SetMenu(GetActiveWindow(), menu);
@@ -334,7 +367,7 @@ struct SystemImpl : public System {
             },
             nullptr);
 #else
-        gMenubar->init(new MenuItem);
+        gMenubar->init(MenuItem::create());
 #endif
     }
 
@@ -357,13 +390,23 @@ struct SystemImpl : public System {
     }
 
     int getKeyFlags() const override {
-        int kc[6] = {Key::SHIFT_L, Key::SHIFT_R, Key::CTRL_L,
-                     Key::CTRL_R,  Key::ALT_L,   Key::ALT_R};
-        int kf[6] = {Keyflag::SHIFT, Keyflag::SHIFT, Keyflag::CTRL,
-                     Keyflag::CTRL,  Keyflag::ALT,   Keyflag::ALT};
+        int kc[] = {
+            Key::SHIFT_L,  Key::SHIFT_R,  Key::CTRL_L,
+            Key::CTRL_R,   Key::ALT_L,    Key::ALT_R,
+#ifdef __APPLE__
+            Key::SYSTEM_L, Key::SYSTEM_R,
+#endif
+        };
+        int kf[] = {
+            Keyflag::SHIFT, Keyflag::SHIFT, Keyflag::CTRL,
+            Keyflag::CTRL,  Keyflag::ALT,   Keyflag::ALT,
+#ifdef __APPLE__
+            Keyflag::CTRL,  Keyflag::CTRL,
+#endif
+        };
 
         int flags = 0;
-        for (int i = 0; i < 6; ++i)
+        for (size_t i = 0; i < std::size(kc); ++i)
             if (myKeyState.test(kc[i])) flags |= kf[i];
 
         return flags;
@@ -398,13 +441,13 @@ struct SystemImpl : public System {
         switch (b) {
             case (T_OK):
                 box.numbuttons = 1;
-                buttons[0].buttonID = R_OK;
+                buttons[0].buttonID = R_ACCEPT;
                 buttons[0].text = "OK";
                 buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
                 break;
             case (T_OK_CANCEL):
                 box.numbuttons = 2;
-                buttons[0].buttonID = R_OK;
+                buttons[0].buttonID = R_ACCEPT;
                 buttons[0].text = "OK";
                 buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
                 buttons[1].buttonID = R_CANCEL;
@@ -445,18 +488,25 @@ struct SystemImpl : public System {
         return static_cast<Result>(result);
     }
 
-    fs::path openFileDlg(const std::string& title,
-                         SDL_DialogFileFilter filters[], int num_filters,
-                         fs::path filename) override {
-        return ShowFileDialog(title, filename, filters, num_filters, nullptr,
-                              false);
+    bool openFileDlg(const std::string& title,
+                     const SDL_DialogFileFilter filters[], int num_filters,
+                     fs::path filename, FileDialogCallback callback) override {
+        return ShowFileDialog(title, filename, filters, num_filters, false,
+                              std::move(callback));
     }
 
-    fs::path saveFileDlg(const std::string& title,
-                         SDL_DialogFileFilter filters[], int num_filters,
-                         int* index, fs::path filename) override {
-        return ShowFileDialog(title, filename, filters, num_filters, index,
-                              true);
+    bool saveFileDlg(const std::string& title,
+                     const SDL_DialogFileFilter filters[], int num_filters,
+                     int initial_filter, fs::path filename,
+                     FileDialogCallback callback) override {
+        (void)initial_filter;
+        return ShowFileDialog(title, filename, filters, num_filters, true,
+                              std::move(callback));
+    }
+
+    bool hasPendingFileDialog() const override {
+        std::scoped_lock lock(fileDialog.mutex);
+        return fileDialog.active;
     }
 
     // ================================================================================================
@@ -480,8 +530,12 @@ struct SystemImpl : public System {
         return Debug::getElapsedTime(myApplicationStartTime);
     }
 
-    std::string getRunDir() const override {
-        return std::string(SDL_GetBasePath());
+    std::string getRunDir() const override { return resourceDirectory; }
+
+    std::string getResourceDir() const override { return resourceDirectory; }
+
+    std::string getPreferenceDir() const override {
+        return preferenceDirectory;
     }
 
     Cursor::Icon getCursor() const override { return myCursor; }
@@ -515,9 +569,12 @@ struct SystemImpl : public System {
     void setWindowSize(vec2i size) override {
         mySize = {std::clamp(size.x, 100, 32768),
                   std::clamp(size.y, 100, 32768)};
-        SDL_SetWindowSize(window, mySize.x, mySize.y);
+        const float scale = std::max(myScale, 1.0f);
+        SDL_SetWindowSize(window, static_cast<int>(mySize.x / scale),
+                          static_cast<int>(mySize.y / scale));
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
+        SDL_GetWindowSizeInPixels(window, &mySize.x, &mySize.y);
     }
 
     bool getWindowState() const override {
@@ -580,20 +637,32 @@ static void ApplicationEnd() {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
-#ifdef WIN32
-    std::wstring exe_folder = Widen(SDL_GetBasePath());
-    SetCurrentDirectoryW(exe_folder.c_str());
-#endif
+    for (int i = 1; i < argc; ++i) {
+        if (std::string_view(argv[i]) == "--smoke-test") {
+            smokeFramesRemaining = 120;
+            if (i + 1 < argc && argv[i + 1][0] != '-')
+                smokeFixturePath = argv[++i];
+        }
+    }
+    if (!smokeFixturePath.empty() && !fs::exists(smokeFixturePath)) {
+        SDL_Log("Smoke-test fixture does not exist: %s",
+                smokeFixturePath.c_str());
+        return SDL_APP_FAILURE;
+    }
+
+    gSystem = new SystemImpl;
+    if (!myInitSuccesful) return SDL_APP_FAILURE;
     ApplicationStart();
 #ifndef NDEBUG
     Debug::openConsole();
 #endif
-    gSystem = new SystemImpl;
     Editor::create();
     SDL_StartTextInput(window);
     SDL_SetWindowResizable(window, true);
 
-    if (argc > 1) {
+    if (!smokeFixturePath.empty()) {
+        gEditor->openSimfile(fs::path(smokeFixturePath));
+    } else if (argc > 1 && std::string_view(argv[1]) != "--smoke-test") {
         gEditor->openSimfile(fs::path(argv[1]));
     }
 
@@ -606,6 +675,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     using namespace std::chrono;
 
     if (!myInitSuccesful) return SDL_APP_FAILURE;
+    ProcessFileDialogCompletion();
     if (myIsTerminated) {
         Editor::destroy();
         return SDL_APP_SUCCESS;
@@ -721,17 +791,27 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
     frames++;
 #endif
+    if (smokeFramesRemaining > 0 && --smokeFramesRemaining == 0) {
+        Debug::log("Smoke test completed successfully after 120 frames.\n");
+        myIsTerminated = true;
+    }
     return SDL_APP_CONTINUE;
 }
 
 // Convert SDL window mouse coordinates to the app's OpenGL coordinate space.
 static vec2i windowMouseToApp(float wx, float wy) {
     int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
-    float rx = wx;
-    float ry = wy;
-    if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
-        HudError("Failed to get render coordinates with error: %s",
-                 SDL_GetError());
+    int logical_w = 0;
+    int logical_h = 0;
+    SDL_GetWindowSize(window, &logical_w, &logical_h);
+    const float scale_x = logical_w > 0 ? static_cast<float>(mySize.x) /
+                                              static_cast<float>(logical_w)
+                                        : 1.0f;
+    const float scale_y = logical_h > 0 ? static_cast<float>(mySize.y) /
+                                              static_cast<float>(logical_h)
+                                        : 1.0f;
+    const float rx = wx * scale_x;
+    const float ry = wy * scale_y;
     return {static_cast<int>(rx), static_cast<int>(ry - menu_h)};
 }
 
@@ -865,6 +945,12 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
+    {
+        std::scoped_lock lock(fileDialog.mutex);
+        fileDialog.callback = nullptr;
+        fileDialog.active = false;
+        fileDialog.completed = false;
+    }
     SDL_StopTextInput(window);
     delete static_cast<SystemImpl*>(gSystem);
     ApplicationEnd();

@@ -137,11 +137,7 @@ static SimFormat ToSimFormat(const std::string& str) {
 }
 
 static std::string getSettingsDir() {
-    const char* xdg = std::getenv("XDG_CONFIG_HOME");
-    if (xdg && xdg[0] == '/') return std::string(xdg) + "/arrowvortex/";
-    const char* home = std::getenv("HOME");
-    if (home) return std::string(home) + "/.config/arrowvortex/";
-    return "settings/";
+    return gSystem ? gSystem->getPreferenceDir() : "settings/";
 }
 
 static void ensureSettingsDirExists() {
@@ -169,6 +165,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
     BackgroundStyle myBackgroundStyle;
     std::vector<SimFormat> myDefaultSaveFormat;
+    bool myCloseAfterSave;
 
     // ================================================================================================
     // EditorImpl :: constructor and destructor.
@@ -193,6 +190,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
         myBackgroundStyle = BG_STYLE_STRETCH;
         myDefaultSaveFormat = {SIM_SM};
+        myCloseAfterSave = false;
 
         myFontPath = "assets/NotoSansJP-Medium.ttf";
         myFontSize = 13;
@@ -497,7 +495,11 @@ struct EditorImpl : public Editor, public InputHandler {
             if (res == System::R_CANCEL) {
                 return false;
             } else if (res == System::R_YES) {
-                gEditor->saveSimfile(false);
+                if (!gEditor->saveSimfile(false)) return false;
+                if (gSystem->hasPendingFileDialog()) {
+                    myCloseAfterSave = true;
+                    return false;
+                }
             }
         }
 
@@ -513,8 +515,11 @@ struct EditorImpl : public Editor, public InputHandler {
     }
 
     bool openSimfile() override {
-        return openSimfile(gSystem->openFileDlg(
-            "Open file", loadFilters, LOAD_FILTERS_COUNT, std::string()));
+        return gSystem->openFileDlg(
+            "Open file", loadFilters, LOAD_FILTERS_COUNT, std::string(),
+            [](fs::path path, int) {
+                if (!path.empty()) gEditor->openSimfile(std::move(path));
+            });
     }
 
     bool openSimfile(fs::path path) override {
@@ -589,6 +594,46 @@ struct EditorImpl : public Editor, public InputHandler {
             return openSimfile(path);
     }
 
+    bool saveSimfileAs(fs::path save_path, int filterIndex) {
+        if (save_path.empty()) return false;
+
+        SimFormat saveFmt = myDefaultSaveFormat[0];
+        const auto ext = pathToUtf8(save_path.extension());
+        switch (filterIndex) {
+            case 0:
+                saveFmt = SIM_SM;
+                break;
+            case 1:
+                saveFmt = SIM_SSC;
+                break;
+            case 2:
+                saveFmt = SIM_OSU;
+                break;
+            case 3:
+                saveFmt = SIM_DWI;
+                break;
+            default:
+                if (ext == ".ssc")
+                    saveFmt = SIM_SSC;
+                else if (ext == ".osu")
+                    saveFmt = SIM_OSU;
+                else if (ext == ".dwi")
+                    saveFmt = SIM_DWI;
+                else
+                    saveFmt = SIM_SM;
+                break;
+        }
+
+        const std::string dir = pathToUtf8(save_path.parent_path());
+        const std::string file = pathToUtf8(save_path.filename());
+        if (!gSimfile->save(dir, file, saveFmt)) {
+            HudError("Could not save %s", file.c_str());
+            return false;
+        }
+        gHistory->onFileSaved();
+        return true;
+    }
+
     bool saveSimfile(bool showSaveAsDialog) override {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return true;
@@ -621,50 +666,18 @@ struct EditorImpl : public Editor, public InputHandler {
                     break;
             };
 
-            // Show the save file dialog.
-            save_path = gSystem->saveFileDlg("Save file", saveFilters,
-                                             SAVE_FILTERS_COUNT, &filterIndex,
-                                             fs::path());
-            dir = pathToUtf8(save_path.parent_path());
-            file = pathToUtf8(save_path.filename());
-            auto ext = pathToUtf8(save_path.extension());
-
-            if (save_path.empty()) return false;
-
-            // Update the save format based on the selected filter index.
-            // SDL3 returns 0-based filter indices (getFilterIndex subtracts 1).
-            switch (filterIndex) {
-                case 0:
-                    saveFmt = SIM_SM;
-                    break;
-                case 1:
-                    saveFmt = SIM_SSC;
-                    break;
-                case 2:
-                    saveFmt = SIM_OSU;
-                    break;
-                case 3:
-                    saveFmt = SIM_DWI;
-                    break;
-                default:
-                    if (ext == ".ssc") {
-                        saveFmt = SIM_SSC;
-                    } else if (ext == ".osu") {
-                        saveFmt = SIM_OSU;
-                    } else if (ext == ".dwi") {
-                        saveFmt = SIM_DWI;
-                    } else {
-                        saveFmt = SIM_SM;
+            return gSystem->saveFileDlg(
+                "Save file", saveFilters, SAVE_FILTERS_COUNT, filterIndex,
+                save_path, [this](fs::path path, int selectedFilter) {
+                    const bool saved =
+                        saveSimfileAs(std::move(path), selectedFilter);
+                    if (saved && myCloseAfterSave) {
+                        myCloseAfterSave = false;
+                        closeSimfile();
+                    } else if (!saved) {
+                        myCloseAfterSave = false;
                     }
-                    break;
-            };
-
-            // Save the simfile.
-            if (!gSimfile->save(dir, file, saveFmt)) {
-                HudError("Could not save %s", file.c_str());
-            }
-
-            return true;
+                });
         }
 
         // Saving multiple formats.

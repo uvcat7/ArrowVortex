@@ -17,6 +17,8 @@
 #include <System/Debug.h>
 #include <System/System.h>
 
+#include <climits>
+
 namespace Vortex {
 namespace {
 

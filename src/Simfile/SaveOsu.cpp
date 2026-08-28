@@ -1,5 +1,6 @@
 ﻿#include <Core/Core.h>
 
+#include <climits>
 #include <set>
 #include <map>
 #include <algorithm>

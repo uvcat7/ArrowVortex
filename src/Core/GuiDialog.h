@@ -3,6 +3,8 @@
 #include <Core/Widgets.h>
 #include <System/System.h>
 
+#include <climits>
+
 namespace Vortex {
 
 class DialogData : public GuiWidget {

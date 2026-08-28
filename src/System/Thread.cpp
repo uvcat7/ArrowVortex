@@ -7,23 +7,25 @@
 
 namespace Vortex {
 
-BackgroundThread::BackgroundThread() { done = false; }
+BackgroundThread::BackgroundThread() = default;
 
-BackgroundThread::~BackgroundThread() = default;
+BackgroundThread::~BackgroundThread() { terminate(); }
 
 void BackgroundThread::start() {
-    if (isDone()) {
+    if (thread.joinable()) {
         return;
     }
 
-    thread = std::jthread([&]() {
+    stopRequested.store(false, std::memory_order_release);
+    done.store(false, std::memory_order_release);
+    thread = std::thread([&]() {
         exec();
-        done = true;
+        done.store(true, std::memory_order_release);
     });
 }
 
 void BackgroundThread::terminate() {
-    thread.request_stop();
+    stopRequested.store(true, std::memory_order_release);
     waitUntilDone();
 }
 
@@ -34,10 +36,12 @@ void BackgroundThread::waitUntilDone() {
     thread.join();
 }
 
-std::stop_token BackgroundThread::getStopToken() {
-    return thread.get_stop_token();
+ThreadStopToken BackgroundThread::getStopToken() {
+    return ThreadStopToken(&stopRequested);
 }
 
-bool BackgroundThread::isDone() const { return done; }
+bool BackgroundThread::isDone() const {
+    return done.load(std::memory_order_acquire);
+}
 
 };  // namespace Vortex

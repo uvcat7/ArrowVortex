@@ -8,6 +8,7 @@
 
 #include <Simfile/Chart.h>
 
+#include <climits>
 #include <stdlib.h>
 
 namespace Vortex {

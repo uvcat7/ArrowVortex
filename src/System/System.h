@@ -2,15 +2,8 @@
 
 #include <Core/Input.h>
 #include <filesystem>
+#include <functional>
 namespace fs = std::filesystem;
-#include <SDL3/SDL.h>
-
-#ifdef __linux__
-// Defines INT_MAX and INT_MIN
-#include <limits.h>
-#define MAX_PATH PATH_MAX
-#undef R_OK
-#endif
 #include <SDL3/SDL.h>
 
 namespace Vortex {
@@ -21,6 +14,8 @@ namespace Vortex {
 // custom filter, filterIndex is set to zero.
 
 struct System {
+    using FileDialogCallback = std::function<void(fs::path, int)>;
+
     /// Helper struct for running system commands.
     struct CommandPipe {
         virtual int read() = 0;
@@ -33,7 +28,7 @@ struct System {
     enum Icon { I_NONE, I_INFO, I_WARNING, I_ERROR, NUM_ICONS };
 
     /// Indicates which button was pressed by the user in a dialog.
-    enum Result { R_CANCEL, R_OK, R_YES, R_NO, NUM_RESULTS };
+    enum Result { R_CANCEL, R_ACCEPT, R_YES, R_NO, NUM_RESULTS };
 
     /// Shows a message box dialog.
     virtual Result showMessageDlg(const std::string& title,
@@ -41,15 +36,20 @@ struct System {
                                   Icon icon) = 0;
 
     /// Shows an open file dialog, see class description.
-    virtual fs::path openFileDlg(const std::string& title,
-                                 SDL_DialogFileFilter filters[],
-                                 int num_filters, fs::path filename) = 0;
+    virtual bool openFileDlg(const std::string& title,
+                             const SDL_DialogFileFilter filters[],
+                             int num_filters, fs::path filename,
+                             FileDialogCallback callback) = 0;
 
     /// Shows a save file dialog, see class description.
-    virtual fs::path saveFileDlg(const std::string& title,
-                                 SDL_DialogFileFilter filters[],
-                                 int num_filters, int* index,
-                                 fs::path filename) = 0;
+    virtual bool saveFileDlg(const std::string& title,
+                             const SDL_DialogFileFilter filters[],
+                             int num_filters, int initial_filter,
+                             fs::path filename,
+                             FileDialogCallback callback) = 0;
+
+    /// Returns true while an asynchronous native file dialog is open.
+    virtual bool hasPendingFileDialog() const = 0;
 
     /// Opens a link to a webpage in the default browser.
     virtual void openWebpage(const std::string& link) = 0;
@@ -71,6 +71,12 @@ struct System {
 
     /// Returns the directory from which the program was run.
     virtual std::string getRunDir() const = 0;
+
+    /// Returns the read-only directory containing bundled resources.
+    virtual std::string getResourceDir() const = 0;
+
+    /// Returns the writable per-user settings and log directory.
+    virtual std::string getPreferenceDir() const = 0;
 
     /// Returns the current mouse cursor icon.
     virtual Cursor::Icon getCursor() const = 0;

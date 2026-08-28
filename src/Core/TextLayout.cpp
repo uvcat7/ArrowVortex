@@ -8,6 +8,7 @@
 #include <System/System.h>
 
 #include <cctype>
+#include <climits>
 #include <vector>
 #include <stdint.h>
 

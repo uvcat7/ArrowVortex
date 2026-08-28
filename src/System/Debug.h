@@ -3,12 +3,13 @@
 #include <Core/Core.h>
 #include <assert.h>
 #include <chrono>
+#include <filesystem>
 
 #ifdef NDEBUG
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
 #else
-#ifdef __linux__
+#ifndef _WIN32
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
 #endif
@@ -27,6 +28,9 @@ double getElapsedTime(std::chrono::steady_clock::time_point startTime);
 
 /// Creates a blank log file.
 void openLogFile();
+
+/// Sets the writable directory used for ArrowVortex.log.
+void setLogDirectory(const std::filesystem::path& directory);
 
 /// Opens a debug console to which log messages are written.
 void openConsole();

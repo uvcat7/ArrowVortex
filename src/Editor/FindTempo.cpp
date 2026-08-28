@@ -51,7 +51,7 @@ struct SerializedTempo {
     float* samples;
     int samplerate;
     int numFrames;
-    std::stop_token terminate;
+    ThreadStopToken terminate;
     std::atomic_int progress;
     TempoResults result;
 };

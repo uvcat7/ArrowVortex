@@ -369,18 +369,12 @@ struct MusicImpl : public Music, public MixSource {
             return;
         }
 
-        // Get source file.
-        fs::path source =
-            gSystem->openFileDlg("Select Source File", loadFilters,
-                                 LOAD_FILTERS_COUNT, std::string());
-        if (source.empty()) {
-            HudError("No source file given.");
-            return;
-        }
-        auto src_ext = pathToUtf8(source.extension());
-        Str::toLower(src_ext);
-
-        startAudioConversion(source, false);
+        gSystem->openFileDlg(
+            "Select Source File", loadFilters, LOAD_FILTERS_COUNT,
+            std::string(), [](fs::path source, int) {
+                if (!source.empty())
+                    gMusic->startAudioConversion(std::move(source), false);
+            });
     }
 
     void startAudioConversion(fs::path source, bool isSimfile) override {
@@ -390,31 +384,27 @@ struct MusicImpl : public Music, public MixSource {
         }
 
         // Get Output File
-        int filterIndex = 0;
         fs::path initial_path = fs::path(source);
         initial_path.replace_extension();
-        fs::path output = gSystem->saveFileDlg("Save converted audio as...",
-                                               saveFilters, SAVE_FILTERS_COUNT,
-                                               &filterIndex, initial_path);
-        if (output.empty()) {
-            HudError("No output file given.");
-            return;
-        }
+        gSystem->saveFileDlg(
+            "Save converted audio as...", saveFilters, SAVE_FILTERS_COUNT, 0,
+            initial_path,
+            [source = std::move(source), isSimfile](fs::path output,
+                                                    int filterIndex) {
+                if (output.empty()) return;
 
-        auto ext = pathToUtf8(output.extension());
-        Str::toLower(ext);
+                auto ext = pathToUtf8(output.extension());
+                Str::toLower(ext);
+                AudioFormat fmt = ext == ".wav"   ? AudioFormat::WAV
+                                  : ext == ".mp3" ? AudioFormat::MP3
+                                                  : AudioFormat::OGG;
+                if (filterIndex == 1)
+                    fmt = AudioFormat::MP3;
+                else if (filterIndex == 2)
+                    fmt = AudioFormat::WAV;
 
-        // Figure out save format.
-        AudioFormat fmt = ext == "wav"   ? AudioFormat::WAV
-                          : ext == "mp3" ? AudioFormat::MP3
-                                         : AudioFormat::OGG;
-
-        if (filterIndex == 1)
-            fmt = AudioFormat::MP3;
-        else if (filterIndex == 2)
-            fmt = AudioFormat::WAV;
-
-        startAudioConversion(fmt, source, output, isSimfile);
+                gMusic->startAudioConversion(fmt, source, output, isSimfile);
+            });
     }
 
     void startAudioConversion(AudioFormat fmt) override {

@@ -4,6 +4,7 @@
 
 #include <System/System.h>
 
+#include <climits>
 #include <math.h>
 
 namespace Vortex {

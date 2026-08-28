@@ -8,6 +8,8 @@
 
 #include <Editor/Common.h>
 
+#include <climits>
+
 #define HISTORY ((HistoryImpl*)gHistory)
 
 #define NO_SAVED_ENTRIES -1

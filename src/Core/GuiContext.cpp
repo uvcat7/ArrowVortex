@@ -6,6 +6,8 @@
 
 #include <System/System.h>
 
+#include <climits>
+
 namespace Vortex {
 
 GuiContext::~GuiContext() = default;

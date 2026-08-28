@@ -1,5 +1,6 @@
 #include <Simfile/TimingData.h>
 
+#include <climits>
 #include <math.h>
 
 #include <vector>

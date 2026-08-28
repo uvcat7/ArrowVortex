@@ -6,6 +6,7 @@
 #include <Editor/Editor.h>
 #include <Editor/Menubar.h>
 #include <Editor/Minimap.h>
+#include <Editor/Menubar.h>
 #include <Editor/Music.h>
 #include <Editor/Notefield.h>
 #include <Editor/NotefieldPreview.h>

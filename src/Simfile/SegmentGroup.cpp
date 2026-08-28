@@ -3,6 +3,7 @@
 #include <Core/ByteStream.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
+#include <climits>
 #include <sstream>
 
 #include <System/System.h>

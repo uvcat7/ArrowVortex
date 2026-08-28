@@ -1,5 +1,7 @@
 #include <Editor/Waveform.h>
 
+#include <climits>
+
 #include <math.h>
 #include <stdint.h>
 #include <algorithm>

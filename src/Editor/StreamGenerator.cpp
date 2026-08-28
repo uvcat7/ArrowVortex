@@ -11,6 +11,7 @@
 #include <Managers/StyleMan.h>
 #include <Managers/NoteMan.h>
 
+#include <climits>
 #include <math.h>
 #include <random>
 
