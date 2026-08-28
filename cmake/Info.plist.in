@@ -22,6 +22,8 @@
     <string>@PROJECT_VERSION@</string>
     <key>CFBundleVersion</key>
     <string>@PROJECT_VERSION@</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright ArrowVortex contributors. GPL-3.0-or-later.</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>NSHighResolutionCapable</key>

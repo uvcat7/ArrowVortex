@@ -1,0 +1,9 @@
+ArrowVortex for Linux x86_64
+
+Run ./ArrowVortex from this directory. The assets, noteskins, and default
+settings directories must remain alongside the executable. To install the
+desktop launcher, adjust Exec and Icon in ArrowVortex.desktop to absolute paths
+and copy it to ~/.local/share/applications/.
+
+ArrowVortex is GPL-3.0-or-later software. Source and dependency notices are
+available from https://github.com/douglasjv/ArrowVortex.

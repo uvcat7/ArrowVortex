@@ -1,98 +1,208 @@
-name: Build & Latest Beta
+name: Desktop builds
 
 on:
   push:
+    branches: [main, 'port/**']
+    tags: ['v*']
   pull_request:
-    paths-ignore:
-      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   formatting:
-    name: "Check formatting"
-    runs-on: windows-2022
-    permissions:
-      contents: read
-    steps:
-      - name: Get AV
-        uses: actions/checkout@v7
-      - name: Check formatting with clang-format
-        run: >
-          clang-format --dry-run --Werror -style=file $(find src/ -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.hpp' \))
-        shell: bash
-  windows:
-    name: "Build Windows x64"
-    runs-on: windows-2022
-    permissions:
-      contents: read
-    steps:
-      - name: Get AV
-        uses: actions/checkout@v7
-      - name: Configure CMake
-        run: >
-          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
-          -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
-          -DYML=YML
-      - name: Build AV
-        run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
-      - name: Collect into a directory
-        if: github.ref_name == 'main'
-        run: cmake --install build --config Release --prefix ./
-      - name: Upload artifact
-        if: github.ref_name == 'main'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ArrowVortex-${{ github.sha }}
-          path: |
-            bin/assets
-            bin/noteskins
-            bin/settings
-            bin/ArrowVortex.exe
-          if-no-files-found: error
-  linux:
-    name: "Build Linux x64"
+    name: Check formatting
     runs-on: ubuntu-22.04
-    permissions:
-      contents: read
     steps:
-      - name: Get AV
-        uses: actions/checkout@v7
-      - name: Install Linux build packages
-        shell: bash
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - run: |
+          files=$(git diff --name-only --diff-filter=ACMRT HEAD^ -- \
+            'src/*.cpp' 'src/*.h' 'src/*.mm')
+          if [ -n "$files" ]; then
+            clang-format --dry-run --Werror -style=file $files
+          fi
+
+  windows:
+    name: Windows x64
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Configure
+        shell: pwsh
+        run: |
+          cmake -B out/build/windows-release -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+      - name: Build
+        run: cmake --build out/build/windows-release --parallel
+      - name: Smoke test
+        run: out/build/windows-release/src/System/ArrowVortex.exe --smoke-test
+      - name: Install
+        run: cmake --install out/build/windows-release --prefix out/install/windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArrowVortex-windows-x64
+          path: out/install/windows
+
+  linux:
+    name: Linux x86_64
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -qq -y nasm libltdl-dev \
-            autoconf autoconf-archive automake libtool \
-            libx11-dev libxft-dev libxext-dev \
-            libwayland-dev libxkbcommon-dev libegl1-mesa-dev \
-            libibus-1.0-dev zenity clang-tidy clang-format build-essential git \
-            pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
-            libaudio-dev libjack-dev libsndio-dev libusb-1.0-0-dev libx11-dev libxext-dev \
-            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libwayland-dev \
-            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev fcitx-libs-dev \
-            libasound2-dev libdecor-0-dev python3-venv libthai-dev libpipewire-0.3-dev \
-            liburing-dev
-      - name: Configure CMake
-        run: >
-          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
-          -DVCPKG_TARGET_TRIPLET=x64-linux
-          -DPRESET_NAME=linux-release
-          -DYML=YML
-      - name: Build AV
-        run: cmake --build build --config Release --parallel $(nproc)
-      - name: Collect into a directory
-        if: github.ref_name == 'main'
-        run: cmake --install build --config Release --prefix ./
-      - name: Upload artifact
-        if: github.ref_name == 'main'
-        uses: actions/upload-artifact@v7
+          sudo apt-get install -y ninja-build pkg-config xvfb libgl1-mesa-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxss-dev libwayland-dev libxkbcommon-dev \
+            libasound2-dev libpulse-dev libdbus-1-dev libibus-1.0-dev \
+            libdecor-0-dev libpipewire-0.3-dev nasm autoconf automake libtool
+      - name: Configure
+        run: |
+          cmake -B out/build/linux-release -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_TARGET_TRIPLET=x64-linux
+      - name: Build and test
+        run: |
+          cmake --build out/build/linux-release --parallel
+          SDL_AUDIODRIVER=dummy xvfb-run -a \
+            out/build/linux-release/src/System/ArrowVortex --smoke-test
+          ctest --test-dir out/build/linux-release --output-on-failure
+      - name: Install and package
+        run: |
+          cmake --install out/build/linux-release --prefix out/install/linux
+          tools/package_linux.sh out/install/linux out/packages
+      - uses: actions/upload-artifact@v4
         with:
-          name: ArrowVortex-${{ github.sha }}
+          name: ArrowVortex-linux-x86_64
           path: |
-            bin/assets
-            bin/noteskins
-            bin/settings
-            bin/ArrowVortex
-          if-no-files-found: error
+            out/packages/ArrowVortex-linux-x86_64.tar.gz
+            out/packages/ArrowVortex-linux-x86_64.tar.gz.sha256
+
+  macos:
+    name: macOS ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+            preset: macos-arm64-release
+          - arch: x86_64
+            runner: macos-15-intel
+            preset: macos-x64-release
+    runs-on: ${{ matrix.runner }}
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          path: vcpkg
+          ref: a62ce77d56ee07513b4b67de1ec2daeaebfae51a
+      - name: Install macOS build tools
+        run: brew install nasm
+      - name: Bootstrap vcpkg
+        run: ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+      - name: Configure and build
+        run: |
+          cmake --preset ${{ matrix.preset }}
+          cmake --build --preset ${{ matrix.preset }} --parallel
+      - name: Smoke test
+        run: |
+          app=out/build/${{ matrix.preset }}/src/System/ArrowVortex.app
+          smoke_result="$RUNNER_TEMP/arrowvortex-smoke-${{ matrix.arch }}"
+          rm -f "$smoke_result"
+          open -W -n "$app" --args --smoke-test --smoke-result "$smoke_result"
+          grep -qx success "$smoke_result"
+          ctest --test-dir out/build/${{ matrix.preset }} --output-on-failure
+      - name: Validate architecture and bundle
+        run: |
+          app=out/build/${{ matrix.preset }}/src/System/ArrowVortex.app
+          lipo -archs "$app/Contents/MacOS/ArrowVortex" | grep -qw ${{ matrix.arch }}
+          plutil -lint "$app/Contents/Info.plist"
+          test -d "$app/Contents/Resources/assets"
+          test -d "$app/Contents/Resources/noteskins"
+          test -d "$app/Contents/Resources/settings"
+          ditto -c -k --keepParent "$app" "ArrowVortex-macOS-${{ matrix.arch }}.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArrowVortex-macOS-${{ matrix.arch }}
+          path: ArrowVortex-macOS-${{ matrix.arch }}.zip
+
+  universal-macos:
+    name: Universal 2 package
+    needs: [macos]
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ArrowVortex-macOS-*
+          path: out/architectures
+      - name: Assemble Universal 2 bundle
+        run: |
+          ditto -x -k out/architectures/ArrowVortex-macOS-arm64/ArrowVortex-macOS-arm64.zip out/arm64
+          ditto -x -k out/architectures/ArrowVortex-macOS-x86_64/ArrowVortex-macOS-x86_64.zip out/x86_64
+          tools/merge_macos_universal.sh out/arm64/ArrowVortex.app \
+            out/x86_64/ArrowVortex.app out/ArrowVortex.app
+          ditto -c -k --keepParent out/ArrowVortex.app out/ArrowVortex-Universal2.zip
+      - name: Create ad-hoc-signed DMG
+        run: tools/package_macos.sh out/ArrowVortex.app out/packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArrowVortex-macOS-Universal2
+          path: |
+            out/packages/ArrowVortex-macOS-Universal2.dmg
+            out/packages/ArrowVortex-macOS-Universal2.dmg.sha256
+            out/ArrowVortex-Universal2.zip
+
+  signed-release:
+    name: Sign and notarize release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, linux, universal-macos]
+    runs-on: macos-15
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ArrowVortex-macOS-Universal2
+          path: out/download
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          test -n "$MACOS_CERTIFICATE"
+          keychain=build.keychain-db
+          security create-keychain -p temporary "$keychain"
+          security default-keychain -s "$keychain"
+          security unlock-keychain -p temporary "$keychain"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
+          security import certificate.p12 -k "$keychain" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k temporary "$keychain"
+      - name: Sign, notarize, and verify
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          ditto -x -k out/download/ArrowVortex-Universal2.zip out/app
+          tools/package_macos.sh out/app/ArrowVortex.app out/release
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" out/release/* --clobber

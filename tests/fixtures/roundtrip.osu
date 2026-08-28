@@ -1,0 +1,23 @@
+osu file format v14
+
+[General]
+AudioFilename: test.ogg
+Mode: 3
+
+[Metadata]
+Title:Round Trip osu!
+Artist:ArrowVortex Tests
+Creator:CI
+Version:Hard
+
+[Difficulty]
+CircleSize:4
+OverallDifficulty:7
+
+[TimingPoints]
+0,500,4,2,0,100,1,0
+4000,333.333333,4,2,0,100,1,0
+
+[HitObjects]
+64,192,1000,1,0,0:0:0:0:
+192,192,2000,128,0,3000:0:0:0:0:

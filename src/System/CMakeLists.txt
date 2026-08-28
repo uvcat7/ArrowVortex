@@ -25,6 +25,7 @@ else()
 endif()
 
 add_library(System STATIC ${SRC} ${INC})
+target_compile_definitions(System PRIVATE ARROWVORTEX_NO_APP_ENTRY=1)
 target_link_libraries(System PRIVATE Core Editor OpenGL::GL SDL3::SDL3)
 
 set(APP_SOURCES System.cpp)
@@ -69,6 +70,12 @@ elseif(APPLE)
         COMMAND "${CMAKE_COMMAND}" -E copy
                 "${MACOS_ICON}"
                 "$<TARGET_BUNDLE_CONTENT_DIR:ArrowVortex>/Resources/ArrowVortex.icns"
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                "${PROJECT_SOURCE_DIR}/LICENSE"
+                "$<TARGET_BUNDLE_CONTENT_DIR:ArrowVortex>/Resources/LICENSE"
+        COMMAND "${CMAKE_COMMAND}" -E copy
+                "${PROJECT_SOURCE_DIR}/CREDITS"
+                "$<TARGET_BUNDLE_CONTENT_DIR:ArrowVortex>/Resources/CREDITS"
         VERBATIM
     )
 else()

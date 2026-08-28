@@ -1,0 +1,23 @@
+#TITLE:Round Trip ユニコード;
+#ARTIST:ArrowVortex Tests;
+#MUSIC:test.ogg;
+#OFFSET:-0.125000;
+#BPMS:0.000=120.000,4.000=180.000,8.000=120.000;
+#STOPS:4.000=0.125,8.000=0.125;
+#WARPS:12.000=2.000;
+#NOTES:
+     dance-single:
+     CI fixture:
+     Hard:
+     7:
+     0.000,0.000,0.000,0.000,0.000:
+1000
+0000
+2000
+0000
+,
+0000
+0000
+3000
+0000
+;

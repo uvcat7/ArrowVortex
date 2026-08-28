@@ -285,8 +285,8 @@ static void CreateScrollRows(std::vector<ScrollRow>& out, const Scroll* it,
 }
 
 static void CreateScrollSpeeds(std::vector<ScrollSpeed>& out, const Speed* it,
-                               const Speed* end) {
-    TempoTimeTracker tracker;
+                               const Speed* end, const TimingData& timing) {
+    TempoTimeTracker tracker(timing);
     double previous = 1;
     while (it != end) {
         int row = it->row;
@@ -496,8 +496,8 @@ void TimingData::update(const Tempo* tempo) {
 
     // Create a scroll speed list.
     speeds.clear();
-    CreateScrollSpeeds(speeds, segments->begin<Speed>(),
-                       segments->end<Speed>());
+    CreateScrollSpeeds(speeds, segments->begin<Speed>(), segments->end<Speed>(),
+                       *this);
     speeds.shrink_to_fit();
 
     // Create a scroll fake region list.

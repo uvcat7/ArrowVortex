@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.28)
 
 project(ArrowVortex VERSION 1.1.0 LANGUAGES C CXX)
 
+include(CTest)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -68,6 +70,36 @@ add_subdirectory(src/Managers)
 add_subdirectory(src/Simfile)
 add_subdirectory(src/System)
 
+if(BUILD_TESTING)
+    add_executable(ArrowVortexSimfileRoundTrip tests/SimfileRoundTrip.cpp)
+    if(UNIX AND NOT APPLE)
+        # The application libraries intentionally retain upstream's circular
+        # references. GNU ld needs an explicit rescan group when the headless
+        # test executable links those static archives directly.
+        target_link_libraries(ArrowVortexSimfileRoundTrip PRIVATE
+            "$<LINK_GROUP:RESCAN,Simfile,System,Core,Editor,Managers,Dialogs>"
+        )
+    else()
+        target_link_libraries(ArrowVortexSimfileRoundTrip PRIVATE Simfile System)
+    endif()
+    if(APPLE)
+        target_link_libraries(ArrowVortexSimfileRoundTrip PRIVATE
+                              "-framework Cocoa")
+    endif()
+
+    foreach(format sm ssc osu dwi)
+        add_test(
+            NAME simfile-roundtrip-${format}
+            COMMAND $<TARGET_FILE:ArrowVortexSimfileRoundTrip>
+                    "${PROJECT_SOURCE_DIR}/tests/fixtures/roundtrip.${format}"
+        )
+        set_tests_properties(simfile-roundtrip-${format} PROPERTIES
+            TIMEOUT 30
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/bin"
+        )
+    endforeach()
+endif()
+
 if(APPLE)
     install(TARGETS ArrowVortex BUNDLE DESTINATION .)
 else()
@@ -75,6 +107,7 @@ else()
     install(DIRECTORY bin/assets DESTINATION bin)
     install(DIRECTORY bin/noteskins DESTINATION bin)
     install(DIRECTORY bin/settings DESTINATION bin)
+    install(FILES LICENSE CREDITS DESTINATION .)
 endif()
 
 file(GLOB_RECURSE path_sources CONFIGURE_DEPENDS

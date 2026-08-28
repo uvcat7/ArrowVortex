@@ -1,6 +1,8 @@
 # ArrowVortex
 
-ArrowVortex is a simfile editor for Windows. It can be used to create or edit stepfiles for various rhythm games, such as StepMania, ITG, osu!, and other games which support DDR-style and/or PIU-style panel layouts.
+ArrowVortex is a cross-platform simfile editor for macOS, Linux, and Windows. It
+can create or edit stepfiles for StepMania, ITG, osu!, and other games which
+support DDR-style and/or PIU-style panel layouts.
 
 This is a continuation of the original project by Bram 'Fietsemaker' van de Wetering. He has graciously allowed for the open sourcing of this code so that development can continue.
 
@@ -61,25 +63,17 @@ Game styles:
 - Pump Double
 - Pump Couple
 
+# Platforms
+
+- macOS 12.0 or later on Apple Silicon and Intel (Universal 2 DMG)
+- Linux x86_64 (portable tarball built on Ubuntu 22.04)
+- Windows x64
+
+The desktop ports use SDL3 for lifecycle, windowing, input, dialogs, clipboard,
+URLs, drag-and-drop, and audio while retaining ArrowVortex's OpenGL renderer and
+simfile data model.
+
 # About this project
-
-## Support and Contributing to the project
-
-When you have questions about ArrowVortex and its functionality, make a discussion topic!
-
-If you would like to report bugs or suggest simple features to add, please use the issue templates to do so. Make sure an issue for your problem doesn't exist before you create a new one.
-When the changes you would like to add are of a larger scope (e.g. adding a new subsystem to the editor or redesigning a popup window), make a discussion instead.
-
-Pull requests to add features and fix bugs are always welcomed. Please reach out to @uvcat7 with any questions. After a contribution, @uvcat7 will add you to the repository as a collaborator.
-
-## Support and Contributing to the project
-
-When you have questions about ArrowVortex and its functionality, make a discussion topic!
-
-If you would like to report bugs or suggest simple features to add, please use the issue templates to do so. Make sure an issue for your problem doesn't exist before you create a new one.
-When the changes you would like to add are of a larger scope (e.g. adding a new subsystem to the editor or redesigning a popup window), make a discussion instead.
-
-Pull requests to add features and fix bugs are always welcomed. Please reach out to @uvcat7 with any questions. After a contribution, @uvcat7 will add you to the repository as a collaborator.
 
 ## Support and Contributing to the project
 
@@ -92,9 +86,9 @@ Pull requests to add features and fix bugs are always welcomed. Please reach out
 
 ## Building ArrowVortex
 
-The project uses CMake for building and vcpkg for package management. Currently Visual Studio is recommended for building the solution, since the project is Windows-only. The Visual Studio Build Tools are required.
-
-See the [build details](BUILDING.md) for more information.
+The project uses CMake presets and a pinned vcpkg manifest. See the
+[build details](BUILDING.md) for native instructions, tests, package validation,
+and release-signing configuration.
 
 ## License
 
