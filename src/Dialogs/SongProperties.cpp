@@ -19,14 +19,15 @@
 
 #include <Editor/Music.h>
 
+#include <cmath>
 #include <filesystem>
 
 namespace Vortex {
 
 static SDL_DialogFileFilter loadFilter[] = {{"All Files (*.*)", "*"}};
 
-#define BANNER_W static_cast<int>(418 * gSystem->getScaleFactor())
-#define BANNER_H static_cast<int>(164 * gSystem->getScaleFactor())
+#define BANNER_W gSystem->applyScaleFactor(418)
+#define BANNER_H gSystem->applyScaleFactor(164)
 
 struct DialogSongProperties::BannerWidget : public GuiWidget {
     explicit BannerWidget(GuiContext* gui) : GuiWidget(gui) {
@@ -38,7 +39,7 @@ struct DialogSongProperties::BannerWidget : public GuiWidget {
 
         auto index = 0;
         if (tex.size() > 1) {
-            timer += clamp(deltaTime.count(), 0.0, 1.0);
+            timer += std::clamp(deltaTime.count(), 0.0, 1.0);
             index = static_cast<int>(timer / 0.1) % tex.size();  // 10 FPS
         }
 
@@ -53,14 +54,14 @@ struct DialogSongProperties::BannerWidget : public GuiWidget {
 struct DialogSongProperties::CdTitleWidget : public GuiWidget {
     explicit CdTitleWidget(GuiContext* gui) : GuiWidget(gui) {
         width_ = BANNER_W;
-        height_ = static_cast<int>(75 * gSystem->getScaleFactor());
+        height_ = gSystem->applyScaleFactor(75);
     }
     void onDraw() override {
         if (tex.size() == 0 || !tex[0].handle()) return;
 
         auto index = 0;
         if (tex.size() > 1) {
-            timer += clamp(deltaTime.count(), 0.0, 1.0);
+            timer += std::clamp(deltaTime.count(), 0.0, 1.0);
             index = static_cast<int>(timer / 0.1) % tex.size();  // 10 FPS
         }
 
@@ -72,11 +73,11 @@ struct DialogSongProperties::CdTitleWidget : public GuiWidget {
         auto aspect = static_cast<float>(w) / static_cast<float>(h);
         if (h > height_) {
             h = height_;
-            w = static_cast<int>(round(h * aspect));
+            w = static_cast<int>(std::round(h * aspect));
         }
         if (w > width_) {
             w = width_;
-            h = static_cast<int>(round(w / aspect));
+            h = static_cast<int>(std::round(w / aspect));
         }
         // Place the CD Title in the middle of the box
         r = {rect_.x + (width_ - w) / 2, rect_.y + (height_ - h) / 2, w, h};
@@ -355,14 +356,14 @@ std::vector<Texture> DialogSongProperties::extractSpriteSheet(fs::path path) {
     if (full.handle() == 0) {
         HudWarning("Could not open \"%s\".",
                    pathToUtf8(path.filename()).c_str());
-        frames.push_back(full);
+        frames.emplace_back(full);
         return frames;
     }
 
     int w = 0, h = 0, tiles = 1;
     if (sscanf(pathToUtf8(path.filename()).c_str(), "%*[^ ] %dx%d.%*s", &w,
                &h) == 2) {
-        tiles = max(1, w * h);
+        tiles = std::max(1, w * h);
     }
 
     if (tiles > 1) {
@@ -371,7 +372,7 @@ std::vector<Texture> DialogSongProperties::extractSpriteSheet(fs::path path) {
         Texture::createTiles(pathToUtf8(path).c_str(), tileW, tileH, tiles,
                              frames);
     } else
-        frames.push_back(full);
+        frames.emplace_back(full);
 
     return frames;
 }

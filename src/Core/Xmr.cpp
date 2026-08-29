@@ -46,13 +46,17 @@ class xstring {
     void append(const char* str) { append(str, strlen(str)); }
     void append(long v) {
         char buf[32];
-        int n = sprintf_s(buf, 32, "%i", v);
+#ifdef _WIN32
+        int n = std::snprintf(buf, 32, "%i", v);
+#else
+        int n = std::snprintf(buf, 32, "%li", v);
+#endif
         if (n < 0) n = 32;
         append(buf, n);
     }
     void append(double v) {
         char buf[32];
-        int n = sprintf_s(buf, 32, "%f", v);
+        int n = std::snprintf(buf, 32, "%f", v);
         if (n < 0) n = 32;
         if (memchr(buf, '.', n)) {
             while (n > 0 && buf[n - 1] == '0') --n;
@@ -66,8 +70,6 @@ class xstring {
 
 // ================================================================================================
 // Utility functions.
-
-static const char* NO_ERROR = "no error";
 
 static const char* EMPTY_ERROR_STRING = "";
 
@@ -474,13 +476,7 @@ static void WriteComment(xstring& out, const char* str) {
 // =============================================================================================================
 // XmrSaveSettings
 
-XmrSaveSettings::XmrSaveSettings()
-    : headerComment(nullptr),
-      useTabsInsteadOfSpaces(false),
-      quoteNodes(XMR_QUOTE_WHEN_NECESSARY),
-      quoteNames(XMR_QUOTE_WHEN_NECESSARY),
-      quoteValues(XMR_QUOTE_WHEN_NECESSARY),
-      spacesPerIndent(2) {}
+XmrSaveSettings::XmrSaveSettings() = default;
 
 // =============================================================================================================
 // XmrAttrib
@@ -783,7 +779,7 @@ XmrDoc::~XmrDoc() {
     clear();
 }
 
-XmrDoc::XmrDoc() : lastError(NO_ERROR) {
+XmrDoc::XmrDoc() {
     name = "root";
     attribPtr = nullptr;
     childPtr = nextPtr = nullptr;

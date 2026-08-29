@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 
 #include <Simfile/Common.h>
 
@@ -14,27 +14,27 @@ namespace Vortex {
 template <typename A, typename B>
 static bool LessThanRowCol(const A& a, const B& b) {
     if (a.row != b.row) {
-        return (int)a.row < (int)b.row;
+        return static_cast<int>(a.row) < static_cast<int>(b.row);
     }
-    return (int)a.col < (int)b.col;
+    return static_cast<int>(a.col) < static_cast<int>(b.col);
 }
 
 template <typename A, typename B>
 static bool LessThanRow(const A& a, const B& b) {
-    return (int)a.row < (int)b.row;
+    return static_cast<int>(a.row) < static_cast<int>(b.row);
 }
 
 template <typename A, typename B>
 static int CompareRowCol(const A& a, const B& b) {
     if (a.row != b.row) {
-        return (int)a.row - (int)b.row;
+        return static_cast<int>(a.row) - static_cast<int>(b.row);
     }
-    return (int)a.col - (int)b.col;
+    return static_cast<int>(a.col) - static_cast<int>(b.col);
 }
 
 template <typename A, typename B>
 static int CompareRow(const A& a, const B& b) {
-    return (int)a.row - (int)b.row;
+    return static_cast<int>(a.row) - static_cast<int>(b.row);
 }
 
 // ================================================================================================

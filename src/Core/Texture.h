@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <vector>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -30,7 +31,7 @@ class Texture {
     Texture(int w, int h, Format fmt = RGBA);
 
     /// Loads a texture from an image file.
-    Texture(fs::path path, bool mipmap = false, Format fmt = RGBA);
+    explicit Texture(fs::path path, bool mipmap = false, Format fmt = RGBA);
 
     /// Creates a texture from a buffer of [w * h * channels] pixel values.
     Texture(int w, int h, const uint8_t* pixeldata, bool mipmap = false,

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Core/Core.h>
-#include <Core/Vector.h>
 
 #include <math.h>
+#include <vector>
 #include <algorithm>
 
 namespace mathalgo {
@@ -44,7 +44,7 @@ struct matrix {
         }
         return oResult;
     }
-    Vortex::Vector<T> data;
+    std::vector<T> data;
     uint32_t rows;
     uint32_t cols;
 };
@@ -182,8 +182,7 @@ struct Givens {
 
 */
 template <typename T>
-Vortex::Vector<T> polyfit(const T* oX, const T* oY, size_t nCount,
-                          int nDegree) {
+std::vector<T> polyfit(const T* oX, const T* oY, size_t nCount, int nDegree) {
     // more intuitive this way
     nDegree++;
 

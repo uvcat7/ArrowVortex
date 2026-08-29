@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/NonCopyable.h>
 
 #include <Simfile/NoteList.h>
@@ -35,14 +35,14 @@ struct Chart : NonCopyable {
     // valid.
     void sanitize();
 
-    const Style* style;
+    const Style* style = nullptr;
     std::string artist;
-    Difficulty difficulty;
-    Vector<double> radar;
-    int meter;
+    Difficulty difficulty = DIFF_CHALLENGE;
+    std::vector<double> radar;
+    int meter = 1;
 
     NoteList notes;
-    Tempo* tempo;
+    Tempo* tempo = nullptr;
 };
 
 // Returns the name of the given difficulty type.

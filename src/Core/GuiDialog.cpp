@@ -8,13 +8,11 @@
 
 namespace Vortex {
 
-#define MY_GUI ((GuiContextImpl*)gui_)
-
 static const int FRAME_TITLEBAR_H = 24;
-#define FRAME_TITLEBAR_H static_cast<int>(24 * gSystem->getScaleFactor())
+#define FRAME_TITLEBAR_H gSystem->applyScaleFactor(24)
 static const int FRAME_PADDING = 4;
 static const int FRAME_RESIZE_BORDER = 5;
-#define FRAME_BUTTON_W static_cast<int>(8 * gSystem->getScaleFactor())
+#define FRAME_BUTTON_W gSystem->applyScaleFactor(8)
 
 // ================================================================================================
 // Dialog Frame implementation.
@@ -25,27 +23,9 @@ DialogData::~DialogData() {
 }
 
 DialogData::DialogData(GuiContext* gui, GuiDialog* dialog)
-    : GuiWidget(gui),
-      dialog_ptr_(dialog),
-      gui_(gui),
-      is_closeable_(true),
-      is_minimizable_(true),
-      is_pinnable_(true),
-      is_draggable_(true),
-      is_horizontally_resizable_(false),
-      is_vertically_resizable_(false),
-      request_close_(false),
-      request_pin_(false),
-      request_minimize_(false),
-      request_move_to_top_(false),
-      pinned_state_(false),
-      minimized_state_(false),
-      min_size_({0, 0}),
-      max_size_({INT_MAX, INT_MAX}),
-      pinned_position_({0, 0}),
-      current_action_(nullptr) {
+    : GuiWidget(gui), dialog_ptr_(dialog), gui_(gui) {
     rect_ = {16, 16, 256, 256};
-    MY_GUI->addDialog(this);
+    reinterpret_cast<GuiContextImpl*>(gui_)->addDialog(this);
 }
 
 // ================================================================================================
@@ -182,16 +162,16 @@ void DialogData::ClampRect() {
 
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
         auto a = static_cast<ResizeAction*>(current_action_);
-        if (a->dirH < 0) rect_.w = min(rect_.w, a->anchor.x - bounds.x);
+        if (a->dirH < 0) rect_.w = std::min(rect_.w, a->anchor.x - bounds.x);
         if (a->dirH > 0)
-            rect_.w = min(rect_.w, bounds.x + bounds.w - a->anchor.x);
-        if (a->dirV < 0) rect_.h = min(rect_.h, a->anchor.y - bounds.y);
+            rect_.w = std::min(rect_.w, bounds.x + bounds.w - a->anchor.x);
+        if (a->dirV < 0) rect_.h = std::min(rect_.h, a->anchor.y - bounds.y);
         if (a->dirV > 0)
-            rect_.h = min(rect_.h, bounds.y + bounds.h - a->anchor.y);
+            rect_.h = std::min(rect_.h, bounds.y + bounds.h - a->anchor.y);
     }
 
-    rect_.w = max(min_size_.x, min(max_size_.x, min(bounds.w, rect_.w)));
-    rect_.h = max(min_size_.y, min(max_size_.y, min(bounds.h, rect_.h)));
+    rect_.w = std::clamp(std::min(bounds.w, rect_.w), min_size_.x, max_size_.x);
+    rect_.h = std::clamp(std::min(bounds.h, rect_.h), min_size_.y, max_size_.y);
 
     if (current_action_ && current_action_->type >= ACT_RESIZE) {
         auto a = static_cast<ResizeAction*>(current_action_);
@@ -200,8 +180,8 @@ void DialogData::ClampRect() {
     }
 
     int marginH = minimized_state_ ? (FRAME_PADDING * -2) : rect_.h;
-    rect_.x = max(min(rect_.x, bounds.x + bounds.w - rect_.w), bounds.x);
-    rect_.y = max(min(rect_.y, bounds.y + bounds.h - marginH), bounds.y);
+    rect_.x = std::clamp(rect_.x, bounds.x, bounds.x + bounds.w - rect_.w);
+    rect_.y = std::clamp(rect_.y, bounds.y, bounds.y + bounds.h - marginH);
 }
 
 void DialogData::arrange() {
@@ -443,13 +423,13 @@ void GuiDialog::setWidth(int w) { DATA->rect_.w = w; }
 
 void GuiDialog::setHeight(int h) { DATA->rect_.h = h; }
 
-void GuiDialog::setMinimumWidth(int w) { DATA->min_size_.x = max(0, w); }
+void GuiDialog::setMinimumWidth(int w) { DATA->min_size_.x = std::max(0, w); }
 
-void GuiDialog::setMinimumHeight(int h) { DATA->min_size_.y = max(0, h); }
+void GuiDialog::setMinimumHeight(int h) { DATA->min_size_.y = std::max(0, h); }
 
-void GuiDialog::setMaximumWidth(int w) { DATA->max_size_.x = max(0, w); }
+void GuiDialog::setMaximumWidth(int w) { DATA->max_size_.x = std::max(0, w); }
 
-void GuiDialog::setMaximumHeight(int h) { DATA->max_size_.y = max(0, h); }
+void GuiDialog::setMaximumHeight(int h) { DATA->max_size_.y = std::max(0, h); }
 
 void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = enable; }
 

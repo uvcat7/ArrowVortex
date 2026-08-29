@@ -200,7 +200,7 @@ struct MetadataManImpl : public MetadataMan {
         auto paths = File::findFiles(sim_dir, false);
         auto parent_paths = File::findFiles(sim_dir.parent_path(), false);
         for (auto& path : parent_paths) {
-            paths.push_back(path);
+            paths.emplace_back(path);
         }
         for (auto& path : paths) {
             std::string f = pathToUtf8(path.filename());

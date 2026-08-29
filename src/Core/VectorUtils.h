@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -13,16 +13,17 @@ struct Vec {
 
     // Destroys all elements in the vector and emtpies the vector.
     template <typename T>
-    static void release(Vector<T*>& v) {
+    static void release(std::vector<T*>& v) {
         for (T* v : v) {
             delete v;
         }
-        v.release();
+        v.clear();
     }
 
     // Erases elements from a vector. Both must be sorted according to compare.
     template <typename T, typename K, typename Compare>
-    static void erase(Vector<T>& v, const K* elems, int num, Compare compare) {
+    static void erase(std::vector<T>& v, const K* elems, int num,
+                      Compare compare) {
         if (num <= 0) return;
 
         // Work forwards, keeping track of a read and write position.
@@ -57,7 +58,8 @@ struct Vec {
 
     // Inserts elements into a vector. Both must be sorted according to compare.
     template <typename T, typename K, typename Compare>
-    static void insert(Vector<T>& v, const K* elems, int num, Compare compare) {
+    static void insert(std::vector<T>& v, const K* elems, int num,
+                       Compare compare) {
         if (num <= 0) return;
 
         // Make room for the elements that are going to be inserted.
@@ -90,8 +92,8 @@ struct Vec {
     // Erases matching elements from two vectors for which the predicate is
     // true. Both vectors must be sorted according to compare.
     template <typename T, typename U, typename Compare, typename Predicate>
-    static void erasePairs(Vector<T>& a, Vector<U>& b, Compare compare,
-                           Predicate pred) {
+    static void erasePairs(std::vector<T>& a, std::vector<U>& b,
+                           Compare compare, Predicate pred) {
         for (int i = a.size() - 1, j = b.size() - 1; i >= 0 && j >= 0;) {
             if (compare(a[i], b[j])) {
                 --j;

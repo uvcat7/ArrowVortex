@@ -131,11 +131,9 @@ bool ReadNext(void* data, int type, T*& it) {
 
 InputEvents::~InputEvents() { clear(); }
 
-InputEvents::InputEvents() : data_(nullptr) {}
+InputEvents::InputEvents() = default;
 
-InputEvents::InputEvents(const InputEvents& other) : data_(nullptr) {
-    *this = other;
-}
+InputEvents::InputEvents(const InputEvents& other) { *this = other; }
 
 void InputEvents::clear() {
     EventHeader* header = static_cast<EventHeader*>(data_);

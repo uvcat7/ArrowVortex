@@ -6,6 +6,7 @@
 #include <Core/GuiDialog.h>
 
 #include <map>
+#include <vector>
 
 namespace Vortex {
 
@@ -14,11 +15,11 @@ namespace Vortex {
 
 class GuiContextImpl : public GuiContext {
    public:
-    ~GuiContextImpl();
     GuiContextImpl();
+    ~GuiContextImpl() override;
 
-    void tick(recti view, float deltaTime, InputEvents& events);
-    void draw();
+    void tick(recti view, float deltaTime, InputEvents& events) override;
+    void draw() override;
 
     void closeDialogs();
 
@@ -73,8 +74,8 @@ class GuiContextImpl : public GuiContext {
     float delta_time_;
     InputEvents* input_events_;
 
-    Vector<DialogData*> dialogs_;
-    Vector<GuiWidget*> focus_widgets_;
+    std::vector<DialogData*> dialogs_;
+    std::vector<GuiWidget*> focus_widgets_;
 };
 
 };  // namespace Vortex

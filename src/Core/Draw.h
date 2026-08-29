@@ -66,7 +66,7 @@ struct TileBar {
 
     Texture texture;
     areaf uvs;
-    int border;
+    int border = 0;
 };
 
 // A 9-part texture with a middle section that stretches horizontally and
@@ -83,7 +83,7 @@ struct TileRect {
 
     Texture texture;
     areaf uvs;
-    int border;
+    int border = 0;
 };
 
 // A horizontal texture of two tile rects, 1st with round corners, 2nd with

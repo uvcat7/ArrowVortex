@@ -1,6 +1,5 @@
 ﻿#include <Core/Polyfit.h>
 #include <Core/Core.h>
-#include <Core/Vector.h>
 #include <Core/AlignedMemory.h>
 
 #include <System/Thread.h>
@@ -14,6 +13,9 @@
 #include <algorithm>
 #include <functional>
 #include <atomic>
+#include <cmath>
+#include <vector>
+#include <cstring>
 
 #define MarkProgress(number, text)              \
     {                                           \
@@ -37,7 +39,7 @@ static const int MaxThreads = 8;
 // ================================================================================================
 // Helper structs.
 
-typedef Vector<TempoResult> TempoResults;
+typedef std::vector<TempoResult> TempoResults;
 
 struct TempoSort {
     bool operator()(const TempoResult& a, const TempoResult& b) {
@@ -166,7 +168,7 @@ static real GetConfidenceForInterval(const GapData& gapdata, int interval) {
 
     int* wrappedPos = gapdata.wrappedPos;
     real* wrappedOnsets = gapdata.wrappedOnsets;
-    memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
+    std::memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
 
     // Make a histogram of onset strengths for every position in the interval.
     int reducedInterval = interval >> downsample;
@@ -200,7 +202,7 @@ static real GetConfidenceForBPM(const GapData& gapdata, IntervalTester& test,
 
     int* wrappedPos = gapdata.wrappedPos;
     real* wrappedOnsets = gapdata.wrappedOnsets;
-    memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
+    std::memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
 
     // Make a histogram of i strengths for every position in the interval.
     real intervalf = test.samplerate * 60.0 / bpm;
@@ -301,7 +303,7 @@ static void RemoveDuplicates(TempoResults& tempo) {
             real v = tempo[j].bpm;
             if (std::min(std::min(abs(v - bpm), abs(v - doubled)),
                          abs(v - halved)) < 0.1) {
-                tempo.erase(j);
+                tempo.erase(tempo.begin() + j);
             }
         }
     }
@@ -338,7 +340,7 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets) {
 
     // Loop through every 10th possible BPM, later we will fill in those that
     // look interesting.
-    memset(test.fitness, 0, test.numIntervals * sizeof(real));
+    std::memset(test.fitness, 0, test.numIntervals * sizeof(real));
     FillCoarseIntervals(test, *gapdata);
     int numCoarseIntervals =
         (test.numIntervals + IntervalDelta - 1) / IntervalDelta;
@@ -362,8 +364,9 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets) {
             vec2i range = FillIntervalRange(test, *gapdata, i - IntervalDelta,
                                             i + IntervalDelta);
             int best = FindBestInterval(test.fitness, range.x, range.y);
-            tempo.push_back(
-                {IntervalToBPM(test, best), 0.0, test.fitness[best]});
+            TempoResult new_result = {IntervalToBPM(test, best), 0.0,
+                                      test.fitness[best]};
+            tempo.emplace_back(new_result);
         }
     }
     MarkProgress(3, "Refine intervals");
@@ -400,7 +403,7 @@ static void CalculateBPM(SerializedTempo* data, Onset* onsets, int numOnsets) {
 
 static void ComputeSlopes(const float* samples, real* out, int numFrames,
                           int samplerate) {
-    memset(out, 0, sizeof(real) * numFrames);
+    std::memset(out, 0, sizeof(real) * numFrames);
 
     int wh = samplerate / 20;
     if (numFrames < wh * 2) return;
@@ -435,12 +438,12 @@ static real GetBaseOffsetValue(const GapData& gapdata, int samplerate,
 
     int* wrappedPos = gapdata.wrappedPos;
     real* wrappedOnsets = gapdata.wrappedOnsets;
-    memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
+    std::memset(wrappedOnsets, 0, sizeof(real) * gapdata.bufferSize);
 
     // Make a histogram of onset strengths for every position in the interval.
     real intervalf = samplerate * 60.0 / bpm;
     int interval = static_cast<int>(intervalf + 0.5);
-    memset(wrappedOnsets, 0, sizeof(real) * interval);
+    std::memset(wrappedOnsets, 0, sizeof(real) * interval);
     for (int i = 0; i < numOnsets; ++i) {
         int pos =
             static_cast<int>(fmod(static_cast<real>(onsets[i].pos), intervalf));
@@ -536,7 +539,7 @@ class TempoDetectorImp : public TempoDetector, public BackgroundThread {
         return sProgressText[data_.progress];
     }
     bool hasResult() const override { return isDone(); }
-    const Vector<TempoResult>& getResult() const override {
+    const std::vector<TempoResult>& getResult() const override {
         return data_.result;
     }
 
@@ -578,11 +581,11 @@ void TempoDetectorImp::exec() {
     SerializedTempo* data = &data_;
 
     // Run the aubio onset tracker to find note onsets.
-    Vector<Onset> onsets;
+    std::vector<Onset> onsets;
     FindOnsets(data->samples, data->samplerate, data->numFrames, 1, onsets);
     MarkProgress(1, "Find onsets");
 
-    for (int i = 0; i < std::min(onsets.size(), 100); ++i) {
+    for (int i = 0; i < std::min(static_cast<int>(onsets.size()), 100); ++i) {
         int a = std::max(0, onsets[i].pos - 100);
         int b = std::min(data->numFrames, onsets[i].pos + 100);
         float v = 0.0f;

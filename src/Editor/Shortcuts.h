@@ -12,8 +12,7 @@ struct Shortcuts {
 
     /// Returns the key notation for the shortcut associated with the given
     /// action.
-    virtual std::string getNotation(Action::Type action,
-                                    bool fullList = false) = 0;
+    virtual std::string getNotation(Action::Type action, bool fullList) = 0;
 
     /// Returns the action associated with the given key press / keyflags
     /// combination.

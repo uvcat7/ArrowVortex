@@ -26,8 +26,7 @@ static const int IFP_SPACING = 4;
 
 DialogGenerateNotes::~DialogGenerateNotes() = default;
 
-DialogGenerateNotes::DialogGenerateNotes()
-    : footSelectionIndex_(0), spacingValue_(0) {
+DialogGenerateNotes::DialogGenerateNotes() {
     setTitle("GENERATE NOTES");
     myCreateWidgets();
 }
@@ -82,7 +81,7 @@ void DialogGenerateNotes::onChanges(int changes) {
         int w = 180;
         auto style = gStyle->get();
         if (style && style->padWidth > 0) {
-            w = max(w, gStyle->getNumCols() * (IFP_SIZE + IFP_SPACING));
+            w = std::max(w, gStyle->getNumCols() * (IFP_SIZE + IFP_SPACING));
             streamGenerator_.feetCols = style->padInitialFeetCols[0];
         }
     }

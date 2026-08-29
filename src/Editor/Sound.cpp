@@ -12,6 +12,7 @@
 #include <limits.h>
 #include <chrono>
 #include <fstream>
+#include <cstring>
 
 namespace Vortex {
 
@@ -29,8 +30,8 @@ static void ConvertSamples(int numFrames, int16_t* dstL, int16_t* dstR,
     if (bytesPerSample == 2) {
         const int16_t* src = static_cast<const int16_t*>(source);
         if (numChannels == 1) {
-            memcpy(dstL, src, numFrames * 2);
-            memcpy(dstR, src, numFrames * 2);
+            std::memcpy(dstL, src, numFrames * 2);
+            std::memcpy(dstR, src, numFrames * 2);
         } else {
             for (int i = 0; i < numFrames;
                  ++i, ++dstL, ++dstR, src += numChannels) {
@@ -117,14 +118,15 @@ bool Sound::Thread::readBlock() {
     int framesRead = mySource->readFrames(BUFFER_SIZE, myBuffer);
 
     if (mySound->myIsAllocated) {
-        framesRead = min(framesRead, mySound->myNumFrames - myCurrentFrame);
+        framesRead =
+            std::min(framesRead, mySound->myNumFrames - myCurrentFrame);
     }
 
     if (framesRead > 0) {
         if (!mySound->myIsAllocated) {
             if (myCurrentFrame + framesRead > myReservedFrames) {
                 myReservedFrames =
-                    max(myReservedFrames * 2, myCurrentFrame + framesRead);
+                    std::max(myReservedFrames * 2, myCurrentFrame + framesRead);
 
                 short* newBufferL = static_cast<short*>(realloc(
                     mySound->mySamplesL, myReservedFrames * sizeof(short)));
@@ -189,9 +191,7 @@ SoundSource* LoadMP3(std::ifstream&& file, std::string& title,
 SoundSource* LoadWav(std::ifstream&& file, std::string& title,
                      std::string& artist);  // Defined in "load_wav.cpp".
 
-Sound::Sound() : myThread(nullptr), mySamplesL(nullptr), mySamplesR(nullptr) {
-    clear();
-}
+Sound::Sound() { clear(); }
 
 Sound::~Sound() { clear(); }
 

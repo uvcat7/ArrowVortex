@@ -3,6 +3,9 @@
 #include <Core/ByteStream.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
+#include <format>
+
+#include <System/System.h>
 
 namespace Vortex {
 
@@ -39,8 +42,8 @@ void SegmentGroup::prepareEdit(const SegmentEdit& in, SegmentEditResult& out,
                 auto first = list.begin();
                 auto last = list.rbegin();
                 if (last->row > first->row) {
-                    regionBegin = min(regionBegin, first->row);
-                    regionEnd = max(regionEnd, last->row);
+                    regionBegin = std::min(regionBegin, first->row);
+                    regionEnd = std::max(regionEnd, last->row);
                 }
             }
         }
@@ -105,7 +108,7 @@ static std::string GetSegmentDescription(uint32_t num, const char* singular,
         case 1:
             return singular;
     }
-    return Str::fmt("%1 %2").arg(num).arg(plural);
+    return std::format("{} {}", num, plural);
 }
 
 std::string SegmentGroup::description() const {
@@ -135,13 +138,13 @@ std::string SegmentGroup::descriptionValues() const {
     }
 
     if (numTypes <= 1) {
-        Vector<std::string> info;
+        std::vector<std::string> info;
 
         auto& list = myLists[lastType];
         auto meta = Segment::meta[lastType];
         auto seg = list.begin(), segEnd = list.end();
         while (seg != segEnd) {
-            info.push_back(meta->getDescription(seg.ptr));
+            info.emplace_back(meta->getDescription(seg.ptr));
             ++seg;
         }
         return Str::join(info, ", ");

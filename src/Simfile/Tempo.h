@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/NonCopyable.h>
 
 #include <Simfile/Common.h>
@@ -56,13 +56,13 @@ struct Tempo : NonCopyable {
     /// Sanitizes the segments and makes sure there is a BPM change at row zero.
     void sanitize(const Chart* owner = nullptr);
 
-    double offset;
-    Vector<Attack> attacks;
-    Vector<std::string> keysounds;
-    Vector<Property> misc;
+    double offset = 0.0;
+    std::vector<Attack> attacks;
+    std::vector<std::string> keysounds;
+    std::vector<Property> misc;
     SegmentGroup* segments;
 
-    DisplayBpm displayBpmType;
+    DisplayBpm displayBpmType = BPM_ACTUAL;
     BpmRange displayBpmRange;
 };
 

@@ -5,6 +5,14 @@
 namespace fs = std::filesystem;
 #include <SDL3/SDL.h>
 
+#ifdef __linux__
+// Defines INT_MAX and INT_MIN
+#include <limits.h>
+#define MAX_PATH PATH_MAX
+#undef R_OK
+#endif
+#include <SDL3/SDL.h>
+
 namespace Vortex {
 
 // Example filters string for open/save file: "Text (*.txt)\0*.txt\0All Files
@@ -13,21 +21,6 @@ namespace Vortex {
 // custom filter, filterIndex is set to zero.
 
 struct System {
-    // Helper struct for building the menu bar.
-    struct MenuItem {
-        static MenuItem* create();
-
-        void addSeperator();
-        void addItem(int item, const std::string& text);
-        void addSubmenu(MenuItem* submenu, const std::string& text,
-                        bool grayed = false);
-        void replaceSubmenu(int pos, MenuItem* submenu, const std::string& text,
-                            bool grayed = false);
-
-        void setChecked(int item, bool checked);
-        void setEnabled(int item, bool checked);
-    };
-
     /// Helper struct for running system commands.
     struct CommandPipe {
         virtual int read() = 0;
@@ -44,9 +37,8 @@ struct System {
 
     /// Shows a message box dialog.
     virtual Result showMessageDlg(const std::string& title,
-                                  const std::string& text,
-                                  Buttons buttons = T_OK,
-                                  Icon icon = I_INFO) = 0;
+                                  const std::string& text, Buttons buttons,
+                                  Icon icon) = 0;
 
     /// Shows an open file dialog, see class description.
     virtual fs::path openFileDlg(const std::string& title,
@@ -76,9 +68,6 @@ struct System {
 
     /// Returns the current clipboard text.
     virtual std::string getClipboardText() const = 0;
-
-    /// Returns the directory of the executable.
-    virtual std::string getExeDir() const = 0;
 
     /// Returns the directory from which the program was run.
     virtual std::string getRunDir() const = 0;
@@ -113,7 +102,7 @@ struct System {
     virtual void setWindowSize(vec2i size) = 0;
 
     /// Returns the current window scale factor.
-    virtual float getScaleFactor() const = 0;
+    virtual int applyScaleFactor(int size) const = 0;
 
     /// Returns the window state, either normal or maximized.
     virtual bool getWindowState() const = 0;

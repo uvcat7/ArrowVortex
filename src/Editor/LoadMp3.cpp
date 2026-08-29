@@ -24,7 +24,7 @@ enum ID3Tagtype {
     TAGTYPE_ID3V2_FOOTER
 };
 
-static ID3Tagtype ID3GetTagtype(const uint8_t *data, id3_length_t length) {
+static ID3Tagtype ID3GetTagtype(const uint8_t* data, id3_length_t length) {
     if (length >= 3 && data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
         return TAGTYPE_ID3V1;
 
@@ -38,7 +38,7 @@ static ID3Tagtype ID3GetTagtype(const uint8_t *data, id3_length_t length) {
     return TAGTYPE_NONE;
 }
 
-static uint64_t ID3ParseUint(const uint8_t **ptr, uint32_t bytes) {
+static uint64_t ID3ParseUint(const uint8_t** ptr, uint32_t bytes) {
     uint64_t value = 0;
     switch (bytes) {
         case 4:
@@ -53,7 +53,7 @@ static uint64_t ID3ParseUint(const uint8_t **ptr, uint32_t bytes) {
     return value;
 }
 
-static uint64_t ID3ParseSyncsafe(const uint8_t **ptr, uint32_t bytes) {
+static uint64_t ID3ParseSyncsafe(const uint8_t** ptr, uint32_t bytes) {
     uint64_t value = 0;
     switch (bytes) {
         case 5:
@@ -67,25 +67,25 @@ static uint64_t ID3ParseSyncsafe(const uint8_t **ptr, uint32_t bytes) {
     return value;
 }
 
-static void ID3ParseHeader(const uint8_t **ptr, uint32_t *version, int *flags,
-                           id3_length_t *size) {
+static void ID3ParseHeader(const uint8_t** ptr, uint32_t* version, int* flags,
+                           id3_length_t* size) {
     *ptr += 3;
     *version = ID3ParseUint(ptr, 2);
     *flags = ID3ParseUint(ptr, 1);
     *size = ID3ParseSyncsafe(ptr, 4);
 }
 
-static std::string ID3DecodeTextFrame(const uint8_t *data,
+static std::string ID3DecodeTextFrame(const uint8_t* data,
                                       id3_length_t length) {
     if (length == 0) return {};
 
     uint8_t encoding = data[0];
-    const uint8_t *text = data + 1;
+    const uint8_t* text = data + 1;
     id3_length_t textLen = length - 1;
 
     if (encoding == 0 || encoding == 3) {
         while (textLen > 0 && text[textLen - 1] == '\0') --textLen;
-        return std::string(reinterpret_cast<const char *>(text), textLen);
+        return std::string(reinterpret_cast<const char*>(text), textLen);
     }
 
     if (encoding == 1 || encoding == 2) {
@@ -130,50 +130,50 @@ static std::string ID3DecodeTextFrame(const uint8_t *data,
     return {};
 }
 
-static void ID3v1ReadTags(std::ifstream &file, std::string &title,
-                          std::string &artist) {
+static void ID3v1ReadTags(std::ifstream& file, std::string& title,
+                          std::string& artist) {
     file.seekg(-128, std::ios::end);
 
     uint8_t tag[128];
-    file.read(reinterpret_cast<char *>(tag), 128);
+    file.read(reinterpret_cast<char*>(tag), 128);
 
     if (file.gcount() != 128) return;
     if (tag[0] != 'T' || tag[1] != 'A' || tag[2] != 'G') return;
 
-    auto readFixed = [](const uint8_t *src, size_t len) -> std::string {
+    auto readFixed = [](const uint8_t* src, size_t len) -> std::string {
         size_t end = len;
         while (end > 0 && (src[end - 1] == '\0' || src[end - 1] == ' ')) --end;
-        return std::string(reinterpret_cast<const char *>(src), end);
+        return std::string(reinterpret_cast<const char*>(src), end);
     };
 
     if (title.empty()) title = readFixed(tag + 3, 30);
     if (artist.empty()) artist = readFixed(tag + 33, 30);
 }
 
-static void ID3v2ReadTags(std::ifstream &file, std::string &title,
-                          std::string &artist) {
+static void ID3v2ReadTags(std::ifstream& file, std::string& title,
+                          std::string& artist) {
     file.seekg(0, std::ios::beg);
 
     uint8_t header[10];
-    file.read(reinterpret_cast<char *>(header), 10);
+    file.read(reinterpret_cast<char*>(header), 10);
 
     if (file.gcount() != 10) return;
     if (header[0] != 'I' || header[1] != 'D' || header[2] != '3') return;
 
     int version = header[3];
 
-    const uint8_t *szPtr = header + 6;
+    const uint8_t* szPtr = header + 6;
     id3_length_t tagSize = ID3ParseSyncsafe(&szPtr, 4);
 
     std::vector<uint8_t> tagData(tagSize);
-    file.read(reinterpret_cast<char *>(tagData.data()), tagSize);
+    file.read(reinterpret_cast<char*>(tagData.data()), tagSize);
     size_t bytesRead = file.gcount();
 
     if (bytesRead <= 0) return;
 
     size_t pos = 0;
     while (pos < bytesRead) {
-        const uint8_t *framePtr = tagData.data() + pos;
+        const uint8_t* framePtr = tagData.data() + pos;
 
         if (framePtr[0] == 0) break;
 
@@ -184,12 +184,12 @@ static void ID3v2ReadTags(std::ifstream &file, std::string &title,
         if (pos + headerLen > bytesRead) break;
 
         if (version >= 3) {
-            frameId = std::string(reinterpret_cast<const char *>(framePtr), 4);
-            const uint8_t *sp = framePtr + 4;
+            frameId = std::string(reinterpret_cast<const char*>(framePtr), 4);
+            const uint8_t* sp = framePtr + 4;
             frameSize =
                 version >= 4 ? ID3ParseSyncsafe(&sp, 4) : ID3ParseUint(&sp, 4);
         } else {
-            frameId = std::string(reinterpret_cast<const char *>(framePtr), 3);
+            frameId = std::string(reinterpret_cast<const char*>(framePtr), 3);
             frameSize = (framePtr[3] << 16) | (framePtr[4] << 8) | framePtr[5];
         }
 
@@ -215,15 +215,15 @@ static void ID3v2ReadTags(std::ifstream &file, std::string &title,
     }
 }
 
-static void ReadID3Tags(std::ifstream &file, std::string &title,
-                        std::string &artist) {
+static void ReadID3Tags(std::ifstream& file, std::string& title,
+                        std::string& artist) {
     auto pos = file.tellg();
     ID3v2ReadTags(file, title, artist);
     ID3v1ReadTags(file, title, artist);
     file.seekg(pos);
 }
 
-static long ID3TagQuery(const uint8_t *data, id3_length_t length) {
+static long ID3TagQuery(const uint8_t* data, id3_length_t length) {
     uint32_t version;
     int flags;
     id3_length_t size;
@@ -265,7 +265,7 @@ enum XingFlags {
     XING_SCALE = 0x00000008L
 };
 
-static int XingParse(XingHeader *xing, struct mad_bitptr ptr,
+static int XingParse(XingHeader* xing, struct mad_bitptr ptr,
                      unsigned int bitlen) {
     const uint32_t XING_MAGIC = (('X' << 24) | ('i' << 16) | ('n' << 8) | 'g');
     const uint32_t INFO_MAGIC = (('I' << 24) | ('n' << 16) | ('f' << 8) | 'o');
@@ -300,7 +300,7 @@ static int XingParse(XingHeader *xing, struct mad_bitptr ptr,
     if (xing->flags & XING_TOC) {
         if (bitlen < 800) goto fail;
 
-        for (unsigned char &i : xing->toc)
+        for (unsigned char& i : xing->toc)
             i = static_cast<unsigned char>(mad_bit_read(&ptr, 8));
 
         bitlen -= 800;
@@ -331,7 +331,7 @@ struct MP3Loader : public SoundSource {
     int getNumFrames() override { return 0; }
     int getNumChannels() override { return numChannels; }
     int getBytesPerSample() override { return 2; }
-    int readFrames(int frames, short *buffer) override;
+    int readFrames(int frames, short* buffer) override;
 
     int fillInputBuffer();
     bool decodeFirstFrame();
@@ -393,7 +393,7 @@ int MP3Loader::fillInputBuffer() {
 
     bool eofBeforeReading = file.eof();
 
-    file.read(reinterpret_cast<char *>(fileBuf + inbytes),
+    file.read(reinterpret_cast<char*>(fileBuf + inbytes),
               sizeof(fileBuf) - inbytes - MAD_BUFFER_GUARD);
     std::streamsize rc = file.gcount();
     if (rc < 0) return -1;
@@ -514,7 +514,7 @@ void MP3Loader::synthDecodedFrame() {
     }
 }
 
-int MP3Loader::readFrames(int frames, short *buffer) {
+int MP3Loader::readFrames(int frames, short* buffer) {
     int framesWritten = 0;
     while (frames > 0) {
         // Copy the synthesized samples that are left in the synth buffer.
@@ -545,8 +545,8 @@ int MP3Loader::readFrames(int frames, short *buffer) {
 
 };  // anonymous namespace.
 
-SoundSource *LoadMP3(std::ifstream &&file, std::string &title,
-                     std::string &artist) {
+SoundSource* LoadMP3(std::ifstream&& file, std::string& title,
+                     std::string& artist) {
     std::unique_ptr<MP3Loader> loader = std::make_unique<MP3Loader>();
 
     // Check if the file stream is valid.

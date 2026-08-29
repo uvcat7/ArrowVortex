@@ -76,19 +76,19 @@ struct SimfileManImpl : public SimfileMan {
         for (auto& segment : *segments) {
             for (auto seg = segment.begin(), end = segment.end(); seg != end;
                  ++seg) {
-                endRow = max(endRow, seg->row);
+                endRow = std::max(endRow, seg->row);
             }
         }
 
         // Row of the last note.
         if (myChart) {
             for (auto& n : myChart->notes) {
-                endRow = max(endRow, n.endrow);
+                endRow = std::max(endRow, n.endrow);
             }
         }
 
         // Row of the end of the music.
-        endRow = max(endRow, gTempo->timeToRow(gMusic->getSongLength()));
+        endRow = std::max(endRow, gTempo->timeToRow(gMusic->getSongLength()));
 
         // Round up to the next beat, with at least half a beat leeway.
         int beatRow = endRow + ROWS_PER_BEAT * 3 / 2 - 1;
@@ -113,7 +113,8 @@ struct SimfileManImpl : public SimfileMan {
     void myUpdateChart() {
         if (mySimfile) {
             myChartIndex =
-                clamp(myChartIndex, -1, mySimfile->charts.size() - 1);
+                std::clamp(myChartIndex, -1,
+                           static_cast<int>(mySimfile->charts.size() - 1));
             myChart =
                 (myChartIndex >= 0) ? mySimfile->charts[myChartIndex] : nullptr;
         } else {
@@ -315,8 +316,9 @@ struct SimfileManImpl : public SimfileMan {
         if (!chart) return;
 
         if (mySimfile) {
-            int pos = mySimfile->charts.find(const_cast<Chart*>(chart));
-            if (pos == mySimfile->charts.size()) {
+            auto pos = std::find(mySimfile->charts.begin(),
+                                 mySimfile->charts.end(), chart);
+            if (pos == mySimfile->charts.end()) {
                 HudError(
                     "Trying to remove a chart that is not in the chart list.");
             } else {
@@ -356,22 +358,22 @@ struct SimfileManImpl : public SimfileMan {
 
             mySimfile->tempo->offset = -td.rowToTime(it->row);
 
-            Vector<Vector<double>> timestamps;
+            std::vector<std::vector<double>> timestamps;
             for(auto& chart : mySimfile->charts)
             {
-                    auto& out = timestamps.push_back();
+                    auto& out = timestamps.emplace_back();
                     for(auto& note : chart->notes)
                     {
-                            out.push_back(td.rowToTime(note.row));
+                            out.emplace_back(td.rowToTime(note.row));
                             if(note.row != note.endrow)
                             {
-                                    out.push_back(td.rowToTime(note.endrow));
+                                    out.emplace_back(td.rowToTime(note.endrow));
                             }
                     }
             }
 
             int row = 0;
-            Vector<BpmChange> bpms;
+            std::vector<BpmChange> bpms;
             double curBpm = mySimfile->tempo->bpmChanges[0].bpm;
             int dists[] = {12, 24, 48};
             for(; it + 1 != end; ++it)
@@ -387,7 +389,7 @@ struct SimfileManImpl : public SimfileMan {
                             if(i == 1 && bpm < 40.0) { ++i; bpm *= 2; }
                             if(curBpm != bpm)
                             {
-                                    bpms.push_back({row, bpm});
+                                    bpms.emplace_back({row, bpm});
                                     curBpm = bpm;
                             }
                             row += dists[i];
@@ -443,7 +445,7 @@ struct SimfileManImpl : public SimfileMan {
 
     std::string applyAdd(Chart* chart) {
         myChartIndex = -1;
-        mySimfile->charts.push_back(chart);
+        mySimfile->charts.emplace_back(chart);
         sortCharts();
         openChart(chart);
         gEditor->reportChanges(VCM_CHART_LIST_CHANGED);
@@ -451,8 +453,9 @@ struct SimfileManImpl : public SimfileMan {
     }
 
     std::string applyRemove(Chart* chart) {
-        int pos = mySimfile->charts.find(chart);
-        if (pos == mySimfile->charts.size()) {
+        auto pos = std::find(mySimfile->charts.begin(), mySimfile->charts.end(),
+                             chart);
+        if (pos == mySimfile->charts.end()) {
             std::string err = "Failed to remove " + chart->description() +
                               ", could not find it.";
             HudError("%s", err.c_str());

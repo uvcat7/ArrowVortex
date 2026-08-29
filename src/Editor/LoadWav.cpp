@@ -16,9 +16,9 @@ namespace {
 struct WaveHeader {
     uint8_t chunkId[4];  // "RIFF"
     uint32_t chunkSize;
-    uint8_t format[4];       // "WAVE"
-    uint8_t subchunk1Id[4];  // "fmt "
-    uint32_t subchunk1Size;
+    uint8_t format[4];  // "WAVE"
+};
+struct WaveFormat {
     uint16_t audioFormat;
     uint16_t numChannels;
     uint32_t sampleRate;
@@ -48,7 +48,7 @@ struct WavLoader : public SoundSource {
 };
 
 int WavLoader::readFrames(int frames, short* buffer) {
-    int numFramesToRead = min(numFramesLeft, frames);
+    int numFramesToRead = std::min(numFramesLeft, frames);
     numFramesLeft -= numFramesToRead;
 
     std::streamsize bytesPerFrame =
@@ -65,22 +65,36 @@ SoundSource* LoadWav(std::ifstream&& file, std::string& title,
     WaveHeader header;
     file.read(reinterpret_cast<char*>(&header), sizeof(header));
     if (file.fail() || memcmp(header.chunkId, "RIFF", 4) != 0 ||
-        memcmp(header.format, "WAVE", 4) != 0 ||
-        memcmp(header.subchunk1Id, "fmt ", 4) != 0 || header.audioFormat != 1 ||
-        header.sampleRate == 0 || header.numChannels == 0 ||
-        (header.bitsPerSample != 8 && header.bitsPerSample != 16 &&
-         header.bitsPerSample != 24)) {
+        memcmp(header.format, "WAVE", 4) != 0) {
+        return nullptr;
+    }
+
+    // Find format tag.
+    WaveData data;
+    while (true) {
+        file.read(reinterpret_cast<char*>(&data), sizeof(WaveData));
+        if (file.fail()) return nullptr;
+        if (memcmp(data.chunkId, "fmt ", 4) == 0) break;
+        file.ignore(data.chunkSize);
+    }
+
+    // Read format.
+    WaveFormat format;
+    file.read(reinterpret_cast<char*>(&format), sizeof(format));
+    if (file.fail() || format.audioFormat != 1 || format.sampleRate == 0 ||
+        format.numChannels == 0 ||
+        (format.bitsPerSample != 8 && format.bitsPerSample != 16 &&
+         format.bitsPerSample != 24)) {
         return nullptr;
     }
 
     // Skip over additional parameters at the end of the format chunk.
-    if (header.subchunk1Size > 16) {
-        size_t extraBytes = static_cast<size_t>(header.subchunk1Size) - 16;
+    if (data.chunkSize > 16) {
+        size_t extraBytes = static_cast<size_t>(data.chunkSize) - 16;
         file.ignore(extraBytes);
     }
 
     // Read the start of the data chunk.
-    WaveData data;
     while (true) {
         file.read(reinterpret_cast<char*>(&data), sizeof(WaveData));
         if (file.fail()) return nullptr;
@@ -91,9 +105,9 @@ SoundSource* LoadWav(std::ifstream&& file, std::string& title,
     // Create a wav loader that will read the contents of the data chunk.
     WavLoader* loader = new WavLoader;
 
-    loader->frequency = header.sampleRate;
-    loader->numChannels = header.numChannels;
-    loader->bytesPerSample = header.bitsPerSample / 8;
+    loader->frequency = format.sampleRate;
+    loader->numChannels = format.numChannels;
+    loader->bytesPerSample = format.bitsPerSample / 8;
     loader->numFrames =
         data.chunkSize / (loader->bytesPerSample * loader->numChannels);
     loader->numFramesLeft = loader->numFrames;

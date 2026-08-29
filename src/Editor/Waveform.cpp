@@ -40,8 +40,8 @@ struct WaveFilter {
     Waveform::FilterType type;
     double strength;
 
-    Vector<short> samplesL;
-    Vector<short> samplesR;
+    std::vector<short> samplesL;
+    std::vector<short> samplesR;
 
     static void lowPassFilter(const short* src, short* dst, int numFrames,
                               double samplerate, double strength) {
@@ -78,8 +78,8 @@ struct WaveFilter {
             filter = lowPassFilter;
         }
 
-        samplesL.release();
-        samplesR.release();
+        samplesL.clear();
+        samplesR.clear();
 
         auto& music = gMusic->getSamples();
         if (music.isCompleted()) {
@@ -89,10 +89,10 @@ struct WaveFilter {
             samplesL.resize(numFrames, 0);
             samplesR.resize(numFrames, 0);
 
-            filter(music.samplesL(), samplesL.begin(), numFrames, samplerate,
-                   strength);
-            filter(music.samplesR(), samplesR.begin(), numFrames, samplerate,
-                   strength);
+            filter(music.samplesL(), &(*samplesL.begin()), numFrames,
+                   samplerate, strength);
+            filter(music.samplesR(), &(*samplesR.begin()), numFrames,
+                   samplerate, strength);
         }
     }
 
@@ -102,10 +102,10 @@ struct WaveFilter {
 // WaveformImpl :: member data.
 
 struct WaveformImpl : public Waveform {
-    Vector<WaveBlock*> waveformBlocks_;
+    std::vector<WaveBlock*> waveformBlocks_;
 
     WaveFilter* waveformFilter_;
-    Vector<uint8_t> waveformTextureBuffer_;
+    std::vector<uint8_t> waveformTextureBuffer_;
 
     int waveformBlockWidth_, waveformSpacing_;
 
@@ -185,7 +185,7 @@ struct WaveformImpl : public Waveform {
             if (ws) setWaveShape(ToWaveShape(ws));
 
             waveform->get("antiAliasing", &waveformAntiAliasingMode_);
-            setAntiAliasing(clamp(waveformAntiAliasingMode_, 0, 3));
+            setAntiAliasing(std::clamp(waveformAntiAliasingMode_, 0, 3));
         }
     }
 
@@ -312,7 +312,7 @@ struct WaveformImpl : public Waveform {
     void edgeLumAmplitude(WaveEdge* edge, int w, int h) {
         int scalar = (255 << 16) * 2 / w;
         for (int y = 0; y < h; ++y, ++edge) {
-            int mag = max(abs(edge->l), abs(edge->r));
+            int mag = std::max(abs(edge->l), abs(edge->r));
             edge->lum = (mag * scalar) >> 16;
         }
     }
@@ -323,7 +323,7 @@ struct WaveformImpl : public Waveform {
     void edgeShapeRectified(uint8_t* dst, const WaveEdge* edge, int w, int h) {
         int cx = w / 2;
         for (int y = 0; y < h; ++y, dst += w, ++edge) {
-            int mag = max(abs(edge->l), abs(edge->r));
+            int mag = std::max(abs(edge->l), abs(edge->r));
             int l = cx - mag;
             int r = cx + mag;
             for (int x = l; x < r; ++x) dst[x] = edge->lum;
@@ -333,8 +333,8 @@ struct WaveformImpl : public Waveform {
     void edgeShapeSigned(uint8_t* dst, const WaveEdge* edge, int w, int h) {
         int cx = w / 2;
         for (int y = 0; y < h; ++y, dst += w, ++edge) {
-            int l = cx + min(edge->l, 0);
-            int r = cx + max(edge->r, 0);
+            int l = cx + std::min(edge->l, 0);
+            int r = cx + std::max(edge->r, 0);
             for (int x = l; x < r; ++x) dst[x] = edge->lum;
         }
     }
@@ -345,9 +345,9 @@ struct WaveformImpl : public Waveform {
     void antiAlias2x(uint8_t* dst, int w, int h) {
         int newW = w / 2, newH = h / 2;
         for (int y = 0; y < newH; ++y) {
-            uint8_t* line = waveformTextureBuffer_.begin() + (y * 2) * w;
+            auto line = waveformTextureBuffer_.begin() + (y * 2) * w;
             for (int x = 0; x < newW; ++x, ++dst) {
-                uint8_t *a = line + (x * 2), *b = a + w;
+                uint8_t *a = &(*(line + (x * 2))), *b = a + w;
                 int sum = 0;
                 sum += a[0] + a[1];
                 sum += b[0] + b[1];
@@ -359,9 +359,9 @@ struct WaveformImpl : public Waveform {
     void antiAlias3x(uint8_t* dst, int w, int h) {
         int newW = w / 3, newH = h / 3;
         for (int y = 0; y < newH; ++y) {
-            uint8_t* line = waveformTextureBuffer_.begin() + (y * 3) * w;
+            auto line = waveformTextureBuffer_.begin() + (y * 3) * w;
             for (int x = 0; x < newW; ++x, ++dst) {
-                uint8_t* a = line + (x * 3);
+                uint8_t* a = &(*(line + (x * 3)));
                 uint8_t *b = a + w, *c = b + w;
                 int sum = 0;
                 sum += a[0] + a[1] + a[2];
@@ -375,9 +375,9 @@ struct WaveformImpl : public Waveform {
     void antiAlias4x(uint8_t* dst, int w, int h) {
         int newW = w / 4, newH = h / 4;
         for (int y = 0; y < newH; ++y) {
-            uint8_t* line = waveformTextureBuffer_.begin() + (y * 4) * w;
+            auto line = waveformTextureBuffer_.begin() + (y * 4) * w;
             for (int x = 0; x < newW; ++x, ++dst) {
-                uint8_t *a = line + (x * 4), *b = a + w;
+                uint8_t *a = &(*(line + (x * 4))), *b = a + w;
                 uint8_t *c = b + w, *d = c + w;
                 int sum = 0;
                 sum += a[0] + a[1] + a[2] + a[3];
@@ -403,11 +403,11 @@ struct WaveformImpl : public Waveform {
         int64_t srcFrames =
             filtered ? waveformFilter_->samplesL.size() : music.getNumFrames();
         int64_t samplePos =
-            max(static_cast<int64_t>(0),
-                static_cast<int64_t>(samplesPerBlock *
-                                     static_cast<double>(blockId)));
-        double sampleCount =
-            min(static_cast<double>(srcFrames) - samplePos, samplesPerBlock);
+            std::max(static_cast<int64_t>(0),
+                     static_cast<int64_t>(samplesPerBlock *
+                                          static_cast<double>(blockId)));
+        double sampleCount = std::min(
+            static_cast<double>(srcFrames) - samplePos, samplesPerBlock);
 
         if (samplePos >= srcFrames || sampleCount <= 0) {
             // A crash could occur if we try to access out-of-bounds memory.
@@ -424,13 +424,13 @@ struct WaveformImpl : public Waveform {
             return;
         }
 
-        double sampleSkip = max(0.001, (samplesPerPixel / 200.0));
+        double sampleSkip = std::max(0.001, (samplesPerPixel / 200.0));
         int wh = w / 2 - 1;
 
         const short* in = nullptr;
         if (filtered) {
-            in = ((channel == 0) ? waveformFilter_->samplesL.begin()
-                                 : waveformFilter_->samplesR.begin());
+            in = ((channel == 0) ? &(*waveformFilter_->samplesL.begin())
+                                 : &(*waveformFilter_->samplesR.begin()));
         } else {
             in = ((channel == 0) ? music.samplesL() : music.samplesR());
         }
@@ -440,18 +440,19 @@ struct WaveformImpl : public Waveform {
         double ofs = 0;
         for (int y = 0; y < h; ++y) {
             // Determine the last sample of the line.
-            double end = min(sampleCount, static_cast<double>(y + 1) * advance);
+            double end =
+                std::min(sampleCount, static_cast<double>(y + 1) * advance);
 
             // Find the minimum/maximum amplitude within the line.
             int minAmp = SHRT_MAX;
             int maxAmp = SHRT_MIN;
             while (ofs < end) {
-                maxAmp =
-                    max(maxAmp,
-                        static_cast<int>(*(in + static_cast<int>(round(ofs)))));
-                minAmp =
-                    min(minAmp,
-                        static_cast<int>(*(in + static_cast<int>(round(ofs)))));
+                maxAmp = std::max(
+                    maxAmp,
+                    static_cast<int>(*(in + static_cast<int>(round(ofs)))));
+                minAmp = std::min(
+                    minAmp,
+                    static_cast<int>(*(in + static_cast<int>(round(ofs)))));
                 ofs += sampleSkip;
             }
 
@@ -459,7 +460,7 @@ struct WaveformImpl : public Waveform {
             int l = (minAmp * wh) >> 15;
             int r = (maxAmp * wh) >> 15;
             if (r >= l) {
-                edges[y] = {clamp(l, -wh, wh), clamp(r, -wh, wh), 0};
+                edges[y] = {std::clamp(l, -wh, wh), std::clamp(r, -wh, wh), 0};
             } else {
                 edges[y] = {0, 0, 0};
             }
@@ -468,7 +469,7 @@ struct WaveformImpl : public Waveform {
 
     void renderWaveform(Texture* textures, WaveEdge* edgeBuf, int w, int h,
                         int blockId, bool filtered) {
-        uint8_t* texBuf = waveformTextureBuffer_.begin();
+        uint8_t* texBuf = &(*(waveformTextureBuffer_.begin()));
         for (int channel = 0; channel < 2; ++channel) {
             memset(texBuf, 0, w * h);
 
@@ -515,21 +516,22 @@ struct WaveformImpl : public Waveform {
         int h = TEX_H * (waveformAntiAliasingMode_ + 1);
         waveformTextureBuffer_.resize(w * h);
 
-        Vector<WaveEdge> edges;
+        std::vector<WaveEdge> edges;
         edges.resize(h);
 
         if (waveformFilter_) {
             if (waveformOverlayFilter_) {
-                renderWaveform(block->tex + 0, edges.begin(), w, h, block->id,
-                               false);
-                renderWaveform(block->tex + 2, edges.begin(), w, h, block->id,
-                               true);
+                renderWaveform(block->tex + 0, &(*edges.begin()), w, h,
+                               block->id, false);
+                renderWaveform(block->tex + 2, &(*edges.begin()), w, h,
+                               block->id, true);
             } else {
-                renderWaveform(block->tex, edges.begin(), w, h, block->id,
+                renderWaveform(block->tex, &(*edges.begin()), w, h, block->id,
                                true);
             }
         } else {
-            renderWaveform(block->tex, edges.begin(), w, h, block->id, false);
+            renderWaveform(block->tex, &(*edges.begin()), w, h, block->id,
+                           false);
         }
     }
 
@@ -552,7 +554,7 @@ struct WaveformImpl : public Waveform {
 
         // If not, create a new block.
         WaveBlock* block = new WaveBlock;
-        waveformBlocks_.push_back(block);
+        waveformBlocks_.emplace_back(block);
 
         block->id = id;
         renderBlock(block);
@@ -563,8 +565,7 @@ struct WaveformImpl : public Waveform {
         int width = waveformBlockWidth_;
 
         waveformBlockWidth_ =
-            min(TEX_W, static_cast<int>(gSystem->getScaleFactor() *
-                                        gView->applyZoom(256)));
+            std::min(TEX_W, gSystem->applyScaleFactor(gView->applyZoom(256)));
         waveformSpacing_ = gView->applyZoom(24);
 
         if (waveformBlockWidth_ != width) clearBlocks();
@@ -610,9 +611,9 @@ struct WaveformImpl : public Waveform {
         int xr = cx + pw + border;
 
         areaf uvs = {0, 0, waveformBlockWidth_ / static_cast<float>(TEX_W), 1};
-        if (reversed) swapValues(uvs.t, uvs.b);
+        if (reversed) std::swap(uvs.t, uvs.b);
 
-        int id = max(0, visibilityStartY / TEX_H);
+        int id = std::max(0, visibilityStartY / TEX_H);
         for (; id * TEX_H < visibilityEndY; ++id) {
             auto block = getBlock(id);
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Texture.h>
+#include <Core/Draw.h>
 
 namespace Vortex {
 
@@ -113,7 +114,7 @@ class Font {
     Font& operator=(const Font& s);
 
     /// Loads a font from a TrueType/OpenType font file.
-    Font(const char* path, Text::Hinting hint = Text::HINT_NORMAL);
+    explicit Font(const char* path, Text::Hinting hint = Text::HINT_NORMAL);
 
     /// Makes sure the font stays loaded until the shutdown of goo.
     void cache() const;
@@ -142,10 +143,10 @@ struct TextStyle {
     void makeDefault();
 
     Font font;
-    int fontSize;
-    uint32_t textFlags;
-    uint32_t textColor;
-    uint32_t shadowColor;
+    int fontSize = 12;
+    uint32_t textFlags = 0;
+    uint32_t textColor = Colors::white;
+    uint32_t shadowColor = Colors::black;
 };
 
 };  // namespace Vortex

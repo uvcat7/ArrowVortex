@@ -5,12 +5,7 @@
 
 namespace Vortex {
 
-Simfile::Simfile()
-    : format(SIM_NONE),
-      previewStart(0.0),
-      previewLength(0.0),
-      isSelectable(true),
-      tempo(new Tempo) {}
+Simfile::Simfile() : tempo(new Tempo) {}
 
 Simfile::~Simfile() {
     for (auto chart : charts) {
@@ -25,7 +20,7 @@ void Simfile::sanitize() {
         if (chart->style == nullptr) {
             std::string desc = chart->description();
             HudWarning("%s is missing a style, ignoring chart.", desc.c_str());
-            charts.erase(i--);
+            charts.erase(charts.begin() + i--);
             delete chart;
         } else {
             chart->sanitize();
