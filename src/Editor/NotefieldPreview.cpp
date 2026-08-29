@@ -344,7 +344,9 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
                 ++measure;
                 row += it->rowsPerMeasure;
             }
-            it = next, ++next;
+            it = next;
+            if (next == end) break;
+            ++next;
         }
         batch.flush();
     }

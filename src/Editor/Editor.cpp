@@ -599,17 +599,18 @@ struct EditorImpl : public Editor, public InputHandler {
         // If the path is empty, ask a path from the user.
         if (save_path.empty() || showSaveAsDialog) {
             // Set the default filter index based on the save format.
+            // SDL doesn't support this currently.
             int filterIndex;
             switch (saveFmt) {
                 default:
                 case SIM_SM:
-                    filterIndex = 1;
+                    filterIndex = 0;
                     break;
                 case SIM_SSC:
-                    filterIndex = 2;
+                    filterIndex = 1;
                     break;
                 case SIM_OSU:
-                    filterIndex = 3;
+                    filterIndex = 2;
                     break;
             };
 
@@ -625,13 +626,13 @@ struct EditorImpl : public Editor, public InputHandler {
 
             // Update the save format based on the selected filter index.
             switch (filterIndex) {
-                case 1:
+                case 0:
                     saveFmt = SIM_SM;
                     break;
-                case 2:
+                case 1:
                     saveFmt = SIM_SSC;
                     break;
-                case 3:
+                case 2:
                     saveFmt = SIM_OSU;
                     break;
                 default:
