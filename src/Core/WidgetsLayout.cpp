@@ -22,8 +22,8 @@ struct RowLayout::Row {
 
     uint32_t expand : 1 = 0;
 
-    Vector<RowLayout::Col> cols;
-    Vector<GuiWidget*> widgets;
+    std::vector<RowLayout::Col> cols;
+    std::vector<GuiWidget*> widgets;
 };
 
 RowLayout::~RowLayout() {
@@ -35,8 +35,8 @@ RowLayout::~RowLayout() {
 RowLayout::RowLayout(GuiContext* gui, int spacing)
     : GuiWidget(gui), row_spacing_(spacing) {
     Row row;
-    row.cols.push_back({0, 1, 0});
-    row_list_.push_back(row);
+    row.cols.emplace_back(0, 1, 0);
+    row_list_.emplace_back(row);
 }
 
 void RowLayout::onUpdateSize() {
@@ -46,10 +46,10 @@ void RowLayout::onUpdateSize() {
     height_ = 0;
 
     for (auto& row : row_list_) {
-        GuiWidget** widget = row.widgets.begin();
+        auto widget = row.widgets.begin();
         int numWidgets = row.widgets.size();
         int numCols = row.cols.size();
-        Col* cols = row.cols.begin();
+        auto cols = row.cols.begin();
 
         for (int c = 0; c < numCols; ++c) {
             if (cols[c].adjust) {
@@ -69,15 +69,15 @@ void RowLayout::onUpdateSize() {
             if (*widget) {
                 (*widget)->updateSize();
                 vec2i size = (*widget)->getSize();
-                h = max(h, size.y);
+                h = std::max(h, size.y);
                 if (cols[c].adjust) {
                     cols[c].width =
-                        max(cols[c].width, static_cast<uint32_t>(size.x));
+                        std::max(cols[c].width, static_cast<uint32_t>(size.x));
                 }
             }
 
             x += cols[c].width;
-            width_ = max(width_, x);
+            width_ = std::max(width_, x);
             x += row_spacing_;
         }
 
@@ -90,15 +90,15 @@ void RowLayout::onUpdateSize() {
 void RowLayout::onArrange(recti r) {
     int y = r.y;
 
-    int extraW = max(0, r.w - width_);
+    int extraW = std::max(0, r.w - width_);
 
     for (auto& row : row_list_) {
         bool expanded = false;
 
-        GuiWidget** widget = row.widgets.begin();
+        auto widget = row.widgets.begin();
         int numWidgets = row.widgets.size();
         int numCols = row.cols.size();
-        Col* cols = row.cols.begin();
+        auto cols = row.cols.begin();
 
         int h = 0, x = r.x;
         for (int i = 0, c = 0; i < numWidgets; ++i, ++c, ++widget) {
@@ -117,7 +117,7 @@ void RowLayout::onArrange(recti r) {
             if (*widget) {
                 vec2i size = (*widget)->getSize();
                 (*widget)->arrange({x, y, colW, size.y});
-                h = max(h, size.y);
+                h = std::max(h, size.y);
             }
 
             x += cols[c].width + row_spacing_;
@@ -138,17 +138,18 @@ void RowLayout::onDraw() {
 }
 
 void RowLayout::add(GuiWidget* widget) {
-    widget_list_.push_back(widget);
-    row_list_.back().widgets.push_back(widget);
+    widget_list_.emplace_back(widget);
+    row_list_.back().widgets.emplace_back(widget);
 }
 
-void RowLayout::addBlank() { row_list_.back().widgets.push_back(nullptr); }
+void RowLayout::addBlank() { row_list_.back().widgets.emplace_back(nullptr); }
 
 RowLayout& RowLayout::row(bool expand) {
     if (row_list_.back().widgets.empty()) row_list_.pop_back();
 
-    Row& row = row_list_.append();
-    row.expand = (expand == true);
+    Row new_row = {};
+    new_row.expand = expand;
+    row_list_.emplace_back(new_row);
 
     return *this;
 }
@@ -156,17 +157,18 @@ RowLayout& RowLayout::row(bool expand) {
 RowLayout& RowLayout::col(bool expand) { return col(INT_MAX, expand); }
 
 RowLayout& RowLayout::col(int w, bool expand) {
-    Col& col = row_list_.back().cols.append();
-    col.width =
-        (w == INT_MAX) ? 0 : static_cast<int>(w * gSystem->getScaleFactor());
-    col.adjust = (w == INT_MAX);
-    col.expand = (expand == true);
-
+    Col& col = row_list_.back().cols.emplace_back(
+        (w == INT_MAX) ? 0 : gSystem->applyScaleFactor(w), w == INT_MAX,
+        expand == true);
     return *this;
 }
 
-GuiWidget** RowLayout::begin() { return widget_list_.begin(); }
+std::vector<GuiWidget*>::const_iterator RowLayout::begin() {
+    return widget_list_.begin();
+}
 
-GuiWidget** RowLayout::end() { return widget_list_.end(); }
+std::vector<GuiWidget*>::const_iterator RowLayout::end() {
+    return widget_list_.end();
+}
 
 };  // namespace Vortex

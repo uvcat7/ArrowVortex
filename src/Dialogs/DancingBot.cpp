@@ -308,11 +308,11 @@ void DialogDancingBot::onUpdateSize() {
     int w = 200, h = 64;
     auto style = gStyle->get();
     if (style && style->padWidth > 0) {
-        w = max(w, style->padWidth * 64 + 8);
-        h = max(h, style->padHeight * 64 + 24);
+        w = std::max(w, style->padWidth * 64 + 8);
+        h = std::max(h, style->padHeight * 64 + 24);
     }
-    w = static_cast<int>(w * gSystem->getScaleFactor());
-    h = static_cast<int>(h * gSystem->getScaleFactor());
+    w = gSystem->applyScaleFactor(w);
+    h = gSystem->applyScaleFactor(h);
     setWidth(w);
     setHeight(h);
 }
@@ -334,7 +334,7 @@ void DialogDancingBot::onDraw() {
 
         // Pad layout.
         auto batch = Renderer::batchTC();
-        BatchSprite::setScale(256 * gSystem->getScaleFactor());
+        BatchSprite::setScale(gSystem->applyScaleFactor(256));
         for (int x = 0; x < style->padWidth; ++x) {
             for (int y = 0; y < style->padHeight; ++y) {
                 int tile = myPadLayout[y * style->padWidth + x];
@@ -349,8 +349,8 @@ void DialogDancingBot::onDraw() {
         for (int col = 0; col < prevNotes.size(); ++col) {
             auto n = prevNotes[col];
             double dist = n ? (time - n->endtime) : 1000.0;
-            int alpha =
-                min(max(static_cast<int>((1.5 - dist * 6.0) * 255.0), 0), 255);
+            int alpha = std::min(
+                std::max(static_cast<int>((1.5 - dist * 6.0) * 255.0), 0), 255);
             if (alpha > 0) {
                 vec2i pos = myGetDrawPos(style->padColPositions[col]);
                 myPadSpr[2].draw(&batch, pos.x, pos.y,
@@ -362,7 +362,7 @@ void DialogDancingBot::onDraw() {
         // Feet sprites.
         Renderer::bindTexture(myFeetTex.handle());
         batch = Renderer::batchTC();
-        BatchSprite::setScale(160 * gSystem->getScaleFactor());
+        BatchSprite::setScale(gSystem->applyScaleFactor(160));
         for (int p = 0; p < gStyle->getNumPlayers(); ++p) {
             uint32_t color =
                 p ? ToColor32({.5f, .5f, 1, 1}) : ToColor32({1, .5f, .5f, 1});
@@ -376,7 +376,7 @@ void DialogDancingBot::onDraw() {
             float rotation = 0.f;
             if (abs(l.x - r.x) + abs(l.y - r.y) > 0.1f) {
                 rotation = atan2(r.y - l.y, r.x - l.x);
-                rotation = min(max(rotation, -0.8f), 0.8f);
+                rotation = std::clamp(rotation, -0.8f, 0.8f);
             }
 
             // Draw the feet.
@@ -396,7 +396,7 @@ void DialogDancingBot::onChanges(int changes) {
     if (changes & VCM_CHART_CHANGED) {
         auto style = gStyle->get();
         if (style == nullptr || style->padWidth == 0 || style->padHeight == 0) {
-            myPadLayout.release();
+            myPadLayout.clear();
         } else {
             // Copy the layout of the buttons.
             myPadLayout.resize(style->padWidth * style->padHeight);
@@ -429,15 +429,13 @@ void DialogDancingBot::myPushArrow(QuadBatchTC* batch, int x, int y) {
 
 vec2i DialogDancingBot::myGetDrawPos(vec2i colRow) {
     recti r = getInnerRect();
-    int panel_size = static_cast<int>(gSystem->getScaleFactor() * 64);
-    return {r.x + static_cast<int>(gSystem->getScaleFactor() * 36) +
-                colRow.x * panel_size,
-            r.y + static_cast<int>(gSystem->getScaleFactor() * 52) +
-                colRow.y * panel_size};
+    int panel_size = gSystem->applyScaleFactor(64);
+    return {r.x + gSystem->applyScaleFactor(36) + colRow.x * panel_size,
+            r.y + gSystem->applyScaleFactor(52) + colRow.y * panel_size};
 }
 
 void DialogDancingBot::myAssignFeetToNotes() {
-    myFeetBits.release();
+    myFeetBits.clear();
     int numNotes = gNotes->end() - gNotes->begin();
     auto style = gStyle->get();
     if (numNotes > 0 && style && style->padWidth > 0) {
@@ -507,15 +505,16 @@ void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn) {
         vec2f curPos = ToVec2f(myGetDrawPos(curButton));
         vec2f endPos = ToVec2f(myGetDrawPos(endButton));
         if (endtime > curTime) {
-            double startTime = max(curTime, endtime - 0.5);
+            double startTime = std::max(curTime, endtime - 0.5);
             double delta = LerpDelta(startTime, endtime, time);
-            curPos = SmoothStep(curPos, endPos,
-                                static_cast<float>(min(max(delta, 0.0), 1.0)));
+            curPos =
+                SmoothStep(curPos, endPos,
+                           static_cast<float>(std::clamp(delta, 0.0, 1.0)));
         }
 
         // Determine feet scale.
-        double dt = min(fabs(curTime - time), fabs(endtime - time));
-        float scale = static_cast<float>(min(1.0, 0.8 + dt * 6.0));
+        double dt = std::min(fabs(curTime - time), fabs(endtime - time));
+        float scale = static_cast<float>(std::min(1.0, 0.8 + dt * 6.0));
 
         out[f] = {curPos.x, curPos.y, scale};
     }

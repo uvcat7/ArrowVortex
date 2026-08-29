@@ -11,7 +11,7 @@ namespace Vortex {
 // A frame refers to a set samples, one for each audio channel.
 
 struct SoundSource {
-    virtual ~SoundSource() {}
+    virtual ~SoundSource() = default;
 
     virtual int getFrequency() = 0;  ///< Number of frames per second.
     virtual int getNumFrames() = 0;  ///< Number of frames in the entire signal.
@@ -68,9 +68,9 @@ class Sound {
 
    private:
     class Thread;
-    Thread* myThread;
-    short* mySamplesL;
-    short* mySamplesR;
+    Thread* myThread = nullptr;
+    short* mySamplesL = nullptr;
+    short* mySamplesR = nullptr;
     int myFrequency;
     int myNumFrames;
     bool myIsAllocated;

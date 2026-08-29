@@ -1,6 +1,8 @@
 #include <System/Debug.h>
 
-#include <io.h>
+#include <cstdio>
+#include <cstdarg>
+#include <cstring>
 #include <fcntl.h>
 #include <stdio.h>
 #include <chrono>
@@ -8,6 +10,8 @@
 #include <fstream>
 
 #include <System/OpenGL.h>
+#include <System/System.h>
+
 #undef ERROR
 
 namespace Vortex {
@@ -30,7 +34,7 @@ double getElapsedTime(steady_clock::time_point startTime) {
 // ================================================================================================
 // Debug :: log file and console.
 
-static wchar_t sLogPath[] = L"ArrowVortex.log";
+static const char sLogPath[] = "ArrowVortex.log";
 
 static bool sHasConsole = false;
 static bool sHasLogFile = false;
@@ -38,10 +42,10 @@ static bool sHasLogFile = false;
 void openLogFile() {
     if (sHasLogFile) return;
 
-    FILE* fp = nullptr;
-    if (_wfopen_s(&fp, sLogPath, L"w") == 0 && fp) {
-        fwrite("\xEF\xBB\xBF", 1, 3, fp);  // UTF-8 BOM.
-        fclose(fp);
+    std::FILE* fp = nullptr;
+    if (fp = std::fopen(&sLogPath[0], "w")) {
+        std::fwrite("\xEF\xBB\xBF", 1, 3, fp);  // UTF-8 BOM.
+        std::fclose(fp);
     }
 
     sHasLogFile = true;
@@ -89,9 +93,9 @@ static bool sLogBlankLine = false;
 
 static void WriteToLogAndConsole(const char* msg) {
     FILE* fp = nullptr;
-    if (sHasLogFile && _wfopen_s(&fp, sLogPath, L"a") == 0 && fp) {
-        fwrite(msg, 1, strlen(msg), fp);
-        fclose(fp);
+    if (fp = std::fopen(&sLogPath[0], "a")) {
+        std::fwrite(msg, 1, std::strlen(msg), fp);
+        std::fclose(fp);
     }
     if (sHasConsole) {
         std::cout << msg;
@@ -106,7 +110,7 @@ void log(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char buffer[sBufsize];
-    int n = vsnprintf(buffer, sBufsize - 1, fmt, args);
+    int n = std::vsnprintf(buffer, sBufsize - 1, fmt, args);
     if (n < 0 || n > sBufsize - 1) n = sBufsize - 1;
     buffer[n] = 0;
     WriteToLogAndConsole(buffer);

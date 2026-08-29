@@ -60,7 +60,7 @@
                     modernize-loop-convert,
                     modernize-make-shared,
                     modernize-make-unique,
-                    modernize-redundant-void-arg,
+                    modernize-redundant-void-arg, #SDL3 headers
                     modernize-replace-random-shuffle,
                     modernize-shrink-to-fit,
                     modernize-use-bool-literals,
@@ -69,7 +69,7 @@
                     modernize-use-equals-default,
                     modernize-use-equals-delete,
                     modernize-use-noexcept,
-                    modernize-use-nullptr,
+                    modernize-use-nullptr, #SDL3 headers
                     modernize-use-override,
                     modernize-use-transparent-functors,
                     readability-redundant-member-init'

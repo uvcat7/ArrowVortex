@@ -80,8 +80,8 @@ class NoteList {
 
    private:
     void myReserve(int num);
-    Note* myNotes;
-    int myNum, myCap;
+    Note* myNotes = nullptr;
+    int myNum = 0, myCap = 0;
 };
 
 struct NoteEdit {

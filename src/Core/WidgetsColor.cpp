@@ -23,8 +23,8 @@ struct ColorHSV {
 
 ColorHSV RGBtoHSV(colorf rgb, float a) {
     float r = rgb.r, g = rgb.g, b = rgb.b, h, s, v;
-    float cmax = max(max(r, g), b);
-    float cmin = min(min(r, g), b);
+    float cmax = std::max(std::max(r, g), b);
+    float cmin = std::min(std::min(r, g), b);
     float delta = cmax - cmin;
     if (delta > 0) {
         if (cmax == r) {
@@ -135,34 +135,33 @@ void WgColorPicker::Expanded::startDrag(int x, int y) {
 void WgColorPicker::Expanded::endDrag() { myDrag = 0; }
 
 void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
-    float scale = gSystem->getScaleFactor();
-    int w = static_cast<int>(scale * 196);
-    int h = static_cast<int>(scale * 160);
+    int w = gSystem->applyScaleFactor(196);
+    int h = gSystem->applyScaleFactor(160);
     rect_ = {r.x + r.w + 2, r.y + r.h / 2 - h / 2, w, h};
 
     recti view = gui->getView();
 
-    rect_.x = clamp(rect_.x, view.x, view.x + view.w - rect_.w);
-    rect_.y = clamp(rect_.y, view.y, view.y + view.h - rect_.h);
+    rect_.x = std::clamp(rect_.x, view.x, view.x + view.w - rect_.w);
+    rect_.y = std::clamp(rect_.y, view.y, view.y + view.h - rect_.h);
 
     vec2i mpos = gui->getMousePos();
 
     if (myDrag == 1) {
         recti r = getSr();
-        myCol.s =
-            clamp(static_cast<float>(mpos.x - r.x) / static_cast<float>(r.w),
-                  0.0f, 1.0f);
-        myCol.v = clamp(
+        myCol.s = std::clamp(
+            static_cast<float>(mpos.x - r.x) / static_cast<float>(r.w), 0.0f,
+            1.0f);
+        myCol.v = std::clamp(
             1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
             0.0f, 1.0f);
     } else if (myDrag == 2) {
         recti r = getHr();
-        myCol.h =
-            clamp(static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
-                  0.0f, 1.0f);
+        myCol.h = std::clamp(
+            static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h), 0.0f,
+            1.0f);
     } else if (myDrag == 3) {
         recti r = getAr();
-        myCol.a = clamp(
+        myCol.a = std::clamp(
             1.0f - static_cast<float>(mpos.y - r.y) / static_cast<float>(r.h),
             0.0f, 1.0f);
     }
@@ -171,8 +170,7 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
 void WgColorPicker::Expanded::draw() {
     auto& dlg = GuiDraw::getDialog();
     dlg.frame.draw(rect_, 0);
-    float scale = gSystem->getScaleFactor();
-    int pick_size = static_cast<int>(scale * 16);
+    int pick_size = gSystem->applyScaleFactor(16);
 
     Draw::fill({rect_.x - 8, rect_.y + rect_.h / 2 - 8, pick_size, pick_size},
                Colors::white, dlg.vshape.handle());
@@ -221,8 +219,7 @@ WgColorPicker::~WgColorPicker() {
     if (colorpicker_expanded_) delete colorpicker_expanded_;
 }
 
-WgColorPicker::WgColorPicker(GuiContext* gui)
-    : GuiWidget(gui), colorpicker_expanded_(nullptr) {}
+WgColorPicker::WgColorPicker(GuiContext* gui) : GuiWidget(gui) {}
 
 void WgColorPicker::onMousePress(MousePress& evt) {
     if (colorpicker_expanded_) {
@@ -292,7 +289,8 @@ void WgColorPicker::onDraw() {
     GuiDraw::checkerboard(r, Colors::white);
 
     ColorHSV hsv = RGBtoHSV(rgb, rgb.a);
-    hsv.v = min(1.0f, hsv.v * 0.75f + isMouseOver() * (hsv.v * 0.25f + 0.25f));
+    hsv.v =
+        std::min(1.0f, hsv.v * 0.75f + isMouseOver() * (hsv.v * 0.25f + 0.25f));
     Draw::fill(r, ToColor32(HSVtoRGB(hsv, rgb.a)));
 
     r = Shrink(r, 1);

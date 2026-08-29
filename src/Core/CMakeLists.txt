@@ -27,7 +27,6 @@ list(APPEND INC
 	"Texture.h"
 	"TextureImpl.h"
 	"Utils.h"
-	"Vector.h"
 	"VectorUtils.h"
 	"WideString.h"
 	"Widgets.h"

@@ -156,28 +156,30 @@ struct HistoryImpl : public History {
     EntryList myChain;
     int myOpenChains = 0;
 
+    std::vector<Callback> myCallbacks;
     int myChainEntries = 0;
     int myAppliedChainEntries = 0;
-
-    Vector<Callback> myCallbacks;
 
     // ================================================================================================
     // HistoryImpl :: constructor and destructor.
 
     ~HistoryImpl() { clearEverything(); }
 
-    HistoryImpl()
-
-    {
-        myCallbacks.push_back({ApplyChain, ReleaseChain});
+    HistoryImpl() {
+        Callback new_callback = {ApplyChain, ReleaseChain};
+        myCallbacks.emplace_back(new_callback);
     }
 
     // ================================================================================================
     // HistoryImpl :: adding callbacks.
 
+    EditId addCallback(ApplyFunc apply) override {
+        return addCallback(apply, nullptr);
+    }
+
     EditId addCallback(ApplyFunc apply, ReleaseFunc release) override {
         EditId out = myCallbacks.size();
-        myCallbacks.push_back({apply, release});
+        myCallbacks.emplace_back(apply, release);
         return out;
     }
 
@@ -348,7 +350,7 @@ struct HistoryImpl : public History {
     void startChain() override { ++myOpenChains; }
 
     void finishChain(std::string msg) override {
-        myOpenChains = max(0, myOpenChains - 1);
+        myOpenChains = std::max(0, myOpenChains - 1);
         if (myChain.head && myOpenChains == 0) {
             bool partialApply = myAppliedChainEntries > 0;
 

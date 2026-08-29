@@ -16,7 +16,7 @@ namespace Vortex {
 
 DialogNewChart::~DialogNewChart() = default;
 
-DialogNewChart::DialogNewChart() : myDifficulty(0), myRating(1), myStyle(0) {
+DialogNewChart::DialogNewChart() {
     setTitle("NEW CHART");
     myCreateWidgets();
     onChanges(VCM_ALL_CHANGES);

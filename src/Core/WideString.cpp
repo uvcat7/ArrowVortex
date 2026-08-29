@@ -7,7 +7,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#endif
 
 namespace Vortex {
 
@@ -42,3 +41,5 @@ std::wstring Widen(const char* s) { return Widen(s, strlen(s)); }
 std::wstring Widen(const std::string& s) { return Widen(s.data(), s.length()); }
 
 };  // namespace Vortex
+
+#endif

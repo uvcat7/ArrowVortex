@@ -22,7 +22,7 @@ static std::vector<vec2i> ReadColumnPairs(const XmrNode* node,
                 vec2i cols = {val[0] - 'A', val[1] - 'A'};
                 if (cols.x >= 0 && cols.x < numCols && cols.y >= 0 &&
                     cols.y < numCols) {
-                    out.push_back(cols);
+                    out.emplace_back(cols);
                 }
             }
         }
@@ -109,7 +109,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers) {
 
     if (numCols < 1 || numCols > SIM_MAX_COLUMNS) {
         int old = numCols;
-        numCols = clamp<int>(numCols, 1, SIM_MAX_COLUMNS);
+        numCols = std::clamp<int>(numCols, 1, SIM_MAX_COLUMNS);
         HudError(
             "Style %s has %i columns, ArrowVortex only supports 1-%i, using %i "
             "columns.",
@@ -118,7 +118,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers) {
 
     if (numPlayers < 1 || numPlayers > SIM_MAX_PLAYERS) {
         int old = numPlayers;
-        numPlayers = clamp<int>(numPlayers, 1, SIM_MAX_PLAYERS);
+        numPlayers = std::clamp<int>(numPlayers, 1, SIM_MAX_PLAYERS);
         HudError(
             "Style %s has %i players, ArrowVortex only supports 1-%i, using %i "
             "players.",
@@ -177,7 +177,7 @@ Style* CreateStyle(const XmrNode* node) {
                 if (col >= 0 && col < numCols) {
                     pos[col] = {x, height};
                 }
-                width = max(width, x + 1);
+                width = std::max(width, x + 1);
             }
             ++height;
         }
@@ -247,14 +247,14 @@ struct StyleManImpl : public StyleMan {
                 Style* proxy = CloneStyle(findStyle(sourceId), node);
                 if (proxy) {
                     proxy->index = myStyles.size();
-                    myStyles.push_back(proxy);
+                    myStyles.emplace_back(proxy);
                 }
                 continue;
             }
             Style* style = CreateStyle(node);
             if (style) {
                 style->index = myStyles.size();
-                myStyles.push_back(style);
+                myStyles.emplace_back(style);
             }
         }
         myNumDefaultStyles = myStyles.size();
@@ -289,7 +289,7 @@ struct StyleManImpl : public StyleMan {
                                      int numPlayers) {
         auto style = CreateStyle(id, numCols, numPlayers);
         style->index = myStyles.size();
-        myStyles.push_back(style);
+        myStyles.emplace_back(style);
         return style;
     }
 
@@ -360,7 +360,7 @@ struct StyleManImpl : public StyleMan {
         std::vector<const Style*> out;
         for (auto style : myStyles) {
             if (style->alias == id) {
-                out.push_back(style);
+                out.emplace_back(style);
             }
         }
         return out;

@@ -105,7 +105,7 @@ struct TempoMan {
     virtual void setTweakValue(double value) = 0;
 
     /// Stops tweaking. If apply is false then the original value is restored.
-    virtual void stopTweaking(bool apply = false) = 0;
+    virtual void stopTweaking(bool apply) = 0;
 
     /// Returns the tweak mode that is currently active.
     virtual TweakMode getTweakMode() const = 0;

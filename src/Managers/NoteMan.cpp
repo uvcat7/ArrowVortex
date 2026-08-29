@@ -8,7 +8,7 @@
 #include <Core/Core.h>
 #include <Core/StringUtils.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
+#include <vector>
 
 #include <Editor/Clipboard.h>
 #include <Editor/Common.h>
@@ -29,6 +29,8 @@
 #include <Simfile/Simfile.h>
 #include <Simfile/TimingData.h>
 
+#include <System/System.h>
+
 namespace Vortex {
 
 #define NOTE_MAN ((NotesManImpl*)gNotes)
@@ -39,7 +41,7 @@ struct NotesManImpl : public NotesMan {
     // ================================================================================================
     // NotesManImpl :: member data.
 
-    Vector<ExpandedNote> myNotes;
+    std::vector<ExpandedNote> myNotes;
 
     int myNumSteps = 0, myNumJumps = 0;
     int myNumHolds = 0, myNumRolls = 0;
@@ -189,7 +191,7 @@ struct NotesManImpl : public NotesMan {
         if (myChart) {
             myUpdateNotes();
         } else {
-            myNotes.release();
+            myNotes.clear();
             myUpdateNoteStats();
         }
 
@@ -238,8 +240,8 @@ struct NotesManImpl : public NotesMan {
             }
 
             int row = gSimfile->getEndRow();
-            if (rem.size()) row = min(row, rem.begin()->row);
-            if (add.size()) row = min(row, add.begin()->row);
+            if (rem.size()) row = std::min(row, rem.begin()->row);
+            if (add.size()) row = std::min(row, add.begin()->row);
 
             int h = gView->getHeight();
             int y = gView->rowToY(row);
@@ -341,23 +343,24 @@ struct NotesManImpl : public NotesMan {
         auto desc = in.read<const EditDescription*>();
         if (in.success()) {
             if (desc) {
-                int numNotes = max(add.size(), rem.size());
+                int numNotes = std::max(add.size(), rem.size());
                 const char* format =
                     (numNotes > 1) ? desc->plural : desc->singular;
                 msg = Str::fmt(format).arg(numNotes).str;
             } else {
-                Vector<std::string> info;
+                std::vector<std::string> info;
 
                 if (add.size() == 1) {
-                    info.push_back("Added " + GetNoteName(*add.begin()));
+                    info.emplace_back("Added " + GetNoteName(*add.begin()));
                 } else if (add.size() > 1) {
-                    info.push_back(Str::fmt("Added %1 notes").arg(add.size()));
+                    info.emplace_back(
+                        Str::fmt("Added %1 notes").arg(add.size()));
                 }
 
                 if (rem.size() == 1) {
-                    info.push_back("Removed " + GetNoteName(*rem.begin()));
+                    info.emplace_back("Removed " + GetNoteName(*rem.begin()));
                 } else if (rem.size() > 1) {
-                    info.push_back(
+                    info.emplace_back(
                         Str::fmt("Removed %1 notes").arg(rem.size()));
                 }
 
@@ -483,21 +486,21 @@ struct NotesManImpl : public NotesMan {
 
         if (mod == SELECT_SET) {
             for (; note != end; ++note) {
-                uint32_t set = pred(note);
+                uint32_t set = pred(&(*note));
                 set &= ignoreRegion || region.rowIsInRegion(note->row);
                 numSelected += set;
                 note->isSelected = set;
             }
         } else if (mod == SELECT_ADD) {
             for (; note != end; ++note) {
-                uint32_t set = pred(note);
+                uint32_t set = pred(&(*note));
                 set &= ignoreRegion || region.rowIsInRegion(note->row);
                 numSelected += set & (note->isSelected ^ 1);
                 note->isSelected |= set;
             }
         } else if (mod == SELECT_SUB) {
             for (; note != end; ++note) {
-                uint32_t set = pred(note);
+                uint32_t set = pred(&(*note));
                 set &= ignoreRegion || region.rowIsInRegion(note->row);
                 numSelected += set & note->isSelected;
                 note->isSelected &= set ^ 1;
@@ -535,8 +538,8 @@ struct NotesManImpl : public NotesMan {
 
     int selectDensity(SelectModifier mod, int density,
                       bool ignoreRegion) override {
-        auto first = myNotes.begin();
-        auto last = myNotes.end() - 1;
+        auto first = &(*myNotes.begin());
+        auto last = &(*(myNotes.end() - 1));
 
         return performSelection(
             mod, ignoreRegion, [&](const ExpandedNote* note) {
@@ -591,7 +594,7 @@ struct NotesManImpl : public NotesMan {
             });
     }
 
-    int select(SelectModifier mod, const Vector<RowCol>& indices,
+    int select(SelectModifier mod, const std::vector<RowCol>& indices,
                bool ignoreRegion) override {
         auto it = indices.begin(), end = indices.end();
 
@@ -615,8 +618,8 @@ struct NotesManImpl : public NotesMan {
     }
 
     int select(SelectModifier mod, Filter filter, bool ignoreRegion) override {
-        auto first = myNotes.begin();
-        auto last = myNotes.end() - 1;
+        auto first = &(*myNotes.begin());
+        auto last = &(*(myNotes.end() - 1));
         switch (filter) {
             case SELECT_STEPS:
                 return performSelection(
@@ -695,7 +698,7 @@ struct NotesManImpl : public NotesMan {
 
     void removeSelectedNotes() override {
         NoteEdit edit;
-        Vector<RowCol> indices;
+        std::vector<RowCol> indices;
 
         auto region = gSelection->getSelectedRegion();
 
@@ -730,7 +733,7 @@ struct NotesManImpl : public NotesMan {
                 if (note.row < region.beginRow) continue;
                 if (note.row > region.endRow) break;
 
-                minRow = min(minRow, note.row);
+                minRow = std::min(minRow, note.row);
                 break;
             }
         }
@@ -738,7 +741,7 @@ struct NotesManImpl : public NotesMan {
         // Notes
         for (auto& note : myNotes) {
             if (note.isSelected) {
-                minRow = min(minRow, note.row);
+                minRow = std::min(minRow, note.row);
                 break;
             }
         }
@@ -769,7 +772,7 @@ struct NotesManImpl : public NotesMan {
     }
 
     void pasteFromClipboard(ClipboardData clipboard, bool insert) override {
-        Vector<uint8_t> buffer = clipboard.notes;
+        std::vector<uint8_t> buffer = clipboard.notes;
         if (buffer.size() == 0) return;
 
         ReadStream stream(buffer.data(), buffer.size());
@@ -822,17 +825,28 @@ struct NotesManImpl : public NotesMan {
 
     int getNumJudge() const override { return myNumJudge; }
 
-    const ExpandedNote* begin() const override { return myNotes.begin(); }
+    const ExpandedNote* begin() const override {
+        if (!myNotes.empty())
+            return &(*myNotes.begin());
+        else
+            return nullptr;
+    }
 
-    const ExpandedNote* end() const override { return myNotes.end(); }
+    const ExpandedNote* end() const override {
+        if (!myNotes.empty())
+            return &(*(myNotes.end() - 1)) + 1;
+        else
+            return nullptr;
+    }
 
     const ExpandedNote* getNoteAt(int row, int col) const override {
+        auto t = myNotes.begin();
         RowCol key = {row, col};
         auto it = std::lower_bound(myNotes.begin(), myNotes.end(), key,
                                    [](const ExpandedNote& a, const RowCol& b) {
                                        return CompareRowCol(a, b) < 0;
                                    });
-        return (it != myNotes.end() && CompareRowCol(*it, key) == 0) ? it
+        return (it != myNotes.end() && CompareRowCol(*it, key) == 0) ? &(*it)
                                                                      : nullptr;
     }
 
@@ -840,13 +854,14 @@ struct NotesManImpl : public NotesMan {
         auto it = myNotes.begin(), end = myNotes.end();
         for (; it != end && it->endrow < row; ++it);
         for (; it != end && it->row <= row; ++it) {
-            if (it->col == col && it->endrow >= row) return it;
+            if (it->col == col && it->endrow >= row) return &(*it);
         }
         return nullptr;
     }
 
-    Vector<const ExpandedNote*> getNotesBeforeTime(double time) const override {
-        Vector<const ExpandedNote*> out(gStyle->getNumCols(), nullptr);
+    std::vector<const ExpandedNote*> getNotesBeforeTime(
+        double time) const override {
+        std::vector<const ExpandedNote*> out(gStyle->getNumCols(), nullptr);
         auto cols = out.begin();
         for (auto& n : myNotes) {
             if (n.time > time) break;

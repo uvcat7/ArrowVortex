@@ -13,8 +13,10 @@
 
 #include <Simfile/SegmentGroup.h>
 
-#define ITEM_H static_cast<int>(20 * gSystem->getScaleFactor())
-#define ITEM_W static_cast<int>(74 * gSystem->getScaleFactor())
+#include <algorithm>
+
+#define ITEM_H gSystem->applyScaleFactor(20)
+#define ITEM_W gSystem->applyScaleFactor(74)
 
 namespace Vortex {
 
@@ -94,7 +96,7 @@ struct DialogLabelBreakdown::LabelButton : public GuiWidget {
 // LabelList
 
 struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
-    Vector<LabelButton*> myButtons;
+    std::vector<LabelButton*> myButtons;
     TileRect2 myButtonTex;
     int myDisplayType;
 
@@ -123,8 +125,9 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
     }
 
     void onUpdateSize() override {
-        scroll_height_ = max(static_cast<int>(24 * gSystem->getScaleFactor()),
-                             myButtons.size() * (ITEM_H + 1));
+        scroll_height_ =
+            std::max(gSystem->applyScaleFactor(24),
+                     static_cast<int>(myButtons.size() * (ITEM_H + 1)));
         ClampScrollPositions();
     }
 
@@ -183,7 +186,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
         while (seg != segEnd) {
             std::string time = displayTime(seg->row);
             std::string text = segs->getRow<Label>(seg->row).str;
-            myButtons.push_back(
+            myButtons.emplace_back(
                 new LabelButton(getGui(), &myButtonTex, seg->row, time, text));
             ++seg;
         }
@@ -229,12 +232,11 @@ DialogLabelBreakdown::~DialogLabelBreakdown() = default;
 
 DialogLabelBreakdown::DialogLabelBreakdown() {
     setTitle("LABELS");
-    float scale = gSystem->getScaleFactor();
-    setWidth(static_cast<int>(scale * 298));
-    setMinimumWidth(static_cast<int>(scale * 298));
-    setMinimumHeight(static_cast<int>(scale * 152));
-    setMaximumWidth(static_cast<int>(scale * 1024));
-    setMaximumHeight(static_cast<int>(scale * 1024));
+    setWidth(gSystem->applyScaleFactor(298));
+    setMinimumWidth(gSystem->applyScaleFactor(298));
+    setMinimumHeight(gSystem->applyScaleFactor(152));
+    setMaximumWidth(gSystem->applyScaleFactor(1024));
+    setMaximumHeight(gSystem->applyScaleFactor(1024));
     setResizeable(true, true);
 
     myDisplayType = TIMESTAMP;
@@ -291,8 +293,7 @@ void DialogLabelBreakdown::onUpdateSize() { myLayout.onUpdateSize(); }
 
 void DialogLabelBreakdown::onTick() {
     recti bounds = getInnerRect();
-    myList->setHeight(bounds.h -
-                      static_cast<int>(58 * gSystem->getScaleFactor()));
+    myList->setHeight(bounds.h - gSystem->applyScaleFactor(58));
 
     if (gSimfile->isOpen()) {
         int row = gView->getCursorRow();

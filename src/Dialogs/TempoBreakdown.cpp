@@ -13,8 +13,8 @@
 
 #include <System/System.h>
 
-#define ITEM_H static_cast<int>(16 * gSystem->getScaleFactor())
-#define ITEM_HEADER static_cast<int>(20 * gSystem->getScaleFactor())
+#define ITEM_H gSystem->applyScaleFactor(16)
+#define ITEM_HEADER gSystem->applyScaleFactor(20)
 
 namespace Vortex {
 
@@ -31,7 +31,7 @@ static int GetTempoListH() {
             }
         }
     }
-    return max(h, ITEM_H);
+    return std::max(h, ITEM_H);
 }
 
 struct DialogTempoBreakdown::TempoList : public WgScrollRegion {
@@ -145,10 +145,9 @@ DialogTempoBreakdown::~DialogTempoBreakdown() { delete myList; }
 
 DialogTempoBreakdown::DialogTempoBreakdown() {
     setTitle("TEMPO BREAKDOWN");
-    float scale = gSystem->getScaleFactor();
-    setWidth(static_cast<int>(scale * 200));
+    setWidth(gSystem->applyScaleFactor(200));
 
-    setMinimumHeight(static_cast<int>(scale * 32));
+    setMinimumHeight(gSystem->applyScaleFactor(32));
     setResizeable(false, true);
 
     myList = new TempoList(getGui());
@@ -157,8 +156,8 @@ DialogTempoBreakdown::DialogTempoBreakdown() {
 void DialogTempoBreakdown::onUpdateSize() {
     myList->updateSize();
     int h = myList->getScrollHeight();
-    setMinimumHeight(min(64, h));
-    setMaximumHeight(min(1024, h));
+    setMinimumHeight(std::min(64, h));
+    setMaximumHeight(std::min(1024, h));
 }
 
 void DialogTempoBreakdown::onTick() {

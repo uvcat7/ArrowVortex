@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -10,6 +10,6 @@ struct Onset {
 };
 
 void FindOnsets(const float* samples, int samplerate, int numFrames,
-                int numThreads, Vector<Onset>& out);
+                int numThreads, std::vector<Onset>& out);
 
 };  // namespace Vortex

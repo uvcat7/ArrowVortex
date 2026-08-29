@@ -46,7 +46,7 @@ struct TempoBoxes {
     virtual void tick() = 0;
     virtual void draw() = 0;
 
-    virtual const Vector<TempoBox>& getBoxes() = 0;
+    virtual const std::vector<TempoBox>& getBoxes() = 0;
     virtual int getStackWidth(int side, int row) = 0;
 };
 
