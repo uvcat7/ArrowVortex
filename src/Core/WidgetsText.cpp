@@ -12,8 +12,8 @@
 
 #include <algorithm>
 
-#define ICON_W static_cast<int>(8 * gSystem->getScaleFactor())
-#define SPINNER_W static_cast<int>(8 * gSystem->getScaleFactor())
+#define ICON_W gSystem->applyScaleFactor(8)
+#define SPINNER_W gSystem->applyScaleFactor(8)
 
 constexpr int MaximumPastedTextLength = 200;
 constexpr int MaximumTextBoxLength = 255;

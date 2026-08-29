@@ -565,8 +565,7 @@ struct WaveformImpl : public Waveform {
         int width = waveformBlockWidth_;
 
         waveformBlockWidth_ =
-            std::min(TEX_W, static_cast<int>(gSystem->getScaleFactor() *
-                                             gView->applyZoom(256)));
+            std::min(TEX_W, gSystem->applyScaleFactor(gView->applyZoom(256)));
         waveformSpacing_ = gView->applyZoom(24);
 
         if (waveformBlockWidth_ != width) clearBlocks();

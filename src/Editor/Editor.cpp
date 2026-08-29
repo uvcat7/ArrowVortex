@@ -964,7 +964,6 @@ struct EditorImpl : public Editor, public InputHandler {
         int menu_h = gMenubar->getMenubarHeight();
 
         vec2i windowSize = gSystem->getWindowSize();
-        float scale = gSystem->getScaleFactor();
         recti r = {0, 0, windowSize.x, windowSize.y};
 
         GuiMain::setViewSize(r.w, r.h + menu_h);

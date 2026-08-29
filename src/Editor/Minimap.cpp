@@ -219,7 +219,7 @@ struct MinimapImpl : public Minimap {
 
     recti myGetMapRect() {
         vec2i size = gSystem->getWindowSize();
-        int width = static_cast<int>(24 * gSystem->getScaleFactor());
+        int width = gSystem->applyScaleFactor(24);
         rect_ = {size.x - 8 - width, 8, width, size.y - 16};
         return {rect_.x + 2, rect_.y + 16, rect_.w - 4, rect_.h - 32};
     }
@@ -283,9 +283,9 @@ struct MinimapImpl : public Minimap {
             // Calculate the x-position of every note column.
             int cols = gStyle->getNumCols();
             int colw = (cols <= 8) ? 2 : 1;
-            colw = static_cast<int>(colw * gSystem->getScaleFactor());
+            colw = gSystem->applyScaleFactor(colw);
             int coldx = (cols <= 4) ? 3 : (cols <= 8) ? 2 : 1;
-            coldx = static_cast<int>(coldx * gSystem->getScaleFactor());
+            coldx = gSystem->applyScaleFactor(coldx);
             int colx[SIM_MAX_COLUMNS] = {};
             for (int c = 0; c < cols; ++c) {
                 colx[c] = MAP_WIDTH / 2 + (c - cols / 2) * coldx;

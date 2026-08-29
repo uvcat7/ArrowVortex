@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Core.h>
+#include <vector>
 #include <filesystem>
 namespace fs = std::filesystem;
 

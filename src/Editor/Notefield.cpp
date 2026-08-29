@@ -239,8 +239,7 @@ struct NotefieldImpl : public Notefield {
 
     void draw() override {
         int cx = CenterX(gView->getRect());
-        myScale =
-            static_cast<int>(gSystem->getScaleFactor() * gView->getNoteScale());
+        myScale = gSystem->applyScaleFactor(gView->getNoteScale());
         bool drawWaveform = myShowWaveform && gView->isTimeBased();
 
         // Update the tweak info box if necessary.

@@ -208,7 +208,7 @@ struct StatusbarImpl : public Statusbar {
             std::string str = Str::join(info, "  ");
             Text::arrange(Text::MC, textStyle, str.c_str());
 
-            int h = static_cast<int>(24 * gSystem->getScaleFactor());
+            int h = gSystem->applyScaleFactor(24);
             recti view = gView->getRect();
             view = {view.x + 128, view.y + view.h - h - 8, view.w - 256 - 32,
                     h};

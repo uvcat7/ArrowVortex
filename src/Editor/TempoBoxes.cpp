@@ -26,7 +26,7 @@
 
 #include <algorithm>
 
-#define BOX_Y static_cast<int>(32 * gSystem->getScaleFactor())
+#define BOX_Y gSystem->applyScaleFactor(32)
 namespace Vortex {
 
 // ================================================================================================
@@ -110,7 +110,7 @@ struct TempoBoxesImpl : public TempoBoxes {
         int stacks[2] = {0, 0};
         for (TempoBox& box : myBoxes) {
             vec2i bounds = Text::arrange(Text::MC, textStyle,
-                                         MAX_WIDTH * gSystem->getScaleFactor(),
+                                         gSystem->applyScaleFactor(MAX_WIDTH),
                                          box.str.c_str());
             int width = std::max(32, bounds.x + 24);
             box.width = width;
@@ -364,7 +364,7 @@ struct TempoBoxesImpl : public TempoBoxes {
             int x = baseX[side] + box.x + side * 4 - 2;
 
             Text::arrange(Text::MC, textStyle,
-                          MAX_WIDTH * gSystem->getScaleFactor(),
+                          gSystem->applyScaleFactor(MAX_WIDTH),
                           box.str.c_str());
             Text::draw(recti{x, y - box.height / 2 - 1,
                              static_cast<int>(box.width), box.height});

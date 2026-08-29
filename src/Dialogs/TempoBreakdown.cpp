@@ -13,8 +13,8 @@
 
 #include <System/System.h>
 
-#define ITEM_H static_cast<int>(16 * gSystem->getScaleFactor())
-#define ITEM_HEADER static_cast<int>(20 * gSystem->getScaleFactor())
+#define ITEM_H gSystem->applyScaleFactor(16)
+#define ITEM_HEADER gSystem->applyScaleFactor(20)
 
 namespace Vortex {
 
@@ -145,10 +145,9 @@ DialogTempoBreakdown::~DialogTempoBreakdown() { delete myList; }
 
 DialogTempoBreakdown::DialogTempoBreakdown() {
     setTitle("TEMPO BREAKDOWN");
-    float scale = gSystem->getScaleFactor();
-    setWidth(static_cast<int>(scale * 200));
+    setWidth(gSystem->applyScaleFactor(200));
 
-    setMinimumHeight(static_cast<int>(scale * 32));
+    setMinimumHeight(gSystem->applyScaleFactor(32));
     setResizeable(false, true);
 
     myList = new TempoList(getGui());
