@@ -16,7 +16,7 @@
 
 #include <System/System.h>
 
-#define TEXT_H static_cast<int>(20 * gSystem->getScaleFactor())
+#define TEXT_H gSystem->applyScaleFactor(20)
 namespace Vortex {
 
 // ================================================================================================
@@ -51,7 +51,7 @@ struct DialogChartList::ChartButton : public GuiWidget {
 
     void onDraw() override {
         recti r = rect_;
-        int w = static_cast<int>(128 * gSystem->getScaleFactor());
+        int w = gSystem->applyScaleFactor(128);
 
         TextStyle textStyle;
         textStyle.textFlags = Text::ELLIPSES;
@@ -227,12 +227,10 @@ DialogChartList::~DialogChartList() { delete myList; }
 DialogChartList::DialogChartList() {
     setTitle("LIST OF CHARTS");
 
-    float scale = gSystem->getScaleFactor();
-    setWidth(static_cast<int>(320 * scale));
-
-    setMinimumWidth(static_cast<int>(128 * scale));
-    setMaximumWidth(static_cast<int>(1024 * scale));
-    setMinimumHeight(static_cast<int>(16 * scale));
+    setWidth(gSystem->applyScaleFactor(320));
+    setMinimumWidth(gSystem->applyScaleFactor(128));
+    setMaximumWidth(gSystem->applyScaleFactor(1024));
+    setMinimumHeight(gSystem->applyScaleFactor(16));
 
     setResizeable(true, true);
 
@@ -244,7 +242,7 @@ void DialogChartList::onChanges(int changes) {
         myList->updateButtons();
         int h = GetChartListH();
         h = std::min(h, getGui()->getView().h - 128);
-        h = std::max(h, static_cast<int>(gSystem->getScaleFactor() * 32));
+        h = std::max(h, gSystem->applyScaleFactor(32));
         setHeight(h);
     }
 }

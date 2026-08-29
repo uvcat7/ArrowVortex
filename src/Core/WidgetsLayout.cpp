@@ -158,8 +158,8 @@ RowLayout& RowLayout::col(bool expand) { return col(INT_MAX, expand); }
 
 RowLayout& RowLayout::col(int w, bool expand) {
     Col& col = row_list_.back().cols.emplace_back(
-        (w == INT_MAX) ? 0 : static_cast<int>(w * gSystem->getScaleFactor()),
-        w == INT_MAX, expand == true);
+        (w == INT_MAX) ? 0 : gSystem->applyScaleFactor(w), w == INT_MAX,
+        expand == true);
     return *this;
 }
 

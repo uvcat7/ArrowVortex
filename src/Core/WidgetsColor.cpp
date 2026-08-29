@@ -135,9 +135,8 @@ void WgColorPicker::Expanded::startDrag(int x, int y) {
 void WgColorPicker::Expanded::endDrag() { myDrag = 0; }
 
 void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
-    float scale = gSystem->getScaleFactor();
-    int w = static_cast<int>(scale * 196);
-    int h = static_cast<int>(scale * 160);
+    int w = gSystem->applyScaleFactor(196);
+    int h = gSystem->applyScaleFactor(160);
     rect_ = {r.x + r.w + 2, r.y + r.h / 2 - h / 2, w, h};
 
     recti view = gui->getView();
@@ -171,8 +170,7 @@ void WgColorPicker::Expanded::tick(recti r, GuiContext* gui) {
 void WgColorPicker::Expanded::draw() {
     auto& dlg = GuiDraw::getDialog();
     dlg.frame.draw(rect_, 0);
-    float scale = gSystem->getScaleFactor();
-    int pick_size = static_cast<int>(scale * 16);
+    int pick_size = gSystem->applyScaleFactor(16);
 
     Draw::fill({rect_.x - 8, rect_.y + rect_.h / 2 - 8, pick_size, pick_size},
                Colors::white, dlg.vshape.handle());

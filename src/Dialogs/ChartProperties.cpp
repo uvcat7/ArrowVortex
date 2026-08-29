@@ -291,7 +291,7 @@ void DialogChartProperties::GraphWidget::updateGraph() {
     }
     endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
-    scale = endMeasure / static_cast<int>(width_ * gSystem->getScaleFactor());
+    scale = endMeasure / gSystem->applyScaleFactor(width_);
     if (scale < 1) scale = 1;
     int buckets = endMeasure;
     peak = 0;
@@ -333,7 +333,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
-    int scale_width = static_cast<int>(width_ * gSystem->getScaleFactor());
+    int scale_width = gSystem->applyScaleFactor(width_);
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     int buckets = data.size();
     double barWidth = (static_cast<double>(scale_width) / buckets);
@@ -432,7 +432,7 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
 
         WgButton* button = myButtons[i];
         button->text.set(item.text.c_str());
-        button->setSize(w, static_cast<int>(20 * gSystem->getScaleFactor()));
+        button->setSize(w, gSystem->applyScaleFactor(20));
         button->onPress.bind(this, &BreakdownWidget::selectStream,
                              vec2i{item.row, item.endrow});
     }
@@ -450,9 +450,9 @@ void DialogChartProperties::BreakdownWidget::selectStream(vec2i rows) {
 
 void DialogChartProperties::BreakdownWidget::onUpdateSize() {
     int x = 0;
-    int w = static_cast<int>(340 * gSystem->getScaleFactor());
-    int y_spacing = static_cast<int>(20 * gSystem->getScaleFactor());
-    int x_spacing = static_cast<int>(2 * gSystem->getScaleFactor());
+    int w = gSystem->applyScaleFactor(340);
+    int y_spacing = gSystem->applyScaleFactor(20);
+    int x_spacing = gSystem->applyScaleFactor(2);
     int y = y_spacing;
     for (auto button : myButtons) {
         vec2i size = button->getSize();
@@ -466,8 +466,8 @@ void DialogChartProperties::BreakdownWidget::onUpdateSize() {
 
 void DialogChartProperties::BreakdownWidget::onArrange(recti r) {
     int x = 0, y = 0;
-    int y_spacing = static_cast<int>(20 * gSystem->getScaleFactor());
-    int x_spacing = static_cast<int>(2 * gSystem->getScaleFactor());
+    int y_spacing = gSystem->applyScaleFactor(20);
+    int x_spacing = gSystem->applyScaleFactor(2);
     for (auto button : myButtons) {
         vec2i size = button->getSize();
         if (x + size.x > r.w) {

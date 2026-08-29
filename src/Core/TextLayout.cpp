@@ -583,8 +583,7 @@ static vec2i ArrangeText(const TextStyle& style, int maxLineWidth,
     LD->align = align;
 
     LD->font = LD->baseFont = static_cast<FontData*>(style.font.data());
-    LD->fontSize = LD->baseFontSize =
-        static_cast<int>(gSystem->getScaleFactor() * style.fontSize);
+    LD->fontSize = LD->baseFontSize = gSystem->applyScaleFactor(style.fontSize);
 
     LD->baseTextColor = LD->textColor = style.textColor;
     LD->baseShadowColor = LD->shadowColor = style.shadowColor;

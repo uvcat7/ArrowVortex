@@ -9,10 +9,10 @@
 namespace Vortex {
 
 static const int FRAME_TITLEBAR_H = 24;
-#define FRAME_TITLEBAR_H static_cast<int>(24 * gSystem->getScaleFactor())
+#define FRAME_TITLEBAR_H gSystem->applyScaleFactor(24)
 static const int FRAME_PADDING = 4;
 static const int FRAME_RESIZE_BORDER = 5;
-#define FRAME_BUTTON_W static_cast<int>(8 * gSystem->getScaleFactor())
+#define FRAME_BUTTON_W gSystem->applyScaleFactor(8)
 
 // ================================================================================================
 // Dialog Frame implementation.

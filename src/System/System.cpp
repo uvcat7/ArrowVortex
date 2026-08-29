@@ -510,7 +510,9 @@ struct SystemImpl : public System {
             return {size.x, size.y - gMenubar->getMenubarHeight()};
     }
 
-    float getScaleFactor() const override { return myScale; }
+    int applyScaleFactor(int size) const override {
+        return static_cast<int>(static_cast<float>(size) * myScale);
+    }
 
     void setWindowSize(vec2i size) override {
         mySize = {std::clamp(size.x, 100, 32768),

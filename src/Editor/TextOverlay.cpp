@@ -23,7 +23,7 @@ namespace Vortex {
 namespace {
 
 #define OVERLAY ((TextOverlayImpl*)gTextOverlay)
-#define TEXT_Y_START static_cast<int>(32 * gSystem->getScaleFactor())
+#define TEXT_Y_START gSystem->applyScaleFactor(32)
 
 struct HudEntry {
     std::string text;
@@ -82,7 +82,7 @@ struct TextOverlayImpl : public TextOverlay {
         Texture icons[NUM_ICONS];
         Texture::createTiles("assets/icons text.png", 64, 64, NUM_ICONS, icons,
                              false, Texture::ALPHA);
-        int tex_size = static_cast<int>(16 * gSystem->getScaleFactor());
+        int tex_size = gSystem->applyScaleFactor(16);
         for (int i = 0; i < NUM_ICONS; ++i) {
             Text::createGlyph(iconNames[i], icons[i], 0, tex_size / 4 - 1, 0,
                               tex_size, tex_size);
@@ -203,8 +203,8 @@ struct TextOverlayImpl : public TextOverlay {
 
     void UpdateScrollValues() {
         vec2i size = gSystem->getWindowSize();
-        int height = static_cast<int>(18 * gSystem->getScaleFactor());
-        int height_header = static_cast<int>(24 * gSystem->getScaleFactor());
+        int height = gSystem->applyScaleFactor(18);
+        int height_header = gSystem->applyScaleFactor(24);
         if (textOverlayMode_ == MESSAGE_LOG) {
             textOverlayPageSize_ = std::max(0, (size.y - TEXT_Y_START) / 16);
             textOverlayScrollEnd_ = std::max(
@@ -299,7 +299,7 @@ struct TextOverlayImpl : public TextOverlay {
     void DrawTitleText(const char* left, const char* mid, const char* right) {
         vec2i size = gSystem->getWindowSize();
 
-        int height = static_cast<int>(28 * gSystem->getScaleFactor());
+        int height = gSystem->applyScaleFactor(28);
         Draw::fill({0, 0, size.x, height}, RGBAtoColor32(0, 0, 0, 191));
         Draw::fill({0, height, size.x, 1}, Colors::white);
 
@@ -320,8 +320,8 @@ struct TextOverlayImpl : public TextOverlay {
     void DrawScrollbar() {
         if (textOverlayPageSize_ > 0 && textOverlayScrollEnd_ > 0) {
             vec2i size = gSystem->getWindowSize();
-            int width = static_cast<int>(12 * gSystem->getScaleFactor());
-            int height = static_cast<int>(28 * gSystem->getScaleFactor());
+            int width = gSystem->applyScaleFactor(12);
+            int height = gSystem->applyScaleFactor(28);
             recti box = {size.x - width - 4, height + 4, width,
                          size.y - height - 8};
 
@@ -490,7 +490,7 @@ struct TextOverlayImpl : public TextOverlay {
     void drawShortcuts() {
         int x = gSystem->getWindowSize().x / 2 - 325, w = 650;
         int y = TEXT_Y_START - textOverlayScrollPos_;
-        int y_off = static_cast<int>(gSystem->getScaleFactor() * 18);
+        int y_off = gSystem->applyScaleFactor(18);
         TextStyle textStyle;
         textStyle.textFlags = Text::MARKUP;
         for (const Shortcut& e : displayShortcuts_) {
@@ -498,14 +498,14 @@ struct TextOverlayImpl : public TextOverlay {
                 Text::arrange(Text::TL, e.a.c_str());
                 Text::draw(vec2i{x, y});
                 Draw::fill({x, y + y_off, w, 1}, Colors::white);
-                y += static_cast<int>(gSystem->getScaleFactor() * 24);
+                y += gSystem->applyScaleFactor(24);
             } else {
                 Text::arrange(Text::TR, textStyle, e.a.c_str());
                 Text::draw(vec2i{x + w / 2 - 10, y});
                 Text::arrange(Text::TL, textStyle, e.b.c_str());
                 Text::draw(vec2i{x + w / 2 + 10, y});
 
-                y += static_cast<int>(gSystem->getScaleFactor() * 18);
+                y += gSystem->applyScaleFactor(18);
             }
         }
 
@@ -545,17 +545,17 @@ struct TextOverlayImpl : public TextOverlay {
 
     recti getGithubButtonRect() {
         vec2i win = gSystem->getWindowSize();
-        int h = static_cast<int>(gSystem->getScaleFactor() * 28);
-        int w = static_cast<int>(gSystem->getScaleFactor() * 64);
-        int y_off = 128 - 5 * static_cast<int>(gSystem->getScaleFactor() * 16);
+        int h = gSystem->applyScaleFactor(28);
+        int w = gSystem->applyScaleFactor(64);
+        int y_off = 128 - 5 * gSystem->applyScaleFactor(16);
         return {win.x / 2 - 3 * w / 2, win.y / 2 - y_off, w, h};
     }
 
     recti getSupportButtonRect() {
         vec2i win = gSystem->getWindowSize();
-        int h = static_cast<int>(gSystem->getScaleFactor() * 28);
-        int w = static_cast<int>(gSystem->getScaleFactor() * 64);
-        int y_off = 128 - 5 * static_cast<int>(gSystem->getScaleFactor() * 16);
+        int h = gSystem->applyScaleFactor(28);
+        int w = gSystem->applyScaleFactor(64);
+        int y_off = 128 - 5 * gSystem->applyScaleFactor(16);
         return {win.x / 2 + w / 2, win.y / 2 - y_off, w, h};
     }
 
@@ -563,7 +563,7 @@ struct TextOverlayImpl : public TextOverlay {
         vec2i size = gSystem->getWindowSize();
 
         Text::arrange(Text::BC, "ArrowVortex release v1.0.1");
-        int h = static_cast<int>(gSystem->getScaleFactor() * 16);
+        int h = gSystem->applyScaleFactor(16);
         Text::draw(vec2i{size.x / 2, size.y / 2 - 128});
         std::string buildDate = "Build date: " + System::getBuildData();
         Text::arrange(Text::TC, buildDate.c_str());
@@ -594,6 +594,8 @@ struct TextOverlayImpl : public TextOverlay {
                       "@DeltaEpsilon7787/Delta Epsilon\n"
                       "@DolpinChips/insep\n"
                       "@ScottBrenner/bren\n"
+                      "@LetalexAlex\n"
+                      "@SilentMystification\n"
                       "\n"
                       "Original program and many thanks to : \n"
                       "Bram 'Fietsemaker' van de Wetering\n");

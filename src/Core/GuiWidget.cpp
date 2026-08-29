@@ -19,10 +19,10 @@ uint32_t flags_;
 
 GuiWidget::GuiWidget(GuiContext* gui)
     : gui_(gui),
-      rect_({0, 0, static_cast<int>(128 * gSystem->getScaleFactor()),
-             static_cast<int>(24 * gSystem->getScaleFactor())}),
-      width_(static_cast<int>(128 * gSystem->getScaleFactor())),
-      height_(static_cast<int>(24 * gSystem->getScaleFactor())) {}
+      rect_({0, 0, gSystem->applyScaleFactor(128),
+             gSystem->applyScaleFactor(24)}),
+      width_(gSystem->applyScaleFactor(128)),
+      height_(gSystem->applyScaleFactor(24)) {}
 
 GuiWidget::~GuiWidget() {
     reinterpret_cast<GuiContextImpl*>(gui_)->removeWidget(this);

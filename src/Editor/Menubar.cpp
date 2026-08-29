@@ -693,18 +693,17 @@ struct MenuBarImpl : public Menubar {
         constexpr int dropdown_color = 64;
         constexpr int dropdown_highlight_color = 85;
         int window_w = gSystem->getWindowSize().x;
-        int menu_h = static_cast<int>(24 * gSystem->getScaleFactor());
-        int entry_h = static_cast<int>(20 * gSystem->getScaleFactor());
-        int box_padding = static_cast<int>(4 * gSystem->getScaleFactor());
-        int separator_h =
-            std::max(1, static_cast<int>(2 * gSystem->getScaleFactor()));
-        int separator_padding = static_cast<int>(6 * gSystem->getScaleFactor());
+        int menu_h = gSystem->applyScaleFactor(24);
+        int entry_h = gSystem->applyScaleFactor(20);
+        int box_padding = gSystem->applyScaleFactor(4);
+        int separator_h = std::max(1, gSystem->applyScaleFactor(2));
+        int separator_padding = gSystem->applyScaleFactor(6);
 
         int x = 0, y = 0;
         TextStyle textStyle;
         textStyle.textFlags = Text::MARKUP;
 
-        int chevron_space = static_cast<int>(16 * gSystem->getScaleFactor());
+        int chevron_space = gSystem->applyScaleFactor(16);
         Text::arrange(Text::MC, textStyle, utf8ToString(u8"✓").c_str());
         int check_space = Text::getBoundingBox(vec2i{0, 0}).w * 2;
         y = -menu_h;
@@ -715,7 +714,7 @@ struct MenuBarImpl : public Menubar {
             std::string str = it.item_text;
             Text::arrange(Text::MC, textStyle, str.c_str());
             int w = Text::getBoundingBox(vec2i{x, y}).w +
-                    12 * gSystem->getScaleFactor();
+                    gSystem->applyScaleFactor(12);
             if (x + w > window_w && x > 0) {
                 y -= menu_h;
                 x = 0;

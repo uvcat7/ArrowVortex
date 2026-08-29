@@ -311,8 +311,8 @@ void DialogDancingBot::onUpdateSize() {
         w = std::max(w, style->padWidth * 64 + 8);
         h = std::max(h, style->padHeight * 64 + 24);
     }
-    w = static_cast<int>(w * gSystem->getScaleFactor());
-    h = static_cast<int>(h * gSystem->getScaleFactor());
+    w = gSystem->applyScaleFactor(w);
+    h = gSystem->applyScaleFactor(h);
     setWidth(w);
     setHeight(h);
 }
@@ -334,7 +334,7 @@ void DialogDancingBot::onDraw() {
 
         // Pad layout.
         auto batch = Renderer::batchTC();
-        BatchSprite::setScale(256 * gSystem->getScaleFactor());
+        BatchSprite::setScale(gSystem->applyScaleFactor(256));
         for (int x = 0; x < style->padWidth; ++x) {
             for (int y = 0; y < style->padHeight; ++y) {
                 int tile = myPadLayout[y * style->padWidth + x];
@@ -362,7 +362,7 @@ void DialogDancingBot::onDraw() {
         // Feet sprites.
         Renderer::bindTexture(myFeetTex.handle());
         batch = Renderer::batchTC();
-        BatchSprite::setScale(160 * gSystem->getScaleFactor());
+        BatchSprite::setScale(gSystem->applyScaleFactor(160));
         for (int p = 0; p < gStyle->getNumPlayers(); ++p) {
             uint32_t color =
                 p ? ToColor32({.5f, .5f, 1, 1}) : ToColor32({1, .5f, .5f, 1});
@@ -429,11 +429,9 @@ void DialogDancingBot::myPushArrow(QuadBatchTC* batch, int x, int y) {
 
 vec2i DialogDancingBot::myGetDrawPos(vec2i colRow) {
     recti r = getInnerRect();
-    int panel_size = static_cast<int>(gSystem->getScaleFactor() * 64);
-    return {r.x + static_cast<int>(gSystem->getScaleFactor() * 36) +
-                colRow.x * panel_size,
-            r.y + static_cast<int>(gSystem->getScaleFactor() * 52) +
-                colRow.y * panel_size};
+    int panel_size = gSystem->applyScaleFactor(64);
+    return {r.x + gSystem->applyScaleFactor(36) + colRow.x * panel_size,
+            r.y + gSystem->applyScaleFactor(52) + colRow.y * panel_size};
 }
 
 void DialogDancingBot::myAssignFeetToNotes() {

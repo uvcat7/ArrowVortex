@@ -5,7 +5,7 @@
 #include <Core/GuiDraw.h>
 #include <System/System.h>
 
-#define CHECK_SIZE static_cast<int>(8 * gSystem->getScaleFactor())
+#define CHECK_SIZE gSystem->applyScaleFactor(8)
 
 namespace Vortex {
 
@@ -135,13 +135,13 @@ void WgCheckbox::onDraw() {
     if (!isEnabled()) style.textColor = misc.colDisabled;
 
     Text::arrange(Text::ML, style, text.get());
-    Text::draw({r.x + static_cast<int>(22 * gSystem->getScaleFactor()), r.y,
-                r.w - static_cast<int>(24 * gSystem->getScaleFactor()), r.h});
+    Text::draw({r.x + gSystem->applyScaleFactor(22), r.y,
+                r.w - gSystem->applyScaleFactor(24), r.h});
 }
 
 recti WgCheckbox::GetCheckboxRect() const {
     recti r = rect_;
-    int size = static_cast<int>(16 * gSystem->getScaleFactor());
+    int size = gSystem->applyScaleFactor(16);
     return {r.x + 2, r.y + r.h / 2 - size / 2, size, size};
 }
 
@@ -190,8 +190,8 @@ void WgSlider::onDraw() {
 
     auto& button = GuiDraw::getButton();
 
-    int bar_size = static_cast<int>(16 * gSystem->getScaleFactor());
-    int line_thickness = static_cast<int>(gSystem->getScaleFactor());
+    int bar_size = gSystem->applyScaleFactor(16);
+    int line_thickness = gSystem->applyScaleFactor(1);
     // Draw the the entire bar graphic.
     recti bar = {r.x + 3, r.y + r.h / 2 - line_thickness / 2, r.w - 6,
                  line_thickness};

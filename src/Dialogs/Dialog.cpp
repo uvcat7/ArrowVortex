@@ -16,12 +16,10 @@ EditorDialog::~EditorDialog() { gEditor->onDialogClosed(myId); }
 
 EditorDialog::EditorDialog()
     : GuiDialog(gEditor->getGui()),
-      myLayout(gEditor->getGui(),
-               static_cast<int>(gSystem->getScaleFactor() * 4)) {}
+      myLayout(gEditor->getGui(), gSystem->applyScaleFactor(4)) {}
 
 void EditorDialog::onUpdateSize() {
     myLayout.onUpdateSize();
-    float scale = gSystem->getScaleFactor();
     setWidth(myLayout.getWidth());
     setHeight(myLayout.getHeight());
 }
