@@ -288,12 +288,10 @@ struct SelectionImpl : public Selection {
             if (keyFlags & (Keyflag::SHIFT | Keyflag::ALT)) {
                 Texture& tex =
                     (keyFlags & Keyflag::SHIFT) ? myAddIcon : mySubIcon;
-                Draw::sprite(
-                    tex,
-                    {start.x - static_cast<int>(8 * gSystem->getScaleFactor()),
-                     start.y - static_cast<int>(8 * gSystem->getScaleFactor()),
-                     static_cast<int>(16 * gSystem->getScaleFactor()),
-                     static_cast<int>(16 * gSystem->getScaleFactor())});
+                Draw::sprite(tex, {start.x - gSystem->applyScaleFactor(8),
+                                   start.y - gSystem->applyScaleFactor(8),
+                                   gSystem->applyScaleFactor(16),
+                                   gSystem->applyScaleFactor(16)});
             }
         }
     }

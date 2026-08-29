@@ -15,6 +15,7 @@
 #include <Editor/Common.h>
 #include <Editor/Shortcuts.h>
 #include <Editor/Action.h>
+#include <string>
 
 #include <algorithm>
 
@@ -154,10 +155,8 @@ struct TextOverlayImpl : public TextOverlay {
                     "Set to target nearby row of snap");
         addShortcut(Action::SET_VISUAL_SYNC_RECEPTOR_ANCHOR,
                     "Set to target receptor's row");
-        addShortcut(Action::SHIFT_ROW_NONDESTRUCTIVE,
-                    "Shift to cursor, non-destructive");
-        addShortcut(Action::SHIFT_ROW_DESTRUCTIVE,
-                    "Shift to cursor, destructive");
+        addShortcut("Non-destructive row shift", "B");
+        addShortcut("Destructive row shift", "Alt-B");
         addShortcut(Action::INJECT_BOUNDING_BPM_CHANGE,
                     "Add bounding BPM change");
 
@@ -410,7 +409,7 @@ struct TextOverlayImpl : public TextOverlay {
         vec2i view = gSystem->getWindowSize();
         int x = view.x / 2, y = 8;
         for (auto& box : infoBoxes_) {
-            vec2i size = {280, box->height()};
+            vec2i size = {gSystem->applyScaleFactor(280), box->height()};
             recti r = {x - size.x / 2, y, size.x, size.y};
             recti r2 = {r.x - 4, r.y - 4, r.w + 8, r.h + 8};
 
@@ -419,7 +418,7 @@ struct TextOverlayImpl : public TextOverlay {
 
             box->draw(r);
 
-            y += size.y + 12;
+            y += size.y + gSystem->applyScaleFactor(280);
         }
 
         x = 4, y = 4;

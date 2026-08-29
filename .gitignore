@@ -406,4 +406,7 @@ vcpkg_installed
 build
 out
 enc_temp_folder
+
+# Build outputs and user-specific files
+bin/
 /path_sources

@@ -39,6 +39,7 @@
 #include <Editor/Action.h>
 #include <Editor/Waveform.h>
 #include <Editor/TempoBoxes.h>
+#include <string>
 
 namespace Vortex {
 
@@ -50,7 +51,7 @@ static int RoundUp(int value, int multiple) {
 
 struct TweakInfoBox : public InfoBox {
     void draw(recti r) override;
-    int height() override { return 100; }
+    int height() override { return gSystem->applyScaleFactor(100); }
 };
 
 struct DrawPosHelper {
@@ -124,6 +125,7 @@ struct NotefieldImpl : public Notefield {
     bool myShowBeatLinesSnap;
     bool myShowBeatLinesColor;
     bool myShowBeatLinesHover;
+    bool myVisualSyncBeatlinesPreset;
     bool myShowNotes;
     bool myShowSongPreview;
 
@@ -141,6 +143,7 @@ struct NotefieldImpl : public Notefield {
         myShowBeatLinesSnap = false;
         myShowBeatLinesColor = false;
         myShowBeatLinesHover = false;
+        myVisualSyncBeatlinesPreset = false;
         myShowNotes = true;
         myShowSongPreview = false;
 
@@ -282,7 +285,7 @@ struct NotefieldImpl : public Notefield {
 
         gNotefieldPreview->draw();
 
-        if (myShowBeatLines) drawBeatLines();
+        if (myShowBeatLines || myVisualSyncBeatlinesPreset) drawBeatLines();
         if (drawWaveform) gWaveform->drawPeaks();
         if (gTempoBoxes->hasShowBoxes()) drawStopsAndWarps();
 
@@ -385,12 +388,15 @@ struct NotefieldImpl : public Notefield {
         // Start drawing measures and beat lines.
         auto batch = Renderer::batchC();
         uint32_t halfColor = ToColor32({1, 1, 1, 0.5f});
-        uint32_t fullColor = myShowBeatLinesColor ? ToRowTypeColor(0)
-                                                  : ToColor32({1, 1, 1, 0.7f});
+        uint32_t fullColor = myShowBeatLinesColor || myVisualSyncBeatlinesPreset
+                                 ? ToRowTypeColor(0)
+                                 : ToColor32({1, 1, 1, 0.7f});
 
-        double snapStep = myShowBeatLinesSnap && gView->getSnapType() > ST_4TH
-                              ? 192.0f / gView->getSnapQuant()
-                              : ROWS_PER_BEAT;
+        double snapStep =
+            myShowBeatLinesSnap ||
+                    myVisualSyncBeatlinesPreset && gView->getSnapType() > ST_4TH
+                ? 192.0f / gView->getSnapQuant()
+                : ROWS_PER_BEAT;
 
         DrawPosHelper drawPos;
         while (it != end && row < drawEndRow) {
@@ -411,7 +417,7 @@ struct NotefieldImpl : public Notefield {
 
                         int r = static_cast<int>(round(beatRow));
                         uint32_t color =
-                            myShowBeatLinesColor
+                            myShowBeatLinesColor || myVisualSyncBeatlinesPreset
                                 ? (ToRowTypeColor(ToRowType(r)) & halfColor)
                                 : halfColor;
 
@@ -430,7 +436,7 @@ struct NotefieldImpl : public Notefield {
         }
 
         // Draw Hovered Row
-        if (myShowBeatLinesHover) {
+        if (myShowBeatLinesHover || myVisualSyncBeatlinesPreset) {
             int hoverRow = gView->getHoveredRow();
             if (hoverRow >= 0) {
                 uint32_t hoverColor =
@@ -814,6 +820,14 @@ struct NotefieldImpl : public Notefield {
         gMenubar->update(Menubar::BEATLINE_HOVER);
     }
 
+    void clearVisualSyncBeatlinePreset() override {
+        myVisualSyncBeatlinesPreset = false;
+    }
+
+    void setVisualSyncBeatlinePreset() override {
+        myVisualSyncBeatlinesPreset = true;
+    }
+
     void toggleShowNotes() override {
         myShowNotes = !myShowNotes;
         gMenubar->update(Menubar::SHOW_NOTES);
@@ -833,6 +847,12 @@ struct NotefieldImpl : public Notefield {
 
     bool hasShowBeatLinesHover() override { return myShowBeatLinesHover; }
 
+    bool hasVisualSyncBeatlinePreset() override {
+        return myVisualSyncBeatlinesPreset ||
+               (myShowBeatLines && myShowBeatLinesColor &&
+                myShowBeatLinesHover && myShowBeatLinesSnap);
+    }
+
     bool hasShowNotes() override { return myShowNotes; }
 
     bool hasShowSongPreview() override { return myShowSongPreview; }
@@ -850,8 +870,11 @@ void TweakInfoBox::draw(recti r) {
     Str::fmt str("Tweak %1 :: %2");
     str.arg(name[mode]).arg(gTempo->getTweakValue(), 3, 3);
 
+    const int init_off_h = gSystem->applyScaleFactor(16);
+    const int text_row_h = gSystem->applyScaleFactor(14);
+
     Text::arrange(Text::MC, static_cast<const char*>(str));
-    Text::draw(vec2i{r.x, r.y + 16});
+    Text::draw(vec2i{r.x, r.y + init_off_h});
 
     const char* keys[] = {
         "scrollwheel + shift",
@@ -870,11 +893,11 @@ void TweakInfoBox::draw(recti r) {
     for (int i = 0; i < 4; ++i) {
         textStyle.textColor = RGBAtoColor32(255, 255, 255, 128);
         Text::arrange(Text::TR, textStyle, keys[i]);
-        Text::draw(vec2i{r.x - 8, r.y + 32 + i * 14});
+        Text::draw(vec2i{r.x - 8, r.y + init_off_h * 2 + i * text_row_h});
 
         textStyle.textColor = Colors::white;
         Text::arrange(Text::TL, textStyle, desc[i]);
-        Text::draw(vec2i{r.x + 8, r.y + 32 + i * 14});
+        Text::draw(vec2i{r.x + 8, r.y + init_off_h * 2 + i * text_row_h});
     }
 }
 

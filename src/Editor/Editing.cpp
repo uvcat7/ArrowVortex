@@ -39,8 +39,10 @@
 #include <Simfile/Segments.h>
 #include <Simfile/Tempo.h>
 
+#include <climits>
 #include <System/Debug.h>
 #include <System/System.h>
+#include <vector>
 
 namespace Vortex {
 
@@ -78,7 +80,6 @@ int noteKeysHeld = 0;
 
 // ================================================================================================
 // EditingImpl :: member data.
-
 struct EditingImpl : public Editing {
     int myCurPlayer;
     PlacingNote myPlacingNotes[SIM_MAX_COLUMNS];
@@ -86,9 +87,9 @@ struct EditingImpl : public Editing {
     bool myUseJumpToNextNote;
     bool myUseUndoRedoJump;
     bool myUseTimeBasedCopy;
+
     EditingAnchor myVisualSyncAnchor;
     EditingAnchor myTempoEditAnchor;
-
     // ================================================================================================
     // EditingImpl :: constructor and destructor.
 
@@ -155,12 +156,15 @@ struct EditingImpl : public Editing {
         if (evt.keyflags & Keyflag::CTRL) {
             if (kc == Key::X) {
                 copySelectionToClipboard(true);
+                disableTemporaryBeatlines();
                 evt.handled = true;
             } else if (kc == Key::C) {
                 copySelectionToClipboard(false);
+                disableTemporaryBeatlines();
                 evt.handled = true;
             } else if (kc == Key::V) {
                 pasteFromClipboard(evt.keyflags & Keyflag::SHIFT);
+                disableTemporaryBeatlines();
                 evt.handled = true;
             }
         }
@@ -171,9 +175,26 @@ struct EditingImpl : public Editing {
             evt.handled = true;
         }
 
+        // Modal visual sync
+        if (gChart->isOpen() && !gTempo->isInVisualSync() && kc == Key::B) {
+            switch (evt.keyflags) {
+                case (0):
+                    this->enableVisualSync(false);
+                    evt.handled = true;
+                    break;
+                case (Keyflag::ALT):
+                    this->enableVisualSync(true);
+                    evt.handled = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         // Placing notes.
         if (gChart->isOpen() && kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 &&
             !evt.repeated) {
+            disableTemporaryBeatlines();
             int col = KeyToCol(kc);
             int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
             if (evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
@@ -270,6 +291,14 @@ struct EditingImpl : public Editing {
 
     void onKeyRelease(KeyRelease& evt) override {
         if (evt.handled) return;
+
+        // Modal visual sync
+        if (gChart->isOpen() && evt.key == Key::B) {
+            gTempo->endVisualSync();
+            evt.handled = true;
+            return;
+        }
+
         if (gChart->isOpen() && evt.key >= Key::DIGIT_0 &&
             evt.key <= Key::DIGIT_9) {
             // Finish placing notes.
@@ -318,6 +347,18 @@ struct EditingImpl : public Editing {
             gTempo->setTweakValue(v);
 
             evt.handled = true;
+        }
+    }
+
+    void onMouseMove(MouseMove& move) override {
+        if (gTempo->isInVisualSync()) {
+            vec2i mpos = gSystem->getMousePos();
+            ChartOffset offset = gView->yToOffset(mpos.y);
+            double targetTime = gView->offsetToTime(offset);
+
+            const double recordedTime = gView->getCursorTime();
+            gTempo->tickVisualSync(targetTime);
+            gView->setCursorTime(recordedTime);
         }
     }
 
@@ -788,46 +829,6 @@ struct EditingImpl : public Editing {
             gNotes->insertRows(row, numRows, curChartOnly);
             gHistory->finishChain((numRows > 0) ? "Insert beats"
                                                 : "Delete beats");
-        }
-    }
-
-    int getAnchorRow(EditingAnchor anchor) {
-        vec2i mouse_pos = gSystem->getMousePos();
-        ChartOffset chart_offset = gView->yToOffset(mouse_pos.y);
-
-        switch (anchor) {
-            case EditingAnchor::RECEPTORS:
-                return gView->getCursorRow();
-            case EditingAnchor::CURSOR:
-                return gView->snapRow(gView->offsetToRow(chart_offset),
-                                      View::SnapDir::SNAP_CLOSEST);
-            default:
-                HudError("Unknown anchor row type");
-                return -1;
-        }
-    }
-
-    void injectBoundingBpmChange() override {
-        if (gSimfile->isClosed() || !gView->isTimeBased()) return;
-
-        int anchorRow = getAnchorRow(myVisualSyncAnchor);
-
-        gTempo->injectBoundingBpmChange(anchorRow);
-    }
-
-    void shiftAnchorRowToMousePosition(bool destructive) override {
-        if (gSimfile->isClosed() || !gView->isTimeBased()) return;
-
-        vec2i mpos = gSystem->getMousePos();
-        ChartOffset offset = gView->yToOffset(mpos.y);
-
-        double targetTime = gView->offsetToTime(offset);
-        int anchorRow = getAnchorRow(myVisualSyncAnchor);
-
-        if (destructive) {
-            gTempo->destructiveShiftRowToTime(anchorRow, targetTime);
-        } else {
-            gTempo->nonDestructiveShiftRowToTime(anchorRow, targetTime);
         }
     }
 
@@ -1334,6 +1335,14 @@ struct EditingImpl : public Editing {
 
     bool hasTimeBasedCopy() override { return myUseTimeBasedCopy; }
 
+    // EditingImpl :: visual sync
+    void disableTemporaryBeatlines() {
+        if (gNotefield->hasVisualSyncBeatlinePreset()) {
+            HudInfo("Disabling temporary visual sync beatlines.");
+            gNotefield->clearVisualSyncBeatlinePreset();
+        }
+    }
+
     void setVisualSyncAnchor(EditingAnchor anchor) override {
         myVisualSyncAnchor = anchor;
         switch (myVisualSyncAnchor) {
@@ -1351,6 +1360,75 @@ struct EditingImpl : public Editing {
 
     EditingAnchor getVisualSyncAnchor() override { return myVisualSyncAnchor; }
 
+    int getAnchorRow(EditingAnchor anchor) {
+        vec2i mousePos = gSystem->getMousePos();
+        ChartOffset chartOffset = gView->yToOffset(mousePos.y);
+
+        switch (anchor) {
+            case EditingAnchor::RECEPTORS:
+                return gView->getCursorRow();
+            case EditingAnchor::CURSOR:
+                return gView->snapRow(gView->offsetToRow(chartOffset),
+                                      View::SnapDir::SNAP_CLOSEST);
+            default:
+                HudError("Unknown anchor row type");
+                return -1;
+        }
+    }
+
+    void enableVisualSync(bool destructiveMode) {
+        if (gChart->isClosed()) {
+            HudError("No chart open");
+            return;
+        }
+        if (!gView->isTimeBased()) {
+            HudError(
+                "Visual sync is only available in time-based (c-mod) view.");
+            return;
+        }
+        if (gTempo->isInVisualSync()) {
+            return;
+        }
+        // Activate temporary beatlines
+        if (!gNotefield->hasVisualSyncBeatlinePreset()) {
+            HudInfo(
+                "Enabling temporary fully enabled beatlines for visual sync.");
+            gNotefield->setVisualSyncBeatlinePreset();
+            return;
+        }
+
+        const int targetRow = getAnchorRow(myVisualSyncAnchor);
+        vec2i mpos = gSystem->getMousePos();
+        ChartOffset offset = gView->yToOffset(mpos.y);
+        double targetTime = gView->offsetToTime(offset);
+
+        if (destructiveMode) {
+            gTempo->startDestructiveVisualSync(targetRow);
+        } else {
+            gTempo->startNondestructiveVisualSync(targetRow);
+        }
+
+        const double recordedTime = gView->getCursorTime();
+        gTempo->tickVisualSync(targetTime);
+        gView->setCursorTime(recordedTime);
+    }
+
+    void injectBoundingBpmChange() override {
+        if (gChart->isClosed()) {
+            HudError("No chart open");
+            return;
+        }
+        if (!gView->isTimeBased()) {
+            HudError(
+                "Visual sync is only available in time-based (c-mod) view.");
+            return;
+        }
+
+        int anchorRow = getAnchorRow(myVisualSyncAnchor);
+
+        gTempo->injectBoundingBpmChange(anchorRow);
+    }
+    // EditingImpl :: tempo edit
     void setTempoEditAnchor(EditingAnchor anchor) override {
         myTempoEditAnchor = anchor;
         switch (myTempoEditAnchor) {

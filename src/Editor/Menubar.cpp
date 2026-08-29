@@ -125,6 +125,7 @@ struct MenuBarImpl : public Menubar {
         add(hEdit, EDIT_CUT, "Cut\tCtrl+X");
         add(hEdit, EDIT_COPY, "Copy\tCtrl+C");
         add(hEdit, EDIT_PASTE, "Paste\tCtrl+V");
+        add(hEdit, EDIT_PASTE_INSERT, "Insert Paste\tCtrl+Shift+V");
         add(hEdit, EDIT_DELETE, "Delete\tDelete");
         sep(hEdit);
         add(hEdit, SELECT_ALL, "Select all\tCtrl+A");

@@ -20,6 +20,7 @@ list(APPEND SRC
 	"NoteList.cpp"
 	"Notes.cpp"
 	"Parsing.cpp"
+	"SaveDwi.cpp"
 	"SaveOsu.cpp"
 	"SaveSm.cpp"
 	"SegmentGroup.cpp"

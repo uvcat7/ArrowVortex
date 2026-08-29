@@ -259,7 +259,7 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols,
                     ++n;
                     break;
                 case '{':
-                    quantization = 4;
+                    quantization = 3;
                     ++n;
                     break;
                 case '`':
@@ -279,12 +279,12 @@ static bool ParseNotes(Simfile* sim, char* p, int numPads, int numCols,
                     ++n;
                     break;
                 case '\'':
-                    quantization = 32;
+                    quantization = 24;
                     ++n;
                     break;
                 default:
                     n = ReadNoteRow(n, chart->notes, row, map, holds,
-                                    quantization);
+                                    192 / quantization);
                     row += quantization;
                     break;
             };
@@ -385,6 +385,10 @@ static void ParseTag(Simfile* sim, std::string tag, char* val) {
         sim->genre = val;
     } else if (tag == "DISPLAYBPM") {
         ParseDisplayBpm(sim->tempo, val);
+    } else if (tag == "SAMPLESTART") {
+        ParseVal(val, sim->previewStart);
+    } else if (tag == "SAMPLELENGTH") {
+        ParseVal(val, sim->previewLength);
     }
 }
 
@@ -408,8 +412,8 @@ bool LoadDwi(fs::path path, Simfile* sim) {
     auto simname = sim->file;
     simname = simname.substr(0, simname.find_last_of("."));
     Str::toLower(simname);
-    for (auto& path : paths) {
-        std::string f = pathToUtf8(path.filename());
+    for (auto& filePath : paths) {
+        std::string f = pathToUtf8(filePath.filename());
         std::string fl(f);
         Str::toLower(fl);
 
