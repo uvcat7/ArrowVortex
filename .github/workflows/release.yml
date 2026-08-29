@@ -1,0 +1,125 @@
+name: Build & Latest Beta
+
+on:
+  push:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+env:
+  USERNAME: uvcat7
+  FEED_URL: https://nuget.pkg.github.com/uvcat7/index.json
+  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/uvcat7/index.json,readwrite"
+
+jobs:
+  formatting:
+    name: "Check formatting"
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Get AV
+        uses: actions/checkout@v7
+      - name: Check formatting with clang-format
+        run: >
+          clang-format --dry-run --Werror -style=file $(find src/ -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.hpp' \))
+        shell: bash
+  windows:
+    name: "Build Windows x64"
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Get AV
+        uses: actions/checkout@v7
+      - name: Add NuGet sources
+        shell: pwsh
+        run: |
+          .$(vcpkg fetch nuget) `
+            sources add `
+            -Source "${{ env.FEED_URL }}" `
+            -StorePasswordInClearText `
+            -Name GitHubPackages `
+            -UserName "${{ env.USERNAME }}" `
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          .$(vcpkg fetch nuget) `
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+            -Source "${{ env.FEED_URL }}"
+      - name: Configure CMake
+        run: >
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+          -DYML=YML
+      - name: Build AV
+        run: cmake --build build --config Release --parallel "$env:NUMBER_OF_PROCESSORS"
+      - name: Collect into a directory
+        if: github.ref_name == 'beta'
+        run: cmake --install build --config Release --prefix ./
+      - name: Upload artifact
+        if: github.ref_name == 'beta'
+        uses: actions/upload-artifact@v5
+        with:
+          name: ArrowVortex-${{ github.sha }}
+          path: |
+            bin/assets
+            bin/noteskins
+            bin/settings
+            bin/ArrowVortex.exe
+          if-no-files-found: error
+  linux:
+    name: "Build Linux x64"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Get AV
+        uses: actions/checkout@v7
+      - name: Add NuGet sources
+        shell: bash
+        run: |
+          sudo apt-get install -qq -y mono-devel nasm libltdl-dev \
+            autoconf autoconf-archive automake libtool \
+            libx11-dev libxft-dev libxext-dev \
+            libwayland-dev libxkbcommon-dev libegl1-mesa-dev \
+            libibus-1.0-dev zenity clang-tidy clang-format build-essential git \
+            pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+            libaudio-dev libjack-dev libsndio-dev libusb-1.0-0-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libwayland-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev fcitx-libs-dev \
+            libasound2-dev libdecor-0-dev python3-venv libthai-dev libpipewire-0.3-dev \
+            liburing-dev
+          mono `vcpkg fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
+      - name: Configure CMake
+        run: >
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=x64-linux
+          -DPRESET_NAME=linux-release
+          -DYML=YML
+      - name: Build AV
+        run: cmake --build build --config Release --parallel $(nproc)
+      - name: Collect into a directory
+        if: github.ref_name == 'beta'
+        run: cmake --install build --config Release --prefix ./
+      - name: Upload artifact
+        if: github.ref_name == 'beta'
+        uses: actions/upload-artifact@v5
+        with:
+          name: ArrowVortex-${{ github.sha }}
+          path: |
+            bin/assets
+            bin/noteskins
+            bin/settings
+            bin/ArrowVortex
+          if-no-files-found: error

@@ -3,8 +3,6 @@
 #include <SDL3/SDL_stdinc.h>
 #include <Editor/Common.h>
 
-#include <malloc.h>
-
 namespace Vortex {
 
 static const int WAVEOUT_CHANNELS = 2;

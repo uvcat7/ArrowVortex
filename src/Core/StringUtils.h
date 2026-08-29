@@ -1,6 +1,8 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
+#include <string>
+#include <cstdint>
 
 namespace Vortex {
 
@@ -210,8 +212,8 @@ struct Str {
 
     /// Helper struct used in string formatting.
     struct fmt {
-        fmt(const std::string& format);
-        fmt(const char* format);
+        explicit fmt(const std::string& format);
+        explicit fmt(const char* format);
 
         fmt& arg(char c);
         fmt& arg(const std::string& s);
@@ -222,8 +224,8 @@ struct Str {
         fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);
         fmt& arg(double v, int minDecimals = 0, int maxDecimals = 6);
 
-        inline operator const char*() { return str.data(); }
-        inline operator std::string&() { return str; }
+        inline explicit operator const char*() { return str.data(); }
+        inline explicit operator std::string&() { return str; }
 
         std::string str;
     };
@@ -233,19 +235,20 @@ struct Str {
 
     /// Splits a string into a string list based on word boundaries.
     /// For example, SplitString("Hello World") returns {"Hello", "World"}.
-    static Vector<std::string> split(const std::string& s);
+    static std::vector<std::string> split(const std::string& s);
 
     /// Splits a string into a string list based on a delimiter.
     /// For example, SplitString("Hello ~ World", "~") returns {"Hello",
     /// "World"}. If trim is true, whitespace surrounding each element is
     /// removed. If skipEmpty is true, empty elements are not added to the list.
-    static Vector<std::string> split(const std::string& s,
-                                     const char* delimiter, bool trim = true,
-                                     bool skipEmpty = true);
+    static std::vector<std::string> split(const std::string& s,
+                                          const char* delimiter,
+                                          bool trim = true,
+                                          bool skipEmpty = true);
 
     /// Returns the concatenation of the list of strings, seperated by the given
     /// delimiter.
-    static std::string join(const Vector<std::string>& list,
+    static std::string join(const std::vector<std::string>& list,
                             const char* delimiter);
 };
 

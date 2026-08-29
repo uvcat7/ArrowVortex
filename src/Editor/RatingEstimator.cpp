@@ -1,6 +1,6 @@
 ﻿#include <Editor/RatingEstimator.h>
 
-#include <Core/Vector.h>
+#include <vector>
 
 #include <System/File.h>
 
@@ -22,10 +22,10 @@ enum Constants {
 
 RatingEstimator::RatingEstimator(const char* databaseFile) {
     bool success;
-    Vector<double> values;
+    std::vector<double> values;
     for (auto& line : File::getLines(databaseFile, &success)) {
         if (line.length() && line[0] == '#') continue;
-        values.push_back(atof(line.data()));
+        values.emplace_back(atof(line.data()));
     }
     if (values.size() != HM_NUM_WEIGHTS) return;
 
@@ -35,17 +35,17 @@ RatingEstimator::RatingEstimator(const char* databaseFile) {
 
 RatingEstimator::~RatingEstimator() { delete[] myWeights; }
 
-static Vector<double> CalcDensities() {
-    Vector<double> stamps, out;
+static std::vector<double> CalcDensities() {
+    std::vector<double> stamps, out;
     TempoTimeTracker tracker(gTempo->getTimingData());
     for (auto& n : *gNotes) {
         if (!(n.isMine | n.isWarped)) {
-            stamps.push_back(tracker.advance(n.row));
+            stamps.emplace_back(tracker.advance(n.row));
         }
     }
 
     // List densities per second of song.
-    Vector<double> densities;
+    std::vector<double> densities;
     if (stamps.size()) {
         double timeWindow = 1.0;
         double curTime = stamps[0];
@@ -54,7 +54,7 @@ static Vector<double> CalcDensities() {
             if (s > *curStamp + timeWindow) {
                 int numArrows = &s - curStamp;
                 double dt = s - *curStamp;
-                densities.push_back(static_cast<double>(numArrows) / dt);
+                densities.emplace_back(static_cast<double>(numArrows) / dt);
                 curStamp = &s;
             }
         }
@@ -70,9 +70,9 @@ static Vector<double> CalcDensities() {
             for (int j = totalSize - i; j != totalSize; ++j) {
                 n += densities[j];
             }
-            out.push_back(n / i);
+            out.emplace_back(n / i);
         } else {
-            out.push_back(0.0);
+            out.emplace_back(0.0);
         }
     }
 
@@ -81,11 +81,11 @@ static Vector<double> CalcDensities() {
 
 inline int getDensityBin(double density) {
     int bin = static_cast<int>(density);
-    return std::min(std::max(0, bin), HM_VALS_PER_SLICE - 2);
+    return std::clamp(bin, 0, HM_VALS_PER_SLICE - 2);
 }
 
 double RatingEstimator::estimateRating() {
-    Vector<double> densities = CalcDensities();
+    std::vector<double> densities = CalcDensities();
 
     double maxRating = 1.0;
     for (int i = 0; i < HM_NUM_SLICES; ++i) {

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <Core/Vector.h>
-
-#include <stdlib.h>
-#include <new>
+#include <Core/Core.h>
+#include <algorithm>
+#include <cstring>
 
 namespace Vortex {
 
@@ -28,20 +27,6 @@ TT inline bool HasLength(const vec2t<T>& v) {
     return v.x * v.x + v.y * v.y > 0.001f;
 }
 
-TT inline const T& min(const T& a, const T& b) { return (a < b) ? a : b; }
-
-TT inline const T& max(const T& a, const T& b) { return (b < a) ? a : b; }
-
-TT inline const T& clamp(const T& x, const T& min, const T& max) {
-    return (x < min) ? min : ((max < x) ? max : x);
-}
-
-TT inline void swapValues(T& a, T& b) {
-    T c(a);
-    a = b;
-    b = c;
-}
-
 TT inline T lerp(T begin, T end, T t) { return begin + (end - begin) * t; }
 
 // ================================================================================================
@@ -61,6 +46,10 @@ TT inline void operator+=(rectt<T>& r, const vec2t<T>& v) {
 
 TT inline void operator-=(rectt<T>& r, const vec2t<T>& v) {
     r.x -= v.x, r.y -= v.y;
+}
+
+TT inline bool IsInside(const rectt<T>& r, const vec2t<T>& v) {
+    return IsInside(r, v.x, v.y);
 }
 
 TT inline bool IsInside(const rectt<T>& r, T x, T y) {
@@ -168,10 +157,12 @@ TT inline rectt<T> ToRect(areat<T> a) {
     return {a.l, a.t, a.r - a.l, a.b - a.t};
 }
 
-TT inline vec2t<int> ToVec2i(const vec2t<T>& v) { return {(int)v.x, (int)v.y}; }
+TT inline vec2t<int> ToVec2i(const vec2t<T>& v) {
+    return {static_cast<int>(v.x), static_cast<int>(v.y)};
+}
 
 TT inline vec2t<float> ToVec2f(const vec2t<T>& v) {
-    return {(float)v.x, (float)v.y};
+    return {static_cast<float>(v.x), static_cast<float>(v.y)};
 }
 
 #undef TT
@@ -217,10 +208,10 @@ inline uint32_t ToColor32(const colorf& c) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)min(max(0, (int)(c.r * 255.0f)), 255);
-    u8[1] = (uint8_t)min(max(0, (int)(c.g * 255.0f)), 255);
-    u8[2] = (uint8_t)min(max(0, (int)(c.b * 255.0f)), 255);
-    u8[3] = (uint8_t)min(max(0, (int)(c.a * 255.0f)), 255);
+    u8[0] = static_cast<uint8_t>(std::clamp(c.r * 255.0f, 0.f, 255.f));
+    u8[1] = static_cast<uint8_t>(std::clamp(c.g * 255.0f, 0.f, 255.f));
+    u8[2] = static_cast<uint8_t>(std::clamp(c.b * 255.0f, 0.f, 255.f));
+    u8[3] = static_cast<uint8_t>(std::clamp(c.a * 255.0f, 0.f, 255.f));
     return u32;
 }
 
@@ -229,25 +220,11 @@ inline uint32_t ToColor32(float r, float g, float b, float a) {
         uint8_t u8[4];
         uint32_t u32;
     };
-    u8[0] = (uint8_t)min(max(0, (int)(r * 255.0f)), 255);
-    u8[1] = (uint8_t)min(max(0, (int)(g * 255.0f)), 255);
-    u8[2] = (uint8_t)min(max(0, (int)(b * 255.0f)), 255);
-    u8[3] = (uint8_t)min(max(0, (int)(a * 255.0f)), 255);
+    u8[0] = static_cast<uint8_t>(std::clamp(r * 255.0f, 0.f, 255.f));
+    u8[1] = static_cast<uint8_t>(std::clamp(g * 255.0f, 0.f, 255.f));
+    u8[2] = static_cast<uint8_t>(std::clamp(b * 255.0f, 0.f, 255.f));
+    u8[3] = static_cast<uint8_t>(std::clamp(a * 255.0f, 0.f, 255.f));
     return u32;
-}
-
-static int gcd(int a, int b) {
-    if (a == 0) {
-        return b;
-    }
-    if (b == 0) {
-        return a;
-    }
-    if (a > b) {
-        return gcd(a - b, b);
-    } else {
-        return gcd(a, b - a);
-    }
 }
 };  // namespace Vortex
 

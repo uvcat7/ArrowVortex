@@ -8,8 +8,7 @@
 
 namespace Vortex {
 
-Chart::Chart()
-    : style(nullptr), difficulty(DIFF_BEGINNER), meter(1), tempo(nullptr) {}
+Chart::Chart() = default;
 
 Chart::~Chart() {
     style = nullptr;
@@ -19,7 +18,8 @@ Chart::~Chart() {
 }
 
 std::string Chart::description() const {
-    return Str::fmt("%1 %2").arg(GetDifficultyName(difficulty)).arg(meter);
+    return static_cast<std::string>(
+        Str::fmt("%1 %2").arg(GetDifficultyName(difficulty)).arg(meter));
 }
 
 bool Chart::hasTempo() const {

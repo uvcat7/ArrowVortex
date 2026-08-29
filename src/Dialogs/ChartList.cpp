@@ -16,7 +16,7 @@
 
 #include <System/System.h>
 
-#define TEXT_H static_cast<int>(20 * gSystem->getScaleFactor())
+#define TEXT_H gSystem->applyScaleFactor(20)
 namespace Vortex {
 
 // ================================================================================================
@@ -51,7 +51,7 @@ struct DialogChartList::ChartButton : public GuiWidget {
 
     void onDraw() override {
         recti r = rect_;
-        int w = static_cast<int>(128 * gSystem->getScaleFactor());
+        int w = gSystem->applyScaleFactor(128);
 
         TextStyle textStyle;
         textStyle.textFlags = Text::ELLIPSES;
@@ -63,7 +63,7 @@ struct DialogChartList::ChartButton : public GuiWidget {
         const Chart* chart = gSimfile->getChart(myChartIndex);
         if (chart) {
             // Draw the left-side colored bar with difficulty and meter.
-            recti left = {rect_.x, rect_.y, min(r.w, w), TEXT_H};
+            recti left = {rect_.x, rect_.y, std::min(r.w, w), TEXT_H};
             uint32_t color = ToColor(chart->difficulty);
             myBar->draw(left, 0, color);
 
@@ -116,11 +116,11 @@ static int GetChartListH() {
         }
         h += TEXT_H + 1;
     }
-    return max(TEXT_H, h);
+    return std::max(TEXT_H, h);
 }
 
 struct DialogChartList::ChartList : public WgScrollRegion {
-    Vector<ChartButton*> myButtons;
+    std::vector<ChartButton*> myButtons;
     TileRect2 myButtonTex;
 
     ~ChartList() override {
@@ -209,7 +209,7 @@ struct DialogChartList::ChartList : public WgScrollRegion {
     void updateButtons() {
         int numCharts = gSimfile->getNumCharts();
         while (myButtons.size() < numCharts) {
-            myButtons.push_back(
+            myButtons.emplace_back(
                 new ChartButton(getGui(), &myButtonTex, myButtons.size()));
         }
         while (myButtons.size() > numCharts) {
@@ -227,12 +227,10 @@ DialogChartList::~DialogChartList() { delete myList; }
 DialogChartList::DialogChartList() {
     setTitle("LIST OF CHARTS");
 
-    float scale = gSystem->getScaleFactor();
-    setWidth(static_cast<int>(320 * scale));
-
-    setMinimumWidth(static_cast<int>(128 * scale));
-    setMaximumWidth(static_cast<int>(1024 * scale));
-    setMinimumHeight(static_cast<int>(16 * scale));
+    setWidth(gSystem->applyScaleFactor(320));
+    setMinimumWidth(gSystem->applyScaleFactor(128));
+    setMaximumWidth(gSystem->applyScaleFactor(1024));
+    setMinimumHeight(gSystem->applyScaleFactor(16));
 
     setResizeable(true, true);
 
@@ -243,8 +241,8 @@ void DialogChartList::onChanges(int changes) {
     if (changes & VCM_CHART_LIST_CHANGED) {
         myList->updateButtons();
         int h = GetChartListH();
-        h = min(h, getGui()->getView().h - 128);
-        h = max(h, static_cast<int>(gSystem->getScaleFactor() * 32));
+        h = std::min(h, getGui()->getView().h - 128);
+        h = std::max(h, gSystem->applyScaleFactor(32));
         setHeight(h);
     }
 }
@@ -252,8 +250,8 @@ void DialogChartList::onChanges(int changes) {
 void DialogChartList::onUpdateSize() {
     myList->updateSize();
     int h = myList->getScrollHeight();
-    setMinimumHeight(min(64, h));
-    setMaximumHeight(min(1024, h));
+    setMinimumHeight(std::min(64, h));
+    setMaximumHeight(std::min(1024, h));
 }
 
 void DialogChartList::onTick() {

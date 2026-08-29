@@ -15,6 +15,8 @@
 #include <Editor/Common.h>
 #include <Editor/Editing.h>
 
+#include <cstring>
+
 namespace Vortex {
 
 enum Actions {
@@ -225,38 +227,39 @@ void DialogAdjustTempoSM5::onAction(int id) {
             gTempo->addSegment(Delay(row, myDelay));
         } break;
         case ACT_WARP_SET: {
-            int rows = max(0, static_cast<int>(ROWS_PER_BEAT * myWarp));
+            int rows = std::max(0, static_cast<int>(ROWS_PER_BEAT * myWarp));
             gTempo->addSegment(Warp(row, rows));
         } break;
         case ACT_TIME_SIG_SET: {
-            int rowsPerMeasure = ROWS_PER_BEAT * max(1, myTimeSigBpm);
-            int beatNote = max(1, myTimeSigNote);
+            int rowsPerMeasure = ROWS_PER_BEAT * std::max(1, myTimeSigBpm);
+            int beatNote = std::max(1, myTimeSigNote);
             gTempo->addSegment(TimeSignature(row, rowsPerMeasure, beatNote));
         } break;
         case ACT_TICK_COUNT_SET: {
-            int ticks = max(0, myTickCount);
+            int ticks = std::max(0, myTickCount);
             gTempo->addSegment(TickCount(row, ticks));
         } break;
         case ACT_COMBO_SET: {
-            int hit = max(1, myComboHit);
-            int miss = max(1, myComboMiss);
+            int hit = std::max(1, myComboHit);
+            int miss = std::max(1, myComboMiss);
             gTempo->addSegment(Combo(row, hit, miss));
         } break;
         case ACT_SPEED_SET: {
             double ratio = mySpeedRatio;
-            double delay = max(0.0, mySpeedDelay);
-            int unit = clamp(mySpeedUnit, 0, 1);
+            double delay = std::max(0.0, mySpeedDelay);
+            int unit = std::clamp(mySpeedUnit, 0, 1);
             gTempo->addSegment(Speed(row, ratio, delay, unit));
         } break;
         case ACT_SCROLL_SET: {
             gTempo->addSegment(Scroll(row, myScrollRatio));
         } break;
         case ACT_FAKE_SET: {
-            int rows = max(0, static_cast<int>(ROWS_PER_BEAT * myFakeBeats));
+            int rows =
+                std::max(0, static_cast<int>(ROWS_PER_BEAT * myFakeBeats));
             gTempo->addSegment(Fake(row, rows));
         } break;
         case ACT_LABEL_SET: {
-            if (strpbrk(myLabelText.c_str(), ";,=") != nullptr) {
+            if (std::strpbrk(myLabelText.c_str(), ";,=") != nullptr) {
                 HudWarning(
                     "A Label cannot contain commas, semicolons, or equal "
                     "signs; they will be replaced with underscores.");

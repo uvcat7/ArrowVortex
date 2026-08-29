@@ -180,7 +180,7 @@ class DialogEditSegment : public EditorDialog, public InputHandler {
    private:
     void myCreateWidgets();
 
-    Segment::Type myType;
+    Segment::Type myType = Segment::Type::BPM;
     std::unique_ptr<SegmentEditor> myEditor;
 };
 

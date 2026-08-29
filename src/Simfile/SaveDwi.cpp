@@ -273,7 +273,7 @@ static void WriteNoteDataForPad(std::ofstream& file, const NoteList& notes,
     // the chart one row at a time. Each hold produces two events: one at the
     // head row (isHoldHead=true) and one at the tail row (isHoldHead=false).
     // Taps produce a single event with isHoldHead=false.
-    Vector<NoteEvent> noteEvents;
+    std::vector<NoteEvent> noteEvents;
     for (const Note& note : notes) {
         int col = static_cast<int>(note.col);
         if (col < padStart || col >= padStart + padColCount) continue;
@@ -503,7 +503,7 @@ bool SaveDwi(const Simfile* sim, bool backup) {
     // Charts. DWI supports at most one chart per (style, difficulty)
     // combination. sim->charts is already sorted beginner to expert by
     // SimfileMan::sortCharts().
-    Vector<int> writtenDiffs;
+    std::vector<int> writtenDiffs;
     for (const Chart* chart : sim->charts) {
         const char* dwiTag;
         int numPads;
@@ -515,7 +515,8 @@ bool SaveDwi(const Simfile* sim, bool backup) {
         }
 
         int key = chart->style->index * NUM_DIFFICULTIES + chart->difficulty;
-        if (writtenDiffs.find(key) != writtenDiffs.size()) {
+        if (std::find(writtenDiffs.begin(), writtenDiffs.end(), key) !=
+            writtenDiffs.end()) {
             HudWarning("Duplicate DWI difficulty \"%s %s\", skipping.", dwiTag,
                        DifficultyToDwi(chart->difficulty));
             continue;

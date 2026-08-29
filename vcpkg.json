@@ -16,7 +16,7 @@
     "stb",
     {
       "name": "ffmpeg",
-      "features": [ "ffmpeg", "vorbis" ]
+      "features": [ "vorbis" ]
     },
     "libmad",
     "libogg",

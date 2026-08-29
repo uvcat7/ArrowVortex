@@ -11,7 +11,6 @@
 #include <Core/StringUtils.h>
 #include <Core/Texture.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
 #include <Core/Xmr.h>
 
 #include <Editor/Common.h>
@@ -19,6 +18,13 @@
 #include <Editor/TempoBoxes.h>
 #include <Editor/View.h>
 
+#include <cmath>
+#include <algorithm>
+#include <Core/Core.h>
+#include <Core/Input.h>
+#include <Core/Texture.h>
+#include <vector>
+#include <cstdint>
 #include <Managers/ChartMan.h>
 #include <Managers/NoteMan.h>
 #include <Managers/StyleMan.h>
@@ -121,8 +127,8 @@ struct SelectionImpl : public Selection {
             int l = evt.x;
             int r = myDragSelectionX;
 
-            if (t > b) swapValues(t, b);
-            if (l > r) swapValues(l, r);
+            if (t > b) std::swap(t, b);
+            if (l > r) std::swap(l, r);
 
             auto tempos = selectTempoBoxes(mod, t, b, l, r);
             auto notes = selectNotes(mod, t, b, l, r);
@@ -176,6 +182,7 @@ struct SelectionImpl : public Selection {
         if (gView->getScaleLevel() >= 2) {
             return gTempoBoxes->select(mod, t, b, l, r);
         }
+        return 0;
     }
 
     int selectNotes(SelectModifier mod, double torT, double torB, int xl,
@@ -208,7 +215,8 @@ struct SelectionImpl : public Selection {
             }
             if (closest) {
                 count = selectNotes(
-                    mod, Vector<RowCol>(1, {closest->row, closest->col}), true);
+                    mod, std::vector<RowCol>(1, {closest->row, closest->col}),
+                    true);
             } else {
                 count = selectNotes(mod, {0, 0}, {0, 0}, true);
             }
@@ -269,8 +277,8 @@ struct SelectionImpl : public Selection {
 
             int x = start.x, x2 = mpos.x;
             int y = start.y, y2 = mpos.y;
-            if (x > x2) swapValues(x, x2);
-            if (y > y2) swapValues(y, y2);
+            if (x > x2) std::swap(x, x2);
+            if (y > y2) std::swap(y, y2);
 
             Draw::fill({x, y, x2 - x, y2 - y}, fill);
             Draw::outline({x, y, x2 - x, y2 - y}, outline);
@@ -280,8 +288,10 @@ struct SelectionImpl : public Selection {
             if (keyFlags & (Keyflag::SHIFT | Keyflag::ALT)) {
                 Texture& tex =
                     (keyFlags & Keyflag::SHIFT) ? myAddIcon : mySubIcon;
-                Draw::sprite(tex, {start.x, start.y, mpos.x - start.x,
-                                   mpos.y - start.y});
+                Draw::sprite(tex, {start.x - gSystem->applyScaleFactor(8),
+                                   start.y - gSystem->applyScaleFactor(8),
+                                   gSystem->applyScaleFactor(16),
+                                   gSystem->applyScaleFactor(16)});
             }
         }
     }
@@ -321,10 +331,18 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
+    int selectNotes(NotesMan::Filter filter) override {
+        return selectNotes(filter, false);
+    }
+
     int selectNotes(RowType rowType, bool ignoreRegion) override {
         int numSelected = gNotes->selectQuant(rowType, ignoreRegion);
         showSelectionResult(SELECT_SET, numSelected);
         return numSelected;
+    }
+
+    int selectNotes(RowType rowType) override {
+        return selectNotes(rowType, false);
     }
 
     int selectNotes(SelectModifier mod, int density,
@@ -332,6 +350,10 @@ struct SelectionImpl : public Selection {
         int numSelected = gNotes->selectDensity(mod, density, ignoreRegion);
         showSelectionResult(mod, numSelected);
         return numSelected;
+    }
+
+    int selectNotes(SelectModifier mod, int density) override {
+        return selectNotes(mod, density, false);
     }
 
     int selectNotes(SelectModifier mod, RowCol begin, RowCol end,
@@ -342,11 +364,20 @@ struct SelectionImpl : public Selection {
         return numSelected;
     }
 
-    int selectNotes(SelectModifier mod, const Vector<RowCol>& indices,
+    int selectNotes(SelectModifier mod, RowCol begin, RowCol end) override {
+        return selectNotes(mod, begin, end, false);
+    }
+
+    int selectNotes(SelectModifier mod, const std::vector<RowCol>& indices,
                     bool ignoreRegion) override {
         int numSelected = gNotes->select(mod, indices, ignoreRegion);
         showSelectionResult(mod, numSelected);
         return numSelected;
+    }
+
+    int selectNotes(SelectModifier mod,
+                    const std::vector<RowCol>& indices) override {
+        return selectNotes(mod, indices, false);
     }
 
     int getSelectedNotes(NoteList& out) override {
@@ -386,8 +417,8 @@ struct SelectionImpl : public Selection {
     void selectRegion(int row, int endRow) override {
         setRegion(row, endRow);
 
-        auto firstRow = min(row, endRow);
-        auto lastRow = max(row, endRow);
+        auto firstRow = std::min(row, endRow);
+        auto lastRow = std::max(row, endRow);
         if (row != endRow) {
             double m1 = gTempo->beatToMeasure(firstRow * BEATS_PER_ROW);
             double m2 = gTempo->beatToMeasure(lastRow * BEATS_PER_ROW);

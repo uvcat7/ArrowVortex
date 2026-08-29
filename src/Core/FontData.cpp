@@ -199,7 +199,7 @@ static Glyph* PutGlyphInCache(GlyphCache* cache, FT_GlyphSlot slot) {
         uint8_t* pixels = CopyGlyphBitmap(bitmapW, bitmapH, bitmap);
         cache->tex->modify(glyph->box.x, glyph->box.y, bitmapW, bitmapH,
                            pixels);
-        cache->shelfH = max(cache->shelfH, bitmapH);
+        cache->shelfH = std::max(cache->shelfH, bitmapH);
         free(pixels);
 
         // Set the glyph uvs.

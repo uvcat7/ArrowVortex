@@ -4,6 +4,7 @@
 
 #include <Editor/Editing.h>
 #include <Editor/Editor.h>
+#include <Editor/Menubar.h>
 #include <Editor/Minimap.h>
 #include <Editor/Music.h>
 #include <Editor/Notefield.h>
@@ -30,6 +31,7 @@
 namespace Vortex {
 
 void Action::perform(Type action) {
+    gMenubar->closeMenus();
 #define FIRST_CASE(x) case x: {
 #define CASE(x) \
     }           \

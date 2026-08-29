@@ -15,13 +15,13 @@ class SegmentGroup {
     // Returns a pointer to the start of the segment list for the given type.
     template <typename T>
     const T* begin() const {
-        return (const T*)(myLists[T::TYPE].rawBegin());
+        return reinterpret_cast<const T*>(myLists[T::TYPE].rawBegin());
     }
 
     // Returns a pointer to the end of the segment list for the given type.
     template <typename T>
     const T* end() const {
-        return (const T*)(myLists[T::TYPE].rawEnd());
+        return reinterpret_cast<const T*>(myLists[T::TYPE].rawEnd());
     }
 
     // Appends a segment to the back of the target list.
@@ -40,7 +40,7 @@ class SegmentGroup {
     // If no segment occured, a default constucted segment is returned.
     template <typename T>
     T getRecent(int row) const {
-        const T* it = (const T*)myLists[T::TYPE].find(row);
+        const T* it = reinterpret_cast<const T*>(myLists[T::TYPE].find(row));
         return it ? T(*it) : T();
     }
 
@@ -48,7 +48,7 @@ class SegmentGroup {
     // If no segment occurs, a default constucted segment is returned.
     template <typename T>
     T getRow(int row) const {
-        const T* it = (const T*)myLists[T::TYPE].find(row);
+        const T* it = reinterpret_cast<const T*>(myLists[T::TYPE].find(row));
         return (it && it->row == row) ? T(*it) : T();
     }
 

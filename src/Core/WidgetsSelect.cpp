@@ -11,9 +11,9 @@ namespace Vortex {
 // ================================================================================================
 // WgSelectList
 
-#define ITEM_H static_cast<int>(18 * gSystem->getScaleFactor())
-#define ICON_W static_cast<int>(8 * gSystem->getScaleFactor())
-#define ICON_SPACE static_cast<int>(10 * gSystem->getScaleFactor())
+#define ITEM_H gSystem->applyScaleFactor(18)
+#define ICON_W gSystem->applyScaleFactor(8)
+#define ICON_SPACE gSystem->applyScaleFactor(10)
 
 WgSelectList::~WgSelectList() {
     clearItems();
@@ -21,11 +21,7 @@ WgSelectList::~WgSelectList() {
     delete scrollbar_;
 }
 
-WgSelectList::WgSelectList(GuiContext* gui)
-    : GuiWidget(gui),
-      scroll_position_(0),
-      is_interacted_(0),
-      show_background_(1) {
+WgSelectList::WgSelectList(GuiContext* gui) : GuiWidget(gui) {
     scrollbar_ = new WgScrollbarV(gui_);
     scrollbar_->value.bind(&scroll_position_);
 }
@@ -33,7 +29,7 @@ WgSelectList::WgSelectList(GuiContext* gui)
 void WgSelectList::hideBackground() { show_background_ = 0; }
 
 void WgSelectList::addItem(const std::string& text) {
-    selectlist_items_.push_back(text);
+    selectlist_items_.emplace_back(text);
 }
 
 void WgSelectList::clearItems() { selectlist_items_.clear(); }
@@ -74,7 +70,7 @@ void WgSelectList::scroll(bool up) {
     if (HasScrollBar()) {
         int end = selectlist_items_.size() * ITEM_H - ItemRect().h;
         int delta = up ? -ITEM_H : ITEM_H;
-        scroll_position_ = min(max(scroll_position_ + delta, 0), end);
+        scroll_position_ = std::clamp(scroll_position_ + delta, 0, end);
     }
 }
 
@@ -187,9 +183,8 @@ void WgDroplist::onMousePress(MousePress& evt) {
         int numItems = droplist_items_.size();
         if (isEnabled() && numItems && evt.button == Mouse::LMB &&
             evt.unhandled()) {
-            int h = min(
-                numItems * static_cast<int>(18 * gSystem->getScaleFactor()) + 8,
-                static_cast<int>(128 * gSystem->getScaleFactor()));
+            int h = std::min(numItems * gSystem->applyScaleFactor(18) + 8,
+                             gSystem->applyScaleFactor(128));
             recti r = {rect_.x, rect_.y + rect_.h, rect_.w, h};
             selectlist_widget_ = new WgSelectList(gui_);
             selectlist_widget_->setHeight(h);
@@ -289,7 +284,7 @@ void WgDroplist::onDraw() {
 void WgDroplist::clearItems() { droplist_items_.clear(); }
 
 void WgDroplist::addItem(const std::string& text) {
-    droplist_items_.push_back(text);
+    droplist_items_.emplace_back(text);
 }
 
 void WgDroplist::CloseDroplist() {
@@ -308,7 +303,7 @@ WgCycleButton::~WgCycleButton() { clearItems(); }
 WgCycleButton::WgCycleButton(GuiContext* gui) : GuiWidget(gui) {}
 
 void WgCycleButton::addItem(const std::string& text) {
-    cycle_items_.push_back(text);
+    cycle_items_.emplace_back(text);
 }
 
 void WgCycleButton::clearItems() { cycle_items_.clear(); }

@@ -2,6 +2,7 @@
 
 #include <Core/Input.h>
 #include <Core/Slot.h>
+#include <Core/GuiWidget.h>
 
 namespace Vortex {
 
@@ -84,7 +85,7 @@ class GuiWidget : public InputHandler {
 
     virtual ~GuiWidget();
 
-    GuiWidget(GuiContext* gui);
+    explicit GuiWidget(GuiContext* gui);
 
     // Captures mouse over for the current frame.
     void captureMouseOver();
@@ -147,7 +148,7 @@ class GuiWidget : public InputHandler {
     recti rect_;
     int width_;
     int height_;
-    uint32_t flags_;
+    uint32_t flags_ = WidgetFlags::WF_ENABLED;
 };
 
 // Base class for dialog objects.
@@ -155,7 +156,7 @@ class GuiDialog {
    public:
     virtual ~GuiDialog();
 
-    GuiDialog(GuiContext* gui);
+    explicit GuiDialog(GuiContext* gui);
 
     virtual void onUpdateSize();
     virtual void onArrange(recti r);

@@ -2,6 +2,7 @@
 
 #include <string>
 
+#ifdef _WIN32
 namespace Vortex {
 
 // Converts a wide String (UTF-16) to a string (UTF-8).
@@ -15,3 +16,4 @@ extern std::wstring Widen(const char* str);
 extern std::wstring Widen(const std::string& str);
 
 };  // namespace Vortex
+#endif

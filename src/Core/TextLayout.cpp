@@ -3,12 +3,12 @@
 #include <Core/TextDraw.h>
 #include <Core/Renderer.h>
 #include <Core/Utils.h>
-#include <Core/Vector.h>
 #include <Core/StringUtils.h>
 
 #include <System/System.h>
 
 #include <cctype>
+#include <vector>
 #include <stdint.h>
 
 namespace Vortex {
@@ -141,18 +141,20 @@ static void ReadMarkupColor(uint32_t& out, const uint8_t* param, int len,
 
 static void ReadTextColor(const uint8_t* param, int len) {
     ReadMarkupColor(LD->textColor, param, len, LD->baseTextColor);
-    auto& item = LD->markup.append();
-    item.type = LMarkup::SET_TEXT_COLOR;
-    item.glyphIndex = LD->glyphs.size();
-    item.setTextColor = LD->textColor;
+    LMarkup new_markup = {0};
+    new_markup.type = LMarkup::SET_TEXT_COLOR;
+    new_markup.glyphIndex = LD->glyphs.size();
+    new_markup.setTextColor = LD->textColor;
+    LD->markup.emplace_back(new_markup);
 }
 
 static void ReadShadowColor(const uint8_t* param, int len) {
     ReadMarkupColor(LD->shadowColor, param, len, LD->baseShadowColor);
-    auto& item = LD->markup.append();
-    item.type = LMarkup::SET_SHADOW_COLOR;
-    item.glyphIndex = LD->glyphs.size();
-    item.setShadowColor = LD->shadowColor;
+    LMarkup new_markup = {0};
+    new_markup.type = LMarkup::SET_SHADOW_COLOR;
+    new_markup.glyphIndex = LD->glyphs.size();
+    new_markup.setShadowColor = LD->shadowColor;
+    LD->markup.emplace_back(new_markup);
 }
 
 static void ReadFontSize(const uint8_t* param, int len) {
@@ -168,7 +170,7 @@ static void ReadFontSize(const uint8_t* param, int len) {
     } else {
         fontSize = static_cast<int>(ReadNumber(param, len) + 0.5);
     }
-    LD->fontSize = min(max(1, fontSize), 256);
+    LD->fontSize = std::clamp(fontSize, 1, 256);
     SetLineMetrics();
 }
 
@@ -185,11 +187,8 @@ static void ReadFontChange(const uint8_t* param, int len) {
 
 static void ReadFgColor(const uint8_t* param, int len) {
     if (LD->fgQuad.enabled) {
-        auto& quad = LD->fgQuads.append();
-        quad.color = LD->fgQuad.color;
-        quad.line = LD->lineIndex;
-        quad.x = LD->fgQuad.x;
-        quad.w = LD->lineW - LD->fgQuad.x;
+        LD->fgQuads.emplace_back(LD->lineIndex, LD->fgQuad.x,
+                                 LD->lineW - LD->fgQuad.x, LD->fgQuad.color);
         LD->fgQuad.enabled = false;
     }
     union {
@@ -205,11 +204,8 @@ static void ReadFgColor(const uint8_t* param, int len) {
 
 static void ReadBgColor(const uint8_t* param, int len) {
     if (LD->bgQuad.enabled) {
-        auto& quad = LD->bgQuads.append();
-        quad.color = LD->bgQuad.color;
-        quad.line = LD->lineIndex;
-        quad.x = LD->bgQuad.x;
-        quad.w = LD->lineW - LD->bgQuad.x;
+        LD->bgQuads.emplace_back(LD->lineIndex, LD->bgQuad.x,
+                                 LD->lineW - LD->bgQuad.x, LD->bgQuad.color);
         LD->bgQuad.enabled = false;
     }
     union {
@@ -320,8 +316,8 @@ static const Glyph* GetGlyph(int charcode) {
 }
 
 static void SetLineMetrics() {
-    LD->lineTop = min(LD->lineTop, -LD->fontSize);
-    LD->lineBottom = max(LD->lineBottom, LD->fontSize / 4);
+    LD->lineTop = std::min(LD->lineTop, -LD->fontSize);
+    LD->lineBottom = std::max(LD->lineBottom, LD->fontSize / 4);
 }
 
 static const Glyph* ReadGlyph(const uint8_t* str) {
@@ -356,32 +352,34 @@ static const Glyph* ReadGlyph(const uint8_t* str) {
 static void AddEllipsesToLine() {
     const Glyph* ellipsesGlyph = GetGlyph('.');
     int ellipsesW = ellipsesGlyph->advance * 3;
-    int maxLineW = max(0, LD->maxLineW - ellipsesW);
+    int maxLineW = std::max(0, LD->maxLineW - ellipsesW);
 
     // In order to do ellipses, the line must contain atleast one glyph.
     if (LD->lineBeginGlyph == LD->glyphs.size()) return;
-    auto* glyphs = LD->glyphs.begin();
     int firstGlyph = LD->lineBeginGlyph;
     int lastGlyph = LD->glyphs.size() - 1;
-    int lineEndCharIndex = glyphs[firstGlyph].charIndex;
+    int lineEndCharIndex = LD->glyphs[firstGlyph].charIndex;
 
     // Omit all glyphs that are past the maximum line width.
     while (lastGlyph >= firstGlyph &&
-           glyphs[lastGlyph].x + glyphs[lastGlyph].glyph->advance > maxLineW) {
-        lineEndCharIndex = glyphs[lastGlyph].charIndex;
+           LD->glyphs[lastGlyph].x + LD->glyphs[lastGlyph].glyph->advance >
+               maxLineW) {
+        lineEndCharIndex = LD->glyphs[lastGlyph].charIndex;
         --lastGlyph;
     }
 
     // We don't put ellipses after whitespace, so omit trailing whitespace as
     // well.
-    while (lastGlyph >= firstGlyph && glyphs[lastGlyph].glyph->isWhitespace) {
-        lineEndCharIndex = glyphs[lastGlyph].charIndex;
+    while (lastGlyph >= firstGlyph &&
+           LD->glyphs[lastGlyph].glyph->isWhitespace) {
+        lineEndCharIndex = LD->glyphs[lastGlyph].charIndex;
         --lastGlyph;
     }
 
     // Determine the new line width.
     if (lastGlyph >= 0) {
-        LD->lineW = glyphs[lastGlyph].x + glyphs[lastGlyph].glyph->advance;
+        LD->lineW =
+            LD->glyphs[lastGlyph].x + LD->glyphs[lastGlyph].glyph->advance;
     } else {
         LD->lineW = 0;
     }
@@ -389,12 +387,12 @@ static void AddEllipsesToLine() {
     // Clamp foreground/background quads to the new line width.
     for (auto& quad : LD->fgQuads) {
         if (quad.line == LD->lineIndex) {
-            quad.w = min(quad.w, max(0, LD->lineW - quad.x));
+            quad.w = std::min(quad.w, std::max(0, LD->lineW - quad.x));
         }
     }
     for (auto& quad : LD->bgQuads) {
         if (quad.line == LD->lineIndex) {
-            quad.w = min(quad.w, max(0, LD->lineW - quad.x));
+            quad.w = std::min(quad.w, std::max(0, LD->lineW - quad.x));
         }
     }
 
@@ -402,20 +400,16 @@ static void AddEllipsesToLine() {
     LD->glyphs.resize(lastGlyph + 1, LGlyph());
     if (ellipsesW < LD->maxLineW) {
         for (int i = 0; i < 3; ++i) {
-            auto& item = LD->glyphs.append();
-            item.glyph = ellipsesGlyph;
-            item.x = LD->lineW;
-            item.charIndex = lineEndCharIndex;
+            LD->glyphs.emplace_back(ellipsesGlyph, LD->lineW, lineEndCharIndex);
             LD->lineW += ellipsesGlyph->advance;
         }
     }
 
     // Make sure all markup from the omitted part is applied after the ellipses.
     int postEllipsesIndex = LD->glyphs.size();
-    auto* markup = LD->markup.begin();
     int markupIndex = LD->markup.size() - 1;
-    while (markupIndex >= 0 && markup[markupIndex].glyphIndex > lastGlyph) {
-        markup[markupIndex].glyphIndex = postEllipsesIndex;
+    while (markupIndex >= 0 && LD->markup[markupIndex].glyphIndex > lastGlyph) {
+        LD->markup[markupIndex].glyphIndex = postEllipsesIndex;
         --markupIndex;
     }
 }
@@ -423,21 +417,15 @@ static void AddEllipsesToLine() {
 static void FinishCurrentLine(bool last) {
     // Finish the current foreground quad.
     if (LD->fgQuad.enabled && LD->lineW > LD->fgQuad.x) {
-        auto& quad = LD->fgQuads.append();
-        quad.color = LD->fgQuad.color;
-        quad.line = LD->lineIndex;
-        quad.x = LD->fgQuad.x;
-        quad.w = LD->lineW - LD->fgQuad.x;
+        LD->fgQuads.emplace_back(LD->lineIndex, LD->fgQuad.x,
+                                 LD->lineW - LD->fgQuad.x, LD->fgQuad.color);
         LD->fgQuad.x = 0;
     }
 
     // Finish the current background quad.
     if (LD->fgQuad.enabled && LD->lineW > LD->fgQuad.x) {
-        auto& quad = LD->bgQuads.append();
-        quad.color = LD->fgQuad.color;
-        quad.line = LD->lineIndex;
-        quad.x = LD->fgQuad.x;
-        quad.w = LD->lineW - LD->fgQuad.x;
+        LD->bgQuads.emplace_back(LD->lineIndex, LD->fgQuad.x,
+                                 LD->lineW - LD->fgQuad.x, LD->fgQuad.color);
         LD->fgQuad.x = 0;
     }
 
@@ -454,17 +442,12 @@ static void FinishCurrentLine(bool last) {
     }
 
     // Store the current line info.
-    auto& line = LD->lines.append();
-    line.beginGlyph = LD->lineBeginGlyph;
-    line.endGlyph = LD->glyphs.size();
-    line.x = 0;
-    line.y = lineY;
-    line.w = LD->lineW;
-    line.top = LD->lineTop;
-    line.bottom = LD->lineBottom;
+    LD->lines.emplace_back(LD->lineBeginGlyph,
+                           static_cast<int>(LD->glyphs.size()), 0, lineY,
+                           LD->lineW, LD->lineTop, LD->lineBottom);
 
     // Update the size of the text area.
-    LD->textW = max(LD->textW, LD->lineW);
+    LD->textW = std::max(LD->textW, LD->lineW);
     LD->textH = lineY + LD->lineBottom;
 
     // advance to the next line.
@@ -551,10 +534,7 @@ static void CreateLayout(const char* str) {
         }
 
         // Insert the glyph in the list.
-        auto& item = LD->glyphs.append();
-        item.glyph = glyph;
-        item.x = LD->lineW;
-        item.charIndex = LD->charIndex;
+        LD->glyphs.emplace_back(glyph, LD->lineW, LD->charIndex);
 
         // Check if we are forced to break the line and continue on a new line.
         if (glyph->isNewline && isMultiline) {
@@ -603,8 +583,7 @@ static vec2i ArrangeText(const TextStyle& style, int maxLineWidth,
     LD->align = align;
 
     LD->font = LD->baseFont = static_cast<FontData*>(style.font.data());
-    LD->fontSize = LD->baseFontSize =
-        static_cast<int>(gSystem->getScaleFactor() * style.fontSize);
+    LD->fontSize = LD->baseFontSize = gSystem->applyScaleFactor(style.fontSize);
 
     LD->baseTextColor = LD->textColor = style.textColor;
     LD->baseShadowColor = LD->shadowColor = style.shadowColor;
@@ -628,11 +607,7 @@ static vec2i ArrangeText(const TextStyle& style, int maxLineWidth,
 // ================================================================================================
 // TextStyle
 
-TextStyle::TextStyle()
-    : fontSize(12),
-      textFlags(0),
-      textColor(Colors::white),
-      shadowColor(Colors::black) {
+TextStyle::TextStyle() {
     if (LD) *this = LD->defaultStyle;
 }
 
@@ -716,7 +691,8 @@ vec2i Text::arrange(Text::Align align, const char* text) {
 }
 
 vec2i Text::arrange(Text::Align align, int maxLineWidth, const char* text) {
-    return ArrangeText(LD->defaultStyle, max(maxLineWidth, 0), align, text);
+    return ArrangeText(LD->defaultStyle, std::max(maxLineWidth, 0), align,
+                       text);
 }
 
 vec2i Text::arrange(Text::Align align, const TextStyle& style,
@@ -726,7 +702,7 @@ vec2i Text::arrange(Text::Align align, const TextStyle& style,
 
 vec2i Text::arrange(Text::Align align, const TextStyle& style, int maxLineWidth,
                     const char* text) {
-    return ArrangeText(style, max(maxLineWidth, 0), align, text);
+    return ArrangeText(style, std::max(maxLineWidth, 0), align, text);
 }
 
 vec2i Text::getSize() { return {LD->textW, LD->textH}; }
@@ -746,8 +722,8 @@ int Text::getCharIndex(recti textBox, vec2i cursorPos) {
 }
 
 int Text::getCharIndex(vec2i textPos, vec2i cursorPos) {
-    const LLine* line = LD->lines.begin();
-    const LLine* lineEnd = LD->lines.end();
+    auto line = LD->lines.begin();
+    auto lineEnd = LD->lines.end();
 
     cursorPos.x -= textPos.x;
     cursorPos.y -= textPos.y;
@@ -766,8 +742,8 @@ int Text::getCharIndex(vec2i textPos, vec2i cursorPos) {
 
     // Otherwise, we look for the closest character on the current line.
     int lastPos = line->beginGlyph;
-    auto* begin = LD->glyphs.begin() + line->beginGlyph;
-    auto* end = LD->glyphs.begin() + line->endGlyph;
+    auto begin = LD->glyphs.begin() + line->beginGlyph;
+    auto end = LD->glyphs.begin() + line->endGlyph;
     for (auto item = begin; item != end; ++item) {
         int glyphCenterX = line->x + item->x + item->glyph->advance / 2;
         if (glyphCenterX > cursorPos.x) return item->charIndex;
@@ -792,8 +768,8 @@ Text::CursorPos Text::getCursorPos(vec2i textPos, int charIndex) {
 
     // Return the rect of the first glyph on or after index.
     for (auto& line : LD->lines) {
-        auto* begin = LD->glyphs.begin() + line.beginGlyph;
-        auto* end = LD->glyphs.begin() + line.endGlyph;
+        auto begin = LD->glyphs.begin() + line.beginGlyph;
+        auto end = LD->glyphs.begin() + line.endGlyph;
         for (auto item = begin; item != end; ++item) {
             if (item->charIndex >= charIndex) {
                 int x = textPos.x + line.x + item->x;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Vector.h>
+#include <vector>
 #include <Core/Utils.h>
 
 #include <Core/Draw.h>
@@ -84,11 +84,11 @@ struct LLayout {
     QuadData fgQuad;
     QuadData bgQuad;
 
-    Vector<LQuad> fgQuads;
-    Vector<LQuad> bgQuads;
-    Vector<LGlyph> glyphs;
-    Vector<LMarkup> markup;
-    Vector<LLine> lines;
+    std::vector<LQuad> fgQuads;
+    std::vector<LQuad> bgQuads;
+    std::vector<LGlyph> glyphs;
+    std::vector<LMarkup> markup;
+    std::vector<LLine> lines;
 
     int stringLength;
 };

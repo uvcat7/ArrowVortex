@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Core/Slot.h>
-#include <Core/Vector.h>
 #include <Core/Draw.h>
 #include <Core/Text.h>
 #include <Core/Gui.h>
+
+#include <vector>
 
 namespace Vortex {
 
@@ -12,7 +13,7 @@ namespace Vortex {
 class WgSeperator : public GuiWidget {
    public:
     ~WgSeperator();
-    WgSeperator(GuiContext* gui);
+    explicit WgSeperator(GuiContext* gui);
 
     void onDraw() override;
 };
@@ -21,7 +22,7 @@ class WgSeperator : public GuiWidget {
 class WgLabel : public GuiWidget {
    public:
     ~WgLabel();
-    WgLabel(GuiContext* gui);
+    explicit WgLabel(GuiContext* gui);
 
     void onDraw() override;
 
@@ -32,7 +33,7 @@ class WgLabel : public GuiWidget {
 class WgButton : public GuiWidget {
    public:
     ~WgButton();
-    WgButton(GuiContext* gui);
+    explicit WgButton(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -48,7 +49,7 @@ class WgButton : public GuiWidget {
 class WgCheckbox : public GuiWidget {
    public:
     ~WgCheckbox();
-    WgCheckbox(GuiContext* gui);
+    explicit WgCheckbox(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -66,7 +67,7 @@ class WgCheckbox : public GuiWidget {
 class WgSlider : public GuiWidget {
    public:
     ~WgSlider();
-    WgSlider(GuiContext* gui);
+    explicit WgSlider(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -89,7 +90,7 @@ class WgSlider : public GuiWidget {
 class WgScrollbar : public GuiWidget {
    public:
     ~WgScrollbar();
-    WgScrollbar(GuiContext* gui);
+    explicit WgScrollbar(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -107,8 +108,8 @@ class WgScrollbar : public GuiWidget {
    protected:
     void ScrollbarUpdateValue(int v);
     int scrollbar_end_, scrollbar_page_;
-    uint32_t scrollbar_action_ : 9;
-    uint32_t scrollbar_grab_position_ : 16;
+    uint32_t scrollbar_action_ : 9 = 0;
+    uint32_t scrollbar_grab_position_ : 16 = 0;
 
    private:
     uint32_t GetScrollbarActionAtPosition(int x, int y);
@@ -120,7 +121,7 @@ class WgScrollRegion : public GuiWidget {
     enum ScrollType { SCROLL_ALWAYS, SCROLL_WHEN_NEEDED, SCROLL_NEVER };
 
     ~WgScrollRegion();
-    WgScrollRegion(GuiContext* gui);
+    explicit WgScrollRegion(GuiContext* gui);
 
     void onMouseScroll(MouseScroll& evt) override;
     void onMousePress(MousePress& evt) override;
@@ -144,14 +145,14 @@ class WgScrollRegion : public GuiWidget {
     void PostTick();
     void ClampScrollPositions();
 
-    uint32_t scroll_type_horizontal_ : 2;
-    uint32_t scroll_type_vertical_ : 2;
-    uint32_t is_horizontal_scrollbar_active_ : 1;
-    uint32_t is_vertical_scrollbar_active_ : 1;
-    uint32_t scroll_region_action_ : 9;
-    uint32_t scroll_region_grab_position_ : 16;
-    int scroll_width_, scroll_height_;
-    int scroll_position_x_, scroll_position_y_;
+    uint32_t scroll_type_horizontal_ : 2 = 0;
+    uint32_t scroll_type_vertical_ : 2 = 0;
+    uint32_t is_horizontal_scrollbar_active_ : 1 = 0;
+    uint32_t is_vertical_scrollbar_active_ : 1 = 0;
+    uint32_t scroll_region_action_ : 9 = 0;
+    uint32_t scroll_region_grab_position_ : 16 = 0;
+    int scroll_width_ = 0, scroll_height_ = 0;
+    int scroll_position_x_ = 0, scroll_position_y_ = 0;
 
    private:
     uint32_t getScrollRegionActionAt_(int x, int y);
@@ -160,14 +161,14 @@ class WgScrollRegion : public GuiWidget {
 // Vertical Scrollbar GuiWidget.
 class WgScrollbarV : public WgScrollbar {
    public:
-    WgScrollbarV(GuiContext* gui);
+    explicit WgScrollbarV(GuiContext* gui);
     bool isVertical() const;
 };
 
 // Horizontal Scrollbar GuiWidget.
 class WgScrollbarH : public WgScrollbar {
    public:
-    WgScrollbarH(GuiContext* gui);
+    explicit WgScrollbarH(GuiContext* gui);
     bool isVertical() const;
 };
 
@@ -175,7 +176,7 @@ class WgScrollbarH : public WgScrollbar {
 class WgSelectList : public GuiWidget {
    public:
     ~WgSelectList();
-    WgSelectList(GuiContext* gui);
+    explicit WgSelectList(GuiContext* gui);
 
     void onArrange(recti r) override;
     void onMousePress(MousePress& evt) override;
@@ -199,18 +200,18 @@ class WgSelectList : public GuiWidget {
     bool HasScrollBar() const;
     recti ItemRect() const;
 
-    WgScrollbarV* scrollbar_;
-    Vector<std::string> selectlist_items_;
-    int scroll_position_;
-    uint32_t is_interacted_ : 1;
-    uint32_t show_background_ : 1;
+    WgScrollbarV* scrollbar_ = nullptr;
+    std::vector<std::string> selectlist_items_;
+    int scroll_position_ = 0;
+    uint32_t is_interacted_ : 1 = 0;
+    uint32_t show_background_ : 1 = 1;
 };
 
 /// Vertical Drop Down List GuiWidget.
 class WgDroplist : public GuiWidget {
    public:
     ~WgDroplist();
-    WgDroplist(GuiContext* gui);
+    explicit WgDroplist(GuiContext* gui);
 
     void onArrange(recti r) override;
     void onMousePress(MousePress& evt) override;
@@ -229,7 +230,7 @@ class WgDroplist : public GuiWidget {
     void CloseDroplist();
 
     WgSelectList* selectlist_widget_;
-    Vector<std::string> droplist_items_;
+    std::vector<std::string> droplist_items_;
     int selected_index_;
 };
 
@@ -237,7 +238,7 @@ class WgDroplist : public GuiWidget {
 class WgCycleButton : public GuiWidget {
    public:
     ~WgCycleButton();
-    WgCycleButton(GuiContext* gui);
+    explicit WgCycleButton(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -250,14 +251,14 @@ class WgCycleButton : public GuiWidget {
     CallSlot onChange;
 
    protected:
-    Vector<std::string> cycle_items_;
+    std::vector<std::string> cycle_items_;
 };
 
 /// Single Line Text Editor GuiWidget.
 class WgLineEdit : public GuiWidget {
    public:
     ~WgLineEdit();
-    WgLineEdit(GuiContext* gui);
+    explicit WgLineEdit(GuiContext* gui);
 
     void onKeyPress(KeyPress& evt) override;
     void onKeyRelease(KeyRelease& evt) override;
@@ -290,7 +291,7 @@ class WgLineEdit : public GuiWidget {
     uint32_t is_numerical_ : 1;
     uint32_t is_editable_ : 1;
     uint32_t force_scroll_update_ : 1;
-    uint32_t lineedit_show_background_ : 1;
+    uint32_t lineedit_show_background_ : 1 = 1;
     TextStyle lineedit_style_;
 };
 
@@ -298,7 +299,7 @@ class WgLineEdit : public GuiWidget {
 class WgSpinner : public GuiWidget {
    public:
     ~WgSpinner();
-    WgSpinner(GuiContext* gui);
+    explicit WgSpinner(GuiContext* gui);
 
     void onArrange(recti r) override;
     void onMousePress(MousePress& evt) override;
@@ -334,7 +335,7 @@ class WgSpinner : public GuiWidget {
 class WgColorPicker : public GuiWidget {
    public:
     ~WgColorPicker();
-    WgColorPicker(GuiContext* gui);
+    explicit WgColorPicker(GuiContext* gui);
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
@@ -346,7 +347,7 @@ class WgColorPicker : public GuiWidget {
 
    private:
     struct Expanded;
-    Expanded* colorpicker_expanded_;
+    Expanded* colorpicker_expanded_ = nullptr;
 };
 
 };  // namespace Vortex

@@ -30,7 +30,7 @@ class Shader {
     static void uniform4f(int loc, float x, float y, float z, float w);
     static void uniform4f(int loc, const colorf& color);
 
-    uint32_t program_id_, vertex_shader_id_, fragment_shader_id_;
+    uint32_t program_id_ = 0, vertex_shader_id_ = 0, fragment_shader_id_ = 0;
 };
 
 };  // namespace Vortex
