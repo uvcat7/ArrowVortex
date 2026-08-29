@@ -109,7 +109,7 @@ void WgScrollbar::setPage(int size) { scrollbar_page_ = size; }
 
 void WgScrollbar::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             uint32_t action = GetScrollbarActionAtPosition(evt.x, evt.y);
             if (action) {
                 startCapturingMouse();
@@ -127,7 +127,7 @@ void WgScrollbar::onMousePress(MousePress& evt) {
                 scrollbar_action_ = ACT_DRAGGING_V;
             }
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 
@@ -228,7 +228,7 @@ void WgScrollRegion::onMouseScroll(MouseScroll& evt) {
 
 void WgScrollRegion::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             uint32_t action = getScrollRegionActionAt_(evt.x, evt.y);
             if (action) {
                 startCapturingMouse();
@@ -248,7 +248,7 @@ void WgScrollRegion::onMousePress(MousePress& evt) {
                 scroll_region_action_ = ACT_DRAGGING_V;
             }
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 

@@ -49,13 +49,13 @@ WgButton::WgButton(GuiContext* gui) : GuiWidget(gui) {}
 
 void WgButton::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             startCapturingMouse();
             isDown.set(true);
             counter.set(counter.get() + 1);
             onPress.call();
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 
@@ -98,12 +98,12 @@ WgCheckbox::WgCheckbox(GuiContext* gui) : GuiWidget(gui) {}
 
 void WgCheckbox::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             startCapturingMouse();
             value.set(!value.get());
             onChange.call();
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 
@@ -161,11 +161,11 @@ void WgSlider::setRange(double begin, double end) {
 
 void WgSlider::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             startCapturingMouse();
             SliderDrag(evt.x, evt.y);
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 

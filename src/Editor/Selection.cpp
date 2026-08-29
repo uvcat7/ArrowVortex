@@ -95,19 +95,19 @@ struct SelectionImpl : public Selection {
 
     void onMousePress(MousePress& evt) override {
         // Start dragging a selection box.
-        if (evt.button == Mouse::LMB && evt.unhandled()) {
+        if (evt.button == Mouse::LMB && !evt.handled) {
             myIsDraggingSelection = true;
             myDragSelectionX = evt.x;
             myDragSelectionTor = gView->yToOffset(evt.y);
-            evt.setHandled();
+            evt.handled = true;
         }
 
         // Clear selection.
-        if (evt.button == Mouse::RMB && evt.unhandled()) {
+        if (evt.button == Mouse::RMB && !evt.handled) {
             gNotes->deselectAll();
             gTempoBoxes->deselectAll();
             this->setRegion(0, 0);
-            evt.setHandled();
+            evt.handled = true;
         }
     }
 

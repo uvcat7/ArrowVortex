@@ -118,7 +118,7 @@ void DialogData::onMousePress(MousePress& evt) {
     stopCapturingMouse();
     recti r = rect_;
     if (isMouseOver()) {
-        if (evt.button == Mouse::LMB && evt.unhandled()) {
+        if (evt.button == Mouse::LMB && !evt.handled) {
             auto actionType = GetAction(evt.x, evt.y);
 
             if (actionType != ACT_NONE || IsInside(r, evt.x, evt.y)) {
@@ -138,7 +138,7 @@ void DialogData::onMousePress(MousePress& evt) {
                 request_pin_ = true;
             }
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 

@@ -351,18 +351,4 @@ void InputHandler::handleInputs(InputEvents& events) {
     }
 }
 
-// ================================================================================================
-// InputHandler :: events structs.
-
-void MousePress::setHandled() { handled = true; }
-
-MousePress::MousePress(Mouse::Code code, int x, int y, int keyflags,
-                       bool doubleClick, bool handled)
-    : button(code),
-      x(x),
-      y(y),
-      keyflags(keyflags),
-      doubleClick(doubleClick),
-      handled(handled) {}
-
 }  // namespace Vortex

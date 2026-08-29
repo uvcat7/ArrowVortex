@@ -126,7 +126,7 @@ void WgLineEdit::onKeyRelease(KeyRelease& evt) {
 
 void WgLineEdit::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             if (isCapturingText() && evt.doubleClick) {
                 lineedit_cursor_.x = 0;
                 lineedit_cursor_.y = static_cast<int>(lineedit_text_.length());
@@ -149,7 +149,7 @@ void WgLineEdit::onMousePress(MousePress& evt) {
 
             startCapturingMouse();
             lineedit_blink_time_ = 0.f;
-            evt.setHandled();
+            evt.handled = true;
         }
     } else
         deselect();
@@ -381,7 +381,7 @@ WgSpinner::WgSpinner(GuiContext* gui) : GuiWidget(gui) {
 
 void WgSpinner::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
-        if (isEnabled() && evt.button == Mouse::LMB && evt.unhandled()) {
+        if (isEnabled() && evt.button == Mouse::LMB && !evt.handled) {
             spinner_lineedit_->deselect();
             startCapturingMouse();
             recti r = SpinnerButtonRect();
@@ -390,7 +390,7 @@ void WgSpinner::onMousePress(MousePress& evt) {
             SpinnerUpdateValue(value.get() + spinner_step_size_ * sign);
             spinner_repeat_timer_ = 0.5f;
         }
-        evt.setHandled();
+        evt.handled = true;
     }
 }
 

@@ -802,32 +802,39 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             }
             break;
         }
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            if (event->button.button == SDL_BUTTON_LEFT) {
+        case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+            mc = event->button.button;
+            if (mc >= SDL_BUTTON_LEFT && mc <= SDL_BUTTON_RIGHT) {
                 SDL_CaptureMouse(true);
                 if (myIsInsideMessageLoop) {
-                    myMousePos =
-                        windowMouseToApp(event->button.x, event->button.y);
-                    myEvents.addMousePress(Mouse::LMB, myMousePos.x,
+                    auto mdc = mcodes[mc];
+                    float x, y;
+                    SDL_GetMouseState(&x, &y);
+                    myMousePos = windowMouseToApp(x, y);
+                    myEvents.addMousePress(mcodes[mc], myMousePos.x,
                                            myMousePos.y, gSystem->getKeyFlags(),
-                                           false);
-                    myMouseState.set(Mouse::LMB);
+                                           event->button.clicks >= 2);
+                    myMouseState.set(mcodes[mc]);
                 }
             }
             break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (event->button.button == SDL_BUTTON_LEFT) {
+        }
+        case SDL_EVENT_MOUSE_BUTTON_UP: {
+            mc = event->button.button;
+            if (mc >= SDL_BUTTON_LEFT && mc <= SDL_BUTTON_RIGHT) {
                 SDL_CaptureMouse(false);
                 if (myIsInsideMessageLoop) {
-                    myMousePos =
-                        windowMouseToApp(event->button.x, event->button.y);
-                    myEvents.addMouseRelease(Mouse::LMB, myMousePos.x,
+                    float x, y;
+                    SDL_GetMouseState(&x, &y);
+                    myMousePos = windowMouseToApp(x, y);
+                    myEvents.addMouseRelease(mcodes[mc], myMousePos.x,
                                              myMousePos.y,
                                              gSystem->getKeyFlags());
-                    myMouseState.reset(Mouse::LMB);
+                    myMouseState.reset(mcodes[mc]);
                 }
             }
             break;
+        }
         case SDL_EVENT_TEXT_INPUT: {
             const char* wp = event->text.text;
             const char n = '\n';
