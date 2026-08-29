@@ -862,7 +862,7 @@ struct MenuBarImpl : public Menubar {
 
     void onMousePress(MousePress& evt) override {
 #ifdef GL_MENU_BAR
-        if (evt.button != Mouse::LMB || !evt.unhandled()) return;
+        if (evt.button != Mouse::LMB || evt.handled) return;
         auto handle_menu = [&](MenuItem* menu) {
             int i = 0;
             for (auto it : menu->getMenuData()) {
@@ -876,7 +876,7 @@ struct MenuBarImpl : public Menubar {
                 else {
                     Action::perform(it.action);
                 }
-                evt.setHandled();
+                evt.handled = true;
                 return false;
             }
             return true;

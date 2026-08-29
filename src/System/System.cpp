@@ -810,9 +810,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                     auto mdc = mcodes[mc];
                     float x, y;
                     SDL_GetMouseState(&x, &y);
-                    myEvents.addMousePress(
-                        mcodes[mc], static_cast<int>(x), static_cast<int>(y),
-                        gSystem->getKeyFlags(), event->button.clicks >= 2);
+                    myMousePos = windowMouseToApp(x, y);
+                    myEvents.addMousePress(mcodes[mc], myMousePos.x,
+                                           myMousePos.y, gSystem->getKeyFlags(),
+                                           event->button.clicks >= 2);
                     myMouseState.set(mcodes[mc]);
                 }
             }
@@ -825,8 +826,9 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
                 if (myIsInsideMessageLoop) {
                     float x, y;
                     SDL_GetMouseState(&x, &y);
-                    myEvents.addMouseRelease(mcodes[mc], static_cast<int>(x),
-                                             static_cast<int>(y),
+                    myMousePos = windowMouseToApp(x, y);
+                    myEvents.addMouseRelease(mcodes[mc], myMousePos.x,
+                                             myMousePos.y,
                                              gSystem->getKeyFlags());
                     myMouseState.reset(mcodes[mc]);
                 }
