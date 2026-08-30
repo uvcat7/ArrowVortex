@@ -247,6 +247,8 @@ enum Type {
     SHOW_MESSAGE_LOG,
     SHOW_DEBUG_LOG,
     SHOW_ABOUT,
+
+    NUM_ACTIONS
 };
 
 // Performs the action associated with the action type.
