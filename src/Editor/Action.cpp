@@ -1,7 +1,11 @@
 ﻿#include <Editor/Action.h>
 
-#include <System/System.h>
+#include <Core/Input.h>
 
+#include <Dialogs/Dialog.h>
+
+#include <Editor/Common.h>
+#include <Editor/ConvertAudio.h>
 #include <Editor/Editing.h>
 #include <Editor/Editor.h>
 #include <Editor/Menubar.h>
@@ -15,18 +19,16 @@
 #include <Editor/TextOverlay.h>
 #include <Editor/View.h>
 
+#include <Managers/ChartMan.h>
+#include <Managers/NoteMan.h>
 #include <Managers/NoteskinMan.h>
 #include <Managers/SimfileMan.h>
 
-#include <Common.h>
-#include <ConvertAudio.h>
-#include <Core/Input.h>
-#include <Dialogs/Dialog.h>
-#include <Managers/ChartMan.h>
-#include <Managers/NoteMan.h>
 #include <Simfile/Common.h>
 #include <Simfile/Notes.h>
 #include <Simfile/Segments.h>
+
+#include <System/System.h>
 
 namespace Vortex {
 
