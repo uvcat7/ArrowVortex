@@ -419,6 +419,7 @@ struct ShortcutsImpl : public Shortcuts {
     };
 
     std::vector<ShortcutEntry> shortcutMappings_;
+    std::vector<std::vector<ShortcutEntry*>> byAction_{Action::NUM_ACTIONS};
 
     // ================================================================================================
     // ShortcutsImpl :: constructor and destructor.
@@ -514,6 +515,11 @@ struct ShortcutsImpl : public Shortcuts {
                 }
             }
         }
+
+        // Per Action lookup.
+        for (auto& entry : shortcutMappings_) {
+            byAction_[static_cast<int>(entry.action->code)].push_back(&entry);
+        }
     }
 
     ~ShortcutsImpl() = default;
@@ -521,44 +527,48 @@ struct ShortcutsImpl : public Shortcuts {
     // ================================================================================================
     // ShortcutsImpl :: API functions.
 
-    bool isAction(KeyPress* press, Action::Type action) override {
-        return getAction(press->keyflags, press->key) == action;
+    bool isAction(int keyflags, Code key, Action::Type action) override {
+        return isAction(keyflags, key, action, false);
     }
 
-    bool isAction(MouseScroll* scroll, Action::Type action) override {
-        return getAction(scroll->keyflags, scroll->up) == action;
+    bool isAction(int keyflags, Code key, Action::Type action,
+                  bool ignoreFlags) override {
+        for (auto* s : byAction_[static_cast<int>(action)]) {
+            if (s->key && s->key->code == key) {
+                if (ignoreFlags || s->keyflags == keyflags) return true;
+            }
+        }
+        return false;
+    }
+
+    bool isAction(int keyflags, bool scrollUp, Action::Type action) override {
+        return isAction(keyflags, scrollUp, action, false);
+    }
+
+    bool isAction(int keyflags, bool scrollUp, Action::Type action,
+                  bool ignoreFlags) override {
+        for (auto* s : byAction_[static_cast<int>(action)]) {
+            if (!s->key && s->scrollUp == scrollUp) {
+                if (ignoreFlags || s->keyflags == keyflags) return true;
+            }
+        }
+        return false;
     }
 
     std::string getNotation(Action::Type action, bool fullList) override {
         std::string out;
-        for (auto& shortcut : shortcutMappings_) {
-            if (shortcut.action->code == action) {
-                if (out.length()) {
-                    out = out + ", ";
-                }
-
-                if (shortcut.keyflags & Keyflag::CTRL) {
-                    out = out + "Ctrl+";
-                }
-                if (shortcut.keyflags & Keyflag::SHIFT) {
-                    out = out + "Shift+";
-                }
-                if (shortcut.keyflags & Keyflag::ALT) {
-                    out = out + "Alt+";
-                }
-                if (shortcut.key == nullptr) {
-                    out =
-                        out + (shortcut.scrollUp ? "Scroll Up" : "Scroll Down");
-                } else if (shortcut.key->chr) {
-                    out = out + shortcut.key->chr;
-                } else {
-                    out = out + shortcut.key->name;
-                }
-
-                if (!fullList) {
-                    break;
-                }
-            }
+        for (auto* s : byAction_[static_cast<int>(action)]) {
+            if (out.length()) out += ", ";
+            if (s->keyflags & Keyflag::CTRL) out += "Ctrl+";
+            if (s->keyflags & Keyflag::SHIFT) out += "Shift+";
+            if (s->keyflags & Keyflag::ALT) out += "Alt+";
+            if (!s->key)
+                out += (s->scrollUp ? "Scroll Up" : "Scroll Down");
+            else if (s->key->chr)
+                out += s->key->chr;
+            else
+                out += s->key->name;
+            if (!fullList) break;
         }
         return out;
     }
