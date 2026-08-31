@@ -14,6 +14,7 @@
 #include <Core/Utils.h>
 #include <Core/Xmr.h>
 
+#include <Editor/Action.h>
 #include <Editor/Clipboard.h>
 #include <Editor/Common.h>
 #include <Editor/Editor.h>
@@ -22,6 +23,7 @@
 #include <Editor/Music.h>
 #include <Editor/Notefield.h>
 #include <Editor/Selection.h>
+#include <Editor/Shortcuts.h>
 #include <Editor/TempoBoxes.h>
 #include <Editor/View.h>
 
@@ -176,20 +178,22 @@ struct EditingImpl : public Editing {
             evt.handled = true;
         }
 
-        // Modal visual sync
-        if (!gTempo->isInVisualSync() && kc == Key::B) {
-            switch (evt.keyflags) {
-                case (0):
-                    this->enableVisualSync(false);
-                    evt.handled = true;
-                    break;
-                case (Keyflag::ALT):
-                    this->enableVisualSync(true);
-                    evt.handled = true;
-                    break;
-                default:
-                    break;
+        // Visual sync
+        if (!gTempo->isInVisualSync()) {
+            if (gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_NONDESTRUCTIVE)) {
+                enableVisualSync(false);
+                evt.handled = true;
             }
+            if (gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_DESTRUCTIVE)) {
+                enableVisualSync(true);
+                evt.handled = true;
+            }
+        }
+        if (gNotefield->hasVisualSyncBeatline() && kc == Key::ESCAPE) {
+            disableTemporaryBeatlines();
+            evt.handled = true;
         }
 
         // Placing notes.
@@ -247,11 +251,16 @@ struct EditingImpl : public Editing {
         if (!gChart->isOpen()) return;
         Key::Code kc = evt.key;
 
-        // Modal visual sync
-        if (kc == Key::B) {
-            gTempo->endVisualSync();
-            evt.handled = true;
-            return;
+        // Visual sync
+        if (gTempo->isInVisualSync()) {
+            if (gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_NONDESTRUCTIVE, true) ||
+                gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_DESTRUCTIVE, true)) {
+                gTempo->endVisualSync();
+                evt.handled = true;
+                return;
+            }
         }
 
         if (kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9) {
@@ -1289,11 +1298,13 @@ struct EditingImpl : public Editing {
 
     bool hasTimeBasedCopy() override { return myUseTimeBasedCopy; }
 
-    // EditingImpl :: visual sync
+    // ================================================================================================
+    // EditingImpl :: visual sync.
+
     void disableTemporaryBeatlines() {
-        if (gNotefield->hasVisualSyncBeatlinePreset()) {
+        if (gNotefield->hasVisualSyncBeatline()) {
             HudInfo("Disabling temporary visual sync beatlines.");
-            gNotefield->clearVisualSyncBeatlinePreset();
+            gNotefield->setVisualSyncBeatline(false);
         }
     }
 
@@ -1344,10 +1355,10 @@ struct EditingImpl : public Editing {
             return;
         }
         // Activate temporary beatlines
-        if (!gNotefield->hasVisualSyncBeatlinePreset()) {
+        if (!gNotefield->needVisualSyncBeatlines()) {
             HudInfo(
                 "Enabling temporary fully enabled beatlines for visual sync.");
-            gNotefield->setVisualSyncBeatlinePreset();
+            gNotefield->setVisualSyncBeatline(true);
             return;
         }
 
@@ -1382,7 +1393,10 @@ struct EditingImpl : public Editing {
 
         gTempo->injectBoundingBpmChange(anchorRow);
     }
-    // EditingImpl :: tempo edit
+
+    // ================================================================================================
+    // EditingImpl :: tempo editor.
+
     void setTempoEditAnchor(EditingAnchor anchor) override {
         myTempoEditAnchor = anchor;
         switch (myTempoEditAnchor) {
