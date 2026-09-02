@@ -12,6 +12,10 @@
 #include <System/OpenGL.h>
 #include <System/System.h>
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#endif
+
 #undef ERROR
 
 namespace Vortex {
@@ -142,6 +146,10 @@ void blockEnd() { sLogBlankLine = true; }
 // Debug :: ignores.
 
 namespace DebugPrivate {
+
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 
 #define MAX_IGNORE_ID_LEN (MAX_PATH + 16)
 #define MAX_DEBUG_MSG_LEN (1024)
