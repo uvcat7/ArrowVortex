@@ -498,8 +498,8 @@ struct MusicImpl : public Music, public MixSource {
                 if (myAudioConversionThread->isSimfile) {
                     fs::path out = utf8ToPath(myAudioConversionThread->outPath);
                     if (gSimfile->isOpen()) {
-                        fs::path path = fs::relative(
-                            out, fs::path(gSimfile->getDir().c_str()));
+                        fs::path path =
+                            fs::relative(out, utf8ToPath(gSimfile->getDir()));
                         gMetadata->setMusicPath(pathToUtf8(path));
                     } else {
                         gEditor->openSimfile(out);

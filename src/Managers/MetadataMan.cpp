@@ -196,7 +196,7 @@ struct MetadataManImpl : public MetadataMan {
     // MetadataManImpl :: autofill functions.
 
     fs::path findImageFile(const char* full, const char* abbrev) {
-        fs::path sim_dir = fs::path(gSimfile->getDir().c_str());
+        fs::path sim_dir = utf8ToPath(gSimfile->getDir());
         auto paths = File::findFiles(sim_dir, false);
         auto parent_paths = File::findFiles(sim_dir.parent_path(), false);
         for (auto& path : parent_paths) {
@@ -212,12 +212,12 @@ struct MetadataManImpl : public MetadataMan {
                 if (Str::startsWith(f, prefix.c_str()) ||
                     Str::endsWith(f, postfix.c_str())) {
                     return fs::relative(path,
-                                        fs::path(gSimfile->getDir().c_str()));
+                                        utf8ToPath(gSimfile->getDir()));
                 }
             }
             if (Str::find(f, abbrev) != std::string::npos ||
                 Str::find(f, full) != std::string::npos) {
-                return fs::relative(path, fs::path(gSimfile->getDir().c_str()));
+                return fs::relative(path, utf8ToPath(gSimfile->getDir()));
             }
         }
         return fs::path("");
@@ -244,7 +244,7 @@ struct MetadataManImpl : public MetadataMan {
                 priority = 1;
             }
         }
-        return fs::relative(out, fs::path(gSimfile->getDir().c_str()));
+        return fs::relative(out, utf8ToPath(gSimfile->getDir()));
     }
 
     fs::path findBannerFile() override { return findImageFile("bn", "banner"); }

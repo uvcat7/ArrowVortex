@@ -339,7 +339,7 @@ void DialogSongProperties::myUpdateCdTitle() {
         auto meta = gSimfile->get();
         std::string filename = meta->cdTitle;
         if (filename.length()) {
-            fs::path path = fs::path(gSimfile->getDir().c_str());
+            fs::path path = utf8ToPath(gSimfile->getDir());
             path.append(stringToUtf8(filename));
             myCdTitleWidget->tex = extractSpriteSheet(path);
         }
