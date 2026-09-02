@@ -838,9 +838,15 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_TEXT_INPUT: {
             const char* wp = event->text.text;
             const char n = '\n';
-            if (*wp >= 32)
+
+            // The text arrives as UTF-8, where anything outside ascii
+            // starts with a byte of 0x80 or above. Read through a plain
+            // char, which is signed, such a byte is negative and fails the
+            // test below, so every non-ascii character was thrown away.
+            const unsigned char lead = static_cast<unsigned char>(*wp);
+            if (lead >= 32)
                 myEvents.addTextInput(wp);
-            else if (*wp == '\r')
+            else if (lead == '\r')
                 myEvents.addTextInput(&n);
             break;
         }
