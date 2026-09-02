@@ -267,18 +267,18 @@ struct SystemImpl : public System {
         myCursorMap.insert({Cursor::SIZE_NESW, SDL_SYSTEM_CURSOR_NESW_RESIZE});
         myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
-        #if defined(__APPLE__)
+#if defined(__APPLE__)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                             SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-        #endif
+#endif
 
         // Avoid creating both a Metal and SDL context on macOS
-        window = SDL_CreateWindow("ArrowVortex", 800, 600,
-                                 SDL_WINDOW_OPENGL |
-                                     SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                     SDL_WINDOW_RESIZABLE);
+        window =
+            SDL_CreateWindow("ArrowVortex", 800, 600,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                 SDL_WINDOW_RESIZABLE);
         if (!window) {
             SDL_Log("Couldn't create window: %s", SDL_GetError());
         }

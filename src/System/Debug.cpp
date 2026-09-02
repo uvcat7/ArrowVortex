@@ -196,12 +196,12 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
         std::vsnprintf(message, sizeof(message), fmt, args);
         va_end(args);
         std::snprintf(buffer, sizeof(buffer),
-                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n",
-                      exp, file, line, func, message);
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
+                      file, line, func, message);
     } else {
         std::snprintf(buffer, sizeof(buffer),
-                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp,
-                      file, line, func);
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp, file,
+                      line, func);
     }
 
     Debug::WriteToLogAndConsole("ASSERT\n");
