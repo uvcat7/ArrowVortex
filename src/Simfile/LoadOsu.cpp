@@ -1,6 +1,7 @@
 ﻿#include <Core/Core.h>
 
 #include <cmath>
+#include <limits>
 #include <map>
 #include <algorithm>
 
@@ -368,7 +369,25 @@ static void AssignDifficulties(Simfile* sim,
 // ================================================================================================
 // Timing point conversion.
 
-static void ConvertTimingPoints(Simfile* sim, OsuFile& osu) {
+// osu! counts beats from the first timing point, and a file is free to place
+// notes before it. A simfile has no rows below zero, so every one of those
+// notes lands on row zero, where the ones that share a column are thrown away
+// as duplicates. Beat zero moves back by whole measures instead, which makes
+// room for them and leaves the bar lines where the file put them.
+static const int ROWS_PER_MEASURE = 48 * 4;
+
+static int LeadingRows(const OsuFile& osu, double earliestTime) {
+    if (osu.timingPoints.empty()) return 0;
+
+    const auto& first = *osu.timingPoints.begin();
+    if (first.second.bpm <= 0.1 || earliestTime >= first.first) return 0;
+
+    double rows = 48.0 * (first.first - earliestTime) * first.second.bpm / 60.0;
+    int measures = static_cast<int>(ceil(rows / ROWS_PER_MEASURE));
+    return std::max(0, measures) * ROWS_PER_MEASURE;
+}
+
+static void ConvertTimingPoints(Simfile* sim, OsuFile& osu, int leadingRows) {
     auto tempo = sim->tempo;
 
     // If the timing points list is empty, return the fallback BPM 120.
@@ -381,12 +400,16 @@ static void ConvertTimingPoints(Simfile* sim, OsuFile& osu) {
     BpmChange initialBpm;
     initialBpm.bpm = it->second.bpm;
     tempo->segments->append(initialBpm);
-    tempo->offset = -it->first;
 
     // Calculate the rows of the other BPM values relative to the previous BPM.
     double spb = 60.0 / it->second.bpm;
     double last_bpm = it->second.bpm;
-    double prevTime = -tempo->offset, prevRow = 0.0;
+
+    // The first timing point lands on row zero, unless measures were added in
+    // front of it to make room for the notes that come earlier.
+    tempo->offset = -(it->first - leadingRows * spb / 48.0);
+
+    double prevTime = it->first, prevRow = leadingRows;
     for (++it; it != end; ++it) {
         if (it->second.bpm <= 0.1 || it->second.bpm >= 10000) continue;
 
@@ -567,8 +590,18 @@ bool LoadOsu(fs::path path, Simfile* sim) {
     sim->banner = mainFile->artwork;
     sim->background = mainFile->artwork;
 
+    // All the charts share one set of timing points, so beat zero has to sit
+    // ahead of the earliest note of every chart that is loaded.
+    double earliest = std::numeric_limits<double>::max();
+    for (auto file : files) {
+        if (file->gameMode != OSUMANIA) continue;
+        for (auto& hitObject : file->hitObjects) {
+            earliest = std::min(earliest, hitObject.time);
+        }
+    }
+
     // Convert the timing points to BPM changes.
-    ConvertTimingPoints(sim, *mainFile);
+    ConvertTimingPoints(sim, *mainFile, LeadingRows(*mainFile, earliest));
 
     // Convert the hit objects to DDR/ITG charts.
     std::vector<std::string> versions;
