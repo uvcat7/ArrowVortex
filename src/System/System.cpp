@@ -234,7 +234,7 @@ struct SystemImpl : public System {
     SystemImpl() : myTitle("ArrowVortex") {
         myApplicationStartTime = Debug::getElapsedTime();
 
-        if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
+        if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
             SDL_Log("Couldn't initialize SDL subsystems: %s", SDL_GetError());
         }
 
