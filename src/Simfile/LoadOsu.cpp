@@ -238,19 +238,18 @@ static void ParseHitObjects(OsuFile& out, Parser& parser) {
         int x = std::max(0, NoteVal(p)), y = NoteVal(p);
         double time = NoteVal(p) * 0.001;
         int type = NoteVal(p);
-        switch (type) {
-            case 1:  // Regular step.
-            case 4:  // Color combo update steps
-            case 5:
-            case 6:
-                out.hitObjects.emplace_back(x, time, time);
-                break;
-            case 128:  // Hold note.
-                int hitSound = NoteVal(p);
-                double endTime = std::max(time, NoteVal(p) * 0.001);
-                out.hitObjects.emplace_back(x, time, endTime);
-                break;
-        };
+
+        // Bit 0 of the type marks a hit circle and bit 7 an osu!mania hold;
+        // the rest carry combo flags.
+        enum { TYPE_CIRCLE = 1, TYPE_HOLD = 128 };
+
+        if (type & TYPE_HOLD) {
+            SkipNoteVal(p);  // hitSound
+            double endTime = std::max(time, NoteVal(p) * 0.001);
+            out.hitObjects.emplace_back(x, time, endTime);
+        } else if (type & TYPE_CIRCLE) {
+            out.hitObjects.emplace_back(x, time, time);
+        }
     }
 }
 
