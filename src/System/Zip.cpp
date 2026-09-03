@@ -26,6 +26,7 @@ void Put32(std::ofstream& out, uint32_t v) {
 
 // The name is UTF-8, which the reader is told about by bit 11 of the flags.
 const uint32_t FLAG_UTF8 = 0x0800;
+const uint32_t METHOD_STORE = 0;
 const uint32_t METHOD_DEFLATE = 8;
 
 // Deflates the whole of a file into memory. The archive holds an audio file
@@ -89,6 +90,35 @@ bool ZipWriter::open(fs::path path) {
     return !myFailed;
 }
 
+bool ZipWriter::addFolder(const std::string& nameInArchive) {
+    if (myFailed) return false;
+
+    Entry entry;
+    entry.name = nameInArchive;
+    entry.isFolder = true;
+    entry.crc = 0;
+    entry.compressedSize = 0;
+    entry.size = 0;
+    entry.offset = static_cast<uint32_t>(myFile.tellp());
+
+    Put32(myFile, 0x04034b50);  // local file header
+    Put16(myFile, 20);          // version needed
+    Put16(myFile, FLAG_UTF8);
+    Put16(myFile, METHOD_STORE);
+    Put16(myFile, 0);  // modification time
+    Put16(myFile, 0);  // modification date
+    Put32(myFile, 0);  // crc
+    Put32(myFile, 0);  // compressed size
+    Put32(myFile, 0);  // size
+    Put16(myFile, static_cast<uint32_t>(entry.name.length()));
+    Put16(myFile, 0);  // extra field length
+    myFile.write(entry.name.data(), entry.name.length());
+
+    myEntries.push_back(entry);
+    myFailed = myFile.fail();
+    return !myFailed;
+}
+
 bool ZipWriter::addFile(fs::path source, const std::string& nameInArchive) {
     if (myFailed) return false;
 
@@ -98,6 +128,7 @@ bool ZipWriter::addFile(fs::path source, const std::string& nameInArchive) {
 
     Entry entry;
     entry.name = nameInArchive;
+    entry.isFolder = false;
     entry.crc = crc;
     entry.compressedSize = static_cast<uint32_t>(data.size());
     entry.size = size;
@@ -132,7 +163,7 @@ bool ZipWriter::close() {
         Put16(myFile, 20);          // version made by
         Put16(myFile, 20);          // version needed
         Put16(myFile, FLAG_UTF8);
-        Put16(myFile, METHOD_DEFLATE);
+        Put16(myFile, entry.isFolder ? METHOD_STORE : METHOD_DEFLATE);
         Put16(myFile, 0);  // modification time
         Put16(myFile, 0);  // modification date
         Put32(myFile, entry.crc);
@@ -143,7 +174,9 @@ bool ZipWriter::close() {
         Put16(myFile, 0);  // comment length
         Put16(myFile, 0);  // disk number
         Put16(myFile, 0);  // internal attributes
-        Put32(myFile, 0);  // external attributes
+        // 0x10 is the directory attribute, which is how a reader that
+        // ignores the trailing slash still sees a folder.
+        Put32(myFile, entry.isFolder ? 0x10 : 0);  // external attributes
         Put32(myFile, entry.offset);
         myFile.write(entry.name.data(), entry.name.length());
     }

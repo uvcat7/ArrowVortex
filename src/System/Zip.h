@@ -23,6 +23,10 @@ class ZipWriter {
     /// Creates the archive. Returns false if the file could not be opened.
     bool open(fs::path path);
 
+    /// Adds a folder entry, which is what a reader needs to see before the
+    /// files inside it. The name carries its own trailing slash.
+    bool addFolder(const std::string& nameInArchive);
+
     /// Adds a file from disk under the given name. Returns false if the file
     /// could not be read.
     bool addFile(fs::path source, const std::string& nameInArchive);
@@ -34,6 +38,7 @@ class ZipWriter {
    private:
     struct Entry {
         std::string name;
+        bool isFolder;
         uint32_t crc;
         uint32_t compressedSize;
         uint32_t size;

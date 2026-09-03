@@ -23,10 +23,22 @@ struct ArchiveFormat {
     const char* filterPattern;
     SimFormat chartFormat;
     const char* chartExtension;
+
+    // osu! and Quaver read a flat archive; StepMania expects the song folder
+    // inside it, which is how a pack is put together.
+    bool inFolder;
+
+    // osu! and Quaver know only the background, so a banner or a CD title
+    // would be dead weight in their archives.
+    bool allArtwork;
 };
 
-const ArchiveFormat OSZ = {".osz", "osu! beatmap (*.osz)", "osz", SIM_OSU,
-                           ".osu"};
+const ArchiveFormat OSZ = {
+    ".osz", "osu! beatmap (*.osz)", "osz", SIM_OSU, ".osu", false, false};
+const ArchiveFormat SM = {
+    ".zip", "StepMania (*.zip)", "zip", SIM_SM, ".sm", true, true};
+const ArchiveFormat SSC = {
+    ".zip", "StepMania 5 (*.zip)", "zip", SIM_SSC, ".ssc", true, true};
 
 // Strips the characters a filename cannot hold.
 std::string FileSafe(const std::string& name) {
@@ -68,14 +80,17 @@ fs::path MakeTempDir() {
     return ec ? fs::path() : dir;
 }
 
-// What the file points at, skipping what is not set and what is not there.
-// osu! knows a background and nothing else, so the banner and the CD title a
-// simfile may carry would be dead weight in the archive. The same file can be
-// named twice, so each one is added once.
-void CollectAssets(const Simfile* sim, std::vector<std::string>& out) {
-    const std::string* fields[] = {&sim->music, &sim->background};
+// The artwork and audio the song refers to, skipping what is not set and what
+// is not there. The same file can be named twice - a background used as the
+// banner as well - so each one is added once.
+void CollectAssets(const Simfile* sim, std::vector<std::string>& out,
+                   bool allArtwork) {
+    const std::string* fields[] = {&sim->music, &sim->background, &sim->banner,
+                                   &sim->cdTitle};
+    int numFields = allArtwork ? 4 : 2;
 
-    for (auto field : fields) {
+    for (int i = 0; i < numFields; ++i) {
+        const std::string* field = fields[i];
         if (field->empty()) continue;
         if (std::find(out.begin(), out.end(), *field) != out.end()) continue;
 
@@ -85,15 +100,34 @@ void CollectAssets(const Simfile* sim, std::vector<std::string>& out) {
     }
 }
 
+const ArchiveFormat& FormatFor(SimFormat format) {
+    return (format == SIM_SM) ? SM : (format == SIM_SSC) ? SSC : OSZ;
+}
+
+// The folder the song lives in, which is what a StepMania archive is named
+// after and what it holds.
+std::string SongFolder(const Simfile* sim) {
+    std::string folder = pathToUtf8(utf8ToPath(sim->dir).filename());
+    return folder.empty() ? ArchiveName(sim) : folder;
+}
+
 };  // anonymous namespace
 
-void ExportArchive() {
+std::string SuggestedArchiveName(SimFormat format) {
+    auto sim = gSimfile->get();
+    if (!sim) return std::string();
+
+    const ArchiveFormat& fmt = FormatFor(format);
+    return (fmt.inFolder ? SongFolder(sim) : ArchiveName(sim)) + fmt.extension;
+}
+
+void ExportArchive(SimFormat format, const std::string& name) {
     if (!gSimfile->isOpen()) {
         HudError("No simfile is open");
         return;
     }
 
-    const ArchiveFormat& fmt = OSZ;
+    const ArchiveFormat& fmt = FormatFor(format);
     auto sim = gSimfile->get();
 
     // Ask where the archive goes, with the name the games use.
@@ -102,9 +136,9 @@ void ExportArchive() {
         {"All Files (*.*)", "*"},
     };
     int filterIndex = 0;
-    fs::path suggested = utf8ToPath(ArchiveName(sim) + fmt.extension);
-    fs::path path =
-        gSystem->saveFileDlg("Export", filters, 2, &filterIndex, suggested);
+    std::string folder = SongFolder(sim);
+    fs::path path = gSystem->saveFileDlg("Export", filters, 2, &filterIndex,
+                                         utf8ToPath(name));
     if (path.empty()) return;
     if (!path.has_extension()) path.concat(fmt.extension);
 
@@ -125,23 +159,30 @@ void ExportArchive() {
         return;
     }
 
+    std::string prefix;
+    if (fmt.inFolder) {
+        prefix = FileSafe(folder) + "/";
+        zip.addFolder(prefix);
+    }
+
     int numCharts = 0;
     std::error_code ec;
     for (auto& entry : fs::directory_iterator(temp, ec)) {
         if (!entry.is_regular_file()) continue;
         if (entry.path().extension() != fmt.chartExtension) continue;
 
-        if (zip.addFile(entry.path(), pathToUtf8(entry.path().filename()))) {
+        if (zip.addFile(entry.path(),
+                        prefix + pathToUtf8(entry.path().filename()))) {
             ++numCharts;
         }
     }
 
     std::vector<std::string> assets;
-    CollectAssets(sim, assets);
+    CollectAssets(sim, assets, fmt.allArtwork);
     for (auto& asset : assets) {
         fs::path source = utf8ToPath(sim->dir);
         source.append(stringToUtf8(asset));
-        if (!zip.addFile(source, asset)) {
+        if (!zip.addFile(source, prefix + asset)) {
             HudWarning("Could not add %s to the archive", asset.c_str());
         }
     }
