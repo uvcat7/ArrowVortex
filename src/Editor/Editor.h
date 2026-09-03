@@ -40,6 +40,14 @@ struct Editor {
     /// otherwise.
     virtual bool saveSimfile(bool showSaveAsDialog) = 0;
 
+    /// Saves in the given format, asking only where the file goes. The name
+    /// is the one offered in the file dialog.
+    virtual bool saveSimfileAs(SimFormat format, const std::string& name) = 0;
+
+    /// The filename the given format asks for, built from the song and the
+    /// chart that is open.
+    virtual std::string getSuggestedSaveName(SimFormat format) const = 0;
+
     /// Empties the recently opened files list.
     virtual void clearRecentFiles() = 0;
 

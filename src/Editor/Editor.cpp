@@ -42,6 +42,7 @@
 #include <Dialogs/SongProperties.h>
 #include <Dialogs/ChartList.h>
 #include <Dialogs/ChartProperties.h>
+#include <Dialogs/SaveAs.h>
 #include <Dialogs/NewChart.h>
 #include <Dialogs/AdjustTempo.h>
 #include <Dialogs/AdjustTempoSM5.h>
@@ -591,6 +592,110 @@ struct EditorImpl : public Editor, public InputHandler {
             return openSimfile(path);
     }
 
+    // ================================================================================================
+    // Names offered in the save dialog.
+
+    // A title can carry brackets of its own - "Vlecheniye (Avariya Remix)".
+    // osu! writes such brackets itself, so there they stay; in a StepMania name
+    // the pair around the author is the only one that means anything, so one
+    // inside the title gives way to dashes.
+    static std::string FlattenBrackets(const std::string& s) {
+        std::string out;
+        for (char c : s) {
+            out.push_back((c == '(' || c == ')') ? '-' : c);
+        }
+        return out;
+    }
+
+    // Strips the characters a filename cannot hold.
+    static std::string SafeName(const std::string& name) {
+        std::string out;
+        for (char c : name) {
+            if (c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' ||
+                c == '\"' || c == '<' || c == '>' || c == '|') {
+                continue;
+            }
+            out.push_back(c);
+        }
+        while (out.length() && out.back() == ' ') out.pop_back();
+        return out;
+    }
+
+    // The author of the chart: its step artist, falling back to the credit of
+    // the song.
+    static std::string SaveNameCreator(const Simfile* sim, const Chart* chart) {
+        if (chart && chart->artist.length()) return chart->artist;
+        return sim ? sim->credit : std::string();
+    }
+
+    // The name the format asks for. osu! names a file after the difficulty it
+    // holds, so it gets the whole thing; StepMania keeps one file per song, so
+    // the title and the author are enough.
+    static std::string BuildSaveName(SimFormat format) {
+        auto sim = gSimfile->get();
+        if (!sim) return std::string();
+
+        auto chart = gChart->get();
+        const std::string& artist =
+            sim->artistTr.length() ? sim->artistTr : sim->artist;
+        const std::string& title =
+            sim->titleTr.length() ? sim->titleTr : sim->title;
+        std::string creator = SaveNameCreator(sim, chart);
+
+        std::string out;
+        if (format == SIM_OSU) {
+            out = artist + " - " + title;
+            if (creator.length()) out += " (" + creator + ")";
+            out += " [";
+            out += chart ? GetDifficultyName(chart->difficulty) : "Normal";
+            out += "]";
+        } else {
+            out = FlattenBrackets(title);
+            if (creator.length()) out += " (" + creator + ")";
+        }
+        return SafeName(out);
+    }
+
+    std::string getSuggestedSaveName(SimFormat format) const override {
+        return BuildSaveName(format);
+    }
+
+    bool saveSimfileAs(SimFormat format, const std::string& name) override {
+        if (gSimfile->isClosed()) return true;
+
+        // The format is already chosen, so the dialog only asks where the
+        // file goes.
+        static const struct {
+            SimFormat format;
+            SDL_DialogFileFilter filter;
+        } kFilters[] = {
+            {SIM_SM, {"Stepmania/ITG (*.sm)", "sm"}},
+            {SIM_SSC, {"Stepmania 5 (*.ssc)", "ssc"}},
+            {SIM_OSU, {"Osu!mania (*.osu)", "osu"}},
+            {SIM_DWI, {"Dance With Intensity (*.dwi)", "dwi"}},
+        };
+
+        SDL_DialogFileFilter filters[2] = {{"", ""}, {"All Files (*.*)", "*"}};
+        for (auto& entry : kFilters) {
+            if (entry.format == format) filters[0] = entry.filter;
+        }
+
+        int filterIndex = 1;
+        fs::path path = gSystem->saveFileDlg("Save file", filters, 2,
+                                             &filterIndex, utf8ToPath(name));
+        if (path.empty()) return false;
+
+        std::string dir = pathToUtf8(path.parent_path());
+        std::string file = pathToUtf8(path.filename());
+        if (!gSimfile->save(dir, file, format)) {
+            HudError("Could not save %s", file.c_str());
+            return false;
+        }
+
+        gHistory->onFileSaved();
+        return true;
+    }
+
     bool saveSimfile(bool showSaveAsDialog) override {
         // Check if a simfile is currently open.
         if (gSimfile->isClosed()) return true;
@@ -847,6 +952,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
             case DIALOG_EDIT_SEGMENT:
                 dlg = new DialogEditSegment;
+                break;
+            case DIALOG_SAVE_AS:
+                dlg = new DialogSaveAs;
                 break;
         };
 
