@@ -839,7 +839,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_TEXT_INPUT: {
             const char* wp = event->text.text;
             const char n = '\n';
-            if (!std::iscntrl(*reinterpret_cast<const char8_t*>(wp), std::locale("")))
+            if (!std::iscntrl(*reinterpret_cast<const char8_t*>(wp),
+                              std::locale("")))
                 myEvents.addTextInput(wp);
             else if (*wp == '\r')
                 myEvents.addTextInput(&n);
