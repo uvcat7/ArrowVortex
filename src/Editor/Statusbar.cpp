@@ -39,6 +39,11 @@ struct StatusbarImpl : public Statusbar {
     bool myShowTimingMode;
     bool myShowScroll;
     bool myShowSpeed;
+    bool myShowFps;
+
+    double myFpsAccum;
+    int myFpsFrames;
+    double myFpsValue;
 
     // ================================================================================================
     // StatusbarImpl :: constructor / destructor.
@@ -57,6 +62,11 @@ struct StatusbarImpl : public Statusbar {
         myShowTimingMode = true;
         myShowScroll = false;
         myShowSpeed = false;
+        myShowFps = false;
+
+        myFpsAccum = 0.0;
+        myFpsFrames = 0;
+        myFpsValue = 0.0;
     }
 
     // ================================================================================================
@@ -76,6 +86,7 @@ struct StatusbarImpl : public Statusbar {
             statusbar->get("showTimingMode", &myShowTimingMode);
             statusbar->get("myShowScroll", &myShowScroll);
             statusbar->get("myShowSpeed", &myShowSpeed);
+            statusbar->get("showFps", &myShowFps);
         }
     }
 
@@ -93,12 +104,47 @@ struct StatusbarImpl : public Statusbar {
         statusbar->addAttrib("showTimingMode", myShowTimingMode);
         statusbar->addAttrib("myShowScroll", myShowScroll);
         statusbar->addAttrib("myShowSpeed", myShowSpeed);
+        statusbar->addAttrib("showFps", myShowFps);
     }
 
     // ================================================================================================
     // StatusbarImpl :: member functions.
 
+    // Rolls the frame time into an average that is refreshed a few
+    // times a second, so the number stays readable.
+    void updateFps() {
+        myFpsAccum += deltaTime.count();
+        ++myFpsFrames;
+        if (myFpsAccum >= 0.25) {
+            myFpsValue = myFpsFrames / myFpsAccum;
+            myFpsAccum = 0.0;
+            myFpsFrames = 0;
+        }
+    }
+
+    void drawFps() {
+        TextStyle textStyle;
+        textStyle.textFlags = Text::MARKUP;
+
+        std::string str =
+            Str::fmt("{tc:888}FPS:{tc} %1").arg(myFpsValue, 0, 0).str;
+        Text::arrange(Text::ML, textStyle, str.c_str());
+
+        int h = gSystem->applyScaleFactor(24);
+        recti view = gView->getRect();
+
+        int w = Text::getSize().x + 12;
+        int x = view.x + 8;
+        int y = view.y + view.h - h - 8;
+
+        Draw::fill({x, y, w, h}, Color32(0, 128));
+        Text::draw(recti{x + 6, y, w - 12, h});
+    }
+
     void draw() override {
+        updateFps();
+        if (myShowFps) drawFps();
+
         std::vector<std::string> info;
 
         TextStyle textStyle;
@@ -224,6 +270,11 @@ struct StatusbarImpl : public Statusbar {
     // ================================================================================================
     // StatusbarImpl :: toggle/check functions.
 
+    void toggleFps() override {
+        myShowFps = !myShowFps;
+        gMenubar->update(Menubar::SHOW_FPS);
+    }
+
     void toggleChart() override {
         myShowChart = !myShowChart;
         gMenubar->update(Menubar::STATUSBAR_CHART);
@@ -300,6 +351,8 @@ struct StatusbarImpl : public Statusbar {
     bool hasScroll() override { return myShowScroll; }
 
     bool hasSpeed() override { return myShowSpeed; }
+
+    bool hasFps() override { return myShowFps; }
 
 };  // StatusbarImpl
 

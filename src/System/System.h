@@ -63,6 +63,11 @@ struct System {
     /// Disables vsync.
     virtual void disableVsync() = 0;
 
+    /// Sets how often the editor is allowed to draw. A negative limit
+    /// follows the display through vertical sync, zero lets it run as fast
+    /// as it can, and a positive one caps it at that many frames.
+    virtual void setFpsLimit(int limitFps) = 0;
+
     /// Returns the elapsed time since the application was started.
     virtual double getElapsedTime() const = 0;
 

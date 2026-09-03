@@ -83,6 +83,13 @@ struct Editor {
     /// false otherwise.
     virtual bool hasMultithreading() const = 0;
 
+    /// How often the editor may draw: below zero follows the display, zero
+    /// is unlimited, above zero is a cap in frames per second.
+    virtual void setFpsLimit(int limitFps) = 0;
+
+    /// Returns the frame rate limit.
+    virtual int getFpsLimit() const = 0;
+
     /// Sets the background scaling style.
     virtual void setBackgroundStyle(int style) = 0;
 

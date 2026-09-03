@@ -21,6 +21,7 @@ struct Statusbar {
     virtual void toggleTimingMode() = 0;
     virtual void toggleScroll() = 0;
     virtual void toggleSpeed() = 0;
+    virtual void toggleFps() = 0;
 
     virtual bool hasChart() = 0;
     virtual bool hasSnap() = 0;
@@ -33,6 +34,7 @@ struct Statusbar {
     virtual bool hasTimingMode() = 0;
     virtual bool hasScroll() = 0;
     virtual bool hasSpeed() = 0;
+    virtual bool hasFps() = 0;
 
     virtual void draw() = 0;
 };

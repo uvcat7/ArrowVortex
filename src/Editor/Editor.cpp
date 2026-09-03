@@ -166,7 +166,7 @@ struct EditorImpl : public Editor, public InputHandler {
     std::string myFontPath;
 
     bool myUseMultithreading;
-    bool myUseVerticalSync;
+    int myFpsLimit;
 
     BackgroundStyle myBackgroundStyle;
     std::vector<SimFormat> myDefaultSaveFormat;
@@ -190,7 +190,7 @@ struct EditorImpl : public Editor, public InputHandler {
         myChanges = 0;
 
         myUseMultithreading = true;
-        myUseVerticalSync = true;
+        myFpsLimit = -1;
 
         myBackgroundStyle = BG_STYLE_STRETCH;
         myDefaultSaveFormat = {SIM_SM};
@@ -211,8 +211,7 @@ struct EditorImpl : public Editor, public InputHandler {
         settings.loadFile(fs::path(getSettingsDir() + "settings.txt"));
         loadSettings(settings);
 
-        // Disable v-sync if requested.
-        if (!myUseVerticalSync) gSystem->disableVsync();
+        gSystem->setFpsLimit(myFpsLimit);
 
         // Initialize the drawing / gui system.
         GuiMain::init();
@@ -334,7 +333,12 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrNode* general = settings.child("general");
         if (general) {
             general->get("useMultithreading", &myUseMultithreading);
-            general->get("useVerticalSync", &myUseVerticalSync);
+            // The old setting only said whether to wait for the
+            // display; the limit replaces it and wins when both are present.
+            bool useVerticalSync = true;
+            general->get("useVerticalSync", &useVerticalSync);
+            myFpsLimit = useVerticalSync ? -1 : 0;
+            general->get("frameLimit", &myFpsLimit);
 
             std::vector<SimFormat> saveFormats;
             auto saveFormat = general->attrib("defaultSaveFormat");
@@ -383,7 +387,8 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrNode* general = settings.addChild("general");
 
         general->addAttrib("useMultithreading", myUseMultithreading);
-        general->addAttrib("useVerticalSync", myUseVerticalSync);
+        general->addAttrib("useVerticalSync", myFpsLimit < 0);
+        general->addAttrib("frameLimit", static_cast<long>(myFpsLimit));
 
         std::vector<const char*> formats;
         for (SimFormat f : myDefaultSaveFormat) formats.push_back(ToString(f));
@@ -1067,6 +1072,13 @@ struct EditorImpl : public Editor, public InputHandler {
     }
 
     bool hasMultithreading() const override { return myUseMultithreading; }
+
+    void setFpsLimit(int limitFps) override {
+        myFpsLimit = limitFps;
+        gSystem->setFpsLimit(myFpsLimit);
+    }
+
+    int getFpsLimit() const override { return myFpsLimit; }
 
     void setBackgroundStyle(int style) override {
         myBackgroundStyle = static_cast<BackgroundStyle>(style);
