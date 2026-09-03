@@ -21,6 +21,11 @@ struct SimfileMan {
     virtual bool save(const std::string& dir, const std::string& name,
                       SimFormat format) = 0;
 
+    /// Writes the chart files into another directory without disturbing
+    /// the simfile that is open: its own directory, its filename and the
+    /// edit history are left alone.
+    virtual bool exportTo(const std::string& dir, SimFormat format) = 0;
+
     /// Closes the simfile that is currently open for editing.
     virtual void close() = 0;
 
