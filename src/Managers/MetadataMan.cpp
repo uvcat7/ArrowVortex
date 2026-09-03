@@ -211,8 +211,7 @@ struct MetadataManImpl : public MetadataMan {
                 std::string postfix = s + abbrev;
                 if (Str::startsWith(f, prefix.c_str()) ||
                     Str::endsWith(f, postfix.c_str())) {
-                    return fs::relative(path,
-                                        utf8ToPath(gSimfile->getDir()));
+                    return fs::relative(path, utf8ToPath(gSimfile->getDir()));
                 }
             }
             if (Str::find(f, abbrev) != std::string::npos ||
