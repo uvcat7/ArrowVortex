@@ -186,7 +186,16 @@ class WgSelectList : public GuiWidget {
     void onDraw() override;
 
     void hideBackground();
+
+    /// Draws the items against the left edge instead of centred, which
+    /// suits a long list of names.
+    void alignItemsLeft();
+
     void addItem(const std::string& text);
+
+    /// Adds an item with a second text against the right edge.
+    void addItem(const std::string& text, const std::string& rightText);
+
     void clearItems();
 
     void scroll(bool up);
@@ -202,9 +211,11 @@ class WgSelectList : public GuiWidget {
 
     WgScrollbarV* scrollbar_ = nullptr;
     std::vector<std::string> selectlist_items_;
+    std::vector<std::string> selectlist_items_right_;
     int scroll_position_ = 0;
     uint32_t is_interacted_ : 1 = 0;
     uint32_t show_background_ : 1 = 1;
+    uint32_t align_items_left_ : 1 = 0;
 };
 
 /// Vertical Drop Down List GuiWidget.
