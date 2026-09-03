@@ -444,6 +444,8 @@ struct MenuBarImpl : public Menubar {
 
         // Options menu.
         myOptionsMenu = newMenu();
+        add(myOptionsMenu, OPEN_DIALOG_KEY_BINDINGS, "Key bindings...");
+        sep(myOptionsMenu);
         sub(myOptionsMenu, myFpsLimitMenu, "FPS limiter");
 
         // Help menu.

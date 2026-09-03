@@ -28,11 +28,23 @@ WgSelectList::WgSelectList(GuiContext* gui) : GuiWidget(gui) {
 
 void WgSelectList::hideBackground() { show_background_ = 0; }
 
+void WgSelectList::alignItemsLeft() { align_items_left_ = 1; }
+
 void WgSelectList::addItem(const std::string& text) {
     selectlist_items_.emplace_back(text);
+    selectlist_items_right_.emplace_back();
 }
 
-void WgSelectList::clearItems() { selectlist_items_.clear(); }
+void WgSelectList::addItem(const std::string& text,
+                           const std::string& rightText) {
+    selectlist_items_.emplace_back(text);
+    selectlist_items_right_.emplace_back(rightText);
+}
+
+void WgSelectList::clearItems() {
+    selectlist_items_.clear();
+    selectlist_items_right_.clear();
+}
 
 void WgSelectList::onMousePress(MousePress& evt) {
     if (isMouseOver()) {
@@ -126,8 +138,16 @@ void WgSelectList::onDraw() {
     for (int i = 0, ty = r.y - scroll_position_; i < numItems;
          ++i, ty += ITEM_H) {
         if (ty > r.y - ITEM_H && ty < r.y + r.h) {
-            Text::arrange(Text::MC, style, selectlist_items_[i].c_str());
-            Text::draw({r.x + 2, ty, r.w - 2, ITEM_H});
+            // The right hand text is drawn first, so a long name is cut
+            // off by the ellipsis rather than running over it.
+            if (selectlist_items_right_[i].length()) {
+                Text::arrange(Text::MR, style,
+                              selectlist_items_right_[i].c_str());
+                Text::draw({r.x + 6, ty, r.w - 12, ITEM_H});
+            }
+            Text::arrange(align_items_left_ ? Text::ML : Text::MC, style,
+                          selectlist_items_[i].c_str());
+            Text::draw({r.x + 6, ty, r.w - 8, ITEM_H});
         }
     }
 
