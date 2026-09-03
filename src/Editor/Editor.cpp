@@ -544,7 +544,7 @@ struct EditorImpl : public Editor, public InputHandler {
         if (gSimfile->isClosed()) return false;
 
         // Make a list of all simfiles in the current pack.
-        fs::path this_dir = fs::path(gSimfile->getDir());
+        fs::path this_dir = utf8ToPath(gSimfile->getDir());
         fs::path packDir = this_dir.parent_path();
         auto songDirs = File::findDirs(packDir, false);
 
