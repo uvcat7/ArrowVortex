@@ -387,10 +387,10 @@ void Action::perform(Type action) {
 
         CASE(CURSOR_UP)
         gView->setCursorRow(
-            gView->snapRow(gView->getCursorRow(), View::SNAP_UP));
+            gView->snapRow(gView->getCursorRowExact(), View::SNAP_UP));
         CASE(CURSOR_DOWN)
         gView->setCursorRow(
-            gView->snapRow(gView->getCursorRow(), View::SNAP_DOWN));
+            gView->snapRow(gView->getCursorRowExact(), View::SNAP_DOWN));
         CASE(CURSOR_PREVIOUS_BEAT)
         gView->setCursorToNextInterval(-48);
         CASE(CURSOR_NEXT_BEAT)
