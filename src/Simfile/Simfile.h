@@ -15,6 +15,7 @@ enum SimFormat {
     SIM_SSC,
     SIM_OSU,
     SIM_DWI,
+    SIM_QUA,
 
     NUM_SIMFILE_FORMATS
 };

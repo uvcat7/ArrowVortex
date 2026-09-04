@@ -73,25 +73,26 @@ struct DialogEntry {
     bool requestOpen;
 };
 
-#define LOAD_FILTERS_COUNT 9
+#define LOAD_FILTERS_COUNT 10
 static SDL_DialogFileFilter loadFilters[] = {
-    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.ogg, *.mp3, *.wav)",
-     "sm;ssc;dwi;osu;ogg;mp3;wav"},
+    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.qua, *.ogg, *.mp3, *.wav)",
+     "sm;ssc;dwi;osu;qua;ogg;mp3;wav"},
     {"Stepmania/ITG (*.sm)", "sm"},
     {"Stepmania 5 (*.ssc)", "ssc"},
     {"Dance With Intensity (*.dwi)", "dwi"},
     {"Osu!mania (*.osu)", "osu"},
+    {"Quaver (*.qua)", "qua"},
     {"Ogg Vorbis (*.ogg)", "ogg"},
     {"MP3 Audio (*.mp3)", "mp3"},
     {"Waveform (*.wav)", "wav"},
     {"All Files (*.*)", "*"},
 };
 
-#define SAVE_FILTERS_COUNT 5
+#define SAVE_FILTERS_COUNT 6
 static SDL_DialogFileFilter saveFilters[] = {
     {"Stepmania/ITG (*.sm)", "sm"}, {"Stepmania 5 (*.ssc)", "ssc"},
     {"Osu!mania (*.osu)", "osu"},   {"Dance With Intensity (*.dwi)", "dwi"},
-    {"All Files (*.*)", "*"},
+    {"Quaver (*.qua)", "qua"},      {"All Files (*.*)", "*"},
 };
 struct DialogSegment {
     Segment::Type type;
@@ -457,8 +458,8 @@ struct EditorImpl : public Editor, public InputHandler {
         // Make a list of loadable extensions, from high priority to low
         // priority.
         static const char* extList[] = {".ssc", ".sm",  ".dwi", ".osu",
-                                        ".ogg", ".mp3", ".wav"};
-        const char** extEnd = extList + (ignoreAudio ? 4 : 7);
+                                        ".qua", ".ogg", ".mp3", ".wav"};
+        const char** extEnd = extList + (ignoreAudio ? 5 : 8);
 
         // Check if the path is a directory.
         if (fs::is_directory(path)) {
@@ -622,6 +623,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 case SIM_DWI:
                     filterIndex = 3;
                     break;
+                case SIM_QUA:
+                    filterIndex = 4;
+                    break;
             };
 
             // Show the save file dialog.
@@ -649,6 +653,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 case 3:
                     saveFmt = SIM_DWI;
                     break;
+                case 4:
+                    saveFmt = SIM_QUA;
+                    break;
                 default:
                     if (ext == ".ssc") {
                         saveFmt = SIM_SSC;
@@ -656,6 +663,8 @@ struct EditorImpl : public Editor, public InputHandler {
                         saveFmt = SIM_OSU;
                     } else if (ext == ".dwi") {
                         saveFmt = SIM_DWI;
+                    } else if (ext == ".qua") {
+                        saveFmt = SIM_QUA;
                     } else {
                         saveFmt = SIM_SM;
                     }
