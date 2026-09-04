@@ -28,6 +28,9 @@ static const int TEX_W = 1024;
 static const int TEX_H = 128;
 static const int UNUSED_BLOCK = -1;
 
+// None, 2x, 3x and 4x.
+static const int NUM_AA_MODES = 4;
+
 struct WaveBlock {
     int id;
     Texture tex[4];
@@ -185,7 +188,7 @@ struct WaveformImpl : public Waveform {
             if (ws) setWaveShape(ToWaveShape(ws));
 
             waveform->get("antiAliasing", &waveformAntiAliasingMode_);
-            setAntiAliasing(std::clamp(waveformAntiAliasingMode_, 0, 3));
+            setAntiAliasing(waveformAntiAliasingMode_);
         }
     }
 
@@ -289,9 +292,11 @@ struct WaveformImpl : public Waveform {
     WaveShape getWaveShape() override { return waveformShape_; }
 
     void setAntiAliasing(int level) override {
-        waveformAntiAliasingMode_ = level;
+        waveformAntiAliasingMode_ = std::clamp(level, 0, NUM_AA_MODES - 1);
         clearBlocks();
     }
+
+    int antiAliasingFactor() const { return waveformAntiAliasingMode_ + 1; }
 
     int getAntiAliasing() override { return waveformAntiAliasingMode_; }
 
@@ -342,49 +347,24 @@ struct WaveformImpl : public Waveform {
     // ================================================================================================
     // Waveform :: anti-aliasing functions.
 
-    void antiAlias2x(uint8_t* dst, int w, int h) {
-        int newW = w / 2, newH = h / 2;
-        for (int y = 0; y < newH; ++y) {
-            auto line = waveformTextureBuffer_.begin() + (y * 2) * w;
-            for (int x = 0; x < newW; ++x, ++dst) {
-                uint8_t *a = &(*(line + (x * 2))), *b = a + w;
-                int sum = 0;
-                sum += a[0] + a[1];
-                sum += b[0] + b[1];
-                *dst = sum / 4;
-            }
-        }
-    }
+    /// Averages every factor x factor block of the supersampled buffer down
+    /// to one pixel. Reading always runs ahead of writing, so the buffer is
+    /// downsampled in place.
+    void antiAlias(uint8_t* dst, int w, int h, int factor) {
+        const int newW = w / factor, newH = h / factor;
+        const int area = factor * factor;
 
-    void antiAlias3x(uint8_t* dst, int w, int h) {
-        int newW = w / 3, newH = h / 3;
         for (int y = 0; y < newH; ++y) {
-            auto line = waveformTextureBuffer_.begin() + (y * 3) * w;
+            auto line = waveformTextureBuffer_.begin() + (y * factor) * w;
             for (int x = 0; x < newW; ++x, ++dst) {
-                uint8_t* a = &(*(line + (x * 3)));
-                uint8_t *b = a + w, *c = b + w;
+                const uint8_t* src = &(*(line + (x * factor)));
                 int sum = 0;
-                sum += a[0] + a[1] + a[2];
-                sum += b[0] + b[1] + b[2];
-                sum += c[0] + c[1] + c[2];
-                *dst = sum / 9;
-            }
-        }
-    }
-
-    void antiAlias4x(uint8_t* dst, int w, int h) {
-        int newW = w / 4, newH = h / 4;
-        for (int y = 0; y < newH; ++y) {
-            auto line = waveformTextureBuffer_.begin() + (y * 4) * w;
-            for (int x = 0; x < newW; ++x, ++dst) {
-                uint8_t *a = &(*(line + (x * 4))), *b = a + w;
-                uint8_t *c = b + w, *d = c + w;
-                int sum = 0;
-                sum += a[0] + a[1] + a[2] + a[3];
-                sum += b[0] + b[1] + b[2] + b[3];
-                sum += c[0] + c[1] + c[2] + c[3];
-                sum += d[0] + d[1] + d[2] + d[3];
-                *dst = sum / 16;
+                for (int sy = 0; sy < factor; ++sy, src += w) {
+                    for (int sx = 0; sx < factor; ++sx) {
+                        sum += src[sx];
+                    }
+                }
+                *dst = static_cast<uint8_t>(sum / area);
             }
         }
     }
@@ -491,17 +471,8 @@ struct WaveformImpl : public Waveform {
             }
 
             // Apply anti-aliasing
-            switch (waveformAntiAliasingMode_) {
-                case 1:
-                    antiAlias2x(texBuf, w, h);
-                    break;
-                case 2:
-                    antiAlias3x(texBuf, w, h);
-                    break;
-                case 3:
-                    antiAlias4x(texBuf, w, h);
-                    break;
-            }
+            const int factor = antiAliasingFactor();
+            if (factor > 1) antiAlias(texBuf, w, h, factor);
 
             // Create or update texture
             if (!textures[channel].handle()) {
@@ -512,8 +483,9 @@ struct WaveformImpl : public Waveform {
     }
 
     void renderBlock(WaveBlock* block) {
-        int w = waveformBlockWidth_ * (waveformAntiAliasingMode_ + 1);
-        int h = TEX_H * (waveformAntiAliasingMode_ + 1);
+        const int factor = antiAliasingFactor();
+        int w = waveformBlockWidth_ * factor;
+        int h = TEX_H * factor;
         waveformTextureBuffer_.resize(w * h);
 
         std::vector<WaveEdge> edges;
