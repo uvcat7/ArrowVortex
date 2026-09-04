@@ -44,6 +44,7 @@ struct OsuFile {
     int gameMode;
     int numCols;
     int overallDifficulty;
+    double previewTime = -1.0;
     std::string chartVersion;
     std::string musicPath;
     std::string songArtist;
@@ -159,6 +160,8 @@ static void ParseGeneral(OsuFile& out, Parser& parser) {
         const std::string& prop = parser.prop;
         if (IsProp(prop, "AudioFilename")) {
             out.musicPath = PropVal(prop);
+        } else if (IsProp(prop, "PreviewTime")) {
+            out.previewTime = Str::readInt(PropVal(prop)) * 0.001;
         } else if (IsProp(prop, "Mode")) {
             out.gameMode = Str::readInt(PropVal(prop));
         }
@@ -566,6 +569,11 @@ bool LoadOsu(fs::path path, Simfile* sim) {
     sim->music = mainFile->musicPath;
     sim->banner = mainFile->artwork;
     sim->background = mainFile->artwork;
+
+    // osu! marks a song with no preview with -1.
+    if (mainFile->previewTime > 0.0) {
+        sim->previewStart = mainFile->previewTime;
+    }
 
     // Convert the timing points to BPM changes.
     ConvertTimingPoints(sim, *mainFile);
