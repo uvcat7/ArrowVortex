@@ -1,4 +1,6 @@
 #include <Editor/Music.h>
+#include <Editor/Menubar.h>
+#include <Editor/TimeStretch.h>
 
 #include <limits.h>
 #include <stdint.h>
@@ -80,6 +82,9 @@ struct MusicImpl : public Music, public MixSource {
 
     std::vector<short> myMixBuffer;
 
+    bool myPreservePitch;
+    TimeStretch myTimeStretch;
+
     OggConversionThread* myAudioConversionThread;
 
     // ================================================================================================
@@ -94,6 +99,7 @@ struct MusicImpl : public Music, public MixSource {
         myMixer = Mixer::create();
 
         myMusicSpeed = 100;
+        myPreservePitch = false;
         myMusicVolume = 100;
         myTickOffsetMs = 0;
         myPlayPosition = 0.0;
@@ -316,6 +322,35 @@ struct MusicImpl : public Music, public MixSource {
             // Source and target samplerate are equal.
             int64_t srcPos = llround(myPlayPosition);
             WriteSourceFrames(buffer, frames, srcPos);
+        } else if (myPreservePitch && myTimeStretch.isReady()) {
+            // Feed the filter until it can fill the whole block. Handing it a
+            // fixed amount instead comes up a fraction of a frame short on
+            // most speeds, and those fractions add up until the block cannot
+            // be filled and the audio drops out.
+            double rate = static_cast<double>(myMusicSpeed) / 100.0;
+            const int chunkFrames = std::max(
+                64, static_cast<int>(static_cast<double>(frames) * rate));
+
+            int consumed = 0;
+            for (int guard = 0;
+                 myTimeStretch.available() < frames && guard < 64; ++guard) {
+                int64_t srcPos =
+                    static_cast<int64_t>(myPlayPosition) + consumed;
+                myMixBuffer.resize(chunkFrames * MIX_CHANNELS);
+                WriteSourceFrames(myMixBuffer.data(), chunkFrames, srcPos);
+                myTimeStretch.push(myMixBuffer.data(), chunkFrames);
+                consumed += chunkFrames;
+            }
+
+            int written = myTimeStretch.pull(buffer, frames);
+            if (written < frames) {
+                memset(buffer + written * MIX_CHANNELS, 0,
+                       sizeof(short) * MIX_CHANNELS * (frames - written));
+            }
+
+            // The position follows what the filter actually swallowed, so the
+            // source is read once and only once.
+            srcAdvance = static_cast<double>(consumed);
         } else {
             double rate = static_cast<double>(myMusicSpeed) / 100.0;
             srcAdvance *= rate;
@@ -524,7 +559,22 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
+    /// Keeps the stretcher in step with the current speed, and throws away
+    /// what it buffered, since playback is about to jump.
+    void resetTimeStretch() {
+        if (!myPreservePitch || myMusicSpeed == 100) {
+            myTimeStretch.reset(1.0, 0);  // releases the filter
+            return;
+        }
+        const double tempo = static_cast<double>(myMusicSpeed) / 100.0;
+        if (!myTimeStretch.reset(tempo, mySamples.getFrequency())) {
+            HudWarning("Could not hold the pitch, falling back.");
+            myPreservePitch = false;
+        }
+    }
+
     void resumeStream() {
+        resetTimeStretch();
         if (!myIsPaused) {
             myPlayPosition =
                 myPlayStartTime * static_cast<double>(mySamples.getFrequency());
@@ -623,6 +673,16 @@ struct MusicImpl : public Music, public MixSource {
     }
 
     int getSpeed() override { return myMusicSpeed; }
+
+    void togglePreservePitch() override {
+        interruptStream();
+        myPreservePitch = !myPreservePitch;
+        resumeStream();
+        gMenubar->update(Menubar::PRESERVE_PITCH);
+        HudNote("Pitch: %s", myPreservePitch ? "held" : "follows speed");
+    }
+
+    bool hasPreservePitch() override { return myPreservePitch; }
 
     void setVolume(int vol) override {
         vol = std::clamp(vol, 0, 100);

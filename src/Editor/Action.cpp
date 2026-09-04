@@ -299,6 +299,8 @@ void Action::perform(Type action) {
 
         CASE(SPEED_RESET)
         gMusic->setSpeed(100);
+        CASE(TOGGLE_PRESERVE_PITCH)
+        gMusic->togglePreservePitch();
         CASE(SPEED_INCREASE)
         gMusic->setSpeed(gMusic->getSpeed() + 10);
         CASE(SPEED_DECREASE)

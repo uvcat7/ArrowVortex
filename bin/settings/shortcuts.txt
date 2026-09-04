@@ -125,6 +125,7 @@ VOLUME_DECREASE = shift + down
 VOLUME_MUTE     =
 
 SPEED_RESET    =
+TOGGLE_PRESERVE_PITCH =
 SPEED_INCREASE = shift + right
 SPEED_DECREASE = shift + left
 

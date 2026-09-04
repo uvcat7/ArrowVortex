@@ -50,6 +50,13 @@ struct Music {
     /// Returns the playback speed of the audio mixer [10-400%].
     virtual int getSpeed() = 0;
 
+    /// Switches between stretching the audio in time, which holds the pitch,
+    /// and plain resampling, which lets the pitch follow the speed.
+    virtual void togglePreservePitch() = 0;
+
+    /// True while the pitch is held.
+    virtual bool hasPreservePitch() = 0;
+
     /// Enables/disables the beat tick sound.
     virtual void toggleBeatTick() = 0;
 
