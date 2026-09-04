@@ -61,6 +61,7 @@ struct Menubar : public InputHandler {
         STATUSBAR_TIMING_MODE,
         STATUSBAR_SCROLL,
         STATUSBAR_SPEED,
+        PRESERVE_PITCH,
 
         NUM_PROPERTIES
 

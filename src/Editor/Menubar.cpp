@@ -12,6 +12,7 @@
 #include <Managers/StyleMan.h>
 
 #include <Editor/Action.h>
+#include <Editor/Music.h>
 #include <Editor/Shortcuts.h>
 #include <Editor/Selection.h>
 #include <Editor/Editor.h>
@@ -60,6 +61,7 @@ struct MenuBarImpl : public Menubar {
     Item* myMinimapMenu;
     Item* myBgStyleMenu;
     Item* myStatusMenu;
+    Item* myAudioSpeedMenu;
 
     UpdateFunction myUpdateFunctions[NUM_PROPERTIES];
 
@@ -294,11 +296,13 @@ struct MenuBarImpl : public Menubar {
         add(hAudioVol, VOLUME_MUTE, "Mute");
 
         // Audio > Speed menu.
-        Item* hAudioSpeed = newMenu();
+        Item* hAudioSpeed = myAudioSpeedMenu = newMenu();
         add(hAudioSpeed, SPEED_RESET, "Default");
         sep(hAudioSpeed);
         add(hAudioSpeed, SPEED_INCREASE, "Faster");
         add(hAudioSpeed, SPEED_DECREASE, "Slower");
+        sep(hAudioSpeed);
+        add(hAudioSpeed, TOGGLE_PRESERVE_PITCH, "Keep pitch");
 
         // Audio menu.
         Item* hAudio = newMenu();
@@ -670,6 +674,10 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[STATUSBAR_SCROLL] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SCROLL,
                                            gStatusbar->hasScroll());
+        };
+        myUpdateFunctions[PRESERVE_PITCH] = [] {
+            MENU->myAudioSpeedMenu->setChecked(TOGGLE_PRESERVE_PITCH,
+                                               gMusic->hasPreservePitch());
         };
         myUpdateFunctions[STATUSBAR_SPEED] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SPEED,

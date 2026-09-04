@@ -307,6 +307,7 @@ static ActionEntry actionMap[] = {
     E(VOLUME_MUTE),
 
     E(SPEED_RESET),
+    E(TOGGLE_PRESERVE_PITCH),
     E(SPEED_INCREASE),
     E(SPEED_DECREASE),
 
