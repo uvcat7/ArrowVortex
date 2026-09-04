@@ -728,6 +728,120 @@ static int init_output_frame(AVFrame** frame,
 /* Global timestamp for the audio frames. */
 static int64_t pts = 0;
 
+/* Trimming and fading happen while the samples pass through: the FIFO is
+ * drained up to the cut, and what comes out first is scaled by a rising
+ * gain. All three are counted in output samples. */
+static int64_t samples_to_drop = 0;
+static int64_t fade_in_samples = 0;
+static int64_t fade_out_samples = 0;
+static int64_t samples_written = 0;
+/* Silence added in front of the song and after it. */
+static int64_t pad_start_samples = 0;
+static int64_t pad_end_samples = 0;
+/* Where the music itself begins and ends among the samples written, so
+ * the fades land on the song rather than on the silence around it. A
+ * music_end of zero means the length is unknown and the fade-out is
+ * skipped. */
+static int64_t music_start = 0;
+static int64_t music_end = 0;
+
+/**
+ * The level a sample should be played at, which is below one while the
+ * song is easing in after the cut or easing out towards the end.
+ * @param position Sample position, counted from the cut
+ */
+static double fade_gain(int64_t position) {
+    const int64_t offset = position - music_start;
+    double gain = 1.0;
+    if (fade_in_samples > 0 && offset < fade_in_samples) {
+        gain = (offset > 0) ? static_cast<double>(offset) /
+                                  static_cast<double>(fade_in_samples)
+                            : 0.0;
+    }
+    if (fade_out_samples > 0 && music_end > 0) {
+        const int64_t start = music_end - fade_out_samples;
+        if (position >= start) {
+            const double left = static_cast<double>(music_end - position) /
+                                static_cast<double>(fade_out_samples);
+            gain *= (left > 0.0) ? left : 0.0;
+        }
+    }
+    return gain;
+}
+
+/**
+ * Scale a frame by the fades, so the song eases in rather than starting
+ * mid-sound after the cut, and eases out instead of being chopped off.
+ * @param frame                Samples on their way to the encoder
+ * @param output_codec_context Codec context of the output file
+ */
+static void apply_fades(AVFrame* frame, AVCodecContext* output_codec_context) {
+    const int nb_samples = frame->nb_samples;
+    const bool fading_in =
+        fade_in_samples > 0 && samples_written < music_start + fade_in_samples;
+    const bool fading_out =
+        fade_out_samples > 0 && music_end > 0 &&
+        samples_written + nb_samples > music_end - fade_out_samples;
+    if (!fading_in && !fading_out) {
+        samples_written += nb_samples;
+        return;
+    }
+
+    const enum AVSampleFormat fmt = output_codec_context->sample_fmt;
+    const int channels = output_codec_context->ch_layout.nb_channels;
+    const int planar = av_sample_fmt_is_planar(fmt);
+    const int planes = planar ? channels : 1;
+    const int stride = planar ? 1 : channels;
+
+    for (int i = 0; i < nb_samples; ++i) {
+        const int64_t position = samples_written + i;
+        const double gain = fade_gain(position);
+        if (gain >= 1.0) continue;
+
+        for (int plane = 0; plane < planes; ++plane) {
+            uint8_t* data = frame->extended_data[plane];
+            for (int c = 0; c < stride; ++c) {
+                const int index = i * stride + c;
+                switch (fmt) {
+                    case AV_SAMPLE_FMT_FLT:
+                    case AV_SAMPLE_FMT_FLTP: {
+                        float* samples = reinterpret_cast<float*>(data);
+                        samples[index] =
+                            static_cast<float>(samples[index] * gain);
+                        break;
+                    }
+                    case AV_SAMPLE_FMT_DBL:
+                    case AV_SAMPLE_FMT_DBLP: {
+                        double* samples = reinterpret_cast<double*>(data);
+                        samples[index] *= gain;
+                        break;
+                    }
+                    case AV_SAMPLE_FMT_S16:
+                    case AV_SAMPLE_FMT_S16P: {
+                        int16_t* samples = reinterpret_cast<int16_t*>(data);
+                        samples[index] = static_cast<int16_t>(llround(
+                            static_cast<double>(samples[index]) * gain));
+                        break;
+                    }
+                    case AV_SAMPLE_FMT_S32:
+                    case AV_SAMPLE_FMT_S32P: {
+                        int32_t* samples = reinterpret_cast<int32_t*>(data);
+                        samples[index] = static_cast<int32_t>(llround(
+                            static_cast<double>(samples[index]) * gain));
+                        break;
+                    }
+                    default:
+                        /* An unexpected sample format is left alone; the
+                         * trim still works, only without the fade. */
+                        break;
+                }
+            }
+        }
+    }
+
+    samples_written += nb_samples;
+}
+
 /**
  * Encode one frame worth of audio to the output file.
  * @param      frame                 Samples to be encoded
@@ -802,6 +916,110 @@ cleanup:
 }
 
 /**
+ * Put a stretch of silence in front of whatever the FIFO already holds, which
+ * is how the song is given a run-up. Going through the FIFO leaves the framing
+ * to the encode loop, which is the only place that knows the size the encoder
+ * asked for.
+ * @param fifo                 Buffer used for temporary storage
+ * @param output_codec_context Codec context of the output file
+ * @param nb_samples           Length of the silence in samples
+ * @return Error code (0 if successful)
+ */
+static int write_leading_silence(AVAudioFifo* fifo,
+                                 AVCodecContext* output_codec_context,
+                                 int64_t nb_samples) {
+    const int channels = output_codec_context->ch_layout.nb_channels;
+    const enum AVSampleFormat fmt = output_codec_context->sample_fmt;
+    const int decoded = av_audio_fifo_size(fifo);
+    uint8_t** decoded_samples = nullptr;
+    uint8_t** silence = nullptr;
+    int chunk = static_cast<int>(FFMIN(nb_samples, 4096));
+    int error = 0;
+
+    /* Anything already decoded belongs after the silence, so it is taken
+     * out of the FIFO first and put back at the end. */
+    if (decoded > 0) {
+        if ((error = av_samples_alloc_array_and_samples(
+                 &decoded_samples, nullptr, channels, decoded, fmt, 0)) < 0) {
+            fprintf(stderr,
+                    "Could not allocate a buffer for the decoded "
+                    "samples\n");
+            return error;
+        }
+        if (av_audio_fifo_read(fifo, reinterpret_cast<void**>(decoded_samples),
+                               decoded) < decoded) {
+            fprintf(stderr, "Could not read data from FIFO\n");
+            error = AVERROR_EXIT;
+            goto cleanup;
+        }
+    }
+
+    if ((error = av_samples_alloc_array_and_samples(&silence, nullptr, channels,
+                                                    chunk, fmt, 0)) < 0) {
+        fprintf(stderr, "Could not allocate a buffer for the silence\n");
+        goto cleanup;
+    }
+    av_samples_set_silence(silence, 0, chunk, channels, fmt);
+
+    while (nb_samples > 0) {
+        const int n = static_cast<int>(FFMIN(nb_samples, chunk));
+        if ((error = add_samples_to_fifo(fifo, silence, n)) < 0) goto cleanup;
+        nb_samples -= n;
+    }
+
+    if (decoded > 0) {
+        error = add_samples_to_fifo(fifo, decoded_samples, decoded);
+    }
+
+cleanup:
+    if (silence) av_freep(&silence[0]);
+    av_freep(&silence);
+    if (decoded_samples) av_freep(&decoded_samples[0]);
+    av_freep(&decoded_samples);
+    return error;
+}
+
+/**
+ * Encode a stretch of silence, which is how the padding after the song is
+ * made. Nothing follows it but the flush, so the short frame the length
+ * usually ends on is allowed to be the last one.
+ * @param output_format_context Format context of the output file
+ * @param output_codec_context  Codec context of the output file
+ * @param nb_samples            Length of the silence in samples
+ * @return Error code (0 if successful)
+ */
+static int encode_silence(AVFormatContext* output_format_context,
+                          AVCodecContext* output_codec_context,
+                          int64_t nb_samples) {
+    const int frame_size = output_codec_context->frame_size > 0
+                               ? output_codec_context->frame_size
+                               : 1024;
+    while (nb_samples > 0) {
+        const int n = static_cast<int>(FFMIN(nb_samples, frame_size));
+        AVFrame* frame = nullptr;
+        int data_written;
+
+        if (init_output_frame(&frame, output_codec_context, n))
+            return AVERROR_EXIT;
+
+        av_samples_set_silence(frame->extended_data, 0, n,
+                               output_codec_context->ch_layout.nb_channels,
+                               output_codec_context->sample_fmt);
+
+        if (encode_audio_frame(frame, output_format_context,
+                               output_codec_context, &data_written)) {
+            av_frame_free(&frame);
+            return AVERROR_EXIT;
+        }
+        av_frame_free(&frame);
+
+        samples_written += n;
+        nb_samples -= n;
+    }
+    return 0;
+}
+
+/**
  * Load one audio frame from the FIFO buffer, encode and write it to the
  * output file.
  * @param fifo                  Buffer used for temporary storage
@@ -835,6 +1053,8 @@ static int load_encode_and_write(AVAudioFifo* fifo,
         av_frame_free(&output_frame);
         return AVERROR_EXIT;
     }
+
+    apply_fades(output_frame, output_codec_context);
 
     /* Encode one frame worth of audio samples. */
     if (encode_audio_frame(output_frame, output_format_context,
@@ -896,6 +1116,14 @@ void OggConversionThread::exec() {
     int i_frame = 0;
     int audio_stream_index = -1;
     pts = 0;
+    samples_to_drop = 0;
+    fade_in_samples = 0;
+    fade_out_samples = 0;
+    samples_written = 0;
+    pad_start_samples = 0;
+    pad_end_samples = 0;
+    music_start = 0;
+    music_end = 0;
 
     /* Open the input file for reading. */
     if (open_input_file(inPath.c_str(), &input_format_context,
@@ -937,6 +1165,75 @@ void OggConversionThread::exec() {
         return;
     }
 
+    /* The cut and the fade are given in seconds; the samples they stand
+     * for depend on the rate the encoder ended up with. */
+    if (trimStart > 0.0) {
+        samples_to_drop =
+            llround(trimStart * output_codec_context->sample_rate);
+    }
+    if (fadeIn > 0.0) {
+        fade_in_samples = llround(fadeIn * output_codec_context->sample_rate);
+    }
+    if (fadeOut > 0.0) {
+        fade_out_samples = llround(fadeOut * output_codec_context->sample_rate);
+    }
+    if (padStart > 0.0) {
+        pad_start_samples =
+            llround(padStart * output_codec_context->sample_rate);
+    }
+    if (padEnd > 0.0) {
+        pad_end_samples = llround(padEnd * output_codec_context->sample_rate);
+    }
+
+    /* Where the music sits among the samples that will be written: after
+     * the leading silence, and as long as the input is once the cut has
+     * been taken off it. */
+    music_start = pad_start_samples;
+    if (samples > 0 && input_codec_context->sample_rate > 0) {
+        const int64_t music = static_cast<int64_t>(samples) *
+                                  output_codec_context->sample_rate /
+                                  input_codec_context->sample_rate -
+                              samples_to_drop;
+        if (music > 0) music_end = music_start + music;
+    }
+    if (music_end <= 0) fade_out_samples = 0;
+
+    /* The cut comes off before the silence goes in, so that the silence
+     * ends up in front of the music instead of being dropped with it. */
+    if (samples_to_drop > 0) {
+        int drained = 0;
+        while (samples_to_drop > 0 && !drained) {
+            if (av_audio_fifo_size(fifo) == 0 &&
+                read_decode_convert_and_store(
+                    fifo, input_format_context, input_codec_context,
+                    output_codec_context, resample_context, audio_stream_index,
+                    &drained)) {
+                error = "Failed to decode a frame into the FIFO buffer.";
+                cleanup(fifo, input_format_context, output_format_context,
+                        input_codec_context, output_codec_context,
+                        resample_context);
+                return;
+            }
+            const int dropped =
+                FFMIN(static_cast<int>(FFMIN(samples_to_drop, INT_MAX)),
+                      av_audio_fifo_size(fifo));
+            if (dropped == 0) break;
+            av_audio_fifo_drain(fifo, dropped);
+            samples_to_drop -= dropped;
+        }
+    }
+
+    /* The silence in front goes through the FIFO like the song does, so the
+     * encoder keeps getting frames of the size it asked for. Whatever was
+     * decoded past the cut has to move behind it. */
+    if (pad_start_samples > 0 &&
+        write_leading_silence(fifo, output_codec_context, pad_start_samples)) {
+        error = "Failed to write the leading silence.";
+        cleanup(fifo, input_format_context, output_format_context,
+                input_codec_context, output_codec_context, resample_context);
+        return;
+    }
+
     if (output_codec_context->frame_size == 0) {
         frames = 1;  // avoid division by zero
     } else {
@@ -973,6 +1270,18 @@ void OggConversionThread::exec() {
             if (finished) break;
         }
 
+        /* Throw away everything before the cut, so the song starts where
+         * it was asked to. */
+        if (samples_to_drop > 0) {
+            const int dropped =
+                FFMIN(static_cast<int>(FFMIN(samples_to_drop, INT_MAX)),
+                      av_audio_fifo_size(fifo));
+            if (dropped > 0) {
+                av_audio_fifo_drain(fifo, dropped);
+                samples_to_drop -= dropped;
+            }
+        }
+
         /* If we have enough samples for the encoder, we encode them.
          * At the end of the file, we pass the remaining samples to
          * the encoder. */
@@ -998,6 +1307,17 @@ void OggConversionThread::exec() {
          * all remaining samples, we can exit this loop and finish. */
         if (finished) {
             int data_written;
+            /* The silence at the end follows the song, before the encoder is
+             * asked for whatever it still holds. */
+            if (pad_end_samples > 0 &&
+                encode_silence(output_format_context, output_codec_context,
+                               pad_end_samples)) {
+                error = "Failed to write the trailing silence.";
+                cleanup(fifo, input_format_context, output_format_context,
+                        input_codec_context, output_codec_context,
+                        resample_context);
+                return;
+            }
             /* Flush the encoder as it may have delayed frames. */
             do {
                 if (encode_audio_frame(nullptr, output_format_context,

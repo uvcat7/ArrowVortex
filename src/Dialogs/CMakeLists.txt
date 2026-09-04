@@ -14,6 +14,7 @@ list(APPEND INC
 	"PreviewSettings.h"
 	"SongProperties.h"
 	"TempoBreakdown.h"
+	"TrimStart.h"
 	"WaveformSettings.h"
 	"Zoom.h"
 )
@@ -34,6 +35,7 @@ list(APPEND SRC
 	"PreviewSettings.cpp"
 	"SongProperties.cpp"
 	"TempoBreakdown.cpp"
+	"TrimStart.cpp"
 	"WaveformSettings.cpp"
 	"Zoom.cpp"
 )

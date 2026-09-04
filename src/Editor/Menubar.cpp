@@ -308,6 +308,8 @@ struct MenuBarImpl : public Menubar {
         add(hAudio, TOGGLE_BEAT_TICK, "Beat tick");
         add(hAudio, TOGGLE_NOTE_TICK, "Note tick");
         sep(hAudio);
+        add(hAudio, OPEN_DIALOG_TRIM_START, "Trim start...");
+        sep(hAudio);
         add(hAudio, CONVERT_MUSIC_TO_OGG, "Convert simfile to ogg");
         add(hAudio, CONVERT_MUSIC_TO_MP3, "Convert simfile to mp3");
         add(hAudio, CONVERT_MUSIC_TO_WAV, "Convert simfile to wav");

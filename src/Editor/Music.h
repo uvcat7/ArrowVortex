@@ -67,6 +67,25 @@ struct Music {
     /// Convert the current simfile music to the given audio format.
     virtual void startAudioConversion(AudioFormat fmt) = 0;
 
+    /// Cuts the given number of seconds off the front of the song, pads
+    /// either end with silence, optionally eases the song in and out over
+    /// fades, and moves the simfile timing along with it.
+    /// The result is written to a file of its own and played in place of
+    /// the song, but nothing is committed until it is applied.
+    virtual void startAudioTrim(double cutSeconds, double fadeInSeconds,
+                                double fadeOutSeconds, double padStart,
+                                double padEnd, bool keepOriginal,
+                                bool saveSimfile) = 0;
+
+    /// Whether a trimmed song is waiting to be applied or thrown away.
+    virtual bool hasTrimPreview() const = 0;
+
+    /// Puts the trimmed song in its final place and keeps the timing.
+    virtual void applyTrimPreview() = 0;
+
+    /// Throws the trimmed song away and puts the original back.
+    virtual void cancelTrimPreview() = 0;
+
     /// Created a thread audio conversion for a source file to the given audio
     /// format, updating the simfile audio if it's currently loaded.
     virtual void startAudioConversion(AudioFormat fmt, fs::path source,
