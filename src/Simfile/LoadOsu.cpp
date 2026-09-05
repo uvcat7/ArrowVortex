@@ -432,7 +432,7 @@ static void ConvertNotes(Simfile* sim, OsuFile& osu, Chart& chart) {
         // x ranges from 0 to 512 (inclusive), y ranges from 0 to 384
         // (inclusive).
         int colWidth = 512 / std::max(osu.numCols, 1);
-        int col = std::clamp(hitObject.x / colWidth, 0, osu.numCols);
+        int col = std::clamp(hitObject.x / colWidth, 0, osu.numCols - 1);
 
         // Convert time and endtime to rows.
         int row = tracker.advance(hitObject.time);

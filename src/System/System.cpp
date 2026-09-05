@@ -35,6 +35,7 @@
 #include <vector>
 #include <map>
 #include <mutex>
+#include <locale>
 #include <condition_variable>
 
 #undef DELETE
@@ -838,7 +839,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_TEXT_INPUT: {
             const char* wp = event->text.text;
             const char n = '\n';
-            if (*wp >= 32)
+            if (!std::iscntrl(*reinterpret_cast<const char8_t*>(wp)))
                 myEvents.addTextInput(wp);
             else if (*wp == '\r')
                 myEvents.addTextInput(&n);
