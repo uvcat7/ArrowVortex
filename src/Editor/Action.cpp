@@ -83,6 +83,8 @@ void Action::perform(Type action) {
         gEditor->openDialog(DIALOG_CUSTOM_SNAP);
         CASE(OPEN_DIALOG_PREVIEW_SETTINGS)
         gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
+        CASE(OPEN_DIALOG_KEY_BINDINGS)
+        gEditor->openDialog(DIALOG_KEY_BINDINGS);
 
         CASE(EDIT_UNDO)
         gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
@@ -434,6 +436,28 @@ void Action::perform(Type action) {
         gStatusbar->toggleScroll();
         CASE(TOGGLE_STATUS_SPEED)
         gStatusbar->toggleSpeed();
+        CASE(TOGGLE_SHOW_FPS)
+        gStatusbar->toggleFps();
+        CASE(SET_FPS_VSYNC)
+        gEditor->setFpsLimit(-1);
+        CASE(SET_FPS_60)
+        gEditor->setFpsLimit(60);
+        CASE(SET_FPS_120)
+        gEditor->setFpsLimit(120);
+        CASE(SET_FPS_240)
+        gEditor->setFpsLimit(240);
+        CASE(SET_FPS_320)
+        gEditor->setFpsLimit(320);
+        CASE(SET_FPS_480)
+        gEditor->setFpsLimit(480);
+        CASE(SET_FPS_500)
+        gEditor->setFpsLimit(500);
+        CASE(SET_FPS_960)
+        gEditor->setFpsLimit(960);
+        CASE(SET_FPS_1200)
+        gEditor->setFpsLimit(1200);
+        CASE(SET_FPS_UNLIMITED)
+        gEditor->setFpsLimit(0);
 
         CASE(SHOW_SHORTCUTS)
         gTextOverlay->show(TextOverlay::SHORTCUTS);

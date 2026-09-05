@@ -8,6 +8,7 @@
 #include <Editor/Common.h>
 
 #include <algorithm>
+#include <fstream>
 #include <vector>
 #include <cstring>
 
@@ -169,6 +170,9 @@ static KeyEntry keyMap[] = {
 
 };
 
+static const char* SHORTCUTS_PATH = "settings/shortcuts.txt";
+static const char* DEFAULT_SHORTCUTS_PATH = "settings/shortcuts_default.txt";
+
 static const int NUM_MAPPED_KEYS = sizeof(keyMap) / sizeof(keyMap[0]);
 
 // ================================================================================================
@@ -205,6 +209,7 @@ static ActionEntry actionMap[] = {
     E(OPEN_DIALOG_CUSTOM_SNAP),
     E(OPEN_DIALOG_ZOOM),
     E(OPEN_DIALOG_PREVIEW_SETTINGS),
+    E(OPEN_DIALOG_KEY_BINDINGS),
 
     E(TOGGLE_JUMP_TO_NEXT_NOTE),
     E(TOGGLE_UNDO_REDO_JUMP),
@@ -372,6 +377,17 @@ static ActionEntry actionMap[] = {
     E(TOGGLE_STATUS_TIMING_MODE),
     E(TOGGLE_STATUS_SCROLL),
     E(TOGGLE_STATUS_SPEED),
+    E(TOGGLE_SHOW_FPS),
+    E(SET_FPS_VSYNC),
+    E(SET_FPS_60),
+    E(SET_FPS_120),
+    E(SET_FPS_240),
+    E(SET_FPS_320),
+    E(SET_FPS_480),
+    E(SET_FPS_500),
+    E(SET_FPS_960),
+    E(SET_FPS_1200),
+    E(SET_FPS_UNLIMITED),
 
     E(PREVIEW_TOGGLE_ENABLED),
     E(PREVIEW_TOGGLE_SHOW_BEAT_LINES),
@@ -474,23 +490,12 @@ struct ShortcutsImpl : public Shortcuts {
         }
     }
 
-    ShortcutsImpl() {
-        /// Sort the named actions by name.
-        std::sort(actionMap, actionMap + NUM_MAPPED_ACTIONS,
-                  [](const ActionEntry& a, const ActionEntry& b) -> bool {
-                      return Str::icompare(a.name, b.name) < 0;
-                  });
+    void LoadFile(const char* path) {
+        shortcutMappings_.clear();
 
-        /// Sort the keycode map.
-        std::sort(keyMap, keyMap + NUM_MAPPED_KEYS,
-                  [](const KeyEntry& a, const KeyEntry& b) -> bool {
-                      return Str::icompare(a.name, b.name) < 0;
-                  });
-
-        // Load the shortcuts file.
         XmrDoc doc;
-        if (doc.loadFile("settings/shortcuts.txt") != XMR_SUCCESS) {
-            HudError("Could not load shortcuts file.");
+        if (doc.loadFile(path) != XMR_SUCCESS) {
+            HudError("Could not load %s", path);
         }
 
         // Create a list of shortcuts.
@@ -515,6 +520,22 @@ struct ShortcutsImpl : public Shortcuts {
                 }
             }
         }
+    }
+
+    ShortcutsImpl() {
+        /// Sort the named actions by name.
+        std::sort(actionMap, actionMap + NUM_MAPPED_ACTIONS,
+                  [](const ActionEntry& a, const ActionEntry& b) -> bool {
+                      return Str::icompare(a.name, b.name) < 0;
+                  });
+
+        /// Sort the keycode map.
+        std::sort(keyMap, keyMap + NUM_MAPPED_KEYS,
+                  [](const KeyEntry& a, const KeyEntry& b) -> bool {
+                      return Str::icompare(a.name, b.name) < 0;
+                  });
+
+        LoadFile(SHORTCUTS_PATH);
     }
 
     ~ShortcutsImpl() = default;
@@ -576,6 +597,141 @@ struct ShortcutsImpl : public Shortcuts {
             }
         }
         return Action::NONE;
+    }
+
+    // ================================================================================================
+    // ShortcutsImpl :: rebinding.
+
+    int getNumActions() override { return NUM_MAPPED_ACTIONS; }
+
+    const char* getActionName(int index) override {
+        if (index < 0 || index >= NUM_MAPPED_ACTIONS) return "";
+        return actionMap[index].name;
+    }
+
+    Action::Type getActionCode(int index) override {
+        if (index < 0 || index >= NUM_MAPPED_ACTIONS) return Action::NONE;
+        return actionMap[index].code;
+    }
+
+    ActionEntry* FindActionEntry(Action::Type action) {
+        for (int i = 0; i < NUM_MAPPED_ACTIONS; ++i) {
+            if (actionMap[i].code == action) return actionMap + i;
+        }
+        return nullptr;
+    }
+
+    KeyEntry* FindKeyEntry(Code key) {
+        for (int i = 0; i < NUM_MAPPED_KEYS; ++i) {
+            if (keyMap[i].code == key) return keyMap + i;
+        }
+        return nullptr;
+    }
+
+    void EraseBindings(Action::Type action) {
+        std::erase_if(shortcutMappings_, [action](const ShortcutEntry& entry) {
+            return entry.action->code == action;
+        });
+    }
+
+    /// A key combination can only trigger one action, so taking it away from
+    /// whoever holds it keeps the bindings unambiguous.
+    void ReleaseCombination(int keyflags, KeyEntry* key, bool scrollUp,
+                            Action::Type newOwner) {
+        std::erase_if(shortcutMappings_, [&](const ShortcutEntry& entry) {
+            if (entry.keyflags != keyflags) return false;
+            if (entry.key != key) return false;
+            if (key == nullptr && entry.scrollUp != scrollUp) return false;
+            if (entry.action->code == newOwner) return false;
+
+            HudNote("Unbound %s", entry.action->name);
+            return true;
+        });
+    }
+
+    void setBinding(Action::Type action, int keyflags, Code key) override {
+        auto actionEntry = FindActionEntry(action);
+        auto keyEntry = FindKeyEntry(key);
+        if (!actionEntry || !keyEntry) {
+            HudError("Could not bind the key, it has no name");
+            return;
+        }
+
+        ReleaseCombination(keyflags, keyEntry, false, action);
+        EraseBindings(action);
+
+        shortcutMappings_.emplace_back(
+            ShortcutEntry{actionEntry, keyEntry, keyflags, false});
+    }
+
+    void setScrollBinding(Action::Type action, int keyflags,
+                          bool scrollUp) override {
+        auto actionEntry = FindActionEntry(action);
+        if (!actionEntry) return;
+
+        ReleaseCombination(keyflags, nullptr, scrollUp, action);
+        EraseBindings(action);
+
+        shortcutMappings_.emplace_back(
+            ShortcutEntry{actionEntry, nullptr, keyflags, scrollUp});
+    }
+
+    void clearBindings(Action::Type action) override { EraseBindings(action); }
+
+    /// Writes a shortcut the way the file reader expects to read it back: key
+    /// names only, because the parser splits on "+" and looks up names, and a
+    /// character like "-" or "+" would not survive the round trip.
+    std::string ToFileNotation(const ShortcutEntry& shortcut) {
+        std::string out;
+        if (shortcut.keyflags & Keyflag::CTRL) out = out + "ctrl + ";
+        if (shortcut.keyflags & Keyflag::SHIFT) out = out + "shift + ";
+        if (shortcut.keyflags & Keyflag::ALT) out = out + "alt + ";
+        if (shortcut.key == nullptr) {
+            out = out + (shortcut.scrollUp ? "scroll up" : "scroll down");
+        } else {
+            out = out + shortcut.key->name;
+        }
+        return out;
+    }
+
+    bool saveToFile() override {
+        std::string out;
+        out.reserve(8192);
+        out.append(
+            "// Key bindings, written by the editor. One action per line,\n"
+            "// and multiple combinations per action, comma separated.\n\n");
+
+        for (auto& action : actionMap) {
+            out.append(action.name);
+            out.append(" = ");
+
+            bool first = true;
+            for (auto& shortcut : shortcutMappings_) {
+                if (shortcut.action->code != action.code) continue;
+                if (!first) out.append(", ");
+                out.append(ToFileNotation(shortcut));
+                first = false;
+            }
+            out.append("\n");
+        }
+
+        std::ofstream file(SHORTCUTS_PATH);
+        if (file.fail()) {
+            HudError("Could not write the shortcuts file");
+            return false;
+        }
+        file << out;
+        file.close();
+
+        HudNote("Saved key bindings");
+        return true;
+    }
+
+    void reloadFromFile() override { LoadFile(SHORTCUTS_PATH); }
+
+    void restoreDefaults() override {
+        LoadFile(DEFAULT_SHORTCUTS_PATH);
+        HudNote("Restored the default key bindings");
     }
 
 };  // ShortcutsImpl

@@ -66,6 +66,18 @@ namespace {
 
 static int wglSwapInterval;
 
+// How often the loop is allowed to come round: below zero it waits for
+// the display, zero is as fast as the machine manages, above zero is a
+// cap in frames per second.
+static const int kFpsVsync = -1;
+static const int kFpsUnlimited = 0;
+static int sFpsLimit = kFpsVsync;
+
+// Waiting for the display is a request the driver is free to ignore, so the
+// loop keeps its own ceiling underneath it. Only an explicit "unlimited"
+// takes that away.
+static const int kFpsDefaultCeiling = 960;
+
 static std::string outPath;
 std::mutex fileDialogMutex;
 std::condition_variable fileDialogCv;
@@ -472,9 +484,15 @@ struct SystemImpl : public System {
         SDL_SetCursor(SDL_CreateSystemCursor(getCursorResource()));
     }
 
-    void disableVsync() override {
-        if (!SDL_GL_SetSwapInterval(0))
-            HudError("Failed to disable V-sync: %s", SDL_GetError());
+    void disableVsync() override { setFpsLimit(kFpsUnlimited); }
+
+    void setFpsLimit(int limitFps) override {
+        sFpsLimit = limitFps;
+        if (wglSwapInterval == -1) return;
+
+        if (!SDL_GL_SetSwapInterval(limitFps < 0 ? 1 : 0)) {
+            HudError("Failed to change V-sync: %s", SDL_GetError());
+        }
     }
 
     double getElapsedTime() const override {
@@ -623,8 +641,10 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     auto frameGuess = 960;
 #endif
 
-    // Non-vsync FPS max target
-    auto frameTarget = duration<double>(1.0 / 960.0);
+    // How long a frame should take while a cap is in force.
+    auto frameTarget = duration<double>(
+        1.0 /
+        static_cast<double>(sFpsLimit > 0 ? sFpsLimit : kFpsDefaultCeiling));
 
     // Enter the message loop.
     auto prevTime = Debug::getElapsedTime();
@@ -661,7 +681,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     duration<double> frameTime = Debug::getElapsedTime() - prevTime;
     auto waitTime = frameTarget.count() - frameTime.count();
 
-    if (wglSwapInterval) {
+    if (wglSwapInterval && sFpsLimit != kFpsUnlimited) {
         while (Debug::getElapsedTime() - prevTime < frameTarget) {
             std::this_thread::yield();
         }

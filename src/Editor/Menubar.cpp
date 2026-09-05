@@ -60,6 +60,8 @@ struct MenuBarImpl : public Menubar {
     Item* myMinimapMenu;
     Item* myBgStyleMenu;
     Item* myStatusMenu;
+    Item* myOptionsMenu;
+    Item* myFpsLimitMenu;
 
     UpdateFunction myUpdateFunctions[NUM_PROPERTIES];
 
@@ -406,6 +408,7 @@ struct MenuBarImpl : public Menubar {
         add(myViewMenu, TOGGLE_SHOW_TEMPO_BOXES, "Show tempo boxes");
         add(myViewMenu, TOGGLE_SHOW_TEMPO_HELP, "Show tempo help");
         add(myViewMenu, TOGGLE_SHOW_NOTES, "Show notes");
+        add(myViewMenu, TOGGLE_SHOW_FPS, "Show FPS");
         add(myViewMenu, TOGGLE_CHART_PREVIEW, "Use SM-style preview");
         sep(myViewMenu);
         add(myViewMenu, TOGGLE_REVERSE_SCROLL, "Reverse scroll");
@@ -424,6 +427,27 @@ struct MenuBarImpl : public Menubar {
         sub(myViewMenu, hViewCursor, "Cursor");
         sub(myViewMenu, myStatusMenu, "Status");
 
+        // Options > FPS limiter menu.
+        myFpsLimitMenu = newMenu();
+        add(myFpsLimitMenu, SET_FPS_VSYNC, "Sync to display");
+        sep(myFpsLimitMenu);
+        add(myFpsLimitMenu, SET_FPS_60, "Limit to 60 FPS");
+        add(myFpsLimitMenu, SET_FPS_120, "Limit to 120 FPS");
+        add(myFpsLimitMenu, SET_FPS_240, "Limit to 240 FPS");
+        add(myFpsLimitMenu, SET_FPS_320, "Limit to 320 FPS");
+        add(myFpsLimitMenu, SET_FPS_480, "Limit to 480 FPS");
+        add(myFpsLimitMenu, SET_FPS_500, "Limit to 500 FPS");
+        add(myFpsLimitMenu, SET_FPS_960, "Limit to 960 FPS");
+        add(myFpsLimitMenu, SET_FPS_1200, "Limit to 1200 FPS");
+        sep(myFpsLimitMenu);
+        add(myFpsLimitMenu, SET_FPS_UNLIMITED, "Unlimited");
+
+        // Options menu.
+        myOptionsMenu = newMenu();
+        add(myOptionsMenu, OPEN_DIALOG_KEY_BINDINGS, "Key bindings...");
+        sep(myOptionsMenu);
+        sub(myOptionsMenu, myFpsLimitMenu, "FPS limiter");
+
         // Help menu.
         Item* hHelp = newMenu();
         add(hHelp, SHOW_SHORTCUTS, "Shortcuts...");
@@ -440,6 +464,7 @@ struct MenuBarImpl : public Menubar {
         sub(menu, hTempo, "Tempo");
         sub(menu, hAudio, "Audio");
         sub(menu, myViewMenu, "View");
+        sub(menu, myOptionsMenu, "Options");
         sub(menu, hHelp, "Help");
 
         update(ALL_PROPERTIES);
@@ -670,6 +695,22 @@ struct MenuBarImpl : public Menubar {
         myUpdateFunctions[STATUSBAR_SCROLL] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SCROLL,
                                            gStatusbar->hasScroll());
+        };
+        myUpdateFunctions[FPS_LIMIT] = [] {
+            const int limit = gEditor->getFpsLimit();
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_VSYNC, limit < 0);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_60, limit == 60);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_120, limit == 120);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_240, limit == 240);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_320, limit == 320);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_480, limit == 480);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_500, limit == 500);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_960, limit == 960);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_1200, limit == 1200);
+            MENU->myFpsLimitMenu->setChecked(SET_FPS_UNLIMITED, limit == 0);
+        };
+        myUpdateFunctions[SHOW_FPS] = [] {
+            MENU->myViewMenu->setChecked(TOGGLE_SHOW_FPS, gStatusbar->hasFps());
         };
         myUpdateFunctions[STATUSBAR_SPEED] = [] {
             MENU->myStatusMenu->setChecked(TOGGLE_STATUS_SPEED,
