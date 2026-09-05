@@ -297,8 +297,11 @@ struct MenuBarImpl : public Menubar {
         Item* hAudioSpeed = newMenu();
         add(hAudioSpeed, SPEED_RESET, "Default");
         sep(hAudioSpeed);
-        add(hAudioSpeed, SPEED_INCREASE, "Faster");
-        add(hAudioSpeed, SPEED_DECREASE, "Slower");
+        add(hAudioSpeed, SPEED_INCREASE, "Faster by 10%");
+        add(hAudioSpeed, SPEED_DECREASE, "Slower by 10%");
+        sep(hAudioSpeed);
+        add(hAudioSpeed, SPEED_INCREASE_FINE, "Faster by 1%");
+        add(hAudioSpeed, SPEED_DECREASE_FINE, "Slower by 1%");
 
         // Audio menu.
         Item* hAudio = newMenu();
