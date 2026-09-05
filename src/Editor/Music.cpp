@@ -82,6 +82,33 @@ struct MusicImpl : public Music, public MixSource {
 
     OggConversionThread* myAudioConversionThread;
 
+    /// What the conversion currently running is trimming, so the
+    /// simfile can be brought in line once the file is written.
+    struct PendingTrim {
+        bool active = false;
+        bool keepOriginal = false;
+        bool saveSimfile = false;
+        double cut = 0.0;
+        fs::path source, output;
+    };
+    PendingTrim myPendingTrim;
+
+    /// A trimmed song that is being listened to but has not been
+    /// committed: the simfile plays it and carries the shifted timing,
+    /// while everything needed to undo that is kept here.
+    struct TrimPreview {
+        bool active = false;
+        bool keepOriginal = false;
+        bool saveSimfile = false;
+        double cut = 0.0;
+        std::string music;
+        double offset = 0.0;
+        double previewStart = 0.0;
+        double previewLength = 0.0;
+        fs::path source, preview;
+    };
+    TrimPreview myTrimPreview;
+
     // ================================================================================================
     // MusicImpl :: constructor and destructor.
 
@@ -437,6 +464,81 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
+    void startAudioTrim(double cut, double fadeIn, double fadeOut,
+                        double padStart, double padEnd, bool keepOriginal,
+                        bool saveSimfile) override {
+        if (gSimfile->isClosed()) {
+            return;
+        } else if (!mySamples.isCompleted()) {
+            HudNote("Wait for the music to finish loading.");
+            return;
+        } else if (mySamples.getNumFrames() == 0) {
+            HudError("There is no music loaded.");
+            return;
+        } else if (myAudioConversionThread) {
+            HudNote("Conversion is currently in progress.");
+            return;
+        } else if (cut <= 0.0 && fadeIn <= 0.0 && fadeOut <= 0.0 &&
+                   padStart <= 0.0 && padEnd <= 0.0) {
+            HudNote("There is nothing to trim.");
+            return;
+        } else if (myTrimPreview.active) {
+            HudNote("Apply or revert the current result first.");
+            return;
+        }
+
+        fs::path source = utf8ToPath(gSimfile->getDir());
+        source.append(stringToUtf8(gSimfile->get()->music));
+
+        // The song keeps the format it came in, so that trimming does
+        // not quietly turn an mp3 into something else.
+        auto ext = pathToUtf8(source.extension());
+        Str::toLower(ext);
+        AudioFormat fmt = AudioFormat::OGG;
+        std::string outExt = ".ogg";
+        if (ext == ".mp3") {
+            fmt = AudioFormat::MP3;
+            outExt = ".mp3";
+        } else if (ext == ".wav") {
+            fmt = AudioFormat::WAV;
+            outExt = ".wav";
+        }
+
+        std::string stem = pathToUtf8(source.stem());
+        fs::path output = source.parent_path() /
+                          utf8ToPath(stem + " (trim preview)" + outExt);
+
+        myPendingTrim = PendingTrim();
+        myPendingTrim.active = true;
+        myPendingTrim.keepOriginal = keepOriginal || outExt != ext;
+        myPendingTrim.saveSimfile = saveSimfile;
+        // What the timing has to follow: the front loses the cut and
+        // gains the padding, so the first beat moves by the difference.
+        myPendingTrim.cut = cut - padStart;
+        myPendingTrim.source = source;
+        myPendingTrim.output = output;
+
+        myAudioConversionThread = new OggConversionThread;
+        myAudioConversionThread->inPath = pathToUtf8(source);
+        myAudioConversionThread->outPath = pathToUtf8(output);
+        myAudioConversionThread->format = fmt;
+        myAudioConversionThread->isSimfile = true;
+        myAudioConversionThread->trimStart = cut;
+        myAudioConversionThread->fadeIn = fadeIn;
+        myAudioConversionThread->fadeOut = fadeOut;
+        myAudioConversionThread->padStart = padStart;
+        myAudioConversionThread->padEnd = padEnd;
+
+        if (gEditor->hasMultithreading()) {
+            auto box = myInfoBox.create();
+            box->left = "Trimming the song...";
+            myAudioConversionThread->start();
+        } else {
+            myAudioConversionThread->exec();
+            finishAudioConversion();
+        }
+    }
+
     void startAudioConversion(AudioFormat fmt, fs::path source, fs::path output,
                               bool isSimfile) override {
         // Get final file extension and encoder name.
@@ -492,26 +594,154 @@ struct MusicImpl : public Music, public MixSource {
     }
 
     void finishAudioConversion() {
-        if (myAudioConversionThread) {
-            if (myAudioConversionThread->error.empty()) {
-                HudInfo("Conversion finished.");
-                if (myAudioConversionThread->isSimfile) {
-                    fs::path out = utf8ToPath(myAudioConversionThread->outPath);
-                    if (gSimfile->isOpen()) {
-                        fs::path path =
-                            fs::relative(out, utf8ToPath(gSimfile->getDir()));
-                        gMetadata->setMusicPath(pathToUtf8(path));
-                    } else {
-                        gEditor->openSimfile(out);
-                    }
-                }
-            } else {
-                HudError("Conversion failed: %s.",
-                         myAudioConversionThread->error.c_str());
-            }
-            delete myAudioConversionThread;
-            myAudioConversionThread = nullptr;
+        if (!myAudioConversionThread) return;
+
+        // The thread goes first: finishing a trim reloads the music,
+        // which would otherwise try to tidy up the thread underfoot.
+        const std::string error = myAudioConversionThread->error;
+        const bool isSimfile = myAudioConversionThread->isSimfile;
+        const fs::path out = utf8ToPath(myAudioConversionThread->outPath);
+
+        delete myAudioConversionThread;
+        myAudioConversionThread = nullptr;
+
+        if (myPendingTrim.active) {
+            finishAudioTrim(error);
+            return;
         }
+
+        if (error.empty()) {
+            HudInfo("Conversion finished.");
+            if (isSimfile) {
+                if (gSimfile->isOpen()) {
+                    fs::path path =
+                        fs::relative(out, utf8ToPath(gSimfile->getDir()));
+                    gMetadata->setMusicPath(pathToUtf8(path));
+                } else {
+                    gEditor->openSimfile(out);
+                }
+            }
+        } else {
+            HudError("Conversion failed: %s.", error.c_str());
+        }
+    }
+
+    void finishAudioTrim(const std::string& error) {
+        const PendingTrim trim = myPendingTrim;
+        myPendingTrim = PendingTrim();
+
+        std::error_code ec;
+        if (!error.empty()) {
+            HudError("Trimming failed: %s.", error.c_str());
+            fs::remove(trim.output, ec);
+            return;
+        }
+        if (gSimfile->isClosed()) return;
+
+        auto sim = gSimfile->get();
+        if (!sim) return;
+
+        // Everything needed to put things back, taken before the simfile
+        // is pointed at the new file.
+        myTrimPreview = TrimPreview();
+        myTrimPreview.active = true;
+        myTrimPreview.keepOriginal = trim.keepOriginal;
+        myTrimPreview.saveSimfile = trim.saveSimfile;
+        myTrimPreview.cut = trim.cut;
+        myTrimPreview.music = sim->music;
+        myTrimPreview.offset = gTempo->getOffset();
+        myTrimPreview.previewStart = sim->previewStart;
+        myTrimPreview.previewLength = sim->previewLength;
+        myTrimPreview.source = trim.source;
+        myTrimPreview.preview = trim.output;
+
+        // The song has to let go of its file before another is loaded.
+        unload();
+
+        // The audio lost its first seconds, so the first beat sits that
+        // much earlier in it, and so does the preview.
+        gMetadata->setMusicPath(pathToUtf8(trim.output.filename()));
+        gTempo->setOffset(myTrimPreview.offset + trim.cut);
+        if (myTrimPreview.previewStart > 0.0) {
+            gMetadata->setMusicPreview(
+                std::max(0.0, myTrimPreview.previewStart - trim.cut),
+                myTrimPreview.previewLength);
+        }
+
+        load();
+
+        HudInfo("Listen to the result, then apply or revert it.");
+    }
+
+    bool hasTrimPreview() const override { return myTrimPreview.active; }
+
+    void applyTrimPreview() override {
+        if (!myTrimPreview.active) return;
+
+        const TrimPreview trim = myTrimPreview;
+        myTrimPreview = TrimPreview();
+
+        std::error_code ec;
+        unload();
+
+        // Where the trimmed song ends up: over the original, or beside it
+        // under a name of its own.
+        fs::path result = trim.source;
+        if (trim.keepOriginal) {
+            std::string stem = pathToUtf8(trim.source.stem());
+            std::string ext = pathToUtf8(trim.preview.extension());
+            result = trim.source.parent_path() /
+                     utf8ToPath(stem + " (trimmed)" + ext);
+            fs::remove(result, ec);
+        } else {
+            // The song it replaces is moved aside rather than deleted,
+            // the same way the editor keeps a .old next to a saved chart.
+            fs::path backup = trim.source;
+            backup += ".old";
+            fs::remove(backup, ec);
+            fs::rename(trim.source, backup, ec);
+            if (ec) fs::remove(trim.source, ec);
+        }
+
+        fs::rename(trim.preview, result, ec);
+        if (ec) {
+            HudError("Could not put the trimmed song in place.");
+            result = trim.preview;
+        }
+
+        gMetadata->setMusicPath(pathToUtf8(result.filename()));
+        load();
+
+        if (trim.saveSimfile) gEditor->saveSimfile(false);
+
+        if (trim.cut > 0.0) {
+            HudInfo("Trimmed %.3f seconds from the start of the song.",
+                    trim.cut);
+        } else if (trim.cut < 0.0) {
+            HudInfo("Added %.3f seconds in front of the song.", -trim.cut);
+        } else {
+            HudInfo("The song has been rewritten.");
+        }
+    }
+
+    void cancelTrimPreview() override {
+        if (!myTrimPreview.active) return;
+
+        const TrimPreview trim = myTrimPreview;
+        myTrimPreview = TrimPreview();
+
+        std::error_code ec;
+        unload();
+
+        gMetadata->setMusicPath(trim.music);
+        gTempo->setOffset(trim.offset);
+        gMetadata->setMusicPreview(trim.previewStart, trim.previewLength);
+
+        fs::remove(trim.preview, ec);
+
+        load();
+
+        HudInfo("The song is back as it was.");
     }
 
     // ================================================================================================
