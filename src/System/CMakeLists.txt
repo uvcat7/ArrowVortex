@@ -7,6 +7,7 @@ list(APPEND INC
 	"Resources.h"
 	"System.h"
 	"Thread.h"
+	"Zip.h"
 )
 
 list(APPEND SRC
@@ -16,10 +17,12 @@ list(APPEND SRC
     "Menu.cpp"
 	"System.cpp"
 	"Thread.cpp"
+	"Zip.cpp"
 )
 
 add_library(System STATIC ${SRC} ${INC}) 
-target_link_libraries(System PRIVATE Core Editor OpenGL::GL SDL3::SDL3)
+target_link_libraries(System PRIVATE Core Editor OpenGL::GL SDL3::SDL3
+                                     ZLIB::ZLIB)
 
 add_executable(ArrowVortex System.cpp "${CMAKE_CURRENT_SOURCE_DIR}/ArrowVortex.rc")
 add_custom_command(

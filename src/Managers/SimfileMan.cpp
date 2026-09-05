@@ -236,6 +236,19 @@ struct SimfileManImpl : public SimfileMan {
         return result;
     }
 
+    bool exportTo(const std::string& dir, SimFormat format) override {
+        if (!mySimfile) return false;
+
+        // The simfile keeps its own directory: this is an export, not a save,
+        // so neither the open file nor the edit history moves.
+        std::string songDir = mySimfile->dir;
+        mySimfile->dir = dir;
+        bool result = SaveSimfile(*mySimfile, format, false);
+        mySimfile->dir = songDir;
+
+        return result;
+    }
+
     void close() override {
         if (!mySimfile) return;
 
