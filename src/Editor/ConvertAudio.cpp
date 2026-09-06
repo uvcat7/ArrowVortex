@@ -458,9 +458,10 @@ static int decode_audio_frame(AVFrame* frame,
     /* Read one audio frame from the input file into a temporary packet. */
     if ((error = av_read_frame(input_format_context, input_packet)) < 0) {
         /* If we are at the end of the file, flush the decoder below. */
-        if (error == AVERROR_EOF)
+        if (error == AVERROR_EOF) {
             *finished = 1;
-        else {
+            error = 0;
+        } else {
             av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, error);
             fprintf(stderr, "Could not read frame (error '%s')\n", errbuf);
             goto cleanup;
@@ -473,8 +474,20 @@ static int decode_audio_frame(AVFrame* frame,
     }
 
     /* Send the audio frame stored in the temporary packet to the decoder.
-     * The input audio stream decoder is used to do this. */
-    if ((error = avcodec_send_packet(input_codec_context, input_packet)) < 0) {
+     * The input audio stream decoder is used to do this. At the end of the
+     * file there is no packet to send, and a null one flushes the decoder
+     * instead. */
+    error = avcodec_send_packet(input_codec_context,
+                                *finished ? nullptr : input_packet);
+    if (error == AVERROR_INVALIDDATA) {
+        /* A packet the decoder cannot make sense of is skipped rather than
+         * ending the conversion. Files carry such packets in ordinary
+         * places: an mp3 written with padding after the last frame ends on
+         * one, and the whole conversion used to fail on it. */
+        error = 0;
+        goto cleanup;
+    }
+    if (error < 0) {
         av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, error);
         fprintf(stderr, "Could not send packet for decoding (error '%s')\n",
                 errbuf);
