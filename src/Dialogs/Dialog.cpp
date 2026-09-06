@@ -4,13 +4,18 @@
 
 namespace Vortex {
 
-static const char* IdStrings[NUM_DIALOG_IDS] = {
+// One name per entry of DialogId, in the same order. The size comes from the
+// list rather than the enum, so that a missing name is caught here instead of
+// leaving a null pointer for the settings reader to walk into.
+static const char* IdStrings[] = {
     "adjustSync",     "adjustTempo",     "adjustTempoSM5",
     "chartList",      "chartProperties", "dancingBot",
     "generateNotes",  "newChart",        "songProperties",
     "tempoBreakdown", "labelBreakdown",  "waveformSettings",
     "zoom",           "customSnap",      "previewSettings",
-    "editSegment"};
+    "editSegment",    "saveAs"};
+static_assert(sizeof(IdStrings) / sizeof(IdStrings[0]) == NUM_DIALOG_IDS,
+              "every dialog needs a name");
 
 EditorDialog::~EditorDialog() { gEditor->onDialogClosed(myId); }
 

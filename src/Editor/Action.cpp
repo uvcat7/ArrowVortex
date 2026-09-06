@@ -46,7 +46,7 @@ void Action::perform(Type action) {
         CASE(FILE_SAVE)
         gEditor->saveSimfile(false);
         CASE(FILE_SAVE_AS)
-        gEditor->saveSimfile(true);
+        gEditor->openDialog(DIALOG_SAVE_AS);
         CASE(FILE_CLOSE)
         gEditor->closeSimfile();
 

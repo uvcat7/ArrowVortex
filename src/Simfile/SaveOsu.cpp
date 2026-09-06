@@ -29,6 +29,43 @@ namespace {
 // ===================================================================================
 // Exporting utilities.
 
+// The author osu! shows for the map: the chart's step artist, falling back
+// to the credit of the song.
+static std::string ChartCreator(const Simfile* sim, const Chart* chart) {
+    if (chart && chart->artist.length()) return chart->artist;
+    return sim ? sim->credit : std::string();
+}
+
+// Strips the characters a filename cannot hold, so that a title or an artist
+// can be used as one.
+static std::string FileSafe(const std::string& name) {
+    std::string out;
+    for (char c : name) {
+        if (c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' ||
+            c == '"' || c == '<' || c == '>' || c == '|') {
+            continue;
+        }
+        out.push_back(c);
+    }
+    while (out.length() && out.back() == ' ') out.pop_back();
+    return out;
+}
+
+// The part of the filename shared by every difficulty of the song, in the
+// shape osu! uses: "Artist - Title (Creator)". The romanised names are
+// preferred, the same way the metadata block prefers them.
+static std::string FileStem(const Simfile* sim, const Chart* chart) {
+    const std::string& artist =
+        sim->artistTr.length() ? sim->artistTr : sim->artist;
+    const std::string& title =
+        sim->titleTr.length() ? sim->titleTr : sim->title;
+
+    std::string creator = ChartCreator(sim, chart);
+    std::string out = artist + " - " + title;
+    if (creator.length()) out = out + " (" + creator + ")";
+    return FileSafe(out);
+}
+
 static int ToMilliseconds(double time) {
     return static_cast<int>(time * 1000.0 + 0.5);
 }
@@ -256,29 +293,31 @@ static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
 };  // namespace
 
 bool SaveOsu(const Simfile* sim, bool backup) {
-    fs::path path = utf8ToPath(sim->dir);
-    path.append(stringToUtf8(sim->file));
-    path.replace_extension(".osu");
+    fs::path lastPath;
+
     if (sim->charts.empty()) {
+        fs::path path = utf8ToPath(sim->dir);
+        path.append(stringToUtf8(FileStem(sim, nullptr) + ".osu"));
         SaveChart(path, sim, nullptr);
+        lastPath = path;
     } else {
         std::map<std::string, int> duplicateCounters;
         for (auto chart : sim->charts) {
             auto diffName = std::string(GetDifficultyName(chart->difficulty));
-            fs::path path = utf8ToPath(sim->dir);
-            path.append(stringToUtf8(sim->file));
-            path.replace_extension();
-            path.concat(" [");
-            path.concat(diffName);
             int& counter = duplicateCounters[diffName];
             if (++counter > 1) {
-                path.concat(Str::fmt(" %1").arg(counter).str);
+                diffName = diffName + Str::fmt(" %1").arg(counter).str;
             }
-            path.concat("].osu");
+
+            fs::path path = utf8ToPath(sim->dir);
+            path.append(
+                stringToUtf8(FileStem(sim, chart) + " [" + diffName + "].osu"));
             SaveChart(path, sim, chart);
+            lastPath = path;
         }
     }
-    HudInfo("Saved: %s", pathToUtf8(path.filename()).c_str());
+
+    HudInfo("Saved: %s", pathToUtf8(lastPath.filename()).c_str());
     return true;
 }
 
