@@ -140,6 +140,27 @@ void DialogSongProperties::myCreateWidgets() {
                     [](std::string& s) { gMetadata->setCredit(s); });
     w->setTooltip("Author of the simfile");
 
+    // The romanised names the simfile keeps beside the originals, under a
+    // heading of their own so that the two Titles are not mistaken for
+    // each other.
+    myLayout.row().col(418);
+    myLayout.add<WgSeperator>();
+    myLayout.add<WgLabel>()->text.set("Transliteration");
+
+    myLayout.row().col(72).col(342);
+
+    w = CreateField(myLayout, "Title", myTitleTranslit,
+                    [](std::string& s) { gMetadata->setTitleTranslit(s); });
+    w->setTooltip("Romanised title, written to #TITLETRANSLIT");
+
+    w = CreateField(myLayout, "Subtitle", mySubtitleTranslit,
+                    [](std::string& s) { gMetadata->setSubtitleTranslit(s); });
+    w->setTooltip("Romanised subtitle, written to #SUBTITLETRANSLIT");
+
+    w = CreateField(myLayout, "Artist", myArtistTranslit,
+                    [](std::string& s) { gMetadata->setArtistTranslit(s); });
+    w->setTooltip("Romanised artist, written to #ARTISTTRANSLIT");
+
     myLayout.row().col(418);
     myLayout.add<WgSeperator>();
     myLayout.row().col(72).col(290).col(24).col(24);
@@ -276,6 +297,9 @@ void DialogSongProperties::myUpdateProperties() {
         mySubtitle = meta->subtitle;
         myArtist = meta->artist;
         myCredit = meta->credit;
+        myTitleTranslit = meta->titleTr;
+        mySubtitleTranslit = meta->subtitleTr;
+        myArtistTranslit = meta->artistTr;
         myMusic = meta->music;
         myBackground = meta->background;
         myBanner = meta->banner;
