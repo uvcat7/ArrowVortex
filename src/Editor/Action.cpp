@@ -303,6 +303,10 @@ void Action::perform(Type action) {
         gMusic->setSpeed(gMusic->getSpeed() + 10);
         CASE(SPEED_DECREASE)
         gMusic->setSpeed(gMusic->getSpeed() - 10);
+        CASE(SPEED_INCREASE_FINE)
+        gMusic->setSpeed(gMusic->getSpeed() + 1);
+        CASE(SPEED_DECREASE_FINE)
+        gMusic->setSpeed(gMusic->getSpeed() - 1);
 
         CASE(TOGGLE_BEAT_TICK)
         gMusic->toggleBeatTick();

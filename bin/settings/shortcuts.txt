@@ -127,6 +127,8 @@ VOLUME_MUTE     =
 SPEED_RESET    =
 SPEED_INCREASE = shift + right
 SPEED_DECREASE = shift + left
+SPEED_INCREASE_FINE = ctrl + shift + right
+SPEED_DECREASE_FINE = ctrl + shift + left
 
 TOGGLE_BEAT_TICK = F3
 TOGGLE_NOTE_TICK = F4
