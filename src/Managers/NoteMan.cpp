@@ -803,7 +803,8 @@ struct NotesManImpl : public NotesMan {
         static const NotesMan::EditDescription desc = {"Pasted %1 note",
                                                        "Pasted %1 notes"};
         modify(edit, !insert, &desc);
-        this->select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
+        gSelection->selectRegion(0, 0);
+        select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
     }
 
     // ================================================================================================
