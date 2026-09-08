@@ -58,6 +58,13 @@ static void WrapCpy(Segment* seg, const Segment* src) {
 }
 
 template <typename T>
+static void WrapMov(Segment* dst, Segment* src) {
+    T* s = static_cast<T*>(src);
+    new (static_cast<T*>(dst)) T(std::move(*s));
+    s->~T();
+}
+
+template <typename T>
 static void WrapEnc(WriteStream& out, const Segment* seg) {
     out.write(seg->row);
     Encode<T>(out, *static_cast<const T*>(seg));
@@ -89,8 +96,8 @@ static std::string WrapDsc(const Segment* seg) {
 }
 
 #define WRAP(x)                                                             \
-    WrapNew<x>, WrapDel<x>, WrapCpy<x>, WrapDec<x>, WrapEnc<x>, WrapRed<x>, \
-        WrapEqu<x>, WrapDsc<x>
+    WrapNew<x>, WrapDel<x>, WrapCpy<x>, WrapMov<x>, WrapDec<x>, WrapEnc<x>, \
+        WrapRed<x>, WrapEqu<x>, WrapDsc<x>
 
 // ================================================================================================
 // Segment.

@@ -27,6 +27,21 @@ inline int diff(const Segment* begin, const Segment* end) {
            (reinterpret_cast<const uint8_t*>(begin));
 }
 
+static void relocate(const SegmentMeta* meta, void* dstPos, void* srcPos,
+                     int count, int stride) {
+    uint8_t* dst = static_cast<uint8_t*>(dstPos);
+    uint8_t* src = static_cast<uint8_t*>(srcPos);
+    if (dst > src) {
+        for (int i = count - 1; i >= 0; --i) {
+            meta->move(ofs(dst, i * stride), ofs(src, i * stride));
+        }
+    } else if (dst < src) {
+        for (int i = 0; i < count; ++i) {
+            meta->move(ofs(dst, i * stride), ofs(src, i * stride));
+        }
+    }
+}
+
 };  // anonymous namespace.
 
 // ================================================================================================
@@ -181,7 +196,7 @@ void SegmentList::assign(const List& list) {
     clear();
 
     myNum = list.myNum;
-    myReserve(myNum);
+    myReserve(myNum, 0);
     myStride = list.myStride;
     myType = list.myType;
 
@@ -200,7 +215,8 @@ void SegmentList::assign(const List& list) {
 void SegmentList::append(int row) {
     auto meta = Segment::meta[myType];
     int pos = myNum;
-    myReserve(++myNum);
+    myReserve(pos + 1, pos);
+    myNum = pos + 1;
     auto it = ofs(mySegs, pos * myStride);
     meta->construct(it);
     it->row = row;
@@ -209,7 +225,8 @@ void SegmentList::append(int row) {
 void SegmentList::append(const Segment* seg) {
     auto meta = Segment::meta[myType];
     int pos = myNum;
-    myReserve(++myNum);
+    myReserve(pos + 1, pos);
+    myNum = pos + 1;
     auto it = ofs(mySegs, pos * myStride);
     meta->construct(it);
     meta->copy(it, seg);
@@ -224,7 +241,8 @@ void SegmentList::insert(const Segment* seg) {
     }
 
     if (pos == myNum) {
-        myReserve(++myNum);
+        myReserve(myNum + 1, myNum);
+        myNum += 1;
         auto it = ofs(mySegs, pos * stride);
         meta->construct(it);
         meta->copy(it, seg);
@@ -232,9 +250,10 @@ void SegmentList::insert(const Segment* seg) {
         Segment* cur = ofs(mySegs, pos * stride);
         if (cur->row != row) {
             int tail = myNum - pos;
-            myReserve(++myNum);
+            myReserve(myNum + 1, myNum);
+            myNum += 1;
             cur = ofs(mySegs, pos * stride);
-            memmove(ofs(cur, stride), cur, tail * stride);
+            relocate(meta, ofs(cur, stride), cur, tail, stride);
             meta->construct(cur);
         }
         meta->copy(cur, seg);
@@ -248,7 +267,7 @@ void SegmentList::insert(const List& insert) {
     int stride = myStride;
 
     int newSize = myNum + insert.myNum;
-    myReserve(newSize);
+    myReserve(newSize, myNum);
 
     // Work backwards, that way insertion can be done on the fly.
     auto write = ofs(mySegs, stride * (newSize - 1));
@@ -271,7 +290,7 @@ void SegmentList::insert(const List& insert) {
 
         // Move existing segments.
         while (read != readEnd && read->row >= ins->row) {
-            memmove(write, read, stride);
+            if (write != read) meta->move(write, read);
             write = ofs(write, -stride);
             read = ofs(read, -stride);
         }
@@ -501,11 +520,17 @@ const Segment* SegmentList::find(int row) const {
 // ================================================================================================
 // SegmentList :: memory management.
 
-void SegmentList::myReserve(int num) {
+void SegmentList::myReserve(int num, int liveCount) {
     int numBytes = num * myStride;
     if (myCap < numBytes) {
         myCap = std::max(numBytes, myCap << 1);
-        mySegs = static_cast<uint8_t*>(realloc(mySegs, myCap));
+        uint8_t* newSegs = static_cast<uint8_t*>(malloc(myCap));
+        auto meta = Segment::meta[myType];
+        for (int i = 0; i < liveCount; ++i) {
+            meta->move(ofs(newSegs, i * myStride), ofs(mySegs, i * myStride));
+        }
+        free(mySegs);
+        mySegs = newSegs;
     }
 }
 
