@@ -361,7 +361,7 @@ struct NotefieldImpl : public Notefield {
         std::vector<MeasureLabel> labels;
 
         // Determine the first row and last row that should show beat lines.
-        int drawBeginRow = std::max(0, gView->offsetToRow(myFirstVisibleTor));
+        int drawBeginRow = gView->offsetToRow(myFirstVisibleTor);
         int drawEndRow = std::min(gView->offsetToRow(myLastVisibleTor),
                                   gSimfile->getEndRow()) +
                          1;
@@ -399,6 +399,35 @@ struct NotefieldImpl : public Notefield {
                 : ROWS_PER_BEAT;
 
         DrawPosHelper drawPos;
+
+        // The lead-in has no time signature of its own, so the first one is
+        // carried backwards to give measures -1, -2 and so on.
+        if (drawBeginRow < 0) {
+            int rpm = it->rowsPerMeasure;
+            int firstMeasure = -((-drawBeginRow + rpm - 1) / rpm);
+            for (int m = firstMeasure; m < 0; ++m) {
+                int measureRow = m * rpm;
+                int y = drawPos.advance(measureRow);
+                Draw::fill(&batch, {myX, y, myW, 1}, fullColor);
+                labels.emplace_back(m, y);
+
+                if (zoomedIn) {
+                    double beatRow = measureRow + snapStep;
+                    while (beatRow < measureRow + rpm) {
+                        int r = static_cast<int>(round(beatRow));
+                        uint32_t color =
+                            myShowBeatLinesColor || myVisualSyncBeatlinesPreset
+                                ? (ToRowTypeColor(ToRowType(r)) & halfColor)
+                                : halfColor;
+
+                        int by = drawPos.advance(r);
+                        Draw::fill(&batch, {myX, by, myW, 1}, color);
+                        beatRow += snapStep;
+                    }
+                }
+            }
+        }
+
         while (it != end && row < drawEndRow) {
             int endRow = drawEndRow;
             if (next != end) endRow = std::min(endRow, next->row);

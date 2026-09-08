@@ -81,6 +81,10 @@ struct View {
     virtual double getPixPerOfs() const = 0;
 
     virtual int getCursorRow() const = 0;
+
+    /// The cursor row as it is, negative while the cursor is in the lead-in.
+    /// getCursorRow stops at zero, since nothing is placed below it.
+    virtual int getCursorRowExact() const = 0;
     virtual double getCursorTime() const = 0;
     virtual double getCursorBeat() const = 0;
     virtual ChartOffset getCursorOffset() const = 0;

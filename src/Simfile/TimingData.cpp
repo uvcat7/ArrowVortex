@@ -392,7 +392,19 @@ static const Event* MostRecentEvent(const std::vector<Event>& events,
     return &(*it);
 }
 
+static bool IsLeadIn(const Event* it, int row) {
+    return row < it->row && it->spr > 0.0;
+}
+
+static bool IsLeadIn(const Event* it, double time) {
+    return time < it->rowTime && it->spr > 0.0;
+}
+
 static double TimeToBeat(const Event* it, double time) {
+    if (IsLeadIn(it, time)) {
+        double row = it->row + (time - it->rowTime) / it->spr;
+        return row * BEATS_PER_ROW;
+    }
     double row = it->row;
     if (time > it->endTime && it->spr > 0.0) {
         row += (time - it->endTime) / it->spr;
@@ -401,6 +413,10 @@ static double TimeToBeat(const Event* it, double time) {
 }
 
 static int TimeToRow(const Event* it, double time) {
+    if (IsLeadIn(it, time)) {
+        return it->row +
+               static_cast<int>(round((time - it->rowTime) / it->spr));
+    }
     int row = it->row;
     if (time > it->endTime && it->spr > 0.0) {
         row += static_cast<int>(round((time - it->endTime) / it->spr));
@@ -412,6 +428,9 @@ static double RowToTime(const Event* it, int row) {
     if (row > it->row) {
         return it->endTime + (row - it->row) * it->spr;
     }
+    if (IsLeadIn(it, row)) {
+        return it->rowTime + (row - it->row) * it->spr;
+    }
     return it->rowTime;
 }
 
@@ -419,6 +438,9 @@ static double BeatToTime(const Event* it, double beat) {
     double row = beat * ROWS_PER_BEAT;
     if (row > it->row) {
         return it->endTime + (row - it->row) * it->spr;
+    }
+    if (row < it->row && it->spr > 0.0) {
+        return it->rowTime + (row - it->row) * it->spr;
     }
     return it->rowTime;
 }

@@ -68,7 +68,9 @@ RowType ToRowType(int rowIndex) {
             }
         }
     }
-    return map[rowIndex % 192];
+    // Rows in the lead-in are negative, and so is their remainder.
+    int index = rowIndex % 192;
+    return map[(index < 0) ? index + 192 : index];
 }
 
 uint32_t ToRowTypeColor(RowType type) { return ROW_TYPE_COLOR[type]; }

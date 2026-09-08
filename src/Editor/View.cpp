@@ -32,6 +32,16 @@
 namespace Vortex {
 namespace {};  // anonymous namespace
 
+// Rows in the lead-in are negative, and -1 % 48 is -1 rather than 47.
+static int FlooredMod(int value, int divisor) {
+    int mod = value % divisor;
+    return (mod < 0) ? mod + divisor : mod;
+}
+
+static int FlooredDiv(int value, int divisor) {
+    return (value - FlooredMod(value, divisor)) / divisor;
+}
+
 // ================================================================================================
 // ViewImpl :: member data.
 
@@ -222,7 +232,16 @@ struct ViewImpl : public View, public InputHandler {
         return myUseTimeBasedView ? myPixPerSec : myPixPerRow;
     }
 
-    int getCursorRow() const override { return myCursorRow; }
+    int getCursorRow() const override { return std::max(0, myCursorRow); }
+
+    int getCursorRowExact() const override { return myCursorRow; }
+
+    // The lead-in reaches back to the start of the audio.
+    double getLeadInTime() const { return std::min(0.0, gTempo->rowToTime(0)); }
+
+    int getLeadInRow() const {
+        return std::min(0, gTempo->timeToRow(getLeadInTime()));
+    }
 
     double getCursorTime() const override { return myCursorTime; }
 
@@ -274,7 +293,7 @@ struct ViewImpl : public View, public InputHandler {
         // Update the cursor time.
         if (!gMusic->isPaused()) {
             int endrow = gSimfile->getEndRow();
-            double begintime = gTempo->rowToTime(0);
+            double begintime = getLeadInTime();
             double endtime = gTempo->rowToTime(endrow);
             if (myCursorTime > endtime) {
                 myCursorTime = endtime;
@@ -402,7 +421,7 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     void setCursorTime(double time) override {
-        double begintime = gTempo->rowToTime(0);
+        double begintime = getLeadInTime();
         double endtime = gTempo->rowToTime(gSimfile->getEndRow());
         myCursorTime = std::clamp(time, begintime, endtime);
         myCursorBeat = gTempo->timeToBeat(myCursorTime);
@@ -411,7 +430,7 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     void setCursorRow(int row) override {
-        myCursorRow = std::clamp(row, 0, gSimfile->getEndRow());
+        myCursorRow = std::clamp(row, getLeadInRow(), gSimfile->getEndRow());
         myCursorBeat = myCursorRow * BEATS_PER_ROW;
         myCursorTime = gTempo->rowToTime(myCursorRow);
         gMusic->seek(myCursorTime);
@@ -431,14 +450,15 @@ struct ViewImpl : public View, public InputHandler {
         int rowsInInterval = abs(rows);
 
         if (rows < 0) {
-            int delta = myCursorRow % rowsInInterval;
+            int delta = FlooredMod(myCursorRow, rowsInInterval);
             if (delta == 0 ||
                 (delta < rowsInInterval / 2 && !gMusic->isPaused())) {
                 delta += rowsInInterval;
             }
             setCursorRow(myCursorRow - delta);
         } else {
-            int delta = rowsInInterval - myCursorRow % rowsInInterval;
+            int delta =
+                rowsInInterval - FlooredMod(myCursorRow, rowsInInterval);
             setCursorRow(myCursorRow + delta);
         }
     }
@@ -645,7 +665,8 @@ struct ViewImpl : public View, public InputHandler {
 
             // Custom snaps
             if (mySnapType == ST_CUSTOM) {
-                int measure = row / 192, measurerow = row % 192;
+                int measure = FlooredDiv(row, 192);
+                int measurerow = FlooredMod(row, 192);
                 if (dir == SNAP_UP) {
                     for (int i = myCustomSnap; i >= 0; --i) {
                         if (myCustomSnapSteps[i] <= measurerow) {
@@ -665,8 +686,9 @@ struct ViewImpl : public View, public InputHandler {
             } else  // Regular case, snap is divisible by 192.
             {
                 int snap = sRowSnapTypes[mySnapType];
-                if (row % snap && dir != SNAP_UP) row += snap;
-                row -= row % snap;
+                int mod = FlooredMod(row, snap);
+                if (mod && dir != SNAP_UP) row += snap;
+                row -= mod;
             }
 
             return row;
@@ -680,10 +702,11 @@ struct ViewImpl : public View, public InputHandler {
         if (snap == 0) {
             return std::find(myCustomSnapSteps,
                              myCustomSnapSteps + myCustomSnap,
-                             row % 192) != myCustomSnapSteps + myCustomSnap;
+                             FlooredMod(row, 192)) !=
+                   myCustomSnapSteps + myCustomSnap;
         }
 
-        return (row % snap == 0);
+        return (FlooredMod(row, snap) == 0);
     }
 
     bool isMouseOverReceptors(int x, int y) const {
