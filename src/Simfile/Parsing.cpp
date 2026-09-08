@@ -37,6 +37,10 @@ namespace Dwi {
 bool LoadDwi(LOAD_ARGS);  // Defined in LoadDwi.cpp
 bool SaveDwi(SAVE_ARGS);  // Defined in SaveDwi.cpp
 };  // namespace Dwi
+namespace Qua {
+bool LoadQua(LOAD_ARGS);  // Defined in LoadQua.cpp
+bool SaveQua(SAVE_ARGS);  // Defined in SaveQua.cpp
+};  // namespace Qua
 
 // ================================================================================================
 // Parsing utilities.
@@ -188,6 +192,8 @@ bool LoadSimfile(Simfile& sim, fs::path path) {
         success = Dwi::LoadDwi(path, &sim);
     } else if (ext == ".osu") {
         success = Osu::LoadOsu(path, &sim);
+    } else if (ext == ".qua") {
+        success = Qua::LoadQua(path, &sim);
     } else {
         Debug::blockBegin(Debug::ERROR, "could not load sim");
         Debug::log("file: %s\n", pathToUtf8(path).c_str());
@@ -209,6 +215,8 @@ bool SaveSimfile(const Simfile& sim, SimFormat format, bool backup) {
             return Osu::SaveOsu(&sim, backup);
         case SIM_DWI:
             return Dwi::SaveDwi(&sim, backup);
+        case SIM_QUA:
+            return Qua::SaveQua(&sim, backup);
     };
     return false;
 }

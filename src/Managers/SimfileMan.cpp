@@ -165,7 +165,7 @@ struct SimfileManImpl : public SimfileMan {
 
         // Check if we are loading a stepmania simfile.
         if (ext == ".sm" || ext == ".ssc" || ext == ".dwi" || ext == ".osu" ||
-            ext == ".osz") {
+            ext == ".osz" || ext == ".qua") {
             if (!LoadSimfile(*mySimfile, path)) {
                 close();
                 return false;
