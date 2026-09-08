@@ -29,6 +29,14 @@ namespace {
 // ===================================================================================
 // Exporting utilities.
 
+// The author osu! shows for the map. A StepMania file usually names the
+// author in the song credit rather than per chart, so that is where this
+// looks when the chart itself says nothing.
+static std::string ChartCreator(const Simfile* sim, const Chart* chart) {
+    if (chart && chart->artist.length()) return chart->artist;
+    return sim ? sim->credit : std::string();
+}
+
 static int ToMilliseconds(double time) {
     return static_cast<int>(time * 1000.0 + 0.5);
 }
@@ -202,11 +210,11 @@ static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
     Write(out, "TitleUnicode", sim->title);
     Write(out, "Artist", sim->artistTr.length() ? sim->artistTr : sim->artist);
     Write(out, "ArtistUnicode", sim->artist);
-    Write(out, "Creator", chart ? chart->artist : "Unknown");
+    Write(out, "Creator", ChartCreator(sim, chart));
     Write(out, "Version",
           chart ? GetDifficultyName(chart->difficulty) : "Normal");
     Write(out, "Source", "");
-    Write(out, "Tags", "");
+    Write(out, "Tags", sim->genre);
     Write(out, "BeatmapID", "0");
     Write(out, "BeatmapSetID", "-1");
 
