@@ -24,7 +24,6 @@ struct GuiDraw {
 
     struct Scrollbar {
         TileRect2 bar, base, hover, pressed;
-        Texture grab;
     };
 
     struct TextBox {
