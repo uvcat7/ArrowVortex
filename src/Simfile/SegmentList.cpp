@@ -137,9 +137,9 @@ void SegmentList::cleanup() {
         while (read != end && read->row >= 0) {
             read = ofs(read, myStride);
         }
-        int numBytes = diff(moveBegin, read);
-        memmove(write, moveBegin, numBytes);
-        write = ofs(write, numBytes);
+        int count = diff(moveBegin, read) / myStride;
+        relocate(meta, write, moveBegin, count, myStride);
+        write = ofs(write, count * myStride);
     }
 }
 
