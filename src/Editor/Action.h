@@ -60,6 +60,8 @@ enum Type {
     SET_VISUAL_SYNC_CURSOR_ANCHOR,
     SET_VISUAL_SYNC_RECEPTOR_ANCHOR,
     INJECT_BOUNDING_BPM_CHANGE,
+    SHIFT_ROW_NONDESTRUCTIVE,
+    SHIFT_ROW_DESTRUCTIVE,
 
     SELECTION_TOGGLE_TEMPO_EDITOR,
 
@@ -247,10 +249,12 @@ enum Type {
     SHOW_MESSAGE_LOG,
     SHOW_DEBUG_LOG,
     SHOW_ABOUT,
+
+    NUM_ACTIONS
 };
 
 // Performs the action associated with the action type.
-void perform(Type action);
+bool perform(Type action);
 };  // namespace Action
 
 };  // namespace Vortex
