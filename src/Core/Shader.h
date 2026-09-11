@@ -2,6 +2,10 @@
 
 #include <Core/Core.h>
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#endif
+
 namespace Vortex {
 
 class Shader {

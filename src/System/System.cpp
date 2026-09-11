@@ -24,6 +24,10 @@
 #include <SDL3/SDL_video.h>
 #include <System/OpenGL.h>
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#endif
+
 #include <chrono>
 #include <thread>
 #include <algorithm>
@@ -231,7 +235,7 @@ struct SystemImpl : public System {
     SystemImpl() : myTitle("ArrowVortex") {
         myApplicationStartTime = Debug::getElapsedTime();
 
-        if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
+        if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
             SDL_Log("Couldn't initialize SDL subsystems: %s", SDL_GetError());
         }
 
@@ -264,13 +268,20 @@ struct SystemImpl : public System {
         myCursorMap.insert({Cursor::SIZE_NESW, SDL_SYSTEM_CURSOR_NESW_RESIZE});
         myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
-        // Create a window handle.
-        if (!SDL_CreateWindowAndRenderer("ArrowVortex", 800, 600,
-                                         SDL_WINDOW_OPENGL |
-                                             SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                             SDL_WINDOW_RESIZABLE,
-                                         &window, &renderer)) {
-            SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+#if defined(__APPLE__)
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+
+        // Avoid creating both a Metal and SDL context on macOS
+        window =
+            SDL_CreateWindow("ArrowVortex", 800, 600,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                 SDL_WINDOW_RESIZABLE);
+        if (!window) {
+            SDL_Log("Couldn't create window: %s", SDL_GetError());
         }
 
         if (LogCheckpoint(window != nullptr, "creating window")) return;
@@ -732,9 +743,11 @@ static vec2i windowMouseToApp(float wx, float wy) {
     int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
     float rx = wx;
     float ry = wy;
-    if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
-        HudError("Failed to get render coordinates with error: %s",
-                 SDL_GetError());
+    if (renderer) {
+        if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
+            HudError("Failed to get render coordinates with error: %s",
+                     SDL_GetError());
+    }
     return {static_cast<int>(rx), static_cast<int>(ry - menu_h)};
 }
 

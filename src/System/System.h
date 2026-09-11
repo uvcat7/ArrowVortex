@@ -11,7 +11,10 @@ namespace fs = std::filesystem;
 #define MAX_PATH PATH_MAX
 #undef R_OK
 #endif
-#include <SDL3/SDL.h>
+
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#endif
 
 namespace Vortex {
 
