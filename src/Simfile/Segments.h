@@ -13,6 +13,7 @@ struct SegmentMeta {
     typedef void (*New)(Segment* seg);
     typedef void (*Del)(Segment* seg);
     typedef void (*Cpy)(Segment* seg, const Segment* src);
+    typedef void (*Mov)(Segment* dst, Segment* src);
 
     typedef void (*Dec)(ReadStream& in, SegmentGroup* out);
     typedef void (*Enc)(WriteStream& out, const Segment* seg);
@@ -33,6 +34,7 @@ struct SegmentMeta {
     New construct;
     Del destruct;
     Cpy copy;
+    Mov move;
 
     Dec decode;
     Enc encode;
