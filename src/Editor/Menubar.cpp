@@ -134,6 +134,8 @@ struct MenuBarImpl : public Menubar {
         add(hEdit, TOGGLE_JUMP_TO_NEXT_NOTE, "Enable jump to next note");
         add(hEdit, TOGGLE_UNDO_REDO_JUMP, "Enable undo/redo jump");
         add(hEdit, TOGGLE_TIME_BASED_COPY, "Enable time-based copy");
+        sep(hEdit);
+        add(hEdit, OPEN_DIALOG_KEY_BINDINGS, "Key bindings...");
 
         // Chart > Convert menu.
         Item* hChartConvert = newMenu();

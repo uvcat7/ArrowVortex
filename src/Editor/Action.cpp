@@ -83,6 +83,8 @@ void Action::perform(Type action) {
         gEditor->openDialog(DIALOG_CUSTOM_SNAP);
         CASE(OPEN_DIALOG_PREVIEW_SETTINGS)
         gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
+        CASE(OPEN_DIALOG_KEY_BINDINGS)
+        gEditor->openDialog(DIALOG_KEY_BINDINGS);
 
         CASE(EDIT_UNDO)
         gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
