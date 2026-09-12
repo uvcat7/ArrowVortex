@@ -42,6 +42,7 @@
 #include <Dialogs/SongProperties.h>
 #include <Dialogs/ChartList.h>
 #include <Dialogs/ChartProperties.h>
+#include <Dialogs/Export.h>
 #include <Dialogs/NewChart.h>
 #include <Dialogs/AdjustTempo.h>
 #include <Dialogs/AdjustTempoSM5.h>
@@ -847,6 +848,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
             case DIALOG_EDIT_SEGMENT:
                 dlg = new DialogEditSegment;
+                break;
+            case DIALOG_EXPORT:
+                dlg = new DialogExport;
                 break;
         };
 

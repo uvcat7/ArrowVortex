@@ -113,6 +113,8 @@ struct MenuBarImpl : public Menubar {
         sep(hFile);
         add(hFile, OPEN_DIALOG_SONG_PROPERTIES, "Properties...");
         sep(hFile);
+        add(hFile, OPEN_DIALOG_EXPORT, "Export...");
+        sep(hFile);
         add(hFile, CONVERT_MUSIC, "Convert audio...");
         sep(hFile);
         add(hFile, EXIT_PROGRAM, "Exit");
