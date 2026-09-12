@@ -136,10 +136,8 @@ struct SelectionImpl : public Selection {
             if (mod == SELECT_SET) {
                 // Clear the selection region if we didn't select anything.
                 if (notes == 0 && tempos == 0) {
-                    if (myIsSelectingRegion) {
-                        setRegion(0, 0);
-                        myIsSelectingRegion = false;
-                    }
+                    setRegion(0, 0);
+                    myIsSelectingRegion = false;
                     gEditor->reportChanges(VCM_SELECTION_CHANGED);
                 }
 
