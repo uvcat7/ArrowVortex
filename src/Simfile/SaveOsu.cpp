@@ -179,7 +179,8 @@ static void SaveChart(fs::path path, const Simfile* sim, const Chart* chart) {
     WriteBlock(out, "General");
     Write(out, "AudioFilename", sim->music);
     Write(out, "AudioLeadIn", "0");
-    Write(out, "PreviewTime", "-1");
+    Write(out, "PreviewTime",
+          sim->previewStart > 0.0 ? ToMilliseconds(sim->previewStart) : -1);
     Write(out, "Countdown", "0");
     Write(out, "SampleSet", "Soft");
     Write(out, "StackLeniency", "0.7");
