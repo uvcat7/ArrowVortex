@@ -4,6 +4,7 @@
 
 #include <Editor/Editing.h>
 #include <Editor/Editor.h>
+#include <Editor/ExportArchive.h>
 #include <Editor/Menubar.h>
 #include <Editor/Minimap.h>
 #include <Editor/Music.h>
@@ -83,6 +84,9 @@ void Action::perform(Type action) {
         gEditor->openDialog(DIALOG_CUSTOM_SNAP);
         CASE(OPEN_DIALOG_PREVIEW_SETTINGS)
         gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
+
+        CASE(EXPORT_OSZ)
+        ExportArchive();
 
         CASE(EDIT_UNDO)
         gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
