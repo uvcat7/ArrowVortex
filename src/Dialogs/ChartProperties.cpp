@@ -329,7 +329,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
         return measure_time(measure + offset) - measure_time(measure);
     };
 
-    if (gNotes->empty()) {
+    if (gNotes->empty() || peak <= 0.0f) {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
@@ -354,6 +354,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
             notes += data[i + slices];
             slices++;
         }
+        if (notes <= 0) continue;
         int h = std::min(
             height_,
             static_cast<int>(std::round(notes / delta_measure_time(i, slices) /

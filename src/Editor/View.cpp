@@ -444,6 +444,7 @@ struct ViewImpl : public View, public InputHandler {
     }
 
     void setCursorToStream(bool top) override {
+        if (gNotes->empty()) return;
         if (gView->hasReverseScroll()) top = !top;
 
         auto first = gNotes->begin(), n = first;
