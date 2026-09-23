@@ -17,6 +17,7 @@ list(APPEND SRC
 	"LoadDwi.cpp"
 	"LoadOsu.cpp"
 	"LoadSm.cpp"
+	"LoadSsq.cpp"
 	"NoteList.cpp"
 	"Notes.cpp"
 	"Parsing.cpp"
