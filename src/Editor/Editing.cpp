@@ -535,9 +535,10 @@ struct EditingImpl : public Editing {
 
     void changePlayerNumber() override {
         int numPlayers = gStyle->getNumPlayers();
+        if (numPlayers <= 0) return;
 
         // Check if the current style actually supports more than 1 player.
-        if (numPlayers <= 1) {
+        if (numPlayers == 1) {
             HudNote("%s only has one player.", gStyle->get()->name.c_str());
             return;
         }
