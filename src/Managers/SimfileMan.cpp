@@ -485,7 +485,7 @@ struct SimfileManImpl : public SimfileMan {
 
     void openChart(int index) override {
         if (mySimfile && myChartIndex != index && index >= -1 &&
-            index < mySimfile->charts.size()) {
+            index < static_cast<int>(mySimfile->charts.size())) {
             myChartIndex = index;
             myUpdateChart();
             if (myChart) {
