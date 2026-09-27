@@ -110,7 +110,7 @@ static int GetChartListH() {
     const Style* style = nullptr;
     for (int i = 0; i < gSimfile->getNumCharts(); ++i) {
         auto chart = gSimfile->getChart(i);
-        if (style != chart->style) {
+        if (chart && style != chart->style) {
             style = chart->style;
             h += TEXT_H + 4;
         }
@@ -160,9 +160,10 @@ struct DialogChartList::ChartList : public WgScrollRegion {
         // Update the properties of each button.
         int y = rect_.y - scroll_position_y_;
         const Style* style = nullptr;
-        for (int i = 0; i < myButtons.size(); ++i) {
-            auto button = myButtons[i];
-            auto chart = gSimfile->getChart(i);
+        int chartIndex = 0;
+
+        for (auto button : myButtons) {
+            auto chart = gSimfile->getChart(chartIndex++);
             if (chart && style != chart->style) {
                 style = chart->style;
                 y += TEXT_H + 4;

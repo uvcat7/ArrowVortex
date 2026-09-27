@@ -988,6 +988,7 @@ struct EditorImpl : public Editor, public InputHandler {
 
         gMenubar->handleInputs(events);
         gTextOverlay->handleInputs(events);
+        notifyChanges();
 
         vec2i view = gSystem->getWindowSize();
 

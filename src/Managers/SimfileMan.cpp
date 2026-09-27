@@ -485,7 +485,7 @@ struct SimfileManImpl : public SimfileMan {
 
     void openChart(int index) override {
         if (mySimfile && myChartIndex != index && index >= -1 &&
-            index < mySimfile->charts.size()) {
+            index < static_cast<int>(mySimfile->charts.size())) {
             myChartIndex = index;
             myUpdateChart();
             if (myChart) {
@@ -532,7 +532,9 @@ struct SimfileManImpl : public SimfileMan {
     int getActiveChart() const { return myChartIndex; }
 
     const Chart* getChart(int index) const override {
-        return mySimfile->charts.begin()[index];
+        if (mySimfile && index >= 0 && index < mySimfile->charts.size())
+            return mySimfile->charts.begin()[index];
+        return nullptr;
     }
 
     int getEndRow() const override { return myEndRow; }

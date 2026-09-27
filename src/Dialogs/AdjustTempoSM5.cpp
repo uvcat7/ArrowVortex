@@ -27,6 +27,8 @@ enum Actions {
     ACT_COMBO_SET,
     ACT_SPEED_SET,
     ACT_SCROLL_SET,
+    ACT_SCROLL_HALVE,
+    ACT_SCROLL_DOUBLE,
     ACT_FAKE_SET,
     ACT_LABEL_SET,
 };
@@ -148,7 +150,7 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     cycler->addItem("B");
     cycler->addItem("T");
 
-    myLayout.row().col(84).col(154);
+    myLayout.row().col(84).col(98).col(24).col(24);
 
     spinner = myLayout.add<WgSpinner>("Scroll");
     spinner->value.bind(&myScrollRatio);
@@ -158,6 +160,20 @@ void DialogAdjustTempoSM5::myCreateWidgets() {
     spinner->onChange.bind(this, &DialogAdjustTempoSM5::onAction,
                            static_cast<int>(ACT_SCROLL_SET));
     spinner->setTooltip("Scroll ratio");
+
+    WgButton* button = myLayout.add<WgButton>();
+    button->text.set("{g:halve}");
+    button->onPress.bind(this, &DialogAdjustTempoSM5::onAction,
+                         static_cast<int>(ACT_SCROLL_HALVE));
+    button->setTooltip("Halve the current Scroll ratio");
+
+    button = myLayout.add<WgButton>();
+    button->text.set("{g:double}");
+    button->onPress.bind(this, &DialogAdjustTempoSM5::onAction,
+                         static_cast<int>(ACT_SCROLL_DOUBLE));
+    button->setTooltip("Double the current Scroll ratio");
+
+    myLayout.row().col(84).col(154);
 
     spinner = myLayout.add<WgSpinner>("Fakes");
     spinner->value.bind(&myFakeBeats);
@@ -252,6 +268,13 @@ void DialogAdjustTempoSM5::onAction(int id) {
         } break;
         case ACT_SCROLL_SET: {
             gTempo->addSegment(Scroll(row, myScrollRatio));
+        } break;
+        case ACT_SCROLL_HALVE:
+        case ACT_SCROLL_DOUBLE: {
+            auto segs = gTempo->getSegments();
+            double ratio = segs->getRecent<Scroll>(row).ratio *
+                           ((id == ACT_SCROLL_DOUBLE) ? 2 : 0.5);
+            gTempo->addSegment(Scroll(row, ratio));
         } break;
         case ACT_FAKE_SET: {
             int rows =
