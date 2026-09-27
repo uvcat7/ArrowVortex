@@ -50,9 +50,6 @@ SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
-// One SDL cursor per icon, created on first use. setCursor runs every frame,
-// and each SDL_CreateSystemCursor makes a new X server cursor, so creating one
-// per call leaks hundreds per second and slows the whole desktop down.
 std::map<Vortex::Cursor::Icon, SDL_Cursor*> myCursorCache;
 bool myIsActive = false;
 bool myIsTerminated = false;
@@ -478,7 +475,6 @@ struct SystemImpl : public System {
         myCursor = c;
         SDL_Cursor*& cursor = myCursorCache[c];
         if (!cursor) cursor = SDL_CreateSystemCursor(getCursorResource());
-        // SDL returns early when this is already the active cursor.
         if (cursor) SDL_SetCursor(cursor);
     }
 
