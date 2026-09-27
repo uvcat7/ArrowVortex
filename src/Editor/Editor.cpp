@@ -1004,8 +1004,7 @@ struct EditorImpl : public Editor, public InputHandler {
                 Action::Type action =
                     gShortcuts->getAction(press->keyflags, press->key);
                 if (action) {
-                    Action::perform(action);
-                    press->handled = true;
+                    press->handled = Action::perform(action);
                 }
             }
         }
@@ -1015,8 +1014,7 @@ struct EditorImpl : public Editor, public InputHandler {
                 Action::Type action =
                     gShortcuts->getAction(scroll->keyflags, scroll->up);
                 if (action) {
-                    Action::perform(action);
-                    scroll->handled = true;
+                    scroll->handled = Action::perform(action);
                 }
             }
         }
