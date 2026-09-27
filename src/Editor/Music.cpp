@@ -526,8 +526,8 @@ struct MusicImpl : public Music, public MixSource {
 
     void resumeStream() {
         if (!myIsPaused) {
-            myPlayPosition =
-                myPlayStartTime * static_cast<double>(mySamples.getFrequency());
+            myPlayPosition = (myPlayStartTime + myTickOffsetMs / 1000.0) *
+                             static_cast<double>(mySamples.getFrequency());
             myPlayTimer = Debug::getElapsedTime();
             myMixer->resume();
         }
