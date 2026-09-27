@@ -50,6 +50,7 @@ SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
+std::map<Vortex::Cursor::Icon, SDL_Cursor*> myCursorCache;
 bool myIsActive = false;
 bool myIsTerminated = false;
 bool myIsInsideMessageLoop = false;
@@ -221,6 +222,9 @@ struct SystemImpl : public System {
     // SystemImpl :: constructor and destructor.
 
     ~SystemImpl() {
+        for (auto& [icon, cursor] : myCursorCache) SDL_DestroyCursor(cursor);
+        myCursorCache.clear();
+
         // Destroy the rendering context.
         if (myHRC) SDL_GL_DestroyContext(myHRC);
 
@@ -469,7 +473,9 @@ struct SystemImpl : public System {
 
     void setCursor(Cursor::Icon c) override {
         myCursor = c;
-        SDL_SetCursor(SDL_CreateSystemCursor(getCursorResource()));
+        SDL_Cursor*& cursor = myCursorCache[c];
+        if (!cursor) cursor = SDL_CreateSystemCursor(getCursorResource());
+        if (cursor) SDL_SetCursor(cursor);
     }
 
     void disableVsync() override {
