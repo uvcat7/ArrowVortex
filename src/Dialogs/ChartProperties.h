@@ -78,6 +78,7 @@ class DialogChartProperties::GraphWidget : public GuiWidget {
    private:
     DialogChartProperties* myDialog;
     std::vector<int> data;
+    std::vector<Vortex::recti> fill_commands;
     double peak = 0.0;
     int scale = 1;
     int endMeasure = 0;

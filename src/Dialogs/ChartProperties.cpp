@@ -278,6 +278,13 @@ DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
 double DialogChartProperties::GraphWidget::peakNps() { return peak; };
 
 void DialogChartProperties::GraphWidget::updateGraph() {
+    auto measure_time = [&](int measure) {
+        return gTempo->rowToTime(measure * ROWS_PER_MEASURE);
+    };
+    auto delta_measure_time = [&](int measure, int offset) {
+        return measure_time(measure + offset) - measure_time(measure);
+    };
+
     if (gNotes->empty()) {
         return;
     }
@@ -295,9 +302,6 @@ void DialogChartProperties::GraphWidget::updateGraph() {
         data[measure]++;
     }
     int slices = 1;
-    auto measure_time = [&](int measure) {
-        return gTempo->rowToTime(measure * 192);
-    };
 
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
@@ -312,33 +316,21 @@ void DialogChartProperties::GraphWidget::updateGraph() {
             peak, static_cast<double>(
                       notes / (measure_time(i + slices) - measure_time(i))));
     }
-}
 
-void DialogChartProperties::GraphWidget::onDraw() {
-    auto measure_time = [&](int measure) {
-        return gTempo->rowToTime(measure * ROWS_PER_MEASURE);
-    };
-    auto delta_measure_time = [&](int measure, int offset) {
-        return measure_time(measure + offset) - measure_time(measure);
-    };
+    if (peak <= 0.0f) return;
 
-    if (gNotes->empty() || peak <= 0.0f) {
-        Draw::fill(rect_, Color32(20, 20, 20, 255));
-        return;
-    }
+    fill_commands.clear();
+
     int scale_width = gSystem->applyScaleFactor(width_);
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
-    int buckets = data.size();
+    buckets = data.size();
     double barWidth = (static_cast<double>(scale_width) / buckets);
     int w = barWidth + 1;
-    auto batch = Renderer::batchC();
-    Draw::fill(rect_, Color32(20, 20, 20, 255));
-    int slices = 1;
+    slices = 1;
 
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
-        int x =
-            rect_.x + static_cast<int>(measure_time(i) / endTime * scale_width);
+        int x = static_cast<int>(measure_time(i) / endTime * scale_width);
         int notes = data[i];
         while (delta_measure_time(i, slices + 1) <= endTime / scale_width &&
                // Averaging looks bad beyond 30 seconds
@@ -352,13 +344,30 @@ void DialogChartProperties::GraphWidget::onDraw() {
             height_,
             static_cast<int>(std::round(notes / delta_measure_time(i, slices) /
                                         peak * height_)));
-        w = rect_.x +
-            static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
+        w = static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
             x;
-        int y = rect_.y + height_ - h;
+        int y = height_ - h;
         if (w == 0 || h == 0) continue;
-        Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
+        fill_commands.push_back({x, y, w, h});
     }
+}
+
+void DialogChartProperties::GraphWidget::onDraw() {
+    if (gNotes->empty() || peak <= 0.0f) {
+        Draw::fill(rect_, Color32(20, 20, 20, 255));
+        return;
+    }
+    int scale_width = gSystem->applyScaleFactor(width_);
+    endTime = gTempo->rowToTime(gSimfile->getEndRow());
+    auto batch = Renderer::batchC();
+    Draw::fill(rect_, Color32(20, 20, 20, 255));
+
+    for (auto recti : fill_commands) {
+        Draw::fill(&batch,
+                   {recti.x + rect_.x, recti.y + rect_.y, recti.w, recti.h},
+                   Color32(80, 80, 80, 255));
+    }
+
     double time = std::min(endTime, gView->getCursorTime());
     int x = static_cast<int>(time / endTime * scale_width);
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
@@ -415,13 +424,15 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
         myButtons.pop_back();
     }
     double percent_measures = 0.0;
-    if (breakdown.size() > 0)
-    {
+    if (breakdown.size() > 0) {
         percent_measures =
             static_cast<double>(measures) * ROWS_PER_MEASURE /
             (breakdown[breakdown.size() - 1].endrow - breakdown[0].row) * 100.0;
     }
-    measureCount->text.set(Str::fmt("Total stream: %1 (%2%)").arg(measures).arg(percent_measures, 1, 1).str);
+    measureCount->text.set(Str::fmt("Total stream: %1 (%2%)")
+                               .arg(measures)
+                               .arg(percent_measures, 1, 1)
+                               .str);
     measureCount16->text.set(
         Str::fmt("16th note stream: %1").arg(measures16).str);
 }
