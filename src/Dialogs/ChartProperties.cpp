@@ -399,36 +399,90 @@ DialogChartProperties::BreakdownWidget::BreakdownWidget(GuiContext* gui)
     : GuiWidget(gui) {}
 
 void DialogChartProperties::BreakdownWidget::updateBreakdown(
-    WgLabel* measureCount, WgLabel* measureCount16) {
+    WgLabel* measureCount, WgLabel* measureCount16, bool compressed) {
     int measures = 0;
     int measures16 = 0;
-    auto breakdown = gChart->getStreamBreakdown(&measures, &measures16);
+    auto breakdown =
+        gChart->getStreamBreakdown(&measures, &measures16, compressed);
+    bool asteriskize = compressed && breakdown.size() > 25;
+
+    int total_run = 0;
+    bool add_asterisk = false;
+    int run_row = 0;
+    int buttons = 0;
+    int w = 0;
     for (int i = 0; i < breakdown.size(); ++i) {
         auto& item = breakdown[i];
 
-        Text::arrange(Text::TL, TextStyle(), item.text.c_str());
-        int w = std::max(16, Text::getSize().x + 8);
-
+        if (asteriskize) {
+            if (item.text[0] == '/' || item.text[0] == '|') {
                 if (buttons >= myButtons.size()) {
-                    myButtons.emplace_back(new WgButton(getGui()));
                     myButtons.emplace_back(new WgButton(getGui()));
                 }
                 WgButton* button = myButtons[buttons];
                 std::string run_text = std::to_string(total_run);
                 if (add_asterisk) run_text += "*";
+                Text::arrange(Text::TL, TextStyle(), run_text.c_str());
+                int w = std::max(16, Text::getSize().x + 8);
                 button->text.set(run_text.c_str());
                 button->setSize(w, gSystem->applyScaleFactor(20));
                 button->onPress.bind(this, &BreakdownWidget::selectStream,
                                      vec2i{run_row, item.row});
-        if (i >= myButtons.size()) {
+                buttons++;
+                if (buttons >= myButtons.size()) {
+                    myButtons.emplace_back(new WgButton(getGui()));
+                }
+                WgButton* button2 = myButtons[buttons];
+                Text::arrange(Text::TL, TextStyle(), item.text.c_str());
+                w = std::max(16, Text::getSize().x + 8);
+                button2->text.set(item.text.c_str());
+                button2->setSize(w, gSystem->applyScaleFactor(20));
+                button2->onPress.bind(this, &BreakdownWidget::selectStream,
+                                      vec2i{item.row, item.endrow});
+                total_run = 0;
+                add_asterisk = false;
+                buttons++;
+            } else if (item.text[0] == '-') {
+                add_asterisk = true;
+            } else {
+                if (total_run == 0)
+                    run_row = item.row;
+                else
+                    add_asterisk = true;
+                total_run += std::stoi(item.text);
+            }
+        } else {
+            Text::arrange(Text::TL, TextStyle(), item.text.c_str());
+            int w = std::max(16, Text::getSize().x + 8);
+            if (i >= myButtons.size()) {
+                myButtons.emplace_back(new WgButton(getGui()));
+            }
+            WgButton* button = myButtons[i];
+            button->text.set(item.text.c_str());
+            button->setSize(w, gSystem->applyScaleFactor(20));
+            button->onPress.bind(this, &BreakdownWidget::selectStream,
+                                 vec2i{item.row, item.endrow});
+        }
+    }
+    if (asteriskize && !breakdown.empty()) {
+        if (buttons >= myButtons.size()) {
             myButtons.emplace_back(new WgButton(getGui()));
         }
-
-        WgButton* button = myButtons[i];
-        button->text.set(item.text.c_str());
+        WgButton* button = myButtons[buttons];
+        std::string run_text = std::to_string(total_run);
+        if (add_asterisk) run_text += "*";
+        Text::arrange(Text::TL, TextStyle(), run_text.c_str());
+        int w = std::max(16, Text::getSize().x + 8);
+        button->text.set(run_text.c_str());
         button->setSize(w, gSystem->applyScaleFactor(20));
-        button->onPress.bind(this, &BreakdownWidget::selectStream,
-                             vec2i{item.row, item.endrow});
+        button->onPress.bind(
+            this, &BreakdownWidget::selectStream,
+            vec2i{run_row, breakdown[breakdown.size() - 1].endrow});
+        buttons++;
+        while (myButtons.size() > buttons) {
+            delete myButtons.back();
+            myButtons.pop_back();
+        }
     }
     while (myButtons.size() > breakdown.size()) {
         delete myButtons.back();
@@ -509,26 +563,37 @@ void DialogChartProperties::myCreateBreakdown() {
     WgLabel* info = myLayout.add<WgLabel>();
     info->text.set("Stream breakdown");
 
+    myLayout.row().col(312);
+    WgCheckbox* small_breakdowns = myLayout.add<WgCheckbox>();
+    small_breakdowns->text.set("Compressed breakdown");
+    small_breakdowns->setTooltip(
+        "Compressed breakdowns are more parseable but have less detail.");
+    small_breakdowns->value.bind(&myCompressedBreakdown);
+    small_breakdowns->onChange.bind(this,
+                                    &DialogChartProperties::myUpdateBreakdown);
+
     myLayout.row().col(340);
     myBreakdown = new BreakdownWidget(getGui());
     myLayout.add(myBreakdown);
 }
 
 void DialogChartProperties::myUpdateBreakdown() {
-    myBreakdown->updateBreakdown(myStreamMeasureCount, my16thMeasureCount);
+    myBreakdown->updateBreakdown(myStreamMeasureCount, my16thMeasureCount,
+                                 myCompressedBreakdown);
 }
 
 void DialogChartProperties::myCopyBreakdown() {
-    auto breakdown = gChart->getStreamBreakdown(nullptr, nullptr);
+    auto breakdown =
+        gChart->getStreamBreakdown(nullptr, nullptr, myCompressedBreakdown);
     if (breakdown.empty()) {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {
         std::string out;
         for (auto& item : breakdown) {
             out = out + item.text;
-            out = out + "/";
+            if (!myCompressedBreakdown) out = out + " ";
         }
-        Str::pop_back(out);
+        if (!myCompressedBreakdown) Str::pop_back(out);
         gSystem->setClipboardText(out);
         HudInfo("%s%s", "Stream breakdown copied to clipboard: ", out.c_str());
     }

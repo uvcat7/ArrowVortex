@@ -196,76 +196,141 @@ struct ChartManImpl : public ChartMan {
     };
 
     static std::vector<BreakdownItem> ToBreakdown(
-        const std::vector<StreamItem>& items) {
+        const std::vector<StreamItem>& items, bool compressed) {
         std::vector<BreakdownItem> out;
         BreakdownItem item = {-1, -1};
-        for (auto it = items.begin(); it < items.end(); std::advance(it, 1)) {
-            // Skip breaks at the beginning and end
-             if ((it == items.begin() ||
-                std::next(it) == items.end()) && it->type == STREAM_BREAK)
-                continue;
-
-            int measures = (it->endrow - it->row) / ROWS_PER_MEASURE;
-
-            // Skip one-measure breaks, including 24th/16th breaks in 32nd/24th
-            // streams
-            if (measures <= 1 && it != items.begin() && std::next(it) != items.end() &&
-                it->type < std::prev(it)->type &&
-                it->type < std::next(it)->type)
-                continue;
-
-            switch (it->type) {
-                case STREAM_BREAK:
-                    item.text = "(" + std::to_string(measures) + ")";
-                    break;
-                case STREAM_16TH:
-                    item.text = std::to_string(measures);
-                    break;
-                case STREAM_24TH:
-                    item.text = "/" + std::to_string(measures) + "/";
-                    break;
-                case STREAM_32ND:
-                    item.text = "*" + std::to_string(measures) + "*";
-                    break;
+        if (compressed) {
+            /* First, find what the "intended" quantization of the chart is
+               supposed to be. This won't work for charts with mixed
+               quantizations at the same NPS for now. */
+            StreamType compressed_type = STREAM_BREAK;
+            double m_16s = 0;
+            double m_24s = 0;
+            double m_32s = 0;
+            for (auto it : items) {
+                int measures = (it.endrow - it.row) / ROWS_PER_MEASURE;
+                compressed_type = std::max(it.type, compressed_type);
+                switch (it.type) {
+                    case STREAM_16TH:
+                        m_16s += measures;
+                        break;
+                    case STREAM_24TH:
+                        m_24s += measures;
+                        break;
+                    case STREAM_32ND:
+                        m_32s += measures;
+                }
             }
-            item.row = it->row;
-            item.endrow = it->endrow;
-            out.emplace_back(item);
+            if (compressed_type == STREAM_BREAK) return out;
+
+            /* Handle charts with bursts properly (looking at the total #of
+             * measures of each type) */
+            if (m_24s > m_32s && compressed_type > STREAM_24TH)
+                compressed_type = STREAM_24TH;
+            if (m_16s > m_32s && m_16s > m_24s && compressed_type > STREAM_16TH)
+                compressed_type = STREAM_16TH;
+
+            double multiplier = 1.0;
+            if (compressed_type == STREAM_24TH)
+                multiplier = 1.5;
+            else if (compressed_type == STREAM_32ND)
+                multiplier = 2.0;
+
+            int compressed_run = 0;
+            int compressed_break = 0;
+            int end_row = 0;
+            // Now use the quantization to actually calculate the effective
+            // breakdown.
+            for (auto it = items.begin(); it < items.end();
+                 std::advance(it, 1)) {
+                // Skip breaks at the beginning and end
+                if ((it == items.begin() || std::next(it) == items.end()) &&
+                    it->type == STREAM_BREAK)
+                    continue;
+
+                if (item.row == -1) item.row = it->row;
+
+                int measures = static_cast<int>((it->endrow - it->row) /
+                                                ROWS_PER_MEASURE * multiplier);
+
+                if (compressed_type <= it->type && compressed_break == 0) {
+                    compressed_run += measures;
+                    end_row = it->endrow;
+                } else if (compressed_type > it->type && compressed_run == 0) {
+                    compressed_break += measures;
+                } else if (compressed_type <= it->type &&
+                           compressed_break != 0) {
+                    compressed_run = measures;
+                    item.endrow = it->row;
+                    if (compressed_break <= 4)
+                        item.text = "-";
+                    else if (compressed_break < 32)
+                        item.text = "/";
+                    else
+                        item.text = "|";
+                    if (!out.empty()) out.emplace_back(item);
+                    item.row = it->row;
+                    end_row = it->endrow;
+                    compressed_break = 0;
+                } else if (compressed_type > it->type && compressed_run != 0) {
+                    item.endrow = end_row;
+                    item.text = std::to_string(compressed_run);
+                    compressed_break = measures;
+                    out.emplace_back(item);
+                    item.row = it->row;
+                    compressed_run = 0;
+                }
+            }
+            if (compressed_run > 0) {
+                item.text = std::to_string(compressed_run);
+                item.endrow = end_row;
+                out.emplace_back(item);
+            }
+        } else {
+            for (auto it = items.begin(); it < items.end();
+                 std::advance(it, 1)) {
+                // Skip breaks at the beginning and end
+                if ((it == items.begin() || std::next(it) == items.end()) &&
+                    it->type == STREAM_BREAK)
+                    continue;
+
+                int measures = (it->endrow - it->row) / ROWS_PER_MEASURE;
+
+                // Skip one-measure breaks, including 24th/16th breaks in
+                // 32nd/24th streams
+                if (measures <= 1 && it != items.begin() &&
+                    std::next(it) != items.end() &&
+                    it->type < std::prev(it)->type &&
+                    it->type < std::next(it)->type)
+                    continue;
+
+                switch (it->type) {
+                    case STREAM_BREAK:
+                        item.text = "(" + std::to_string(measures) + ")";
+                        break;
+                    case STREAM_16TH:
+                        item.text = std::to_string(measures);
+                        break;
+                    case STREAM_24TH:
+                        item.text = "/" + std::to_string(measures) + "/";
+                        break;
+                    case STREAM_32ND:
+                        item.text = "*" + std::to_string(measures) + "*";
+                        break;
+                }
+                item.row = it->row;
+                item.endrow = it->endrow;
+                out.emplace_back(item);
+            }
         }
         return out;
     }
 
-    static void MergeItems(std::vector<StreamItem>& items) {
-        // Merge successive streams and breaks into a single item.
-        for (int i = items.size() - 1; i > 0; --i) {
-            if (items[i].type == items[i - 1].type) {
-                items[i - 1].endrow = items[i].endrow;
-                items.erase(items.begin() + i);
-            }
-        }
-
-        // Remove breaks at the front and back of the list.
-        if (items.size() && items.back().type == STREAM_BREAK) items.pop_back();
-        if (items.size() && items[0].type == STREAM_BREAK)
-            items.erase(items.begin());
-    }
-
-    static void RemoveItems(std::vector<StreamItem>& items, int minRows,
-                            bool breaks) {
-        for (int i = items.size() - 1; i >= 0; --i) {
-            if ((items[i].endrow - items[i].row) < minRows &&
-                (items[i].type == STREAM_BREAK) == breaks) {
-                items.erase(items.begin() + i);
-            }
-        }
-        MergeItems(items);
-    }
-
     std::vector<BreakdownItem> getStreamBreakdown(
-        int* totalMeasures, int* total16thMeasures) const override {
+        int* totalMeasures, int* total16thMeasures,
+        bool compressed) const override {
         int dummy;
-        if (!totalMeasures) 
-            totalMeasures = &dummy;
+        if (!totalMeasures) totalMeasures = &dummy;
         if (!total16thMeasures) total16thMeasures = &dummy;
 
         *totalMeasures = 0;
@@ -300,19 +365,21 @@ struct ChartManImpl : public ChartMan {
         int sequence_begin = 0;
         int note_measure = 0;
         int notes_in_measure = 0;
-        for (const ExpandedNote *n = first, *next; n <= gNotes->end(); n = next) {
+        for (const ExpandedNote *n = first, *next; n <= gNotes->end();
+             n = next) {
             next = std::next(n);
             // Mines, fakes, and jumps/brackets/etc. aren't stream, skip them
-            while ((next->isMine || next->isFake || next->row == n->row) && next <= last)
+            while ((next->isMine || next->isFake || next->row == n->row) &&
+                   next <= last)
                 ++next;
 
             int row = 0;
-            // Make a dummy note after the last note to end whatever we currently have going on
+            // Make a dummy note after the last note to end whatever we
+            // currently have going on
             if (n > last)
                 row = next_measure(last->endrow + ROWS_PER_MEASURE);
             else
                 row = n->row;
-
 
             if (note_measure != start_of_measure(row)) {
                 if (notes_in_measure >= 32) {
@@ -341,7 +408,8 @@ struct ChartManImpl : public ChartMan {
             }
 
             // Forcibly add whatever we have if it is the last note
-            if (last_measure_type != sequence_type || (n > last && sequence_begin != last_measure(row))) {
+            if (last_measure_type != sequence_type ||
+                (n > last && sequence_begin != last_measure(row))) {
                 items.emplace_back(sequence_begin, last_measure(row),
                                    sequence_type);
                 sequence_type = last_measure_type;
@@ -353,10 +421,10 @@ struct ChartManImpl : public ChartMan {
 
         for (auto& i : items) {
             if (i.type != STREAM_BREAK) {
-                int measures = (i.endrow - i.row + ROWS_PER_BEAT) /
-                    ROWS_PER_MEASURE;
+                int measures =
+                    (i.endrow - i.row + ROWS_PER_BEAT) / ROWS_PER_MEASURE;
                 *totalMeasures += measures;
-                switch (i.type) { 
+                switch (i.type) {
                     case STREAM_16TH:
                         total_16ths += measures;
                         break;
@@ -371,22 +439,8 @@ struct ChartManImpl : public ChartMan {
         }
 
         *total16thMeasures = static_cast<int>(total_16ths);
-
-        // Merge streams with breaks shorter than half a beat.
-        const int rpb = ROWS_PER_BEAT;
-        // RemoveItems(items, rpb / 2, true);
-
-        //// Merge/remove more streams if the breakdown is too long.
-        // if (items.size() > 28) RemoveItems(items, rpb * 8, false);
-        // if (items.size() > 28) RemoveItems(items, rpb * 2, true);
-        // if (items.size() > 28) RemoveItems(items, rpb * 16, false);
-        // if (items.size() > 28) RemoveItems(items, rpb * 4, true);
-        // if (items.size() > 28) RemoveItems(items, rpb * 24, false);
-        // if (items.size() > 28) RemoveItems(items, rpb * 6, true);
-        // if (items.size() > 28) RemoveItems(items, rpb * 32, false);
-
         // Finally, construct the breakdown.
-        return ToBreakdown(items);
+        return ToBreakdown(items, compressed);
     }
 
     // ================================================================================================

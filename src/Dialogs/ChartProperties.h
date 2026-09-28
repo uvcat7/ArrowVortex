@@ -45,6 +45,7 @@ class DialogChartProperties : public EditorDialog {
     WgLabel* my16thMeasureCount;
     WgDroplist* myStyleList;
     std::string myStepArtist;
+    bool myCompressedBreakdown = false;
 
     int myRating = 1, myDifficulty = 0, myStyle = 0;
 };
@@ -54,7 +55,8 @@ class DialogChartProperties::BreakdownWidget : public GuiWidget {
     ~BreakdownWidget() override;
     explicit BreakdownWidget(GuiContext* gui);
 
-    void updateBreakdown(WgLabel* measureCount, WgLabel* measureCount16);
+    void updateBreakdown(WgLabel* measureCount, WgLabel* measureCount16,
+                         bool compressed);
     void selectStream(vec2i rows);
 
     void onUpdateSize() override;
