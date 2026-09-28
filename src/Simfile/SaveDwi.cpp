@@ -262,8 +262,6 @@ static void EmitNoteSlot(std::ofstream& file, DwiNote* taps, int nTaps,
 // 3), so a measure mixing 24th and 64th notes falls back to 192nd.
 static void WriteNoteDataForPad(std::ofstream& file, const NoteList& notes,
                                 int numCols, int pad) {
-    const int ROWS_PER_MEASURE =
-        ROWS_PER_BEAT * 4;  // 192 rows; assumes 4/4 time
 
     // Column range owned by this pad.
     int padStart = (numCols == 8) ? pad * 4 : 0;

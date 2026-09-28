@@ -8,8 +8,7 @@
 namespace Vortex {
 
 // Row/beat conversion constants.
-#define ROWS_PER_BEAT (48)
-#define BEATS_PER_ROW (1.0 / 48.0)
+#define BEATS_PER_ROW (1.0 / ROWS_PER_BEAT)
 
 // Converts a BPM value to seconds per row.
 inline double SecPerRow(double beatsPerMin) {

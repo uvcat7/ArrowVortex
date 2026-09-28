@@ -76,13 +76,14 @@ void DialogChartProperties::onChanges(int changes) {
 
     // Update the chart breakdown and note counts if notes change.
     if (changes & (VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED)) {
-        myUpdateNoteInfo();
         myUpdateGraph();
+        myUpdateNoteInfo();
         myUpdateBreakdown();
     }
 
     if (changes & (VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED)) {
         myUpdateGraph();
+        myUpdateNoteInfo();
     }
 }
 
@@ -192,6 +193,8 @@ void DialogChartProperties::myCreateNoteInfo() {
     myLayout.row().col(162).col(162);
     myNoteDensity = myLayout.add<WgLabel>();
     myStreamMeasureCount = myLayout.add<WgLabel>();
+    myPeakDensity = myLayout.add<WgLabel>();
+    my16thMeasureCount = myLayout.add<WgLabel>();
 }
 
 void DialogChartProperties::myUpdateNoteInfo() {
@@ -215,7 +218,9 @@ void DialogChartProperties::myUpdateNoteInfo() {
     }
 
     myNoteDensity->text.set(
-        Str::fmt("Note density: %1 NPS").arg(density, 1, 1).str);
+        Str::fmt("Avg density: %1 NPS").arg(density, 1, 1).str);
+    myPeakDensity->text.set(
+        Str::fmt("Peak density: %1 NPS").arg(myGraph->peakNps(), 1, 1).str);
 }
 
 void DialogChartProperties::myCopyNoteInfo() {
@@ -264,32 +269,19 @@ void DialogChartProperties::mySelectNotes(int type) {
 // ================================================================================================
 // NPS Graph.
 
-class DialogChartProperties::GraphWidget : public GuiWidget {
-   public:
-    ~GraphWidget() override;
-    explicit GraphWidget(GuiContext* gui);
-    void updateGraph();
-    void onDraw() override;
-
-   private:
-    DialogChartProperties* myDialog;
-    std::vector<int> data;
-    double peak = 0.0;
-    int scale = 1;
-    int endMeasure = 0;
-    double endTime = 0.0;
-};
 DialogChartProperties::GraphWidget::~GraphWidget() = default;
 DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
     : GuiWidget(gui) {
     width_ = 340;
     height_ = 100;
 }
+double DialogChartProperties::GraphWidget::peakNps() { return peak; };
+
 void DialogChartProperties::GraphWidget::updateGraph() {
     if (gNotes->empty()) {
         return;
     }
-    endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
+    endMeasure = (gSimfile->getEndRow() - 1) / ROWS_PER_MEASURE + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     scale = endMeasure / gSystem->applyScaleFactor(width_);
     if (scale < 1) scale = 1;
@@ -298,7 +290,7 @@ void DialogChartProperties::GraphWidget::updateGraph() {
     data.resize(buckets);
     for (int i = 0; i < buckets; i++) data[i] = 0;
     for (auto& note : *gNotes) {
-        int measure = note.row / (ROWS_PER_BEAT * 4);
+        int measure = note.row / ROWS_PER_MEASURE;
         if (note.isMine || note.isWarped || note.isFake) continue;
         data[measure]++;
     }
@@ -321,9 +313,10 @@ void DialogChartProperties::GraphWidget::updateGraph() {
                       notes / (measure_time(i + slices) - measure_time(i))));
     }
 }
+
 void DialogChartProperties::GraphWidget::onDraw() {
     auto measure_time = [&](int measure) {
-        return gTempo->rowToTime(measure * 192);
+        return gTempo->rowToTime(measure * ROWS_PER_MEASURE);
     };
     auto delta_measure_time = [&](int measure, int offset) {
         return measure_time(measure + offset) - measure_time(measure);
@@ -363,6 +356,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
             static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
             x;
         int y = rect_.y + height_ - h;
+        if (w == 0 || h == 0) continue;
         Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
     }
     double time = std::min(endTime, gView->getCursorTime());
@@ -370,10 +364,6 @@ void DialogChartProperties::GraphWidget::onDraw() {
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
     batch.flush();
-    TextStyle textStyle;
-    std::string info = Str::fmt("Peak: %1 NPS").arg(peak, 1, 1).str;
-    Text::arrange(Text::TL, textStyle, info.c_str());
-    Text::draw(vec2i{rect_.x + 4, rect_.y + 2});
 };
 
 void DialogChartProperties::myCreateGraph() {
@@ -390,24 +380,6 @@ void DialogChartProperties::myUpdateGraph() { myGraph->updateGraph(); }
 // ================================================================================================
 // Stream breakdown.
 
-class DialogChartProperties::BreakdownWidget : public GuiWidget {
-   public:
-    ~BreakdownWidget() override;
-    explicit BreakdownWidget(GuiContext* gui);
-
-    void updateBreakdown(WgLabel* measureCount);
-    void selectStream(vec2i rows);
-
-    void onUpdateSize() override;
-    void onArrange(recti r) override;
-    void onTick() override;
-    void onDraw() override;
-
-   private:
-    DialogChartProperties* myDialog;
-    std::vector<WgButton*> myButtons;
-};
-
 DialogChartProperties::BreakdownWidget::~BreakdownWidget() {
     for (auto button : myButtons) {
         delete button;
@@ -418,9 +390,10 @@ DialogChartProperties::BreakdownWidget::BreakdownWidget(GuiContext* gui)
     : GuiWidget(gui) {}
 
 void DialogChartProperties::BreakdownWidget::updateBreakdown(
-    WgLabel* measureCount) {
+    WgLabel* measureCount, WgLabel* measureCount16) {
     int measures = 0;
-    auto breakdown = gChart->getStreamBreakdown(&measures);
+    int measures16 = 0;
+    auto breakdown = gChart->getStreamBreakdown(&measures, &measures16);
     for (int i = 0; i < breakdown.size(); ++i) {
         auto& item = breakdown[i];
 
@@ -441,7 +414,16 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
         delete myButtons.back();
         myButtons.pop_back();
     }
-    measureCount->text.set(Str::fmt("Stream measures: %1").arg(measures).str);
+    double percent_measures = 0.0;
+    if (breakdown.size() > 0)
+    {
+        percent_measures =
+            static_cast<double>(measures) * ROWS_PER_MEASURE /
+            (breakdown[breakdown.size() - 1].endrow - breakdown[0].row) * 100.0;
+    }
+    measureCount->text.set(Str::fmt("Total stream: %1 (%2%)").arg(measures).arg(percent_measures, 1, 1).str);
+    measureCount16->text.set(
+        Str::fmt("16th note stream: %1").arg(measures16).str);
 }
 
 void DialogChartProperties::BreakdownWidget::selectStream(vec2i rows) {
@@ -511,11 +493,11 @@ void DialogChartProperties::myCreateBreakdown() {
 }
 
 void DialogChartProperties::myUpdateBreakdown() {
-    myBreakdown->updateBreakdown(myStreamMeasureCount);
+    myBreakdown->updateBreakdown(myStreamMeasureCount, my16thMeasureCount);
 }
 
 void DialogChartProperties::myCopyBreakdown() {
-    auto breakdown = gChart->getStreamBreakdown(nullptr);
+    auto breakdown = gChart->getStreamBreakdown(nullptr, nullptr);
     if (breakdown.empty()) {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {
