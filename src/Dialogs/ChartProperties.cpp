@@ -409,6 +409,17 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
         Text::arrange(Text::TL, TextStyle(), item.text.c_str());
         int w = std::max(16, Text::getSize().x + 8);
 
+                if (buttons >= myButtons.size()) {
+                    myButtons.emplace_back(new WgButton(getGui()));
+                    myButtons.emplace_back(new WgButton(getGui()));
+                }
+                WgButton* button = myButtons[buttons];
+                std::string run_text = std::to_string(total_run);
+                if (add_asterisk) run_text += "*";
+                button->text.set(run_text.c_str());
+                button->setSize(w, gSystem->applyScaleFactor(20));
+                button->onPress.bind(this, &BreakdownWidget::selectStream,
+                                     vec2i{run_row, item.row});
         if (i >= myButtons.size()) {
             myButtons.emplace_back(new WgButton(getGui()));
         }
