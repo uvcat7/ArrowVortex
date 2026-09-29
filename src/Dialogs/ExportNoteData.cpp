@@ -49,6 +49,8 @@ static double ToBeat(int row) {
 // ================================================================================================
 // DialogExportNoteData :: dialog.
 
+const uint32_t MAX_PREVIEW_NOTES = 20;
+
 enum Format { JSON, LUA, CSV, YAML, TEXT };
 
 struct DialogExportNoteData::ExportBox : public GuiWidget {
@@ -88,7 +90,7 @@ struct DialogExportNoteData::ExportBox : public GuiWidget {
         if (area.w <= 0 || area.h <= 0) return;
 
         TextStyle style;
-        style.textFlags |= Text::WRAP_LINE;
+        style.textFlags |= Text::ELLIPSES;
 
         Renderer::pushScissorRect(r.x + 3, r.y + 1, r.w - 6, r.h - 2);
         Text::arrange(Text::TL, style, area.w, text.get());
@@ -219,7 +221,9 @@ void DialogExportNoteData::myCreateWidgets() {
     copy->onPress.bind(this, &DialogExportNoteData::onCopy);
 }
 
-void DialogExportNoteData::onAction() { myExportText = ExportData(10); }
+void DialogExportNoteData::onAction() {
+    myExportText = ExportData(MAX_PREVIEW_NOTES);
+}
 
 void DialogExportNoteData::onCopy() {
     auto out = ExportData(0);
@@ -233,7 +237,7 @@ void DialogExportNoteData::onCopy() {
 
 void DialogExportNoteData::onChanges(int changes) {
     if (changes & VCM_SELECTION_CHANGED) {
-        myExportText = ExportData(20);
+        myExportText = ExportData(MAX_PREVIEW_NOTES);
     }
 }
 
