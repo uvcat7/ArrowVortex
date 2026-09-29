@@ -111,7 +111,7 @@ DialogExportNoteData::DialogExportNoteData() {
 
     optionOffsetColumn = false;
     optionPadNumbers = false;
-    optionSMTypes = true;
+    optionFullNames = false;
     optionMinify = false;
 
     myExportText = ExportData(10);
@@ -162,6 +162,7 @@ void DialogExportNoteData::myCreateWidgets() {
     option->text.set("Length");
     option->value.bind(&includeLength);
     option->onChange.bind(this, &DialogExportNoteData::onAction);
+    option->setTooltip("Total length of a note in beats.");
 
     options->add<WgSeperator>();
 
@@ -178,11 +179,10 @@ void DialogExportNoteData::myCreateWidgets() {
     option->setTooltip("Pad decimals to three places.");
 
     option = options->add<WgCheckbox>();
-    option->text.set("Use SM Note Types");
-    option->value.bind(&optionSMTypes);
+    option->text.set("Full Names");
+    option->value.bind(&optionFullNames);
     option->onChange.bind(this, &DialogExportNoteData::onAction);
-    option->setTooltip(
-        "Use Stepmania note types. (Tap = 1, Hold = 2, Mine = M)");
+    option->setTooltip("Use full names instead of Stepmania shorthand.");
 
     option = options->add<WgCheckbox>();
     option->text.set("Minify");
@@ -252,7 +252,7 @@ std::string DialogExportNoteData::ExportData(int noteCap) {
     const int minDec = optionPadNumbers ? 3 : 0;
     const int colOff = optionOffsetColumn ? 1 : 0;
     const bool mini = optionMinify;
-    const bool names = !optionSMTypes;
+    const bool names = optionFullNames;
     int count = 0;
 
     std::vector<ExportField> fields;

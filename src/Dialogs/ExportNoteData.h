@@ -34,7 +34,7 @@ class DialogExportNoteData : public EditorDialog, public InputHandler {
 
     bool optionOffsetColumn;
     bool optionPadNumbers;
-    bool optionSMTypes;
+    bool optionFullNames;
     bool optionMinify;
 
     struct ExportBox;
