@@ -55,6 +55,7 @@
 #include <Dialogs/CustomSnap.h>
 #include <Dialogs/PreviewSettings.h>
 #include <Dialogs/EditSegment.h>
+#include <Dialogs/ExportNoteData.h>
 
 #include <algorithm>
 #include <cstdlib>
@@ -847,6 +848,9 @@ struct EditorImpl : public Editor, public InputHandler {
                 break;
             case DIALOG_EDIT_SEGMENT:
                 dlg = new DialogEditSegment;
+                break;
+            case DIALOG_EXPORT_NOTE_DATA:
+                dlg = new DialogExportNoteData;
                 break;
         };
 

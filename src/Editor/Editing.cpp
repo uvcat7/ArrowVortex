@@ -1182,26 +1182,6 @@ struct EditingImpl : public Editing {
         gHistory->finishChain("Convert ITG Couples to Routine");
     }
 
-    void exportNotesAsLuaTable() override {
-        const Chart* chart = gChart->get();
-        if (!chart) {
-            HudInfo("No notes to export, open a chart first.");
-            return;
-        }
-
-        Debug::logBlankLine();
-        Debug::log("arrowtable = {");
-        for (auto it = chart->notes.begin(), end = chart->notes.end(),
-                  last = end - 1;
-             it != end; ++it) {
-            std::string beat = Str::val(it->row * BEATS_PER_ROW, 0, 3);
-            const char* fmt = (it == last) ? "{%s,%i}};\n" : "{%s,%i},";
-            Debug::log(fmt, beat.c_str(), it->col);
-        }
-        Debug::logBlankLine();
-        HudNote("Note table written to log.");
-    }
-
     // ================================================================================================
     // EditingImpl :: clipboard functions.
 

@@ -242,6 +242,7 @@ struct MenuBarImpl : public Menubar {
         sub(hNotes, hNoteCompress, "Compress");
         add(hNotes, REQUANTIZE_NOTES, "Requantize");
         add(hNotes, OPEN_DIALOG_GENERATE_NOTES, "Generate...");
+        add(hNotes, OPEN_DIALOG_EXPORT_NOTE_DATA, "Export...");
 
         // Tempo > Select menu.
         Item* hSelectTempo = newMenu();
