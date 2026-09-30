@@ -116,7 +116,7 @@ DialogExportNoteData::DialogExportNoteData() {
     optionFullNames = false;
     optionMinify = false;
 
-    myExportText = ExportData(10);
+    myExportText = ExportData(MAX_PREVIEW_NOTES);
 
     setTitle("EXPORT NOTE DATA");
     myCreateWidgets();
