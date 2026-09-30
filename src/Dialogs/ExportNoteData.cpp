@@ -141,9 +141,10 @@ void DialogExportNoteData::myCreateWidgets() {
     option->onChange.bind(this, &DialogExportNoteData::onAction);
 
     option = options->add<WgCheckbox>();
-    option->text.set("Second");
+    option->text.set("Time");
     option->value.bind(&includeSecond);
     option->onChange.bind(this, &DialogExportNoteData::onAction);
+    option->setTooltip("Time in seconds.");
 
     option = options->add<WgCheckbox>();
     option->text.set("Column");
