@@ -5,6 +5,8 @@
 
 namespace Vortex {
 
+struct XmrNode;
+
 struct WidgetMapping {
     GuiWidget* widget;
     const char* name;
@@ -44,11 +46,15 @@ class EditorDialog : public GuiDialog {
     void setFocus(const char* name);
 
     virtual void onChanges(int changes) {}
+    virtual void loadSettings(const XmrNode& options) {}
+    virtual void saveSettings(XmrNode& options) const {}
 
     static DialogId getId(const char* name);
     static const char* getName(DialogId id);
 
    protected:
+    void storeSettings();
+
     DialogId myId;
     RowLayout myLayout;
     std::vector<WidgetMapping> myWidgetMap;
