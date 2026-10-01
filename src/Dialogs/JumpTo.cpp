@@ -32,10 +32,10 @@ void DialogJumpTo::myCreateWidgets() {
     myTypeList->setTooltip("Type of value to jump to.");
 
     myTypeList->addItem("Time");
-    myTypeList->addItem("{tc:F9F}R{tc}ow");
-    myTypeList->addItem("{tc:F9F}B{tc}eat");
-    myTypeList->addItem("{tc:F9F}M{tc}easure");
-    myTypeList->addItem("{tc:F9F}N{tc}ote");
+    myTypeList->addItem("{tc:BBB}R{tc}ow");
+    myTypeList->addItem("{tc:BBB}B{tc}eat");
+    myTypeList->addItem("{tc:BBB}M{tc}easure");
+    myTypeList->addItem("{tc:BBB}N{tc}ote");
 
     WgLineEdit* target = myLayout.add<WgLineEdit>();
     target->text.bind(&myJumpToTarget);
