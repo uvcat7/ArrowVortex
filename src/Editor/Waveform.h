@@ -31,8 +31,15 @@ struct Waveform {
 
     virtual void setOverlayFilter(bool enabled) = 0;
     virtual bool getOverlayFilter() = 0;
-    virtual void enableFilter(FilterType type, double strength) = 0;
+
+    virtual void enableFilter() = 0;
     virtual void disableFilter() = 0;
+
+    virtual void setFilterType(FilterType type) = 0;
+    virtual FilterType getFilterType() = 0;
+
+    virtual void setFilterStrength(float strength) = 0;
+    virtual float getFilterStrength() = 0;
 
     virtual void setPreset(Preset preset) = 0;
 
