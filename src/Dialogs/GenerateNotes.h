@@ -13,6 +13,8 @@ class DialogGenerateNotes : public EditorDialog, public InputHandler {
     DialogGenerateNotes();
 
     void onChanges(int changes) override;
+    void loadSettings(const XmrNode& options) override;
+    void saveSettings(XmrNode& options) const override;
 
    private:
     void myCreateWidgets();
