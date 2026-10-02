@@ -831,7 +831,7 @@ struct EditingImpl : public Editing {
             }
         }
 
-        std::sort(rows.begin(), rows.end());
+        std::sort(rows.begin(), rows.end(), std::greater<>());
         rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
 
         if (rows.empty()) {
@@ -868,9 +868,7 @@ struct EditingImpl : public Editing {
         // Start Per-Row Edits, from end to beginning.
         auto segs = gTempo->getSegments();
 
-        for (auto rowIt = rows.rbegin(); rowIt != rows.rend(); ++rowIt) {
-            const int row = *rowIt;
-
+        for (const int row : rows) {
             NoteEdit notesEdit;
             SegmentEdit tempoEdit;
 
