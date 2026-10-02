@@ -549,7 +549,8 @@ void DialogChartProperties::BreakdownWidget::onDraw() {
     }
 }
 
-std::string DialogChartProperties::BreakdownWidget::buttonText(bool compressed) { 
+std::string DialogChartProperties::BreakdownWidget::buttonText(
+    bool compressed) {
     if (myButtons.empty()) return "";
     std::string out = "";
     for (auto& item : myButtons) {
@@ -599,7 +600,8 @@ void DialogChartProperties::myCopyBreakdown() {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {
         gSystem->setClipboardText(breakdown);
-        HudInfo("%s%s", "Stream breakdown copied to clipboard: ", breakdown.c_str());
+        HudInfo("%s%s",
+                "Stream breakdown copied to clipboard: ", breakdown.c_str());
     }
 }
 
