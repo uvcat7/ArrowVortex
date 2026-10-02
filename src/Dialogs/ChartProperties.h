@@ -63,6 +63,7 @@ class DialogChartProperties::BreakdownWidget : public GuiWidget {
     void onArrange(recti r) override;
     void onTick() override;
     void onDraw() override;
+    std::string buttonText(bool compressed);
 
    private:
     DialogChartProperties* myDialog;

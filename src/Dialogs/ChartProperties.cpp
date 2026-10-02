@@ -549,6 +549,17 @@ void DialogChartProperties::BreakdownWidget::onDraw() {
     }
 }
 
+std::string DialogChartProperties::BreakdownWidget::buttonText(bool compressed) { 
+    if (myButtons.empty()) return "";
+    std::string out = "";
+    for (auto& item : myButtons) {
+        out = out + item->text.get();
+        if (!compressed) out = out + " ";
+    }
+    if (!compressed) out.pop_back();
+    return out;
+}
+
 void DialogChartProperties::myCreateBreakdown() {
     myLayout.row().col(340);
     myLayout.add<WgSeperator>();
@@ -583,19 +594,12 @@ void DialogChartProperties::myUpdateBreakdown() {
 }
 
 void DialogChartProperties::myCopyBreakdown() {
-    auto breakdown =
-        gChart->getStreamBreakdown(nullptr, nullptr, myCompressedBreakdown);
-    if (breakdown.empty()) {
+    std::string breakdown = myBreakdown->buttonText(myCompressedBreakdown);
+    if (breakdown == "") {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {
-        std::string out;
-        for (auto& item : breakdown) {
-            out = out + item.text;
-            if (!myCompressedBreakdown) out = out + " ";
-        }
-        if (!myCompressedBreakdown) Str::pop_back(out);
-        gSystem->setClipboardText(out);
-        HudInfo("%s%s", "Stream breakdown copied to clipboard: ", out.c_str());
+        gSystem->setClipboardText(breakdown);
+        HudInfo("%s%s", "Stream breakdown copied to clipboard: ", breakdown.c_str());
     }
 }
 
