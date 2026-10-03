@@ -12,6 +12,10 @@
 #include <System/OpenGL.h>
 #include <System/System.h>
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#endif
+
 #undef ERROR
 
 namespace Vortex {
@@ -143,6 +147,10 @@ void blockEnd() { sLogBlankLine = true; }
 
 namespace DebugPrivate {
 
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+
 #define MAX_IGNORE_ID_LEN (MAX_PATH + 16)
 #define MAX_DEBUG_MSG_LEN (1024)
 #define MAX_NUM_IGNORES (32)
@@ -172,6 +180,40 @@ static bool AddIgnore(const char* id) {
 // Debug :: asserts.
 
 #ifndef VORTEX_DISABLE_ASSERTS
+
+#ifndef _WIN32
+
+bool assrt(const char* exp, const char* file, int line, const char* func,
+           const char* fmt, ...) {
+    char id[MAX_IGNORE_ID_LEN];
+    std::snprintf(id, sizeof(id), "%s%i", file, line);
+
+    char buffer[MAX_DEBUG_MSG_LEN * 2];
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        char message[MAX_DEBUG_MSG_LEN];
+        std::vsnprintf(message, sizeof(message), fmt, args);
+        va_end(args);
+        std::snprintf(buffer, sizeof(buffer),
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
+                      file, line, func, message);
+    } else {
+        std::snprintf(buffer, sizeof(buffer),
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp, file,
+                      line, func);
+    }
+
+    Debug::WriteToLogAndConsole("ASSERT\n");
+    Debug::WriteToLogAndConsole("-----------------------------------");
+    Debug::WriteToLogAndConsole(buffer);
+    Debug::WriteToLogAndConsole("-----------------------------------");
+    Debug::WriteToLogAndConsole("\n");
+
+    return false;
+}
+
+#else
 
 static HHOOK sHook;
 
@@ -247,6 +289,8 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
 
     return false;
 }
+
+#endif
 
 #endif
 
