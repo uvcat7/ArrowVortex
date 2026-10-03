@@ -150,12 +150,23 @@ static void ensureSettingsDirExists() {
     fs::create_directories(utf8ToPath(getSettingsDir()), ec);
 }
 
+static void CopyXmrNode(XmrNode& dst, const XmrNode& src) {
+    for (XmrAttrib* a = src.attrib(); a; a = a->next()) {
+        dst.addAttrib(a->name, const_cast<const char**>(a->values),
+                      a->numValues);
+    }
+    for (XmrNode* c = src.child(); c; c = c->next()) {
+        CopyXmrNode(*dst.addChild(c->name), *c);
+    }
+}
+
 // ================================================================================================
 // EditorImpl :: member data.
 
 struct EditorImpl : public Editor, public InputHandler {
     GuiContext* gui_;
     DialogEntry myDialogs[NUM_DIALOG_IDS];
+    XmrDoc myDialogOptions;
     DialogFocus myDialogFocus;
     DialogSegment mySegmentEditor;
     int myChanges;
@@ -210,6 +221,7 @@ struct EditorImpl : public Editor, public InputHandler {
         XmrDoc settings;
         settings.loadFile(fs::path(getSettingsDir() + "settings.txt"));
         loadSettings(settings);
+        loadDialogSettings(settings);
 
         // Disable v-sync if requested.
         if (!myUseVerticalSync) gSystem->disableVsync();
@@ -286,11 +298,14 @@ struct EditorImpl : public Editor, public InputHandler {
         gView->saveSettings(settings);
         gMusic->saveSettings(settings);
         gNoteskin->saveSettings(settings);
-        saveDialogSettings(settings);
+        saveDialogPositions(settings);
 
         // Destroy the gui context first, because some dialogs refer to editor
         // components.
         delete gui_;
+
+        // Save all dialog settings.
+        saveDialogSettings(settings);
 
         // Destroy the editor components.
         Minimap::destroy();
@@ -408,7 +423,7 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
-    void saveDialogSettings(XmrNode& settings) {
+    void saveDialogPositions(XmrNode& settings) {
         XmrNode* dialogs = settings.addChild("dialogs");
 
         for (int id = 0; id < NUM_DIALOG_IDS; ++id) {
@@ -424,6 +439,24 @@ struct EditorImpl : public Editor, public InputHandler {
                 }
             }
         }
+    }
+
+    void loadDialogSettings(XmrNode& settings) {
+        XmrNode* options = settings.child("dialogOptions");
+        if (options) CopyXmrNode(myDialogOptions, *options);
+    }
+
+    void saveDialogSettings(XmrNode& settings) {
+        if (myDialogOptions.child()) {
+            CopyXmrNode(*settings.addChild("dialogOptions"), myDialogOptions);
+        }
+    }
+
+    XmrNode* resetDialogSettings(int dialogId) override {
+        auto name = EditorDialog::getName(static_cast<DialogId>(dialogId));
+        XmrNode* old = myDialogOptions.child(name);
+        if (old) myDialogOptions.removeChild(old);
+        return myDialogOptions.addChild(name);
     }
 
     // ================================================================================================
@@ -857,6 +890,9 @@ struct EditorImpl : public Editor, public InputHandler {
         }
 
         dlg->setId(id);
+
+        XmrNode* options = myDialogOptions.child(EditorDialog::getName(id));
+        if (options) dlg->loadSettings(*options);
 
         if (rect.w > 0 && rect.h > 0) {
             dlg->setPosition(rect.x, rect.y);

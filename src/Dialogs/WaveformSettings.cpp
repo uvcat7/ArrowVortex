@@ -15,10 +15,9 @@ DialogWaveformSettings::DialogWaveformSettings() {
     luminanceValue_ = gWaveform->getLuminance();
     waveShape_ = gWaveform->getWaveShape();
     antiAliasingMode_ = gWaveform->getAntiAliasing();
+    filterType_ = gWaveform->getFilterType();
+    filterStrength_ = gWaveform->getFilterStrength();
     isOverlayFilterActive_ = gWaveform->getOverlayFilter();
-
-    filterType_ = Waveform::FT_HIGH_PASS;
-    filterStrength_ = 0.75f;
 
     setTitle("WAVEFORM SETTINGS");
 
@@ -92,6 +91,7 @@ DialogWaveformSettings::DialogWaveformSettings() {
 
     WgCycleButton* filter = myLayout.add<WgCycleButton>("Filter type");
     filter->value.bind(&filterType_);
+    filter->onChange.bind(this, &DialogWaveformSettings::myUpdateFilter);
     filter->addItem("High-pass");
     filter->addItem("Low-pass");
     filter->setTooltip("Determines the shape of the waveform filter");
@@ -99,6 +99,7 @@ DialogWaveformSettings::DialogWaveformSettings() {
     // Filter strength.
     WgSlider* strength = myLayout.add<WgSlider>("Strength");
     strength->value.bind(&filterStrength_);
+    strength->onChange.bind(this, &DialogWaveformSettings::myUpdateFilter);
     strength->setTooltip("The strength of the waveform filter");
 
     // Show both waveforms.
@@ -139,16 +140,20 @@ void DialogWaveformSettings::myUpdateSettings() {
     gWaveform->setAntiAliasing(antiAliasingMode_);
     gWaveform->setLuminance(static_cast<Waveform::Luminance>(luminanceValue_));
     gWaveform->setWaveShape(static_cast<Waveform::WaveShape>(waveShape_));
+    gWaveform->setFilterType(static_cast<Waveform::FilterType>(filterType_));
+    gWaveform->setFilterStrength(filterStrength_);
+}
+
+void DialogWaveformSettings::myUpdateFilter() {
+    gWaveform->setFilterType(static_cast<Waveform::FilterType>(filterType_));
+    gWaveform->setFilterStrength(filterStrength_);
 }
 
 void DialogWaveformSettings::myToggleOverlayFilter() {
     gWaveform->setOverlayFilter(isOverlayFilterActive_);
 }
 
-void DialogWaveformSettings::myEnableFilter() {
-    gWaveform->enableFilter(static_cast<Waveform::FilterType>(filterType_),
-                            filterStrength_);
-}
+void DialogWaveformSettings::myEnableFilter() { gWaveform->enableFilter(); }
 
 void DialogWaveformSettings::myDisableFilter() { gWaveform->disableFilter(); }
 

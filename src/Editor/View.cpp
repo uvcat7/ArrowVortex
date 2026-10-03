@@ -53,7 +53,7 @@ struct ViewImpl : public View, public InputHandler {
     bool myUseChartPreview = false;
     int myCustomSnap = 20;
     int myCustomSnapSteps[193];
-    SnapType mySnapType = ST_NONE;
+    SnapType mySnapType = ST_4TH;
 
     // ================================================================================================
     // ViewImpl :: constructor / destructor.
@@ -81,6 +81,11 @@ struct ViewImpl : public View, public InputHandler {
             view->get("receptorY", &myReceptorY);
             view->get("previewOffset", &myPreviewOffset);
 
+            int snapType_ = mySnapType;
+            view->get("snapType", &snapType_);
+            mySnapType = static_cast<SnapType>(
+                std::clamp(snapType_, 0, NUM_SNAP_TYPES - 1));
+
             myCustomSnap = std::clamp(myCustomSnap, 5, 191);
             myZoomLevel = std::clamp(myZoomLevel, -2.0, 16.0);
             myScaleLevel = std::clamp(myScaleLevel, 1.0, 10.0);
@@ -103,6 +108,7 @@ struct ViewImpl : public View, public InputHandler {
         view->addAttrib("receptorX", static_cast<long>(myReceptorX));
         view->addAttrib("receptorY", static_cast<long>(myReceptorY));
         view->addAttrib("previewOffset", static_cast<long>(myPreviewOffset));
+        view->addAttrib("snapType", static_cast<long>(mySnapType));
     }
 
     // ================================================================================================
