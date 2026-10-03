@@ -60,6 +60,25 @@ std::vector<std::string> getLines(fs::path path, bool* success) {
     return v;
 }
 
+std::vector<uint8_t> getBytes(fs::path path, bool* success) {
+    std::ifstream in(path.c_str(), std::ios::binary | std::ios::ate);
+    if (in.fail()) {
+        HudError("Failed to open file: %s", std::strerror(errno));
+        if (success != nullptr) *success = false;
+        return {};
+    }
+    auto size = in.tellg();
+    in.seekg(0, std::ios::beg);
+    std::vector<uint8_t> data(static_cast<size_t>(size));
+    if (size > 0 && !in.read(reinterpret_cast<char*>(data.data()), size)) {
+        HudError("Failed to read file: %s", std::strerror(errno));
+        if (success != nullptr) *success = false;
+        return {};
+    }
+    if (success != nullptr) *success = true;
+    return data;
+}
+
 static bool HasValidExt(fs::path path,
                         const std::vector<std::string>& filters) {
     auto ext = pathToUtf8(path.extension());

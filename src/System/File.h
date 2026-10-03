@@ -35,6 +35,9 @@ extern std::string getText(fs::path path, bool* success);
 /// Returns a vector with the contents of a file, split into lines.
 extern std::vector<std::string> getLines(fs::path path, bool* success);
 
+/// Returns a vector with the raw binary contents of a file.
+extern std::vector<uint8_t> getBytes(fs::path path, bool* success);
+
 /// Returns a list of files if path is a directory, or a single file if path is
 /// a file. Filters is a string of acceptable extensions seperated by semicolons
 /// (e.g. "sm;ssc").

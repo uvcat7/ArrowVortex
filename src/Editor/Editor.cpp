@@ -73,14 +73,15 @@ struct DialogEntry {
     bool requestOpen;
 };
 
-#define LOAD_FILTERS_COUNT 9
+#define LOAD_FILTERS_COUNT 10
 static SDL_DialogFileFilter loadFilters[] = {
-    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.ogg, *.mp3, *.wav)",
-     "sm;ssc;dwi;osu;ogg;mp3;wav"},
+    {"Supported Media (*.sm, *.ssc, *.dwi, *.osu, *.ssq, *.ogg, *.mp3, *.wav)",
+     "sm;ssc;dwi;osu;ssq;ogg;mp3;wav"},
     {"Stepmania/ITG (*.sm)", "sm"},
     {"Stepmania 5 (*.ssc)", "ssc"},
     {"Dance With Intensity (*.dwi)", "dwi"},
     {"Osu!mania (*.osu)", "osu"},
+    {"DDR (*.ssq)", "ssq"},
     {"Ogg Vorbis (*.ogg)", "ogg"},
     {"MP3 Audio (*.mp3)", "mp3"},
     {"Waveform (*.wav)", "wav"},
@@ -457,8 +458,8 @@ struct EditorImpl : public Editor, public InputHandler {
         // Make a list of loadable extensions, from high priority to low
         // priority.
         static const char* extList[] = {".ssc", ".sm",  ".dwi", ".osu",
-                                        ".ogg", ".mp3", ".wav"};
-        const char** extEnd = extList + (ignoreAudio ? 4 : 7);
+                                        ".ssq", ".ogg", ".mp3", ".wav"};
+        const char** extEnd = extList + (ignoreAudio ? 5 : 8);
 
         // Check if the path is a directory.
         if (fs::is_directory(path)) {
