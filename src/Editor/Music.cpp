@@ -475,7 +475,7 @@ struct MusicImpl : public Music, public MixSource {
 
         if (gEditor->hasMultithreading()) {
             auto box = myInfoBox.create();
-            box->left = Str::fmt("Converting music to %1...").arg(encoder).str;
+            box->left = std::format("Converting music to {}...", encoder);
             myAudioConversionThread->start();
         } else {
             myAudioConversionThread->exec();

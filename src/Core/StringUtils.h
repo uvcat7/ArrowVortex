@@ -210,26 +210,6 @@ struct Str {
     static void appendVal(std::string& s, double v, int minDecimalPlaces = 0,
                           int maxDecimalPlaces = 6);
 
-    /// Helper struct used in string formatting.
-    struct fmt {
-        explicit fmt(const std::string& format);
-        explicit fmt(const char* format);
-
-        fmt& arg(char c);
-        fmt& arg(const std::string& s);
-        fmt& arg(const char* s);
-        fmt& arg(const char* s, size_t n);
-        fmt& arg(int v, int minDigits = 0, bool hex = false);
-        fmt& arg(uint32_t v, int minDigits = 0, bool hex = false);
-        fmt& arg(float v, int minDecimals = 0, int maxDecimals = 6);
-        fmt& arg(double v, int minDecimals = 0, int maxDecimals = 6);
-
-        inline explicit operator const char*() { return str.data(); }
-        inline explicit operator std::string&() { return str; }
-
-        std::string str;
-    };
-
     /// Returns a formatted string of the given time.
     static std::string formatTime(double seconds, bool showMilliseconds = true);
 

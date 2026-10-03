@@ -311,11 +311,10 @@ static void WriteDisplayBpm(ExportData& data, const Tempo* tempo) {
             WriteTag(data, "DISPLAYBPM", tempo->displayBpmRange.min, ALWAYS,
                      false);
         } else {
-            Str::fmt fmt = Str::fmt("%1:%2");
-            fmt.arg(tempo->displayBpmRange.min, 6);
-            fmt.arg(tempo->displayBpmRange.max, 6);
-            WriteTag(data, "DISPLAYBPM", static_cast<std::string>(fmt), ALWAYS,
-                     false);
+            WriteTag(data, "DISPLAYBPM",
+                     std::format("{:.6f}:{:.6f}", tempo->displayBpmRange.min,
+                                 tempo->displayBpmRange.max),
+                     ALWAYS, false);
         }
     } else if (tempo->displayBpmType == BPM_RANDOM) {
         WriteTag(data, "DISPLAYBPM", "*", ALWAYS, false);

@@ -424,9 +424,10 @@ struct SelectionImpl : public Selection {
             double m1 = gTempo->beatToMeasure(firstRow * BEATS_PER_ROW);
             double m2 = gTempo->beatToMeasure(lastRow * BEATS_PER_ROW);
 
-            Str::fmt fmt("Selected measure %1 to %2 (%3 measures)");
-            fmt.arg(m1, 0, 2).arg(m2, 0, 2).arg(m2 - m1, 0, 2);
-            HudNote("%s", static_cast<const char*>(fmt));
+            std::string msg = std::format(
+                "Selected measure {:.2f} to {:.2f} ({:.2f} measures)", m1, m2,
+                m2 - m1);
+            HudNote("%s", msg.c_str());
         }
     }
 

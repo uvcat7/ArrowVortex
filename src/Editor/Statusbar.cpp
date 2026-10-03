@@ -110,12 +110,12 @@ struct StatusbarImpl : public Statusbar {
 
         if (myShowSnap) {
             const char* snap = ToString(gView->getSnapType());
-            info.emplace_back(Str::fmt("{tc:888}Snap:{tc} %1").arg(snap));
+            info.emplace_back(std::format("{{tc:888}}Snap:{{tc}} {}", snap));
         }
 
         if (myShowBpm && gSimfile->isOpen()) {
             double bpm = gTempo->getBpm(gView->getCursorRow());
-            info.emplace_back(Str::fmt("{tc:888}BPM:{tc} %1").arg(bpm, 3, 3));
+            info.emplace_back(std::format("{{tc:888}}BPM:{{tc}} {:.3f}", bpm));
         }
 
         if (myShowRow) {
@@ -123,12 +123,10 @@ struct StatusbarImpl : public Statusbar {
             int hrow = gView->getHoveredRow();
 
             if (myShowHover && hrow >= 0) {
-                info.emplace_back(
-                    Str::fmt("{tc:888}Row:{tc} %1 {tc:CCC}(%2){tc}")
-                        .arg(row)
-                        .arg(hrow));
+                info.emplace_back(std::format(
+                    "{{tc:888}}Row:{{tc}} {} {{tc:CCC}}({}){{tc}}", row, hrow));
             } else {
-                info.emplace_back(Str::fmt("{tc:888}Row:{tc} %1").arg(row));
+                info.emplace_back(std::format("{{tc:888}}Row:{{tc}} {}", row));
             }
         }
 
@@ -137,13 +135,12 @@ struct StatusbarImpl : public Statusbar {
             double hbeat = gView->getHoveredBeat();
 
             if (myShowHover && hbeat >= 0) {
-                info.emplace_back(
-                    Str::fmt("{tc:888}Beat:{tc} %1 {tc:CCC}(%2){tc}")
-                        .arg(beat, 3, 3)
-                        .arg(hbeat, 3, 3));
+                info.emplace_back(std::format(
+                    "{{tc:888}}Beat:{{tc}} {:.3f} {{tc:CCC}}({:.3f}){{tc}}", beat,
+                    hbeat));
             } else {
                 info.emplace_back(
-                    Str::fmt("{tc:888}Beat:{tc} %1").arg(beat, 3, 3));
+                    std::format("{{tc:888}}Beat:{{tc}} {:.3f}", beat));
             }
         }
 
@@ -152,13 +149,12 @@ struct StatusbarImpl : public Statusbar {
             double hmeasure = gTempo->beatToMeasure(gView->getHoveredBeat());
 
             if (myShowHover && hmeasure >= 0) {
-                info.emplace_back(
-                    Str::fmt("{tc:888}Measure:{tc} %1 {tc:CCC}(%2){tc}")
-                        .arg(measure, 2, 2)
-                        .arg(hmeasure, 2, 2));
+                info.emplace_back(std::format(
+                    "{{tc:888}}Measure:{{tc}} {:.2f} {{tc:CCC}}({:.2f}){{tc}}",
+                    measure, hmeasure));
             } else {
                 info.emplace_back(
-                    Str::fmt("{tc:888}Measure:{tc} %1").arg(measure, 2, 2));
+                    std::format("{{tc:888}}Measure:{{tc}} {:.2f}", measure));
             }
         }
 
@@ -169,12 +165,11 @@ struct StatusbarImpl : public Statusbar {
 
             if (myShowHover && htiimeval >= 0) {
                 std::string htime = Str::formatTime(htiimeval);
-                info.emplace_back(
-                    Str::fmt("{tc:888}Time:{tc} %1 {tc:CCC}(%2){tc}")
-                        .arg(time)
-                        .arg(htime));
+                info.emplace_back(std::format(
+                    "{{tc:888}}Time:{{tc}} {} {{tc:CCC}}({}){{tc}}", time,
+                    htime));
             } else {
-                info.emplace_back(Str::fmt("{tc:888}Time:{tc} %1").arg(time));
+                info.emplace_back(std::format("{{tc:888}}Time:{{tc}} {}", time));
             }
         }
         if (myShowTimingMode) {
@@ -194,14 +189,14 @@ struct StatusbarImpl : public Statusbar {
             int row = gView->getCursorRow();
             double ratio = gTempo->getSegments()->getRecent<Scroll>(row).ratio;
             info.emplace_back(
-                Str::fmt("{tc:888}Scroll:{tc} %1").arg(ratio, 2, 2));
+                std::format("{{tc:888}}Scroll:{{tc}} {:.2f}", ratio));
         }
         if (myShowSpeed) {
             double beat = gView->getCursorBeat();
             double time = gView->getCursorTime();
             double speed = gTempo->positionToSpeed(beat, time);
             info.emplace_back(
-                Str::fmt("{tc:888}Speed:{tc} %1").arg(speed, 3, 3));
+                std::format("{{tc:888}}Speed:{{tc}} {:.3f}", speed));
         }
 
         if (info.size()) {

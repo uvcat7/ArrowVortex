@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <algorithm>
+#include <format>
 
 namespace Vortex {
 
@@ -456,8 +457,6 @@ bool Str::iequal(const char* a, const char* b) { return icompare(a, b) == 0; }
 // ================================================================================================
 // Str :: formatting functions.
 
-typedef Str::fmt Fmt;
-
 static const int INT_BUFLEN = 32;
 static const int DBL_BUFLEN = 64;
 
@@ -547,73 +546,6 @@ void Str::appendVal(std::string& s, float v, int minDec, int maxDec) {
 void Str::appendVal(std::string& s, double v, int minDec, int maxDec) {
     char buf[DBL_BUFLEN];
     append(s, buf, PrintDouble(buf, v, minDec, maxDec));
-}
-
-Fmt::fmt(const std::string& format) : str(format) {}
-
-Fmt::fmt(const char* format) : str(format) {}
-
-Fmt& Fmt::arg(int v, int minDig, bool hex) {
-    char buf[INT_BUFLEN];
-    return arg(buf, PrintInt(buf, v, minDig, hex));
-}
-
-Fmt& Fmt::arg(uint32_t v, int minDig, bool hex) {
-    char buf[INT_BUFLEN];
-    return arg(buf, PrintUint(buf, v, minDig, hex));
-}
-
-Fmt& Fmt::arg(float v, int minDec, int maxDec) {
-    char buf[DBL_BUFLEN];
-    return arg(buf, PrintDouble(buf, v, minDec, maxDec));
-}
-
-Fmt& Fmt::arg(double v, int minDec, int maxDec) {
-    char buf[DBL_BUFLEN];
-    return arg(buf, PrintDouble(buf, v, minDec, maxDec));
-}
-
-Fmt& Fmt::arg(char c) { return arg(&c, 1); }
-
-Fmt& Fmt::arg(const std::string& s) { return arg(s.data(), s.length()); }
-
-Fmt& Fmt::arg(const char* s) { return arg(s, strlen(s)); }
-
-Fmt& Fmt::arg(const char* s, size_t n) {
-    auto fmtLen = str.length();
-
-    // find the lowest marker position.
-    auto markerPos = fmtLen;
-    auto markerLen = 0;
-    if (fmtLen > 0) {
-        size_t lowestMarker = 100;
-        const char* p = str.c_str();
-        for (int i = 0; i < fmtLen; ++i) {
-            if (p[i] == '%') {
-                char c = p[i + 1];
-                if (c >= '0' && c <= '9') {
-                    int len = 2;
-                    int marker = c - '0';
-                    c = p[i + 2];
-                    if (c >= '0' && c <= '9') {
-                        marker = marker * 10 + c - '0';
-                        ++len;
-                    }
-                    if (marker > 0 && marker < lowestMarker) {
-                        lowestMarker = marker;
-                        markerPos = i;
-                        markerLen = len;
-                    }
-                }
-            }
-        }
-    }
-
-    // Insert the string at the marker position.
-    str.erase(str.begin() + markerPos, str.begin() + markerPos + markerLen);
-    insert(str, markerPos, s, n);
-
-    return *this;
 }
 
 // ================================================================================================
@@ -810,10 +742,8 @@ std::string Str::formatTime(double seconds, bool precise) {
     t -= min * (60 * 1000);
     int64_t sec = t / 1000;
 
-    std::string fmt =
-        static_cast<std::string>(Str::fmt("%1:%2.")
-                                     .arg(static_cast<int>(min), 2)
-                                     .arg(static_cast<int>(sec), 2));
+    std::string fmt = std::format("{:02}:{:02}.", static_cast<int>(min),
+                                  static_cast<int>(sec));
 
     if (precise) {
         t -= sec * 1000;

@@ -865,13 +865,13 @@ void TweakInfoBox::draw(recti r) {
     r.x += r.w / 2;
 
     const char* name[] = {"none", "offset", "BPM", "stop"};
-    Str::fmt str("Tweak %1 :: %2");
-    str.arg(name[mode]).arg(gTempo->getTweakValue(), 3, 3);
+    std::string str =
+        std::format("Tweak {} :: {:.3f}", name[mode], gTempo->getTweakValue());
 
     const int init_off_h = gSystem->applyScaleFactor(16);
     const int text_row_h = gSystem->applyScaleFactor(14);
 
-    Text::arrange(Text::MC, static_cast<const char*>(str));
+    Text::arrange(Text::MC, str.c_str());
     Text::draw(vec2i{r.x, r.y + init_off_h});
 
     const char* keys[] = {

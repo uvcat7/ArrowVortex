@@ -156,7 +156,7 @@ void DialogChartProperties::myCalcRating() {
 static void StringifyNoteInfo(std::string& out, const char* name, int count) {
     if (count > 0) {
         if (out.length()) out = out + ", ";
-        out = out + Str::fmt("%1 %2").arg(count).arg(name).str;
+        out = out + std::format("{} {}", count, name);
         if (count > 1) out = out + "s";
     }
 }
@@ -214,8 +214,7 @@ void DialogChartProperties::myUpdateNoteInfo() {
             std::max(1.0, (gNotes->end() - 1)->time - gNotes->begin()->time);
     }
 
-    myNoteDensity->text.set(
-        Str::fmt("Note density: %1 NPS").arg(density, 1, 1).str);
+    myNoteDensity->text.set(std::format("Note density: {:.1f} NPS", density));
 }
 
 void DialogChartProperties::myCopyNoteInfo() {
@@ -371,7 +370,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
                Color32(160, 160, 160, 255));
     batch.flush();
     TextStyle textStyle;
-    std::string info = Str::fmt("Peak: %1 NPS").arg(peak, 1, 1).str;
+    std::string info = std::format("Peak: {:.1f} NPS", peak);
     Text::arrange(Text::TL, textStyle, info.c_str());
     Text::draw(vec2i{rect_.x + 4, rect_.y + 2});
 };
@@ -441,7 +440,7 @@ void DialogChartProperties::BreakdownWidget::updateBreakdown(
         delete myButtons.back();
         myButtons.pop_back();
     }
-    measureCount->text.set(Str::fmt("Stream measures: %1").arg(measures).str);
+    measureCount->text.set(std::format("Stream measures: {}", measures));
 }
 
 void DialogChartProperties::BreakdownWidget::selectStream(vec2i rows) {

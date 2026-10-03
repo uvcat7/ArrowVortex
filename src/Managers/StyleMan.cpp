@@ -102,7 +102,7 @@ Style* CreateStyle(const std::string& id, int numCols, int numPlayers) {
 
     out->id = id;
     if (out->id.empty()) {
-        out->id = Str::fmt("kb%1-single").arg(numCols).str;
+        out->id = std::format("kb{}-single", numCols);
     }
 
     out->name = IdToName(out->id);
@@ -273,14 +273,12 @@ struct StyleManImpl : public StyleMan {
     static std::string getFallbackText(int numCols, int numPlayers) {
         std::string out;
         if (numPlayers > 1) {
-            out = Str::fmt("creating a fallback style (%1 columns, %1 players)")
-                      .arg(numCols)
-                      .arg(numPlayers)
-                      .str;
+            out = std::format(
+                "Creating a fallback style ({} columns, {} players)", numCols,
+                numPlayers);
         } else {
-            out = Str::fmt("creating a fallback style (%1 columns)")
-                      .arg(numCols)
-                      .str;
+            out =
+                std::format("Creating a fallback style ({} columns)", numCols);
         }
         return out;
     }

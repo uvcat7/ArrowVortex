@@ -18,8 +18,7 @@ Chart::~Chart() {
 }
 
 std::string Chart::description() const {
-    return static_cast<std::string>(
-        Str::fmt("%1 %2").arg(GetDifficultyName(difficulty)).arg(meter));
+    return std::format("{} {}", GetDifficultyName(difficulty), meter);
 }
 
 bool Chart::hasTempo() const {

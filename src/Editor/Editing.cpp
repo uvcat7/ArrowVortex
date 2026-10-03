@@ -413,9 +413,9 @@ struct EditingImpl : public Editing {
         }
 
         static const NotesMan::EditDescription descs[3] = {
-            {"Converted %1 hold to roll.", "Converted %1 holds to rolls."},
-            {"Converted %1 roll to hold.", "Converted %1 rolls to holds."},
-            {"Converted %1 hold/roll.", "Converted %1 holds/rolls."},
+            {"Converted {} hold to roll.", "Converted {} holds to rolls."},
+            {"Converted {} roll to hold.", "Converted {} rolls to holds."},
+            {"Converted {} hold/roll.", "Converted {} holds/rolls."},
         };
         if (numHolds > 0 || numRolls > 0) {
             auto* desc = descs + (numRolls ? (numHolds ? 2 : 1) : 0);
@@ -442,11 +442,11 @@ struct EditingImpl : public Editing {
         }
         if (numHolds > 0) {
             static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
-                {"Converted %1 hold to step.", "Converted %1 holds to steps."},
-                {"Converted %1 hold to mine.", "Converted %1 holds to mines."},
-                {"Converted %1 hold to roll.", "Converted %1 holds to rolls."},
-                {"Converted %1 hold to lift.", "Converted %1 holds to lifts."},
-                {"Converted %1 hold to fake.", "Converted %1 holds to fakes."},
+                {"Converted {} hold to step.", "Converted {} holds to steps."},
+                {"Converted {} hold to mine.", "Converted {} holds to mines."},
+                {"Converted {} hold to roll.", "Converted {} holds to rolls."},
+                {"Converted {} hold to lift.", "Converted {} holds to lifts."},
+                {"Converted {} hold to fake.", "Converted {} holds to fakes."},
             };
             gNotes->modify(edit, false, &descs[type]);
 
@@ -487,11 +487,11 @@ struct EditingImpl : public Editing {
 
     void changeNotesToType(NoteType type) override {
         static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
-            {"Converted %1 step to step.", "Converted %1 steps to steps."},
-            {"Converted %1 step to mine.", "Converted %1 steps to mines."},
-            {"Converted %1 step to roll.", "Converted %1 steps to rolls."},
-            {"Converted %1 step to lift.", "Converted %1 steps to lifts."},
-            {"Converted %1 step to fake.", "Converted %1 steps to fakes."},
+            {"Converted {} step to step.", "Converted {} steps to steps."},
+            {"Converted {} step to mine.", "Converted {} steps to mines."},
+            {"Converted {} step to roll.", "Converted {} steps to rolls."},
+            {"Converted {} step to lift.", "Converted {} steps to lifts."},
+            {"Converted {} step to fake.", "Converted {} steps to fakes."},
         };
 
         changeNoteTypeToType(NOTE_STEP_OR_HOLD, type, &descs[type]);
@@ -499,11 +499,11 @@ struct EditingImpl : public Editing {
 
     void changeMinesToType(NoteType type) override {
         static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
-            {"Converted %1 mine to step.", "Converted %1 mines to steps."},
-            {"Converted %1 mine to mine.", "Converted %1 mines to mines."},
-            {"Converted %1 mine to roll.", "Converted %1 mines to rolls."},
-            {"Converted %1 mine to lift.", "Converted %1 mines to lifts."},
-            {"Converted %1 mine to fake.", "Converted %1 mines to fakes."},
+            {"Converted {} mine to step.", "Converted {} mines to steps."},
+            {"Converted {} mine to mine.", "Converted {} mines to mines."},
+            {"Converted {} mine to roll.", "Converted {} mines to rolls."},
+            {"Converted {} mine to lift.", "Converted {} mines to lifts."},
+            {"Converted {} mine to fake.", "Converted {} mines to fakes."},
         };
 
         changeNoteTypeToType(NOTE_MINE, type, &descs[type]);
@@ -511,11 +511,11 @@ struct EditingImpl : public Editing {
 
     void changeFakesToType(NoteType type) override {
         static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
-            {"Converted %1 fake to step.", "Converted %1 fakes to steps."},
-            {"Converted %1 fake to mine.", "Converted %1 fakes to mines."},
-            {"Converted %1 fake to roll.", "Converted %1 fakes to rolls."},
-            {"Converted %1 fake to lift.", "Converted %1 fakes to lifts."},
-            {"Converted %1 fake to fake.", "Converted %1 fakes to fakes."},
+            {"Converted {} fake to step.", "Converted {} fakes to steps."},
+            {"Converted {} fake to mine.", "Converted {} fakes to mines."},
+            {"Converted {} fake to roll.", "Converted {} fakes to rolls."},
+            {"Converted {} fake to lift.", "Converted {} fakes to lifts."},
+            {"Converted {} fake to fake.", "Converted {} fakes to fakes."},
         };
 
         changeNoteTypeToType(NOTE_FAKE, type, &descs[type]);
@@ -523,11 +523,11 @@ struct EditingImpl : public Editing {
 
     void changeLiftsToType(NoteType type) override {
         static const NotesMan::EditDescription descs[NUM_NOTE_TYPES] = {
-            {"Converted %1 lift to step.", "Converted %1 lifts to steps."},
-            {"Converted %1 lift to mine.", "Converted %1 lifts to mines."},
-            {"Converted %1 lift to roll.", "Converted %1 lifts to rolls."},
-            {"Converted %1 lift to lift.", "Converted %1 lifts to lifts."},
-            {"Converted %1 lift to fake.", "Converted %1 lifts to fakes."},
+            {"Converted {} lift to step.", "Converted {} lifts to steps."},
+            {"Converted {} lift to mine.", "Converted {} lifts to mines."},
+            {"Converted {} lift to roll.", "Converted {} lifts to rolls."},
+            {"Converted {} lift to lift.", "Converted {} lifts to lifts."},
+            {"Converted {} lift to fake.", "Converted {} lifts to fakes."},
         };
 
         changeNoteTypeToType(NOTE_LIFT, type, &descs[type]);
@@ -567,10 +567,10 @@ struct EditingImpl : public Editing {
 
         // We do have a selection, switch players for all selected notes.
         static const NotesMan::EditDescription descs[4] = {
-            {"Converted %1 note to P1.", "Converted %1 notes to P1."},
-            {"Converted %1 note to P2.", "Converted %1 notes to P2."},
-            {"Converted %1 note to P3.", "Converted %1 notes to P3."},
-            {"Switched player for %1 note.", "Switched player for %1 notes."},
+            {"Converted {} note to P1.", "Converted {} notes to P1."},
+            {"Converted {} note to P2.", "Converted {} notes to P2."},
+            {"Converted {} note to P3.", "Converted {} notes to P3."},
+            {"Switched player for {} note.", "Switched player for {} notes."},
         };
         auto* desc = descs + (samePlayer ? std::min(newPlayer, 3) : 3);
         gNotes->modify(edit, false, desc);
@@ -623,7 +623,7 @@ struct EditingImpl : public Editing {
 
         // Perform the move operation.
         static const NotesMan::EditDescription desc = {
-            "Switched side for %1 note.", "Switched side for %1 notes."};
+            "Switched side for {} note.", "Switched side for {} notes."};
         gNotes->modify(edit, false, &desc);
 
         // Reselect the moved notes.
@@ -677,8 +677,8 @@ struct EditingImpl : public Editing {
                 out[i].col = notes[i].col;
         }
 
-        static const NotesMan::EditDescription tag = {"Pasted %1 note", "Pasted
-        %1 notes"}; gNotes->add(out, NotesMan::OVERWRITE_ROWS, &tag);*/
+        static const NotesMan::EditDescription tag = {"Pasted {} note", "Pasted
+        {} notes"}; gNotes->add(out, NotesMan::OVERWRITE_ROWS, &tag);*/
     }
 
     static void switchColumns(NoteList& notes, const std::vector<int>& table) {
@@ -724,10 +724,10 @@ struct EditingImpl : public Editing {
 
         // Perform the mirror operation.
         static const NotesMan::EditDescription descs[3] = {
-            {"Horizontally mirrored %1 note.",
-             "Horizontally mirrored %1 notes."},
-            {"Vertically mirrored %1 note.", "Vertically mirrored %1 notes."},
-            {"Fully mirrored %1 note.", "Fully mirrored %1 notes."},
+            {"Horizontally mirrored {} note.",
+             "Horizontally mirrored {} notes."},
+            {"Vertically mirrored {} note.", "Vertically mirrored {} notes."},
+            {"Fully mirrored {} note.", "Fully mirrored {} notes."},
         };
         gNotes->modify(edit, false, descs + type);
 
@@ -767,16 +767,16 @@ struct EditingImpl : public Editing {
         }
 
         // Perform the scale operation.
-        static const NotesMan::EditDescription tExp = {"Expanded %1 note.",
-                                                       "Expanded %1 notes."};
+        static const NotesMan::EditDescription tExp = {"Expanded {} note.",
+                                                       "Expanded {} notes."};
         static const NotesMan::EditDescription tExpTrunc = {
-            "Expanded %1 note, bounded to the selection area.",
-            "Expanded %1 notes, bounded to the selection area."};
-        static const NotesMan::EditDescription tCom = {"Compressed %1 note.",
-                                                       "Compressed %1 notes."};
+            "Expanded {} note, bounded to the selection area.",
+            "Expanded {} notes, bounded to the selection area."};
+        static const NotesMan::EditDescription tCom = {"Compressed {} note.",
+                                                       "Compressed {} notes."};
         static const NotesMan::EditDescription tComTrunc = {
-            "Compressed %1 note, bounded to the selection area.",
-            "Compressed %1 notes, bounded to the selection area."};
+            "Compressed {} note, bounded to the selection area.",
+            "Compressed {} notes, bounded to the selection area."};
         const NotesMan::EditDescription* desc =
             (numerator > denominator) ? (truncated ? &tExpTrunc : &tExp)
                                       : (truncated ? &tComTrunc : &tCom);
@@ -1027,8 +1027,8 @@ struct EditingImpl : public Editing {
                     add.erase(i, add.size());
             }
 
-            static const NotesMan::EditDescription tag = {"Expanded %1 note.",
-    "Expanded %1 notes."}; gChart->modify(add, rem, NotesMan::OVERWRITE_REGION,
+            static const NotesMan::EditDescription tag = {"Expanded {} note.",
+    "Expanded {} notes."}; gChart->modify(add, rem, NotesMan::OVERWRITE_REGION,
     &tag); if(gSelection->isNotes()) gSelection->selectNotes(SELECT_ADD, add);
     }*/
 

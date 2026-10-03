@@ -154,9 +154,9 @@ void DialogAdjustSync::onTick() {
             for (int i = 0; i < myDetectionResults.size(); ++i) {
                 auto& t = myDetectionResults[i];
 
-                Str::fmt fmt("#%1 :: %2 BPM :: %3%");
-                fmt.arg(i + 1).arg(t.bpm, 2, 2).arg(t.fitness * 100, 0, 0);
-                myBPMList->addItem(static_cast<std::string>(fmt));
+                myBPMList->addItem(std::format("#{} :: {:.2f} BPM :: {:.0f}%",
+                                               i + 1, t.bpm,
+                                               t.fitness * 100));
             }
             if (myDetectionResults.size() == 0) {
                 myBPMList->addItem("- no results found -");

@@ -295,8 +295,7 @@ void Decode(ReadStream& in, TimeSignature& seg) {
 template <>
 std::string GetDescription(const TimeSignature& seg) {
     int beatsPerMeasure = seg.rowsPerMeasure / ROWS_PER_BEAT;
-    return static_cast<std::string>(
-        Str::fmt("%1/%2").arg(beatsPerMeasure).arg(seg.beatNote));
+    return std::format("{}/{}", beatsPerMeasure, seg.beatNote);
 }
 
 template <>
@@ -384,8 +383,7 @@ void Decode(ReadStream& in, Combo& seg) {
 
 template <>
 std::string GetDescription(const Combo& seg) {
-    return static_cast<std::string>(
-        Str::fmt("%1/%2").arg(seg.hitCombo).arg(seg.missCombo));
+    return std::format("{}/{}", seg.hitCombo, seg.missCombo);
 }
 
 template <>
@@ -432,10 +430,8 @@ void Decode(ReadStream& in, Speed& seg) {
 
 template <>
 std::string GetDescription(const Speed& seg) {
-    return static_cast<std::string>(Str::fmt("%1/%2/%3")
-                                        .arg(seg.ratio, 0, 6)
-                                        .arg(seg.delay, 0, 6)
-                                        .arg(seg.unit ? 'T' : 'B'));
+    return std::format("{}/{}/{}", Str::val(seg.ratio, 0, 6),
+                       Str::val(seg.delay, 0, 6), seg.unit ? 'T' : 'B');
 }
 
 template <>

@@ -272,7 +272,7 @@ bool SaveOsu(const Simfile* sim, bool backup) {
             path.concat(diffName);
             int& counter = duplicateCounters[diffName];
             if (++counter > 1) {
-                path.concat(Str::fmt(" %1").arg(counter).str);
+                path.concat(std::format(" {}", counter));
             }
             path.concat("].osu");
             SaveChart(path, sim, chart);

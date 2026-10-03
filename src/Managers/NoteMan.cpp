@@ -346,22 +346,21 @@ struct NotesManImpl : public NotesMan {
                 int numNotes = std::max(add.size(), rem.size());
                 const char* format =
                     (numNotes > 1) ? desc->plural : desc->singular;
-                msg = Str::fmt(format).arg(numNotes).str;
+                msg = std::vformat(format, std::make_format_args(numNotes));
             } else {
                 std::vector<std::string> info;
 
                 if (add.size() == 1) {
                     info.emplace_back("Added " + GetNoteName(*add.begin()));
                 } else if (add.size() > 1) {
-                    info.emplace_back(
-                        Str::fmt("Added %1 notes").arg(add.size()));
+                    info.emplace_back(std::format("Added {} notes", add.size()));
                 }
 
                 if (rem.size() == 1) {
                     info.emplace_back("Removed " + GetNoteName(*rem.begin()));
                 } else if (rem.size() > 1) {
                     info.emplace_back(
-                        Str::fmt("Removed %1 notes").arg(rem.size()));
+                        std::format("Removed {} notes", rem.size()));
                 }
 
                 msg = Str::join(info, ", ");

@@ -242,18 +242,18 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         if (guideCModEnabled_ && drawMode_ == CMOD) {
             drawViewLine((gView->getPixPerSec() * (500.0f / guideCMod_)),
-                         Str::fmt("C%1").arg(guideCMod_),
+                         std::format("C{}", guideCMod_),
                          ToColor32({1, 1, 0, 1.0f}));
         }
 
         if (guideXModEnabled_ && drawMode_ != CMOD) {
             drawViewLine((gView->getPixPerRow() * (400.0f / guideXMod_)),
-                         Str::fmt("%1x").arg(guideXMod_),
+                         std::format("{}x", Str::val(guideXMod_)),
                          ToColor32({1, 0.65, 0, 1.0f}));
         }
     }
 
-    void drawViewLine(int h, Str::fmt fmt, uint32_t color) {
+    void drawViewLine(int h, const std::string& label, uint32_t color) {
         guideHeight_ = h * (reverse_ ? -1 : 1);
 
         Renderer::resetColor();
@@ -265,7 +265,7 @@ struct NotefieldPreviewImpl : public NotefieldPreview {
 
         // Draw Speed Info
         TextStyle textStyle;
-        Text::arrange(Text::MR, textStyle, static_cast<const char*>(fmt));
+        Text::arrange(Text::MR, textStyle, label.c_str());
         Text::draw(vec2i{myX - 5, myY + guideHeight_});
     }
 
