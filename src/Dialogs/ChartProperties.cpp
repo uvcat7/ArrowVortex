@@ -76,13 +76,14 @@ void DialogChartProperties::onChanges(int changes) {
 
     // Update the chart breakdown and note counts if notes change.
     if (changes & (VCM_NOTES_CHANGED | VCM_TEMPO_CHANGED)) {
-        myUpdateNoteInfo();
         myUpdateGraph();
+        myUpdateNoteInfo();
         myUpdateBreakdown();
     }
 
     if (changes & (VCM_TEMPO_CHANGED | VCM_END_ROW_CHANGED)) {
         myUpdateGraph();
+        myUpdateNoteInfo();
     }
 }
 
@@ -192,6 +193,8 @@ void DialogChartProperties::myCreateNoteInfo() {
     myLayout.row().col(162).col(162);
     myNoteDensity = myLayout.add<WgLabel>();
     myStreamMeasureCount = myLayout.add<WgLabel>();
+    myPeakDensity = myLayout.add<WgLabel>();
+    my16thMeasureCount = myLayout.add<WgLabel>();
 }
 
 void DialogChartProperties::myUpdateNoteInfo() {
@@ -215,7 +218,9 @@ void DialogChartProperties::myUpdateNoteInfo() {
     }
 
     myNoteDensity->text.set(
-        Str::fmt("Note density: %1 NPS").arg(density, 1, 1).str);
+        Str::fmt("Avg density: %1 NPS").arg(density, 1, 1).str);
+    myPeakDensity->text.set(
+        Str::fmt("Peak density: %1 NPS").arg(myGraph->peakNps(), 1, 1).str);
 }
 
 void DialogChartProperties::myCopyNoteInfo() {
@@ -264,32 +269,26 @@ void DialogChartProperties::mySelectNotes(int type) {
 // ================================================================================================
 // NPS Graph.
 
-class DialogChartProperties::GraphWidget : public GuiWidget {
-   public:
-    ~GraphWidget() override;
-    explicit GraphWidget(GuiContext* gui);
-    void updateGraph();
-    void onDraw() override;
-
-   private:
-    DialogChartProperties* myDialog;
-    std::vector<int> data;
-    double peak = 0.0;
-    int scale = 1;
-    int endMeasure = 0;
-    double endTime = 0.0;
-};
 DialogChartProperties::GraphWidget::~GraphWidget() = default;
 DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
     : GuiWidget(gui) {
     width_ = 340;
     height_ = 100;
 }
+double DialogChartProperties::GraphWidget::peakNps() { return peak; };
+
 void DialogChartProperties::GraphWidget::updateGraph() {
+    auto measure_time = [&](int measure) {
+        return gTempo->rowToTime(measure * ROWS_PER_MEASURE);
+    };
+    auto delta_measure_time = [&](int measure, int offset) {
+        return measure_time(measure + offset) - measure_time(measure);
+    };
+
     if (gNotes->empty()) {
         return;
     }
-    endMeasure = (gSimfile->getEndRow() - 1) / (ROWS_PER_BEAT * 4) + 1;
+    endMeasure = (gSimfile->getEndRow() - 1) / ROWS_PER_MEASURE + 1;
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     scale = endMeasure / gSystem->applyScaleFactor(width_);
     if (scale < 1) scale = 1;
@@ -298,14 +297,11 @@ void DialogChartProperties::GraphWidget::updateGraph() {
     data.resize(buckets);
     for (int i = 0; i < buckets; i++) data[i] = 0;
     for (auto& note : *gNotes) {
-        int measure = note.row / (ROWS_PER_BEAT * 4);
+        int measure = note.row / ROWS_PER_MEASURE;
         if (note.isMine || note.isWarped || note.isFake) continue;
         data[measure]++;
     }
     int slices = 1;
-    auto measure_time = [&](int measure) {
-        return gTempo->rowToTime(measure * 192);
-    };
 
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
@@ -320,32 +316,21 @@ void DialogChartProperties::GraphWidget::updateGraph() {
             peak, static_cast<double>(
                       notes / (measure_time(i + slices) - measure_time(i))));
     }
-}
-void DialogChartProperties::GraphWidget::onDraw() {
-    auto measure_time = [&](int measure) {
-        return gTempo->rowToTime(measure * 192);
-    };
-    auto delta_measure_time = [&](int measure, int offset) {
-        return measure_time(measure + offset) - measure_time(measure);
-    };
 
-    if (gNotes->empty() || peak <= 0.0f) {
-        Draw::fill(rect_, Color32(20, 20, 20, 255));
-        return;
-    }
+    if (peak <= 0.0f) return;
+
+    fill_commands.clear();
+
     int scale_width = gSystem->applyScaleFactor(width_);
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
-    int buckets = data.size();
+    buckets = data.size();
     double barWidth = (static_cast<double>(scale_width) / buckets);
     int w = barWidth + 1;
-    auto batch = Renderer::batchC();
-    Draw::fill(rect_, Color32(20, 20, 20, 255));
-    int slices = 1;
+    slices = 1;
 
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
-        int x =
-            rect_.x + static_cast<int>(measure_time(i) / endTime * scale_width);
+        int x = static_cast<int>(measure_time(i) / endTime * scale_width);
         int notes = data[i];
         while (delta_measure_time(i, slices + 1) <= endTime / scale_width &&
                // Averaging looks bad beyond 30 seconds
@@ -359,21 +344,35 @@ void DialogChartProperties::GraphWidget::onDraw() {
             height_,
             static_cast<int>(std::round(notes / delta_measure_time(i, slices) /
                                         peak * height_)));
-        w = rect_.x +
-            static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
+        w = static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
             x;
-        int y = rect_.y + height_ - h;
-        Draw::fill(&batch, {x, y, w, h}, Color32(80, 80, 80, 255));
+        int y = height_ - h;
+        if (w == 0 || h == 0) continue;
+        fill_commands.push_back({x, y, w, h});
     }
+}
+
+void DialogChartProperties::GraphWidget::onDraw() {
+    if (gNotes->empty() || peak <= 0.0f) {
+        Draw::fill(rect_, Color32(20, 20, 20, 255));
+        return;
+    }
+    int scale_width = gSystem->applyScaleFactor(width_);
+    endTime = gTempo->rowToTime(gSimfile->getEndRow());
+    auto batch = Renderer::batchC();
+    Draw::fill(rect_, Color32(20, 20, 20, 255));
+
+    for (auto recti : fill_commands) {
+        Draw::fill(&batch,
+                   {recti.x + rect_.x, recti.y + rect_.y, recti.w, recti.h},
+                   Color32(80, 80, 80, 255));
+    }
+
     double time = std::min(endTime, gView->getCursorTime());
     int x = static_cast<int>(time / endTime * scale_width);
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
     batch.flush();
-    TextStyle textStyle;
-    std::string info = Str::fmt("Peak: %1 NPS").arg(peak, 1, 1).str;
-    Text::arrange(Text::TL, textStyle, info.c_str());
-    Text::draw(vec2i{rect_.x + 4, rect_.y + 2});
 };
 
 void DialogChartProperties::myCreateGraph() {
@@ -390,24 +389,6 @@ void DialogChartProperties::myUpdateGraph() { myGraph->updateGraph(); }
 // ================================================================================================
 // Stream breakdown.
 
-class DialogChartProperties::BreakdownWidget : public GuiWidget {
-   public:
-    ~BreakdownWidget() override;
-    explicit BreakdownWidget(GuiContext* gui);
-
-    void updateBreakdown(WgLabel* measureCount);
-    void selectStream(vec2i rows);
-
-    void onUpdateSize() override;
-    void onArrange(recti r) override;
-    void onTick() override;
-    void onDraw() override;
-
-   private:
-    DialogChartProperties* myDialog;
-    std::vector<WgButton*> myButtons;
-};
-
 DialogChartProperties::BreakdownWidget::~BreakdownWidget() {
     for (auto button : myButtons) {
         delete button;
@@ -418,30 +399,107 @@ DialogChartProperties::BreakdownWidget::BreakdownWidget(GuiContext* gui)
     : GuiWidget(gui) {}
 
 void DialogChartProperties::BreakdownWidget::updateBreakdown(
-    WgLabel* measureCount) {
+    WgLabel* measureCount, WgLabel* measureCount16, bool compressed) {
     int measures = 0;
-    auto breakdown = gChart->getStreamBreakdown(&measures);
+    int measures16 = 0;
+    auto breakdown =
+        gChart->getStreamBreakdown(&measures, &measures16, compressed);
+    bool asteriskize = compressed && breakdown.size() > 25;
+
+    int total_run = 0;
+    bool add_asterisk = false;
+    int run_row = 0;
+    int buttons = 0;
+    int w = 0;
     for (int i = 0; i < breakdown.size(); ++i) {
         auto& item = breakdown[i];
 
-        Text::arrange(Text::TL, TextStyle(), item.text.c_str());
-        int w = std::max(16, Text::getSize().x + 8);
-
-        if (i >= myButtons.size()) {
+        if (asteriskize) {
+            if (item.text[0] == '/' || item.text[0] == '|') {
+                if (buttons >= myButtons.size()) {
+                    myButtons.emplace_back(new WgButton(getGui()));
+                }
+                WgButton* button = myButtons[buttons];
+                std::string run_text = std::to_string(total_run);
+                if (add_asterisk) run_text += "*";
+                Text::arrange(Text::TL, TextStyle(), run_text.c_str());
+                int w = std::max(16, Text::getSize().x + 8);
+                button->text.set(run_text.c_str());
+                button->setSize(w, gSystem->applyScaleFactor(20));
+                button->onPress.bind(this, &BreakdownWidget::selectStream,
+                                     vec2i{run_row, item.row});
+                buttons++;
+                if (buttons >= myButtons.size()) {
+                    myButtons.emplace_back(new WgButton(getGui()));
+                }
+                WgButton* button2 = myButtons[buttons];
+                Text::arrange(Text::TL, TextStyle(), item.text.c_str());
+                w = std::max(16, Text::getSize().x + 8);
+                button2->text.set(item.text.c_str());
+                button2->setSize(w, gSystem->applyScaleFactor(20));
+                button2->onPress.bind(this, &BreakdownWidget::selectStream,
+                                      vec2i{item.row, item.endrow});
+                total_run = 0;
+                add_asterisk = false;
+                buttons++;
+            } else if (item.text[0] == '-') {
+                add_asterisk = true;
+            } else {
+                if (total_run == 0)
+                    run_row = item.row;
+                else
+                    add_asterisk = true;
+                total_run += std::stoi(item.text);
+            }
+        } else {
+            Text::arrange(Text::TL, TextStyle(), item.text.c_str());
+            int w = std::max(16, Text::getSize().x + 8);
+            if (i >= myButtons.size()) {
+                myButtons.emplace_back(new WgButton(getGui()));
+            }
+            WgButton* button = myButtons[i];
+            button->text.set(item.text.c_str());
+            button->setSize(w, gSystem->applyScaleFactor(20));
+            button->onPress.bind(this, &BreakdownWidget::selectStream,
+                                 vec2i{item.row, item.endrow});
+        }
+    }
+    if (asteriskize && !breakdown.empty()) {
+        if (buttons >= myButtons.size()) {
             myButtons.emplace_back(new WgButton(getGui()));
         }
-
-        WgButton* button = myButtons[i];
-        button->text.set(item.text.c_str());
+        WgButton* button = myButtons[buttons];
+        std::string run_text = std::to_string(total_run);
+        if (add_asterisk) run_text += "*";
+        Text::arrange(Text::TL, TextStyle(), run_text.c_str());
+        int w = std::max(16, Text::getSize().x + 8);
+        button->text.set(run_text.c_str());
         button->setSize(w, gSystem->applyScaleFactor(20));
-        button->onPress.bind(this, &BreakdownWidget::selectStream,
-                             vec2i{item.row, item.endrow});
+        button->onPress.bind(
+            this, &BreakdownWidget::selectStream,
+            vec2i{run_row, breakdown[breakdown.size() - 1].endrow});
+        buttons++;
+        while (myButtons.size() > buttons) {
+            delete myButtons.back();
+            myButtons.pop_back();
+        }
     }
     while (myButtons.size() > breakdown.size()) {
         delete myButtons.back();
         myButtons.pop_back();
     }
-    measureCount->text.set(Str::fmt("Stream measures: %1").arg(measures).str);
+    double percent_measures = 0.0;
+    if (breakdown.size() > 0) {
+        percent_measures =
+            static_cast<double>(measures) * ROWS_PER_MEASURE /
+            (breakdown[breakdown.size() - 1].endrow - breakdown[0].row) * 100.0;
+    }
+    measureCount->text.set(Str::fmt("Total stream: %1 (%2%)")
+                               .arg(measures)
+                               .arg(percent_measures, 1, 1)
+                               .str);
+    measureCount16->text.set(
+        Str::fmt("16th note stream: %1").arg(measures16).str);
 }
 
 void DialogChartProperties::BreakdownWidget::selectStream(vec2i rows) {
@@ -491,6 +549,18 @@ void DialogChartProperties::BreakdownWidget::onDraw() {
     }
 }
 
+std::string DialogChartProperties::BreakdownWidget::buttonText(
+    bool compressed) {
+    if (myButtons.empty()) return "";
+    std::string out = "";
+    for (auto& item : myButtons) {
+        out = out + item->text.get();
+        if (!compressed) out = out + " ";
+    }
+    if (!compressed) out.pop_back();
+    return out;
+}
+
 void DialogChartProperties::myCreateBreakdown() {
     myLayout.row().col(340);
     myLayout.add<WgSeperator>();
@@ -505,28 +575,33 @@ void DialogChartProperties::myCreateBreakdown() {
     WgLabel* info = myLayout.add<WgLabel>();
     info->text.set("Stream breakdown");
 
+    myLayout.row().col(312);
+    WgCheckbox* small_breakdowns = myLayout.add<WgCheckbox>();
+    small_breakdowns->text.set("Compressed breakdown");
+    small_breakdowns->setTooltip(
+        "Compressed breakdowns are more parseable but have less detail.");
+    small_breakdowns->value.bind(&myCompressedBreakdown);
+    small_breakdowns->onChange.bind(this,
+                                    &DialogChartProperties::myUpdateBreakdown);
+
     myLayout.row().col(340);
     myBreakdown = new BreakdownWidget(getGui());
     myLayout.add(myBreakdown);
 }
 
 void DialogChartProperties::myUpdateBreakdown() {
-    myBreakdown->updateBreakdown(myStreamMeasureCount);
+    myBreakdown->updateBreakdown(myStreamMeasureCount, my16thMeasureCount,
+                                 myCompressedBreakdown);
 }
 
 void DialogChartProperties::myCopyBreakdown() {
-    auto breakdown = gChart->getStreamBreakdown(nullptr);
-    if (breakdown.empty()) {
+    std::string breakdown = myBreakdown->buttonText(myCompressedBreakdown);
+    if (breakdown == "") {
         HudInfo("%s", "There is no breakdown to copy...");
     } else {
-        std::string out;
-        for (auto& item : breakdown) {
-            out = out + item.text;
-            out = out + "/";
-        }
-        Str::pop_back(out);
-        gSystem->setClipboardText(out);
-        HudInfo("%s%s", "Stream breakdown copied to clipboard: ", out.c_str());
+        gSystem->setClipboardText(breakdown);
+        HudInfo("%s%s",
+                "Stream breakdown copied to clipboard: ", breakdown.c_str());
     }
 }
 
