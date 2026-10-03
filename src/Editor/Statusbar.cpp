@@ -136,8 +136,8 @@ struct StatusbarImpl : public Statusbar {
 
             if (myShowHover && hbeat >= 0) {
                 info.emplace_back(std::format(
-                    "{{tc:888}}Beat:{{tc}} {:.3f} {{tc:CCC}}({:.3f}){{tc}}", beat,
-                    hbeat));
+                    "{{tc:888}}Beat:{{tc}} {:.3f} {{tc:CCC}}({:.3f}){{tc}}",
+                    beat, hbeat));
             } else {
                 info.emplace_back(
                     std::format("{{tc:888}}Beat:{{tc}} {:.3f}", beat));
@@ -165,11 +165,12 @@ struct StatusbarImpl : public Statusbar {
 
             if (myShowHover && htiimeval >= 0) {
                 std::string htime = Str::formatTime(htiimeval);
-                info.emplace_back(std::format(
-                    "{{tc:888}}Time:{{tc}} {} {{tc:CCC}}({}){{tc}}", time,
-                    htime));
+                info.emplace_back(
+                    std::format("{{tc:888}}Time:{{tc}} {} {{tc:CCC}}({}){{tc}}",
+                                time, htime));
             } else {
-                info.emplace_back(std::format("{{tc:888}}Time:{{tc}} {}", time));
+                info.emplace_back(
+                    std::format("{{tc:888}}Time:{{tc}} {}", time));
             }
         }
         if (myShowTimingMode) {

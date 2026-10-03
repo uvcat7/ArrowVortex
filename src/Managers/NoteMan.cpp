@@ -353,7 +353,8 @@ struct NotesManImpl : public NotesMan {
                 if (add.size() == 1) {
                     info.emplace_back("Added " + GetNoteName(*add.begin()));
                 } else if (add.size() > 1) {
-                    info.emplace_back(std::format("Added {} notes", add.size()));
+                    info.emplace_back(
+                        std::format("Added {} notes", add.size()));
                 }
 
                 if (rem.size() == 1) {

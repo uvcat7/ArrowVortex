@@ -602,8 +602,8 @@ struct TextOverlayImpl : public TextOverlay {
 
         DrawTitleText("ABOUT", "[ESC] close", nullptr);
 
-        auto fps = std::format(
-            "{:.0f} FPS", 1.0f / std::max(deltaTime.count(), 0.0001));
+        auto fps = std::format("{:.0f} FPS",
+                               1.0f / std::max(deltaTime.count(), 0.0001));
         Text::arrange(Text::TR, fps.c_str());
         Text::draw(vec2i{size.x - 4, 4});
     }
