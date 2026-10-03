@@ -800,8 +800,8 @@ struct NotesManImpl : public NotesMan {
         if (edit.add.empty()) return;
 
         // Perform the changes.
-        static const NotesMan::EditDescription desc = {"Pasted %1 note",
-                                                       "Pasted %1 notes"};
+        static const NotesMan::EditDescription desc = {"Pasted {} note",
+                                                       "Pasted {} notes"};
         modify(edit, !insert, &desc);
         gSelection->selectRegion(0, 0);
         select(SELECT_SET, edit.add.begin(), edit.add.size(), true);
