@@ -661,12 +661,8 @@ struct EditorImpl : public Editor, public InputHandler {
             if (saveFmt == SIM_NONE) saveFmt = gSimfile->get()->format;
 
             // First time saving an audio file, didn't provide an extension or
-            // format filter, then save it as a .sm or .ssc.
-            if (saveFmt == SIM_NONE) {
-                saveFmt = gSimfile->get()->tempo->segments->count(SIM_SSC) > 0
-                              ? SIM_SSC
-                              : SIM_SM;
-            }
+            // format filter, then save it as the default format.
+            if (saveFmt == SIM_NONE) saveFmt = myDefaultSaveFormat[0];
 
             // Save the simfile.
             if (!gSimfile->save(dir, file, saveFmt)) {
