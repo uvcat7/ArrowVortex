@@ -7,6 +7,7 @@
 
 #include <Core/Utils.h>
 
+#include <System/Debug.h>
 #include <System/File.h>
 
 namespace Vortex {
@@ -85,6 +86,13 @@ SoundSource* LoadWav(std::ifstream&& file, std::string& title,
         format.numChannels == 0 ||
         (format.bitsPerSample != 8 && format.bitsPerSample != 16 &&
          format.bitsPerSample != 24)) {
+        Debug::blockBegin(Debug::ERROR, "could not load audio file");
+        Debug::log("audioFormat: %i [good: 1]\n", format.audioFormat);
+        Debug::log("sampleRate: %i [good: >0]\n", format.sampleRate);
+        Debug::log("numChannels: %i [good: >0]\n", format.numChannels);
+        Debug::log("bitsPerSample: %i [good: 8,16,24]\n", format.bitsPerSample);
+        Debug::log("reason: invalid audio format\n");
+        Debug::blockEnd();
         return nullptr;
     }
 
