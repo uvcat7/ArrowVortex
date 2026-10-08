@@ -35,6 +35,8 @@ struct Menubar : public InputHandler {
 
         SELECT_DENSITY,
 
+        AUDIO_PRESERVE_PITCH,
+
         BEATLINE_ENABLED,
         BEATLINE_SNAP,
         BEATLINE_COLOR,

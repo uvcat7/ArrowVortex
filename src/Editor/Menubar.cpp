@@ -22,6 +22,7 @@
 #include <Editor/Waveform.h>
 #include <Editor/Editing.h>
 #include <Editor/Minimap.h>
+#include <Editor/Music.h>
 #include <Editor/TempoBoxes.h>
 
 #include <System/System.h>
@@ -51,6 +52,7 @@ struct MenuBarImpl : public Menubar {
     Item* myFileMenu;
     Item* myEditMenu;
     Item* myVisualSyncMenu;
+    Item* myAudioSpeedMenu;
     Item* myTempoEditMenu;
     Item* myNotesSelectMenu;
     Item* myTempoMenu;
@@ -294,19 +296,21 @@ struct MenuBarImpl : public Menubar {
         add(hAudioVol, VOLUME_MUTE, "Mute");
 
         // Audio > Speed menu.
-        Item* hAudioSpeed = newMenu();
-        add(hAudioSpeed, SPEED_RESET, "Default");
-        sep(hAudioSpeed);
-        add(hAudioSpeed, SPEED_INCREASE, "Faster by 10%");
-        add(hAudioSpeed, SPEED_DECREASE, "Slower by 10%");
-        sep(hAudioSpeed);
-        add(hAudioSpeed, SPEED_INCREASE_FINE, "Faster by 1%");
-        add(hAudioSpeed, SPEED_DECREASE_FINE, "Slower by 1%");
+        myAudioSpeedMenu = newMenu();
+        add(myAudioSpeedMenu, SPEED_RESET, "Default");
+        sep(myAudioSpeedMenu);
+        add(myAudioSpeedMenu, SPEED_INCREASE, "Faster by 10%");
+        add(myAudioSpeedMenu, SPEED_DECREASE, "Slower by 10%");
+        sep(myAudioSpeedMenu);
+        add(myAudioSpeedMenu, SPEED_INCREASE_FINE, "Faster by 1%");
+        add(myAudioSpeedMenu, SPEED_DECREASE_FINE, "Slower by 1%");
+        sep(myAudioSpeedMenu);
+        add(myAudioSpeedMenu, TOGGLE_PRESERVE_PITCH, "Preserve pitch");
 
         // Audio menu.
         Item* hAudio = newMenu();
         sub(hAudio, hAudioVol, "Volume");
-        sub(hAudio, hAudioSpeed, "Speed");
+        sub(hAudio, myAudioSpeedMenu, "Speed");
         sep(hAudio);
         add(hAudio, TOGGLE_BEAT_TICK, "Beat tick");
         add(hAudio, TOGGLE_NOTE_TICK, "Note tick");
@@ -562,6 +566,10 @@ struct MenuBarImpl : public Menubar {
             }
             MENU->myNotesSelectMenu->replaceSubmenu(1, density, "Density",
                                                     (numCol == 0));
+        };
+        myUpdateFunctions[AUDIO_PRESERVE_PITCH] = [] {
+            MENU->myAudioSpeedMenu->setChecked(TOGGLE_PRESERVE_PITCH,
+                                               gMusic->getPreservePitch());
         };
         myUpdateFunctions[VIEW_MODE] = [] {
             MENU->myViewMenu->setChecked(USE_ROW_BASED_VIEW,

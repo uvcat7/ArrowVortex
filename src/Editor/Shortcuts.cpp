@@ -312,6 +312,7 @@ static ActionEntry actionMap[] = {
     E(SPEED_DECREASE),
     E(SPEED_INCREASE_FINE),
     E(SPEED_DECREASE_FINE),
+    E(TOGGLE_PRESERVE_PITCH),
 
     E(TOGGLE_BEAT_TICK),
     E(TOGGLE_NOTE_TICK),
