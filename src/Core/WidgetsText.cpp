@@ -14,6 +14,7 @@
 
 #define ICON_W gSystem->applyScaleFactor(8)
 #define SPINNER_W gSystem->applyScaleFactor(8)
+#define SPINNER_GAP gSystem->applyScaleFactor(14)
 
 constexpr int MaximumPastedTextLength = 200;
 constexpr int MaximumTextBoxLength = 255;
@@ -402,7 +403,7 @@ void WgSpinner::onMouseRelease(MouseRelease& evt) {
 
 void WgSpinner::onArrange(recti r) {
     GuiWidget::onArrange(r);
-    r.w -= 14;
+    r.w -= SPINNER_GAP;
     spinner_lineedit_->arrange(r);
 }
 
@@ -528,6 +529,6 @@ void WgSpinner::SpinnerOnTextChange() {
     }
 }
 
-recti WgSpinner::SpinnerButtonRect() { return SideR(rect_, 14); }
+recti WgSpinner::SpinnerButtonRect() { return SideR(rect_, SPINNER_GAP); }
 
 };  // namespace Vortex
