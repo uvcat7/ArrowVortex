@@ -757,6 +757,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         }
         case SDL_EVENT_WINDOW_MOUSE_ENTER:
         case SDL_EVENT_WINDOW_FOCUS_GAINED: {
+            myEvents.addWindowActive();
             myMouseState.reset();
             myKeyState.reset();
             break;
@@ -769,8 +770,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             break;
         }
         case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
-            myScale = SDL_GetWindowDisplayScale(window);
+            float scale = SDL_GetWindowDisplayScale(window);
+            if (scale > 0.0f && myScale != scale) {  // scale can be 0 on error
+                myScale = scale;
+                myEvents.addWindowRescale();
+            }
             vec2i next = {event->window.data1, event->window.data2};
             if (!SDL_GetWindowSizeInPixels(window, &next.x, &next.y))
                 HudError("Failed to get SDL window size with error %s",

@@ -289,8 +289,14 @@ class InputEvents {
     /// onto the window.
     void addFileDrop(const char* const* files, int count, int x, int y);
 
+    /// Adds a window active event; indicates the window has gained focus.
+    void addWindowActive();
+
     /// Adds a window inactive event; indicates the window has lost focus.
     void addWindowInactive();
+
+    /// Adds a window rescale event; indicates the window scale has changed.
+    void addWindowRescale();
 
     /// Iterates over the mouse move events in the list, see class description.
     bool next(MouseMove*& it) const;
@@ -363,8 +369,14 @@ class InputHandler {
     /// Occurs when the user drops one or more files onto the window.
     virtual void onFileDrop(FileDrop& drop) {}
 
+    /// Occurs when the window becomes active.
+    virtual void onWindowActive() {}
+
     /// Occurs when the window becomes inactive.
     virtual void onWindowInactive() {}
+
+    /// Occurs when the window rescales.
+    virtual void onWindowRescale() {}
 };
 
 };  // namespace Vortex
