@@ -25,6 +25,7 @@ DialogData::DialogData(GuiContext* gui, GuiDialog* dialog)
     : GuiWidget(gui), dialog_ptr_(dialog), gui_(gui) {
     rect_ = {16, 16, 256, 256};
     reinterpret_cast<GuiContextImpl*>(gui_)->addDialog(this);
+    rescale();
 }
 
 // ================================================================================================
@@ -144,6 +145,28 @@ void DialogData::onMousePress(MousePress& evt) {
 void DialogData::onMouseRelease(MouseRelease& evt) {
     FinishActions();
     stopCapturingMouse();
+}
+
+void DialogData::onWindowRescale() {
+    FinishActions();
+    stopCapturingMouse();
+    rescale();
+}
+
+void DialogData::rescale() {
+    auto scale = gSystem->getScaleFactor();
+    if (scale == scale_) return;
+    rect_.w = static_cast<int>(rect_.w / scale_ * scale);
+    rect_.h = static_cast<int>(rect_.h / scale_ * scale);
+    if (min_size_.x != INT_MAX)
+        min_size_.x = static_cast<int>(min_size_.x / scale_ * scale);
+    if (min_size_.y != INT_MAX)
+        min_size_.y = static_cast<int>(min_size_.y / scale_ * scale);
+    if (max_size_.x != INT_MAX)
+        max_size_.x = static_cast<int>(max_size_.x / scale_ * scale);
+    if (max_size_.y != INT_MAX)
+        max_size_.y = static_cast<int>(max_size_.y / scale_ * scale);
+    scale_ = scale;
 }
 
 // ================================================================================================
@@ -422,13 +445,21 @@ void GuiDialog::setWidth(int w) { DATA->rect_.w = w; }
 
 void GuiDialog::setHeight(int h) { DATA->rect_.h = h; }
 
-void GuiDialog::setMinimumWidth(int w) { DATA->min_size_.x = std::max(0, w); }
+void GuiDialog::setMinimumWidth(int w) {
+    DATA->min_size_.x = static_cast<int>(std::max(0, w) * DATA->scale_);
+}
 
-void GuiDialog::setMinimumHeight(int h) { DATA->min_size_.y = std::max(0, h); }
+void GuiDialog::setMinimumHeight(int h) {
+    DATA->min_size_.y = static_cast<int>(std::max(0, h) * DATA->scale_);
+}
 
-void GuiDialog::setMaximumWidth(int w) { DATA->max_size_.x = std::max(0, w); }
+void GuiDialog::setMaximumWidth(int w) {
+    DATA->max_size_.x = static_cast<int>(std::max(0, w) * DATA->scale_);
+}
 
-void GuiDialog::setMaximumHeight(int h) { DATA->max_size_.y = std::max(0, h); }
+void GuiDialog::setMaximumHeight(int h) {
+    DATA->max_size_.y = static_cast<int>(std::max(0, h) * DATA->scale_);
+}
 
 void GuiDialog::setCloseable(bool enable) { DATA->is_closeable_ = enable; }
 
