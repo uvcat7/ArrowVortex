@@ -918,7 +918,10 @@ struct EditorImpl : public Editor, public InputHandler {
         }
     }
 
-    void onWindowRescale() override { FontManager::updateSpecialGlyphs(); }
+    void onWindowRescale() override {
+        FontManager::updateSpecialGlyphs();
+        gTempoBoxes->onChanges(VCM_TEMPO_CHANGED);
+    }
 
     void onMenuAction(int id) override {
         Action::perform(static_cast<Action::Type>(id));
