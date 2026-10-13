@@ -19,10 +19,12 @@ uint32_t flags_;
 
 GuiWidget::GuiWidget(GuiContext* gui)
     : gui_(gui),
-      rect_({0, 0, gSystem->applyScaleFactor(128),
-             gSystem->applyScaleFactor(24)}),
-      width_(gSystem->applyScaleFactor(128)),
-      height_(gSystem->applyScaleFactor(24)) {}
+      rect_({0, 0, 128, 24}),
+      width_(128),
+      height_(24),
+      scale_(1.0f) {
+    rescale();
+}
 
 GuiWidget::~GuiWidget() {
     reinterpret_cast<GuiContextImpl*>(gui_)->removeWidget(this);
@@ -99,6 +101,13 @@ void GuiWidget::draw() {
     if (!isCapturingFocus()) {
         onDraw();
     }
+}
+
+void GuiWidget::rescale() {
+    auto scale = gSystem->getScaleFactor();
+    width_ = width_ / scale_ * scale;
+    height_ = height_ / scale_ * scale;
+    scale_ = scale;
 }
 
 void GuiWidget::onTick() {
