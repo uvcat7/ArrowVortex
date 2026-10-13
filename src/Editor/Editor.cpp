@@ -801,8 +801,10 @@ struct EditorImpl : public Editor, public InputHandler {
         auto coords = gView->getNotefieldCoords();
         int offset =
             gTempoBoxes->getStackWidth(meta->side, mySegmentEditor.row);
-        int x = meta->side ? coords.xr + offset + 16
-                           : coords.xl - offset - 10 - dlg->getFixedWidth();
+        int x = meta->side
+                    ? coords.xr + offset + gSystem->applyScaleFactor(16)
+                    : coords.xl - offset -
+                          gSystem->applyScaleFactor(10 + dlg->getFixedWidth());
         int y =
             gView->rowToY(mySegmentEditor.row) - (dlg->getFixedHeight() / 2);
 
