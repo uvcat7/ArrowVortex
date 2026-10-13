@@ -102,6 +102,9 @@ struct System {
     virtual void setWindowSize(vec2i size) = 0;
 
     /// Returns the current window scale factor.
+    virtual float getScaleFactor() const = 0;
+
+    /// Applies the current window scale factor to a value.
     virtual int applyScaleFactor(int size) const = 0;
 
     /// Returns the window state, either normal or maximized.

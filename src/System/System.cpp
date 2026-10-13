@@ -517,6 +517,8 @@ struct SystemImpl : public System {
             return {size.x, size.y - gMenubar->getMenubarHeight()};
     }
 
+    float getScaleFactor() const override { return myScale; }
+
     int applyScaleFactor(int size) const override {
         return static_cast<int>(static_cast<float>(size) * myScale);
     }
