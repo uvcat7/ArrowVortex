@@ -6,12 +6,14 @@
 
 namespace Vortex {
 
-class DialogChartProperties : public EditorDialog {
+class DialogChartProperties : public EditorDialog, public InputHandler {
    public:
     ~DialogChartProperties();
     DialogChartProperties();
 
+    void onWindowRescale();
     void onChanges(int changes) override;
+    void onTick() override;
 
    private:
     void myCreateChartProperties();
