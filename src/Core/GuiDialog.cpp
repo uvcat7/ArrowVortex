@@ -8,7 +8,6 @@
 
 namespace Vortex {
 
-static const int FRAME_TITLEBAR_H = 24;
 #define FRAME_TITLEBAR_H gSystem->applyScaleFactor(24)
 static const int FRAME_PADDING = 4;
 static const int FRAME_RESIZE_BORDER = 5;
