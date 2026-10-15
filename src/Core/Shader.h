@@ -1,10 +1,7 @@
 #pragma once
 
 #include <Core/Core.h>
-
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#endif
+#include <System/OpenGL.h>
 
 namespace Vortex {
 

@@ -24,10 +24,6 @@
 #include <SDL3/SDL_video.h>
 #include <System/OpenGL.h>
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#endif
-
 #include <chrono>
 #include <thread>
 #include <algorithm>

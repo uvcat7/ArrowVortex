@@ -12,10 +12,6 @@
 #include <System/OpenGL.h>
 #include <System/System.h>
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#endif
-
 #undef ERROR
 
 namespace Vortex {
