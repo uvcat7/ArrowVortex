@@ -37,8 +37,6 @@
 #include <mutex>
 #include <condition_variable>
 
-#undef DELETE
-
 // Various statics had to be pulled out of the System singleton since
 // SDL needs non-member callback functions for event handling.
 bool myInitSuccesful = false;
@@ -97,7 +95,7 @@ static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
                                 SDLK_HOME,         Key::HOME,
                                 SDLK_END,          Key::END,
                                 SDLK_INSERT,       Key::INSERT,
-                                SDLK_DELETE,       Key::DELETE,
+                                SDLK_DELETE,       Key::DELETE_KEY,
                                 SDLK_PRINTSCREEN,  Key::PRINT_SCREEN,
                                 SDLK_SCROLLLOCK,   Key::SCROLL_LOCK,
                                 SDLK_PAUSE,        Key::PAUSE,

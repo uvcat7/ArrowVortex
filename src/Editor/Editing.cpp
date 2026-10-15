@@ -170,7 +170,7 @@ struct EditingImpl : public Editing {
         }
 
         // Deleting notes.
-        if (kc == Key::DELETE) {
+        if (kc == Key::DELETE_KEY) {
             deleteSelection();
             evt.handled = true;
         }

@@ -159,8 +159,8 @@
       }
     },
     {
-      "name": "macos-debug",
-      "displayName": "MacOS Debug",
+      "name": "macos-release",
+      "displayName": "MacOS Release",
       "description": "Target a remote OSX system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",

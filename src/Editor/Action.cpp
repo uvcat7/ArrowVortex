@@ -98,7 +98,7 @@ void Action::perform(Type action) {
         gSystem->getEvents().addKeyPress(Key::V, Keyflag::CTRL | Keyflag::SHIFT,
                                          false);
         CASE(EDIT_DELETE)
-        gSystem->getEvents().addKeyPress(Key::DELETE, 0, false);
+        gSystem->getEvents().addKeyPress(Key::DELETE_KEY, 0, false);
         CASE(SELECT_ALL)
         gSystem->getEvents().addKeyPress(Key::A, Keyflag::CTRL, false);
 

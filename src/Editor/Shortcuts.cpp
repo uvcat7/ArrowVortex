@@ -86,7 +86,7 @@ static KeyEntry keyMap[] = {
     {"Home", 0, HOME},
     {"End", 0, END},
     {"Insert", 0, INSERT},
-    {"Delete", 0, DELETE},
+    {"Delete", 0, DELETE_KEY},
     {"Print Screen", 0, PRINT_SCREEN},
     {"Scroll Lock", 0, SCROLL_LOCK},
     {"Pause", 0, PAUSE},

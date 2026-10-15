@@ -356,22 +356,22 @@ struct EditorImpl : public Editor, public InputHandler {
             if (bgStyle) myBackgroundStyle = ToBackgroundStyle(bgStyle);
         }
 
-        XmrNode* interface = settings.child("interface");
-        if (interface) {
-            interface->get("fontSize", &myFontSize);
+        XmrNode* xmr_interface = settings.child("interface");
+        if (xmr_interface) {
+            xmr_interface->get("fontSize", &myFontSize);
 
-            fs::path path = fs::path(interface->get("fontPath"));
+            fs::path path = fs::path(xmr_interface->get("fontPath"));
             if (std::ifstream testPath(path.c_str());
                 !path.empty() && testPath.good())
                 myFontPath = pathToUtf8(path);
 
             bool winMax = false;
-            interface->get("windowMaximized", &winMax);
+            xmr_interface->get("windowMaximized", &winMax);
             if (winMax)
                 gSystem->setWindowState(true);
             else {
                 int winSize[2] = {0, 0};
-                if (interface->get("windowSize", winSize, 2)) {
+                if (xmr_interface->get("windowSize", winSize, 2)) {
                     vec2i size = {winSize[0], winSize[1]};
                     gSystem->setWindowSize(size);
                 }
@@ -393,18 +393,18 @@ struct EditorImpl : public Editor, public InputHandler {
 
         view->addAttrib("backgroundStyle", ToString(myBackgroundStyle));
 
-        XmrNode* interface = settings.addChild("interface");
+        XmrNode* xmr_interface = settings.addChild("interface");
 
-        interface->addAttrib("fontPath", myFontPath.c_str());
-        interface->addAttrib("fontSize", static_cast<long>(myFontSize));
+        xmr_interface->addAttrib("fontPath", myFontPath.c_str());
+        xmr_interface->addAttrib("fontSize", static_cast<long>(myFontSize));
 
         bool windowState = gSystem->getWindowState();
         if (windowState) {
-            interface->addAttrib("windowMaximized", true);
+            xmr_interface->addAttrib("windowMaximized", true);
         } else {
             vec2i ws = gSystem->getWindowSize();
             long windowSize[] = {ws.x, ws.y};
-            interface->addAttrib("windowSize", windowSize, 2);
+            xmr_interface->addAttrib("windowSize", windowSize, 2);
         }
     }
 
