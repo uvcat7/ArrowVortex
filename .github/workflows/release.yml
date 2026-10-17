@@ -10,8 +10,6 @@ env:
   USERNAME: uvcat7
   FEED_URL: https://nuget.pkg.github.com/uvcat7/index.json
   VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/uvcat7/index.json,readwrite"
-  VCPKG_WORKSPACE: ${{ github.workspace }}/vcpkg
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
 
 jobs:
   formatting:
@@ -135,35 +133,25 @@ jobs:
     steps:
       - name: Get AV
         uses: actions/checkout@v7
-      - name: Setup GitHub Actions
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
-        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
-        shell: bash
       - name: Add NuGet sources
         shell: bash
         run: |
-          brew install pkg-config sdl3 nasm mono
-      - name: Restore vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.VCPKG_WORKSPACE }}
-            !${{ env.VCPKG_WORKSPACE }}/buildtrees
-            !${{ env.VCPKG_WORKSPACE }}/packages
-            !${{ env.VCPKG_WORKSPACE }}/downloads
-            !${{ env.VCPKG_WORKSPACE }}/installed
-          key: |
-            ${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}
+          brew install pkg-config sdl3 nasm mono-complete
+          mono `vcpkg fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
       - name: Configure CMake
         run: >
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
-          -DVCPKG_TARGET_TRIPLET=x64-osx
+          -DVCPKG_TARGET_TRIPLET=arm64-osx
           -DPRESET_NAME=macos-release
           -DYML=YML
       - name: Build AV
