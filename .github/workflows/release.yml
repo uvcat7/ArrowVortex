@@ -147,7 +147,7 @@ jobs:
       - name: Add NuGet sources
         shell: bash
         run: |
-          brew install pkg-config sdl3 nasm
+          brew install pkg-config sdl3 nasm mono
       - name: Restore vcpkg
         uses: actions/cache@v4
         with:
