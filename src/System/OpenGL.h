@@ -7,7 +7,7 @@
 #undef min
 #undef ERROR
 #elif defined(__APPLE__)
-#include <OpenGL/gl.h
+#include <OpenGL/gl.h>
 #ifndef APIENTRY
 #define APIENTRY
 #endif
