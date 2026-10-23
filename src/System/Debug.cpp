@@ -1,6 +1,7 @@
 #include <System/Debug.h>
 
 #include <cstdio>
+#include <string>
 #include <cstdarg>
 #include <cstring>
 #include <fcntl.h>
@@ -243,7 +244,7 @@ static int ShowMessageBox(HWND hWnd, LPCSTR lpcText, LPCSTR lpcCaption,
 bool assrt(const char* exp, const char* file, int line, const char* func,
            const char* fmt, ...) {
     char id[MAX_IGNORE_ID_LEN];
-    sprintf_s(id, MAX_IGNORE_ID_LEN, "%s%i", file, line);
+    std::snprintf(id, MAX_IGNORE_ID_LEN, "%s%i", file, line);
 
     // Skip leading periods.
     while (file[0] == '.' && file[1] == '.' && file[2] == '\\') file += 3;
@@ -258,11 +259,11 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
             char message[MAX_DEBUG_MSG_LEN];
             vsnprintf(message, MAX_DEBUG_MSG_LEN - 1, fmt, args);
             va_end(args);
-            sprintf_s(buffer, MAX_DEBUG_MSG_LEN,
+            std::snprintf(buffer, MAX_DEBUG_MSG_LEN,
                       "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
                       file, line, func, message);
         } else {
-            sprintf_s(buffer, MAX_DEBUG_MSG_LEN,
+            std::snprintf(buffer, MAX_DEBUG_MSG_LEN,
                       "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp, file,
                       line, func);
         }
@@ -308,7 +309,7 @@ bool glerr(const char* file, int line, const char* func) {
     int code = glGetError();
     if (code) {
         char id[MAX_IGNORE_ID_LEN];
-        sprintf_s(id, MAX_IGNORE_ID_LEN, "%s%i", file, line);
+        std::snprintf(id, MAX_IGNORE_ID_LEN, "%s%i", file, line);
         if (!ShouldIgnore(id)) {
             Debug::blockBegin(Debug::ERROR, "openGL error");
             Debug::log("location: %s(%i)\n", file, line);
