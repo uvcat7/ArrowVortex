@@ -23,9 +23,9 @@ class GuiContextImpl : public GuiContext {
 
     void closeDialogs();
 
-    recti getView();
-    vec2i getMousePos();
-    float getDeltaTime();
+    recti getView() override;
+    vec2i getMousePos() override;
+    float getDeltaTime() override;
     InputEvents& getEvents();
 
     bool bind(const std::string& slot, const int* v);

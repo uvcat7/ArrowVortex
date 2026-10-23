@@ -42,8 +42,8 @@ static bool sHasLogFile = false;
 void openLogFile() {
     if (sHasLogFile) return;
 
-    std::FILE* fp = nullptr;
-    if (fp = std::fopen(&sLogPath[0], "w")) {
+    std::FILE* fp = std::fopen(&sLogPath[0], "w");
+    if (fp != nullptr) {
         std::fwrite("\xEF\xBB\xBF", 1, 3, fp);  // UTF-8 BOM.
         std::fclose(fp);
     }
@@ -92,8 +92,8 @@ static const int sBufsize = 1024;
 static bool sLogBlankLine = false;
 
 static void WriteToLogAndConsole(const char* msg) {
-    FILE* fp = nullptr;
-    if (fp = std::fopen(&sLogPath[0], "a")) {
+    FILE* fp = std::fopen(&sLogPath[0], "a");
+    if (fp != nullptr) {
         std::fwrite(msg, 1, std::strlen(msg), fp);
         std::fclose(fp);
     }

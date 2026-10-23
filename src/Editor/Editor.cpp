@@ -848,6 +848,8 @@ struct EditorImpl : public Editor, public InputHandler {
             case DIALOG_EDIT_SEGMENT:
                 dlg = new DialogEditSegment;
                 break;
+            default:
+                break;
         };
 
         if (dlg == nullptr) {
