@@ -443,6 +443,8 @@ void Action::perform(Type action) {
         gTextOverlay->show(TextOverlay::DEBUG_LOG);
         CASE(SHOW_ABOUT)
         gTextOverlay->show(TextOverlay::ABOUT);
+        default:
+            break;
     }
 };
 

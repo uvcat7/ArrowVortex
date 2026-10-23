@@ -1,5 +1,3 @@
-#include <System/Debug.h>
-
 #include <cstdio>
 #include <string>
 #include <cstdarg>
@@ -12,6 +10,7 @@
 
 #include <System/OpenGL.h>
 #include <System/System.h>
+#include <System/Debug.h>
 
 #undef ERROR
 
@@ -260,12 +259,12 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
             vsnprintf(message, MAX_DEBUG_MSG_LEN - 1, fmt, args);
             va_end(args);
             std::snprintf(buffer, MAX_DEBUG_MSG_LEN,
-                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
-                      file, line, func, message);
+                          "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
+                          file, line, func, message);
         } else {
             std::snprintf(buffer, MAX_DEBUG_MSG_LEN,
-                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp, file,
-                      line, func);
+                          "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp,
+                          file, line, func);
         }
 
         Debug::WriteToLogAndConsole("ASSERT\n");
