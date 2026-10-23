@@ -258,16 +258,13 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
             char message[MAX_DEBUG_MSG_LEN];
             vsnprintf(message, MAX_DEBUG_MSG_LEN - 1, fmt, args);
             va_end(args);
-            sprintf_s(buffer,
-                      MAX_DEBUG_MSG_LEN,
-                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n",
-                    exp, file, line, func, message);
+            sprintf_s(buffer, MAX_DEBUG_MSG_LEN,
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
+                      file, line, func, message);
         } else {
-            sprintf_s(buffer,
-                      MAX_DEBUG_MSG_LEN,
-                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n",
-                      exp,
-                    file, line, func);
+            sprintf_s(buffer, MAX_DEBUG_MSG_LEN,
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp, file,
+                      line, func);
         }
 
         Debug::WriteToLogAndConsole("ASSERT\n");
