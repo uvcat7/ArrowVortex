@@ -10,6 +10,14 @@ struct Shortcuts {
     static void create();
     static void destroy();
 
+    /// Returns if the current input event is valid for the given action.
+    virtual bool isAction(int keyflags, Key::Code key, Action::Type action) = 0;
+    virtual bool isAction(int keyflags, Key::Code key, Action::Type action,
+                          bool ignoreFlags) = 0;
+    virtual bool isAction(int keyflags, bool scrollUp, Action::Type action) = 0;
+    virtual bool isAction(int keyflags, bool scrollUp, Action::Type action,
+                          bool ignoreFlags) = 0;
+
     /// Returns the key notation for the shortcut associated with the given
     /// action.
     virtual std::string getNotation(Action::Type action, bool fullList) = 0;

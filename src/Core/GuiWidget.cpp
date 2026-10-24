@@ -144,7 +144,14 @@ std::string GuiWidget::getTooltip() const {
     return GuiManager::getTooltip(this);
 }
 
-void GuiWidget::setEnabled(bool value) { SetFlags(flags_, WF_ENABLED, value); }
+void GuiWidget::setEnabled(bool value) {
+    if (!value) {
+        if (isCapturingMouse()) stopCapturingMouse();
+        if (isCapturingText()) stopCapturingText();
+        if (isCapturingFocus()) stopCapturingFocus();
+    }
+    SetFlags(flags_, WF_ENABLED, value);
+}
 
 void GuiWidget::setTooltip(const std::string& text) {
     GuiManager::setTooltip(this, text);
