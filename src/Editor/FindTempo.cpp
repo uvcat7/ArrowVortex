@@ -112,11 +112,6 @@ GapData::GapData(int bufferSize, int downsample, int numOnsets,
       bufferSize(bufferSize) {
     window = AlignedMalloc<real>(windowSize);
     wrappedPos = AlignedMalloc<int>(numOnsets);
-    // One slot of slack: callers fill this histogram at
-    // (int)fmod(onsetPos, intervalf), and intervalf is a double that can be a
-    // fraction above the integer bufferSize the caller sized us from. At the
-    // very bottom of the BPM range (a candidate rounded down to exactly 89 BPM)
-    // that index reaches bufferSize itself, one past the end.
     wrappedOnsets = AlignedMalloc<real>(bufferSize + 1);
     CreateHammingWindow(window, windowSize);
 }
@@ -137,10 +132,6 @@ static real GapConfidence(const GapData& gapdata, int gapPos, int interval) {
     const real* wrappedOnsets = gapdata.wrappedOnsets;
     real area = 0.0;
 
-    // Interval position that window index 0 corresponds to. It stays fixed even
-    // when the loop bounds below get clamped, which is what keeps the window
-    // aligned with the gap position. Callers guarantee interval > windowSize,
-    // so at most one of the two wrap-around branches can run.
     const int windowBegin = gapPos - halfWindowSize;
 
     int beginOnset = windowBegin;
@@ -164,15 +155,6 @@ static real GapConfidence(const GapData& gapdata, int gapPos, int interval) {
         endOnset = interval;
     }
     for (int i = beginOnset; i < endOnset; ++i) {
-        // Previously "i - beginOnset". When the window wrapped past position 0
-        // the clamp above had already moved beginOnset to 0, which restarted
-        // the window at its own index 0 instead of continuing from where the
-        // wrapped part left off. That double-counted the low window weights and
-        // never reached the high ones, so a gap position inside the first half
-        // window of the interval scored far below its true support: an onset
-        // sitting exactly on position 0 measured 0.08 instead of the window's
-        // peak weight of 1.0. Those positions could therefore never win, which
-        // put a blind spot in the offset search.
         int windowIndex = i - windowBegin;
         area += wrappedOnsets[i] * window[windowIndex];
     }
@@ -533,10 +515,6 @@ static void CalculateOffset(SerializedTempo* data, Onset* onsets,
     for (auto& t : tempo)
         t.offset = GetBaseOffsetValue(gapdata, samplerate, t.bpm);
 
-    // Test all onsets against their offbeat values, pick the best one. The
-    // slope representation of the waveform is the same for every candidate, so
-    // build it once here rather than once per candidate; it is one double per
-    // frame, which is a few hundred megabytes on a long song.
     real* slopes = AlignedMalloc<real>(data->numFrames);
     if (!slopes) return;
 
@@ -578,12 +556,6 @@ class TempoDetectorImp : public TempoDetector, public BackgroundThread {
 TempoDetectorImp::TempoDetectorImp(int firstFrame, int numFrames) {
     auto& music = gMusic->getSamples();
 
-    // Safe to take before start(): BackgroundThread owns a stop_source that is
-    // live from construction. It used to come from the jthread, which has no
-    // stop state until start() assigns one, so this token was permanently dead
-    // and the MarkProgress cancellation check below could never fire. Closing
-    // the dialog or restarting detection then blocked the UI thread in join()
-    // until the whole analysis ran to completion.
     data_.terminate = getStopToken();
     data_.progress = 0;
 
@@ -619,23 +591,6 @@ void TempoDetectorImp::exec() {
     FindOnsets(data->samples, data->samplerate, data->numFrames, 1, onsets);
     MarkProgress(1, "Find onsets");
 
-    // Weight the first 100 onsets by how loud the audio is around them.
-    //
-    // The 100 looks like a bug, and in isolation it is a strange thing to do:
-    // every onset past the hundredth keeps the placeholder strength of 1.0 that
-    // FindOnsets assigns, and local loudness lands around 0.03-0.09 on typical
-    // material, so the later onsets outweigh the first hundred by roughly
-    // twenty to one. The weighting the histograms in CalculateBPM rely on is
-    // therefore a step function of onset index.
-    //
-    // Extending the loop to every onset has been tried. It made no measurable
-    // difference on full-length songs, and it broke a short sparse reference
-    // file (a 17 s, 113-onset sync test at 128 BPM), demoting the correct BPM
-    // from the top result to third and promoting a spurious 160 BPM above it:
-    // with amplitude weighting applied throughout, a handful of loud onsets
-    // dominate the histogram when there are few onsets to begin with. Uniform
-    // weighting is more robust on sparse input, so this stays as it is until
-    // there is a weighting scheme that measures better on both.
     for (int i = 0; i < std::min(static_cast<int>(onsets.size()), 100); ++i) {
         int a = std::max(0, onsets[i].pos - 100);
         int b = std::min(data->numFrames, onsets[i].pos + 100);
