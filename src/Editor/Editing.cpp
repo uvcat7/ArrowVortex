@@ -806,18 +806,19 @@ struct EditingImpl : public Editing {
         auto currentType = snapToRowType[gView->getSnapType()];
 
         // Get all Notes by Row
-        NoteEdit selection;
-        gSelection->getSelectedNotes(selection.rem);
+        NoteList selection;
+        gSelection->getSelectedNotes(selection);
 
-        if (selection.rem.empty()) {
+        if (selection.empty()) {
             HudNote("There are no notes selected.");
             return;
         }
 
-        auto select = selection.rem.begin();
+        std::vector<int> rows;
+        auto select = selection.begin();
         auto notes = gNotes->begin();
 
-        while (select != selection.rem.end() && notes != gNotes->end()) {
+        while (select != selection.end() && notes != gNotes->end()) {
             if (notes->isWarped || ToRowType(notes->row) == currentType) {
                 ++notes;
             } else if (notes->row < select->row) {
@@ -825,12 +826,15 @@ struct EditingImpl : public Editing {
             } else if (notes->row > select->row) {
                 ++select;
             } else {
-                selection.add.append(CompressNote(*notes));
+                rows.push_back(notes->row);
                 ++notes;
             }
         }
 
-        if (selection.add.empty()) {
+        std::sort(rows.begin(), rows.end(), std::greater<>());
+        rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
+
+        if (rows.empty()) {
             HudNote("There are no notes selected.");
             return;
         }
@@ -861,51 +865,34 @@ struct EditingImpl : public Editing {
 
         gHistory->startChain();
 
-        // Start Per-Note Edits, from end to beginning.
+        // Start Per-Row Edits, from end to beginning.
         auto segs = gTempo->getSegments();
-        auto lastRow = -1;
-        auto lastRowPosition = -1;
-        auto lastSnap = -1;
 
-        auto note = selection.add.end();
-        while (note != selection.add.begin()) {
-            --note;
-
+        for (const int row : rows) {
             NoteEdit notesEdit;
             SegmentEdit tempoEdit;
 
-            // Quick Edit chords.
-            if (note->row == lastRow) {
-                note->row = lastRowPosition;
-                notesEdit.rem.append(*note);
-                notesEdit.add.append({lastSnap, lastSnap, note->col,
-                                      note->player, note->type, 192});
-                gNotes->modify(notesEdit, false, nullptr);
-                gHistory->updateChain();
-                continue;
-            }
-
             // Find Note Bounds
             int before = 0, after = INT_MAX;
-            auto it = gNotes->begin();
-            while (it != gNotes->end()) {
-                if (it->row < note->row) {
-                    before = it->row;
-                } else if (it->row > note->row) {
-                    after = it->row;
-                    break;
+            for (const auto& note : *gNotes) {
+                for (int r : {note.row, note.endrow}) {
+                    if (r < row) {
+                        before = std::max(before, r);
+                    } else if (r > row) {
+                        after = std::min(after, r);
+                    }
                 }
-                ++it;
+
+                if (note.row > row) break;
             }
 
             // Find Tempo Bounds
-            auto segments = gTempo->getSegments();
-            for (const auto& segment : *segments) {
+            for (const auto& segment : *segs) {
                 for (auto seg = segment.begin(), segEnd = segment.end();
                      seg != segEnd; ++seg) {
-                    if (seg->row < note->row) {
+                    if (seg->row < row) {
                         before = std::max(before, seg->row);
-                    } else if (seg->row > note->row) {
+                    } else if (seg->row > row) {
                         after = std::min(after, seg->row);
                         break;
                     }
@@ -913,11 +900,10 @@ struct EditingImpl : public Editing {
             }
 
             // Store previous values.
-            auto boundStart = std::max(before, note->row - ROWS_PER_BEAT);
-            auto boundMid = note->row;
-            auto boundEnd = std::min(after, note->row + ROWS_PER_BEAT);
+            auto boundStart = std::max(before, row - ROWS_PER_BEAT);
+            auto boundMid = row;
+            auto boundEnd = std::min(after, row + ROWS_PER_BEAT);
 
-            int range[] = {boundStart, boundMid, boundEnd};
             double time[] = {gTempo->rowToTime(boundStart),
                              gTempo->rowToTime(boundMid),
                              gTempo->rowToTime(boundEnd)};
@@ -931,14 +917,13 @@ struct EditingImpl : public Editing {
                                 segs->getRecent<Scroll>(boundEnd).ratio};
 
             // Prevent Infinite BPMs.
-            if (time[0] == time[1] || time[1] == time[2]) {
-                lastRow = -1;
-                continue;
-            }
+            if (time[0] == time[1] || time[1] == time[2]) continue;
 
             // Find Nearest Valid Snap Point
             int snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
                                    currentType);
+
+            int noteRow = row;
 
             // No Snap Point, Insert beat and try again.
             if (snap == -1) {
@@ -946,16 +931,12 @@ struct EditingImpl : public Editing {
                 gTempo->insertRows(boundMid, ROWS_PER_BEAT, true);
                 gHistory->updateChain();
 
-                note->row += ROWS_PER_BEAT;
+                noteRow += ROWS_PER_BEAT;
                 boundEnd += ROWS_PER_BEAT;
 
                 // Find Snap
                 snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
                                    currentType);
-
-                notesEdit.rem.append(*note);
-                notesEdit.add.append(
-                    {snap, snap, note->col, note->player, note->type, 192});
 
                 tempoEdit.rem.append(
                     BpmChange(boundMid + ROWS_PER_BEAT, bpms[1]));
@@ -963,12 +944,31 @@ struct EditingImpl : public Editing {
                     Scroll(boundMid + ROWS_PER_BEAT, scrolls[1]));
             }
 
-            // It fits, move note.
-            else {
-                notesEdit.rem.append(*note);
-                notesEdit.add.append(
-                    {snap, snap, note->col, note->player, note->type, 192});
+            // Move every note.
+            for (const auto& note : *gNotes) {
+                if (note.row > noteRow) break;
+                if (note.row != noteRow && note.endrow != noteRow) continue;
+
+                Note oldNote = CompressNote(note);
+                Note newNote = oldNote;
+
+                if (oldNote.row == noteRow) {
+                    newNote.row = snap;
+                    newNote.quant = 192;
+                }
+
+                if (oldNote.endrow == noteRow) {
+                    newNote.endrow = snap;
+                }
+
+                notesEdit.rem.append(oldNote);
+                notesEdit.add.append(newNote);
             }
+
+            std::sort(notesEdit.rem.begin(), notesEdit.rem.end(),
+                      LessThanRowCol<Note, Note>);
+            std::sort(notesEdit.add.begin(), notesEdit.add.end(),
+                      LessThanRowCol<Note, Note>);
 
             // Tempo Changes
             double newbpms[] = {
@@ -990,10 +990,6 @@ struct EditingImpl : public Editing {
             gNotes->modify(notesEdit, false, nullptr);
             gTempo->modify(tempoEdit, false);
             gHistory->updateChain();
-
-            lastRow = boundMid;
-            lastRowPosition = note->row;
-            lastSnap = snap;
         }
         gHistory->finishChain("Recolorized Selected Notes");
     }
