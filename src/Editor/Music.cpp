@@ -166,6 +166,7 @@ struct MusicImpl : public Music, public MixSource {
 
         if (gSimfile->get()->music.empty()) {
             HudError("Could not load music, the music property is blank.");
+            myMixer->open(this, myBeatTick.sound.getFrequency());
             return;
         }
 
@@ -182,6 +183,7 @@ struct MusicImpl : public Music, public MixSource {
         } else {
             mySamples.clear();
             HudError("Could not load \"%s\".", gSimfile->get()->music.c_str());
+            myMixer->open(this, myBeatTick.sound.getFrequency());
         }
     }
 

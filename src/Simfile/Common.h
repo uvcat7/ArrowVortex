@@ -2,6 +2,9 @@
 
 #include <Core/Core.h>
 
+#define ROWS_PER_BEAT (48)
+#define ROWS_PER_MEASURE (ROWS_PER_BEAT * 4)
+
 namespace Vortex {
 
 /// Determines how the selection is modified.

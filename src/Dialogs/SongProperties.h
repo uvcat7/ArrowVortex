@@ -49,6 +49,9 @@ class DialogSongProperties : public EditorDialog {
     std::string mySubtitle;
     std::string myArtist;
     std::string myCredit;
+    std::string myTitleTranslit;
+    std::string mySubtitleTranslit;
+    std::string myArtistTranslit;
     std::string myMusic;
     std::string myBackground;
     std::string myBanner;

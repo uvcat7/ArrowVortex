@@ -148,7 +148,7 @@ class SegmentList {
                      List& outRem, int regionBegin, int regionEnd);
 
    private:
-    void myReserve(int num);
+    void myReserve(int num, int liveCount);
 
     uint8_t* mySegs = nullptr;
     int myNum = 0, myStride = Segment::meta[Segment::BPM]->stride, myCap = 0;
