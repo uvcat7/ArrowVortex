@@ -14,6 +14,7 @@
 #include <Core/Utils.h>
 #include <Core/Xmr.h>
 
+#include <Editor/Action.h>
 #include <Editor/Clipboard.h>
 #include <Editor/Common.h>
 #include <Editor/Editor.h>
@@ -22,6 +23,7 @@
 #include <Editor/Music.h>
 #include <Editor/Notefield.h>
 #include <Editor/Selection.h>
+#include <Editor/Shortcuts.h>
 #include <Editor/TempoBoxes.h>
 #include <Editor/View.h>
 
@@ -150,6 +152,7 @@ struct EditingImpl : public Editing {
 
     void onKeyPress(KeyPress& evt) override {
         if (evt.handled) return;
+        if (!gChart->isOpen()) return;
         Key::Code kc = evt.key;
 
         // Copy/pasting.
@@ -175,25 +178,26 @@ struct EditingImpl : public Editing {
             evt.handled = true;
         }
 
-        // Modal visual sync
-        if (gChart->isOpen() && !gTempo->isInVisualSync() && kc == Key::B) {
-            switch (evt.keyflags) {
-                case (0):
-                    this->enableVisualSync(false);
-                    evt.handled = true;
-                    break;
-                case (Keyflag::ALT):
-                    this->enableVisualSync(true);
-                    evt.handled = true;
-                    break;
-                default:
-                    break;
+        // Visual sync
+        if (!gTempo->isInVisualSync()) {
+            if (gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_NONDESTRUCTIVE)) {
+                enableVisualSync(false);
+                evt.handled = true;
             }
+            if (gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_DESTRUCTIVE)) {
+                enableVisualSync(true);
+                evt.handled = true;
+            }
+        }
+        if (gNotefield->hasVisualSyncBeatline() && kc == Key::ESCAPE) {
+            disableTemporaryBeatlines();
+            evt.handled = true;
         }
 
         // Placing notes.
-        if (gChart->isOpen() && kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 &&
-            !evt.repeated) {
+        if (kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9 && !evt.repeated) {
             disableTemporaryBeatlines();
             int col = KeyToCol(kc);
             int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
@@ -242,68 +246,27 @@ struct EditingImpl : public Editing {
         }
     }
 
-    void turnIntoTriplets() {
-        /* TODO?
-        // h/h/h/k/k/h/h/h/k/k/
-
-        int delta[5] = {24, 24, 24, 12, 12};
-        int deltaIdx = 0;
-
-        std::vector<RowCol> rem;
-        NoteList add = gSelection->getSelectedNotes();
-        for(auto& note : add) rem.emplace_back({note.row, (int)note.col});
-
-        if(add.empty())
-        {
-                HudNote("There are no notes selected.");
-                return;
-        }
-
-        // Scale the rows of the selected notes.
-        int row = add[0].row;
-        for(Note& n : add)
-        {
-                n.row = n.endrow = row;
-                row += delta[deltaIdx];
-                deltaIdx = (deltaIdx + 1) % 5;
-        }
-
-        // If we are using row selection, we remove all expanded notes outside
-        the selection range. auto region = gSelection->getSelectedRegion();
-        if(region.beginRow != region.endRow)
-        {
-                int i = 0;
-                while(i != add.size() && (int)add[i].row <= region.endRow) ++i;
-                add.erase(i, add.size());
-        }
-
-        // Perform the scale operation.
-        static const NotesMan::EditDescription tag = {"Expanded %1 note.",
-        "Expanded %1 notes."}; gNotes->modify(add, rem,
-        NotesMan::OVERWRITE_REGION, &tag);
-
-        // Reselect the scaled notes.
-        if(gSelection->isNotes())
-        {
-                gNotes->select(SELECT_SET, add.begin(), add.size());
-        }*/
-    }
-
     void onKeyRelease(KeyRelease& evt) override {
         if (evt.handled) return;
+        if (!gChart->isOpen()) return;
+        Key::Code kc = evt.key;
 
-        // Modal visual sync
-        if (gChart->isOpen() && evt.key == Key::B) {
-            gTempo->endVisualSync();
-            evt.handled = true;
-            return;
+        // Visual sync
+        if (gTempo->isInVisualSync()) {
+            if (gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_NONDESTRUCTIVE, true) ||
+                gShortcuts->isAction(evt.keyflags, evt.key,
+                                     Action::SHIFT_ROW_DESTRUCTIVE, true)) {
+                gTempo->endVisualSync();
+                evt.handled = true;
+                return;
+            }
         }
 
-        if (gChart->isOpen() && evt.key >= Key::DIGIT_0 &&
-            evt.key <= Key::DIGIT_9) {
+        if (kc >= Key::DIGIT_0 && kc <= Key::DIGIT_9) {
             // Finish placing notes.
             int row = gView->snapRow(gView->getCursorRow(), View::SNAP_CLOSEST);
-            int col = KeyToCol(evt.key);
+            int col = KeyToCol(kc);
             if (evt.keyflags & Keyflag::ALT) col += gStyle->getNumCols() / 2;
             if (col >= 0 && col < gStyle->getNumCols()) {
                 noteKeysHeld--;
@@ -572,9 +535,10 @@ struct EditingImpl : public Editing {
 
     void changePlayerNumber() override {
         int numPlayers = gStyle->getNumPlayers();
+        if (numPlayers <= 0) return;
 
         // Check if the current style actually supports more than 1 player.
-        if (numPlayers <= 1) {
+        if (numPlayers == 1) {
             HudNote("%s only has one player.", gStyle->get()->name.c_str());
             return;
         }
@@ -842,18 +806,19 @@ struct EditingImpl : public Editing {
         auto currentType = snapToRowType[gView->getSnapType()];
 
         // Get all Notes by Row
-        NoteEdit selection;
-        gSelection->getSelectedNotes(selection.rem);
+        NoteList selection;
+        gSelection->getSelectedNotes(selection);
 
-        if (selection.rem.empty()) {
+        if (selection.empty()) {
             HudNote("There are no notes selected.");
             return;
         }
 
-        auto select = selection.rem.begin();
+        std::vector<int> rows;
+        auto select = selection.begin();
         auto notes = gNotes->begin();
 
-        while (select != selection.rem.end() && notes != gNotes->end()) {
+        while (select != selection.end() && notes != gNotes->end()) {
             if (notes->isWarped || ToRowType(notes->row) == currentType) {
                 ++notes;
             } else if (notes->row < select->row) {
@@ -861,12 +826,15 @@ struct EditingImpl : public Editing {
             } else if (notes->row > select->row) {
                 ++select;
             } else {
-                selection.add.append(CompressNote(*notes));
+                rows.push_back(notes->row);
                 ++notes;
             }
         }
 
-        if (selection.add.empty()) {
+        std::sort(rows.begin(), rows.end(), std::greater<>());
+        rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
+
+        if (rows.empty()) {
             HudNote("There are no notes selected.");
             return;
         }
@@ -897,51 +865,34 @@ struct EditingImpl : public Editing {
 
         gHistory->startChain();
 
-        // Start Per-Note Edits, from end to beginning.
+        // Start Per-Row Edits, from end to beginning.
         auto segs = gTempo->getSegments();
-        auto lastRow = -1;
-        auto lastRowPosition = -1;
-        auto lastSnap = -1;
 
-        auto note = selection.add.end();
-        while (note != selection.add.begin()) {
-            --note;
-
+        for (const int row : rows) {
             NoteEdit notesEdit;
             SegmentEdit tempoEdit;
 
-            // Quick Edit chords.
-            if (note->row == lastRow) {
-                note->row = lastRowPosition;
-                notesEdit.rem.append(*note);
-                notesEdit.add.append({lastSnap, lastSnap, note->col,
-                                      note->player, note->type, 192});
-                gNotes->modify(notesEdit, false, nullptr);
-                gHistory->updateChain();
-                continue;
-            }
-
             // Find Note Bounds
             int before = 0, after = INT_MAX;
-            auto it = gNotes->begin();
-            while (it != gNotes->end()) {
-                if (it->row < note->row) {
-                    before = it->row;
-                } else if (it->row > note->row) {
-                    after = it->row;
-                    break;
+            for (const auto& note : *gNotes) {
+                for (int r : {note.row, note.endrow}) {
+                    if (r < row) {
+                        before = std::max(before, r);
+                    } else if (r > row) {
+                        after = std::min(after, r);
+                    }
                 }
-                ++it;
+
+                if (note.row > row) break;
             }
 
             // Find Tempo Bounds
-            auto segments = gTempo->getSegments();
-            for (const auto& segment : *segments) {
+            for (const auto& segment : *segs) {
                 for (auto seg = segment.begin(), segEnd = segment.end();
                      seg != segEnd; ++seg) {
-                    if (seg->row < note->row) {
+                    if (seg->row < row) {
                         before = std::max(before, seg->row);
-                    } else if (seg->row > note->row) {
+                    } else if (seg->row > row) {
                         after = std::min(after, seg->row);
                         break;
                     }
@@ -949,11 +900,10 @@ struct EditingImpl : public Editing {
             }
 
             // Store previous values.
-            auto boundStart = std::max(before, note->row - ROWS_PER_BEAT);
-            auto boundMid = note->row;
-            auto boundEnd = std::min(after, note->row + ROWS_PER_BEAT);
+            auto boundStart = std::max(before, row - ROWS_PER_BEAT);
+            auto boundMid = row;
+            auto boundEnd = std::min(after, row + ROWS_PER_BEAT);
 
-            int range[] = {boundStart, boundMid, boundEnd};
             double time[] = {gTempo->rowToTime(boundStart),
                              gTempo->rowToTime(boundMid),
                              gTempo->rowToTime(boundEnd)};
@@ -967,14 +917,13 @@ struct EditingImpl : public Editing {
                                 segs->getRecent<Scroll>(boundEnd).ratio};
 
             // Prevent Infinite BPMs.
-            if (time[0] == time[1] || time[1] == time[2]) {
-                lastRow = -1;
-                continue;
-            }
+            if (time[0] == time[1] || time[1] == time[2]) continue;
 
             // Find Nearest Valid Snap Point
             int snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
                                    currentType);
+
+            int noteRow = row;
 
             // No Snap Point, Insert beat and try again.
             if (snap == -1) {
@@ -982,16 +931,12 @@ struct EditingImpl : public Editing {
                 gTempo->insertRows(boundMid, ROWS_PER_BEAT, true);
                 gHistory->updateChain();
 
-                note->row += ROWS_PER_BEAT;
+                noteRow += ROWS_PER_BEAT;
                 boundEnd += ROWS_PER_BEAT;
 
                 // Find Snap
                 snap = findSnapRow(boundStart + 1, boundMid, boundEnd - 1,
                                    currentType);
-
-                notesEdit.rem.append(*note);
-                notesEdit.add.append(
-                    {snap, snap, note->col, note->player, note->type, 192});
 
                 tempoEdit.rem.append(
                     BpmChange(boundMid + ROWS_PER_BEAT, bpms[1]));
@@ -999,12 +944,31 @@ struct EditingImpl : public Editing {
                     Scroll(boundMid + ROWS_PER_BEAT, scrolls[1]));
             }
 
-            // It fits, move note.
-            else {
-                notesEdit.rem.append(*note);
-                notesEdit.add.append(
-                    {snap, snap, note->col, note->player, note->type, 192});
+            // Move every note.
+            for (const auto& note : *gNotes) {
+                if (note.row > noteRow) break;
+                if (note.row != noteRow && note.endrow != noteRow) continue;
+
+                Note oldNote = CompressNote(note);
+                Note newNote = oldNote;
+
+                if (oldNote.row == noteRow) {
+                    newNote.row = snap;
+                    newNote.quant = 192;
+                }
+
+                if (oldNote.endrow == noteRow) {
+                    newNote.endrow = snap;
+                }
+
+                notesEdit.rem.append(oldNote);
+                notesEdit.add.append(newNote);
             }
+
+            std::sort(notesEdit.rem.begin(), notesEdit.rem.end(),
+                      LessThanRowCol<Note, Note>);
+            std::sort(notesEdit.add.begin(), notesEdit.add.end(),
+                      LessThanRowCol<Note, Note>);
 
             // Tempo Changes
             double newbpms[] = {
@@ -1026,10 +990,6 @@ struct EditingImpl : public Editing {
             gNotes->modify(notesEdit, false, nullptr);
             gTempo->modify(tempoEdit, false);
             gHistory->updateChain();
-
-            lastRow = boundMid;
-            lastRowPosition = note->row;
-            lastSnap = snap;
         }
         gHistory->finishChain("Recolorized Selected Notes");
     }
@@ -1335,11 +1295,13 @@ struct EditingImpl : public Editing {
 
     bool hasTimeBasedCopy() override { return myUseTimeBasedCopy; }
 
-    // EditingImpl :: visual sync
+    // ================================================================================================
+    // EditingImpl :: visual sync.
+
     void disableTemporaryBeatlines() {
-        if (gNotefield->hasVisualSyncBeatlinePreset()) {
+        if (gNotefield->hasVisualSyncBeatline()) {
             HudInfo("Disabling temporary visual sync beatlines.");
-            gNotefield->clearVisualSyncBeatlinePreset();
+            gNotefield->setVisualSyncBeatline(false);
         }
     }
 
@@ -1390,10 +1352,10 @@ struct EditingImpl : public Editing {
             return;
         }
         // Activate temporary beatlines
-        if (!gNotefield->hasVisualSyncBeatlinePreset()) {
+        if (!gNotefield->needVisualSyncBeatlines()) {
             HudInfo(
                 "Enabling temporary fully enabled beatlines for visual sync.");
-            gNotefield->setVisualSyncBeatlinePreset();
+            gNotefield->setVisualSyncBeatline(true);
             return;
         }
 
@@ -1428,7 +1390,10 @@ struct EditingImpl : public Editing {
 
         gTempo->injectBoundingBpmChange(anchorRow);
     }
-    // EditingImpl :: tempo edit
+
+    // ================================================================================================
+    // EditingImpl :: tempo editor.
+
     void setTempoEditAnchor(EditingAnchor anchor) override {
         myTempoEditAnchor = anchor;
         switch (myTempoEditAnchor) {

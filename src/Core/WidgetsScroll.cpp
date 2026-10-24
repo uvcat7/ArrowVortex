@@ -66,17 +66,9 @@ static void DrawScrollbar(recti bar, ScrollButtonData button, bool vertical,
     if (vertical) {
         buttonRect = {bar.x, bar.y + button.pos, bar.w, button.size};
         scrollbar.base.draw(buttonRect);
-        if (buttonRect.h >= 16) {
-            recti grabPos = {bar.x, buttonRect.y, bar.w, buttonRect.h};
-            Draw::sprite(scrollbar.grab, grabPos, Draw::ROT_90);
-        }
     } else {
         buttonRect = {bar.x + button.pos, bar.y, button.size, bar.h};
         scrollbar.base.draw(buttonRect);
-        if (buttonRect.w >= 16) {
-            recti grabPos = {bar.x, buttonRect.y, bar.w, buttonRect.h};
-            Draw::sprite(scrollbar.grab, grabPos, 0);
-        }
     }
     if (focus) {
         scrollbar.pressed.draw(buttonRect);
