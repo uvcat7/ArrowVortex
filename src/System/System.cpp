@@ -789,7 +789,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (myIsInsideMessageLoop) {
                 bool up = (event->wheel.y > 0) !=
                           (event->wheel.direction != SDL_MOUSEWHEEL_NORMAL);
-                myEvents.addMouseScroll(up, event->wheel.x, event->wheel.y,
+                myEvents.addMouseScroll(up, myMousePos.x, myMousePos.y,
                                         gSystem->getKeyFlags());
             }
             break;
