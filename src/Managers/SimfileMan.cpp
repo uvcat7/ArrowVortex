@@ -128,7 +128,7 @@ struct SimfileManImpl : public SimfileMan {
         gNoteskin->update(myChart);
         gNotes->update(mySimfile, myChart);
         gTempo->update(mySimfile, myChart);
-        
+
         gMenubar->update(Menubar::SELECT_DENSITY);
 
         gEditor->reportChanges(VCM_CHART_CHANGED |
