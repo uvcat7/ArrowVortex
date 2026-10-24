@@ -269,6 +269,11 @@ struct SystemImpl : public System {
         myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
         // Create a window handle.
+#ifdef __APPLE__
+        // The default Metal renderer recreates the window without
+        // SDL_WINDOW_OPENGL.
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+#endif
         if (!SDL_CreateWindowAndRenderer("ArrowVortex", 800, 600,
                                          SDL_WINDOW_OPENGL |
                                              SDL_WINDOW_HIGH_PIXEL_DENSITY |
@@ -522,9 +527,20 @@ struct SystemImpl : public System {
     }
 
     void setWindowSize(vec2i size) override {
-        mySize = {std::clamp(size.x, 100, 32768),
-                  std::clamp(size.y, 100, 32768)};
-        SDL_SetWindowSize(window, mySize.x, mySize.y);
+        // SDL window coordinates are points on macOS, not pixels.
+        float density = SDL_GetWindowPixelDensity(window);
+        if (density <= 0) density = 1;
+        int w = static_cast<int>(size.x / density);
+        int h = static_cast<int>(size.y / density);
+        SDL_Rect usable;
+        if (SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(window),
+                                       &usable)) {
+            w = std::min(w, usable.w);
+            h = std::min(h, usable.h);
+        }
+        SDL_SetWindowSize(window, std::max(w, 100), std::max(h, 100));
+        SDL_SyncWindow(window);
+        SDL_GetWindowSizeInPixels(window, &mySize.x, &mySize.y);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
     }
@@ -592,6 +608,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
 #ifdef WIN32
     std::wstring exe_folder = Widen(SDL_GetBasePath());
     SetCurrentDirectoryW(exe_folder.c_str());
+#else
+    fs::current_path(SDL_GetBasePath());
 #endif
     ApplicationStart();
 #ifndef NDEBUG

@@ -87,6 +87,20 @@ cmake --install build --prefix "{your_folder_here}"
 2. Install vcpkg on the remote system to /opt/vcpkg, or modify CMakePresets.json/create a user preset.
 3. Build on Windows to the Linux installation. WSL can run the GUI application.
 
+## macOS
+
+```
+xcode-select --install
+brew install cmake ninja pkg-config autoconf autoconf-archive automake libtool
+git clone https://github.com/microsoft/vcpkg ~/code/vcpkg && ~/code/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+export VCPKG_ROOT=~/code/vcpkg
+cmake --preset macos-release
+cmake --build out/build/macos-release
+```
+
+The binary is `out/build/macos-release/bin/ArrowVortex`. The first configure builds every
+dependency (FFmpeg included) from source through vcpkg and takes a while.
+
 ## Troubleshooting
 ### No SDL3 video or audio device
 One of the dependent development packages SDL needs is missing. Delete your cached vcpkg packages so they are force rebuilt, then rerun `vcpkg integrate install` and the build process.

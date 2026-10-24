@@ -8,7 +8,7 @@
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
 #else
-#ifdef __linux__
+#ifndef _WIN32
 #define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
 #endif

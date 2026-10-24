@@ -19,7 +19,10 @@ endif()
 if(WIN32)
     set(tidy_extra "-extra-arg=/EHsc;--exclude-header-filter=SDL3*;")
 endif()
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags}${tidy_extra}-p=build")
+find_program(CLANG_TIDY_EXE clang-tidy)
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};${tidy_flags}${tidy_extra}-p=build")
+endif()
 
 # Sometimes caching will cause CMAKE_TOOLCHAIN_FILE, build presets, and includes to not update/work, so include fallbacks by hand.
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE OR "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")

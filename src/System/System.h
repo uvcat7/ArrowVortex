@@ -5,7 +5,7 @@
 namespace fs = std::filesystem;
 #include <SDL3/SDL.h>
 
-#ifdef __linux__
+#ifndef _WIN32
 // Defines INT_MAX and INT_MIN
 #include <limits.h>
 #define MAX_PATH PATH_MAX
