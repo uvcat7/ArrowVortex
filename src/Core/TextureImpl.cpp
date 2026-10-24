@@ -59,7 +59,7 @@ Texture::Data* TextureManager::load(fs::path path, Texture::Format fmt,
 
     // Combine path/format/mipmap information to form the key String.
     std::string key = pathToUtf8(path);
-    key = key + ("0" + fmt);
+    key = key + std::to_string(fmt);
     key = key + (mipmap ? "y" : "n");
 
     // Check if the image is already loaded.

@@ -41,9 +41,9 @@ jobs:
             -StorePasswordInClearText `
             -Name GitHubPackages `
             -UserName "${{ env.USERNAME }}" `
-            -Password "${{ github.token }}"
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
           .$(vcpkg fetch nuget) `
-            setapikey "${{ github.token }}" `
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
             -Source "${{ env.FEED_URL }}"
       - name: Configure CMake
         run: >
@@ -97,9 +97,9 @@ jobs:
             -StorePasswordInClearText \
             -Name GitHubPackages \
             -UserName "${{ env.USERNAME }}" \
-            -Password "${{ github.token }}"
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
           mono `vcpkg fetch nuget | tail -n 1` \
-            setapikey "${{ github.token }}" \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
       - name: Configure CMake
         run: >
@@ -143,9 +143,9 @@ jobs:
             -StorePasswordInClearText \
             -Name GitHubPackages \
             -UserName "${{ env.USERNAME }}" \
-            -Password "${{ github.token }}"
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
           mono `vcpkg fetch nuget | tail -n 1` \
-            setapikey "${{ github.token }}" \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
       - name: Configure CMake
         run: >
