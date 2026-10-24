@@ -173,9 +173,10 @@ static bool AddIgnore(const char* id) {
 
 #ifndef VORTEX_DISABLE_ASSERTS
 
-static HHOOK sHook;
-
 static const char* sDashLine = "-----------------------------------";
+
+#ifdef _WIN32
+static HHOOK sHook;
 
 static LRESULT CALLBACK CBTProc(INT nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HCBT_ACTIVATE) {
@@ -201,6 +202,7 @@ static int ShowMessageBox(HWND hWnd, LPCSTR lpcText, LPCSTR lpcCaption,
     sHook = SetWindowsHookEx(WH_CBT, &CBTProc, nullptr, GetCurrentThreadId());
     return MessageBox(hWnd, lpcText, lpcCaption, uType);
 }
+#endif
 
 bool assrt(const char* exp, const char* file, int line, const char* func,
            const char* fmt, ...) {
@@ -232,6 +234,7 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
         Debug::WriteToLogAndConsole(buffer);
         Debug::WriteToLogAndConsole(sDashLine);
 
+#ifdef _WIN32
         int answer = ShowMessageBox(nullptr, buffer, "ASSERT",
                                     MB_ICONERROR | MB_YESNOCANCEL);
         if (answer == IDYES) {
@@ -243,6 +246,9 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
                             "ERROR", MB_ICONERROR | MB_OK);
             }
         }
+#else
+        AddIgnore(id);
+#endif
     }
 
     return false;

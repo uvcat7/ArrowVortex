@@ -9,7 +9,6 @@
 #define VORTEX_DISABLE_CHECKPOINTS
 #else
 #ifndef _WIN32
-#define VORTEX_DISABLE_ASSERTS
 #define VORTEX_DISABLE_CHECKPOINTS
 #endif
 #endif
