@@ -139,6 +139,10 @@ bool Action::perform(Type action) {
             gEditor->openDialog(DIALOG_PREVIEW_SETTINGS);
             break;
         }
+        case OPEN_DIALOG_EXPORT_NOTE_DATA: {
+            gEditor->openDialog(DIALOG_EXPORT_NOTE_DATA);
+            break;
+        }
 
         case EDIT_UNDO: {
             gSystem->getEvents().addKeyPress(Key::Z, Keyflag::CTRL, false);
@@ -476,11 +480,6 @@ bool Action::perform(Type action) {
         }
         case MIRROR_NOTES_FULL: {
             gEditing->mirrorNotes(Editing::MIRROR_HV);
-            break;
-        }
-
-        case EXPORT_NOTES_AS_LUA_TABLE: {
-            gEditing->exportNotesAsLuaTable();
             break;
         }
 

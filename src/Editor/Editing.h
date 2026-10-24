@@ -50,8 +50,6 @@ struct Editing : public InputHandler {
     virtual void convertCouplesToRoutine() = 0;
     virtual void convertRoutineToCouples() = 0;
 
-    virtual void exportNotesAsLuaTable() = 0;
-
     virtual void toggleJumpToNextNote() = 0;
     virtual bool hasJumpToNextNote() = 0;
 
