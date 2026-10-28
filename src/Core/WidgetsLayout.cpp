@@ -128,6 +128,7 @@ void RowLayout::onArrange(recti r) {
 }
 
 void RowLayout::onTick() {
+    handleInputs(gui_->getEvents());
     FOR_VECTOR_REVERSE(widget_list_, i) { widget_list_[i]->tick(); }
 }
 
@@ -135,6 +136,23 @@ void RowLayout::onDraw() {
     for (GuiWidget* widget : widget_list_) {
         widget->draw();
     }
+}
+
+void RowLayout::onWindowRescale() {
+    auto scale = gSystem->getScaleFactor();
+    if (scale == scale_) return;
+    row_spacing_ = row_spacing_ / scale_ * scale;
+    for (auto& row : row_list_) {
+        int numCols = row.cols.size();
+        auto cols = row.cols.begin();
+        for (int c = 0; c < numCols; ++c) {
+            if (!cols[c].adjust) {
+                cols[c].width = cols[c].width / scale_ * scale;
+            }
+        }
+    }
+    FOR_VECTOR_REVERSE(widget_list_, i) { widget_list_[i]->rescale(); }
+    scale_ = scale;
 }
 
 void RowLayout::add(GuiWidget* widget) {

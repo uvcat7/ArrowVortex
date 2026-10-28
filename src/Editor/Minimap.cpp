@@ -430,6 +430,8 @@ struct MinimapImpl : public Minimap {
 
     Minimap::Mode getMode() const override { return myMode; }
 
+    void onWindowRescale() override { onChanges(VCM_ALL_CHANGES); }
+
 };  // MinimapImpl
 
 // ================================================================================================

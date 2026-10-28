@@ -531,6 +531,8 @@ struct SystemImpl : public System {
             return {size.x, size.y - gMenubar->getMenubarHeight()};
     }
 
+    float getScaleFactor() const override { return myScale; }
+
     int applyScaleFactor(int size) const override {
         return static_cast<int>(static_cast<float>(size) * myScale);
     }
@@ -786,6 +788,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         }
         case SDL_EVENT_WINDOW_MOUSE_ENTER:
         case SDL_EVENT_WINDOW_FOCUS_GAINED: {
+            myEvents.addWindowActive();
             myMouseState.reset();
             myKeyState.reset();
             break;
@@ -800,7 +803,14 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_WINDOW_RESIZED:
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
-            myScale = SDL_GetWindowDisplayScale(window);
+            float new_scale = SDL_GetWindowDisplayScale(window);
+            if (new_scale <= 0.0)
+                HudError("Failed to get SDL window scale with error %s",
+                         SDL_GetError());
+            else if (myScale != new_scale) {
+                myScale = new_scale;
+                myEvents.addWindowRescale();
+            }
             vec2i next = {event->window.data1, event->window.data2};
             if (!SDL_GetWindowSizeInPixels(window, &next.x, &next.y))
                 HudError("Failed to get SDL window size with error %s",

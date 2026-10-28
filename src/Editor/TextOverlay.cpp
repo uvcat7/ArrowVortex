@@ -42,16 +42,8 @@ struct Shortcut {
     bool isHeader;
 };
 
-static const int NUM_ICONS = 20;
-
 static uint8_t supportLink[] = "https://discord.gg/GCNAyDmjqy";
 static uint8_t githubLink[] = "https://github.com/uvcat7/ArrowVortex";
-
-static const char* iconNames[NUM_ICONS] = {
-    "up one",      "up half",        "down one",       "down half", "halve",
-    "double",      "full selection", "half selection", "undo",      "redo",
-    "calculate",   "tweak",          "search",         "copy",      "play",
-    "arrow right", "folder",         "trash",          "keyboard",  "mouse"};
 
 };  // anonymous namespace
 
@@ -79,15 +71,6 @@ struct TextOverlayImpl : public TextOverlay {
         textOverlayScrollPos_ = 0;
         textOverlayScrollEnd_ = 0;
         textOverlayPageSize_ = 0;
-
-        Texture icons[NUM_ICONS];
-        Texture::createTiles("assets/icons text.png", 64, 64, NUM_ICONS, icons,
-                             false, Texture::ALPHA);
-        int tex_size = gSystem->applyScaleFactor(16);
-        for (int i = 0; i < NUM_ICONS; ++i) {
-            Text::createGlyph(iconNames[i], icons[i], 0, tex_size / 4 - 1, 0,
-                              tex_size, tex_size);
-        }
     }
 
     // ================================================================================================

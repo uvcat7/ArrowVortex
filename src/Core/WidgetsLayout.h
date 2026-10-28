@@ -16,6 +16,8 @@ class RowLayout : public GuiWidget {
     void onTick();
     void onDraw();
 
+    void onWindowRescale() override;
+
     void add(GuiWidget* w);
     void addBlank();
 

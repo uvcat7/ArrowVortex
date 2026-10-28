@@ -3,6 +3,7 @@
 #include <Core/Xmr.h>
 #include <Core/Utils.h>
 #include <Core/GuiDraw.h>
+#include <System/System.h>
 
 #include <stdint.h>
 
@@ -23,6 +24,8 @@ enum ScrollActions {
     ACT_DRAGGING_H,
     ACT_DRAGGING_V,
 };
+
+#define SCROLLBAR_SIZE gSystem->applyScaleFactor(14)
 
 // ================================================================================================
 // Helper functions.
@@ -191,18 +194,20 @@ uint32_t WgScrollbar::GetScrollbarActionAtPosition(int x, int y) {
     return ACT_NONE;
 }
 
-WgScrollbarV::WgScrollbarV(GuiContext* gui) : WgScrollbar(gui) { width_ = 14; }
+WgScrollbarV::WgScrollbarV(GuiContext* gui) : WgScrollbar(gui) {
+    width_ = SCROLLBAR_SIZE;
+}
 
 bool WgScrollbarV::isVertical() const { return true; }
 
-WgScrollbarH::WgScrollbarH(GuiContext* gui) : WgScrollbar(gui) { height_ = 14; }
+WgScrollbarH::WgScrollbarH(GuiContext* gui) : WgScrollbar(gui) {
+    height_ = SCROLLBAR_SIZE;
+}
 
 bool WgScrollbarH::isVertical() const { return false; }
 
 // ================================================================================================
 // WgScrollRegion.
-
-static const int SCROLLBAR_SIZE = 14;
 
 WgScrollRegion::~WgScrollRegion() = default;
 

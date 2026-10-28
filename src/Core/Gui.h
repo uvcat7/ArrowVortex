@@ -113,6 +113,7 @@ class GuiWidget : public InputHandler {
     void arrange(recti r);
     void tick();
     void draw();
+    void rescale();
 
     // Set functions.
     void setId(const std::string& id);
@@ -145,9 +146,10 @@ class GuiWidget : public InputHandler {
 
    protected:
     GuiContext* gui_;
-    recti rect_;
-    int width_;
-    int height_;
+    recti rect_ = {0, 0, 128, 24};
+    int width_ = 128;
+    int height_ = 24;
+    float scale_ = 1.0f;
     uint32_t flags_ = WidgetFlags::WF_ENABLED;
 };
 

@@ -1,13 +1,11 @@
 #include <Editor/Editor.h>
 
-#include <map>
-#include <format>
-
 #include <Core/Xmr.h>
 #include <Core/Gui.h>
 #include <Core/Draw.h>
 #include <Core/Shader.h>
 #include <Core/StringUtils.h>
+#include <Core/FontManager.h>
 
 #include <System/System.h>
 #include <System/File.h>
@@ -17,7 +15,6 @@
 #include <Editor/Menubar.h>
 #include <Editor/Action.h>
 #include <Editor/Shortcuts.h>
-
 #include <Editor/View.h>
 #include <Editor/Notefield.h>
 #include <Editor/NotefieldPreview.h>
@@ -58,7 +55,9 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <format>
 #include <fstream>
+#include <map>
 
 #include <SDL3/SDL.h>
 
@@ -92,6 +91,14 @@ static SDL_DialogFileFilter saveFilters[] = {
     {"Osu!mania (*.osu)", "osu"},   {"Dance With Intensity (*.dwi)", "dwi"},
     {"All Files (*.*)", "*"},
 };
+
+static const int NUM_ICONS = 20;
+static const char* iconNames[NUM_ICONS] = {
+    "up one",      "up half",        "down one",       "down half", "halve",
+    "double",      "full selection", "half selection", "undo",      "redo",
+    "calculate",   "tweak",          "search",         "copy",      "play",
+    "arrow right", "folder",         "trash",          "keyboard",  "mouse"};
+
 constexpr int SAVE_FILTERS_COUNT = SDL_arraysize(saveFilters);
 static SDL_DialogFileFilter saveOrderedFilters[SAVE_FILTERS_COUNT];
 static int saveFiltersOrder[SAVE_FILTERS_COUNT];
@@ -248,6 +255,17 @@ struct EditorImpl : public Editor, public InputHandler {
         text.textColor = Colors::white;
         text.shadowColor = RGBAtoColor32(0, 0, 0, 128);
         text.makeDefault();
+
+        // Load text glyphs.
+        Texture icons[NUM_ICONS];
+        Texture::createTiles("assets/icons text.png", 64, 64, NUM_ICONS, icons,
+                             false, Texture::ALPHA);
+        int tex_size = 16;
+        for (int i = 0; i < NUM_ICONS; ++i) {
+            Text::createGlyph(iconNames[i], icons[i], 0, tex_size / 4 - 1, 0,
+                              tex_size, tex_size);
+        }
+        FontManager::updateSpecialGlyphs();
 
         // Create the text overlay, so other editor components can show HUD
         // messages.
@@ -787,8 +805,10 @@ struct EditorImpl : public Editor, public InputHandler {
         auto coords = gView->getNotefieldCoords();
         int offset =
             gTempoBoxes->getStackWidth(meta->side, mySegmentEditor.row);
-        int x = meta->side ? coords.xr + offset + 16
-                           : coords.xl - offset - 10 - dlg->getFixedWidth();
+        int x = meta->side
+                    ? coords.xr + offset + gSystem->applyScaleFactor(16)
+                    : coords.xl - offset -
+                          gSystem->applyScaleFactor(10 + dlg->getFixedWidth());
         int y =
             gView->rowToY(mySegmentEditor.row) - (dlg->getFixedHeight() / 2);
 
@@ -904,6 +924,11 @@ struct EditorImpl : public Editor, public InputHandler {
                 }
             }
         }
+    }
+
+    void onWindowRescale() override {
+        FontManager::updateSpecialGlyphs();
+        gTempoBoxes->onChanges(VCM_TEMPO_CHANGED);
     }
 
     void onMenuAction(int id) override {
