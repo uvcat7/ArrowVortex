@@ -7,6 +7,8 @@ namespace Vortex {
 class DialogLabelBreakdown : public EditorDialog {
    public:
     void onChanges(int changes) override;
+    void loadSettings(const XmrNode& options) override;
+    void saveSettings(XmrNode& options) const override;
     void onUpdateSize() override;
     void onTick() override;
 

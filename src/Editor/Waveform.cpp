@@ -113,10 +113,13 @@ struct WaveformImpl : public Waveform {
     WaveShape waveformShape_;
     Luminance waveformLuminance_;
     int waveformAntiAliasingMode_;
+    FilterType filterType_ = FT_HIGH_PASS;
+    float filterStrength_;
+    bool filterEnabled_;
     bool waveformOverlayFilter_;
 
     // ================================================================================================
-    // ViewImpl :: constructor / destructor.
+    // Waveform :: constructor / destructor.
 
     ~WaveformImpl() {
         for (auto block : waveformBlocks_) delete block;
@@ -136,7 +139,7 @@ struct WaveformImpl : public Waveform {
     }
 
     // ================================================================================================
-    // ViewImpl :: load / save settings.
+    // Waveform :: load / save settings.
 
     static void SaveColor(XmrNode* n, const char* name, colorf col) {
         std::string r = Str::val(col.r, 0, 2), g = Str::val(col.g, 0, 2);
@@ -155,6 +158,11 @@ struct WaveformImpl : public Waveform {
         return "uniform";
     }
 
+    static const char* ToString(FilterType filter) {
+        if (filter == FT_LOW_PASS) return "low";
+        return "high";
+    }
+
     static WaveShape ToWaveShape(const std::string& str) {
         if (str == "signed") return WS_SIGNED;
         return WS_RECTIFIED;
@@ -163,6 +171,10 @@ struct WaveformImpl : public Waveform {
     static Luminance ToLuminance(const std::string& str) {
         if (str == "amplitude") return LL_AMPLITUDE;
         return LL_UNIFORM;
+    }
+    static FilterType ToFilterType(const std::string& str) {
+        if (str == "low") return FT_LOW_PASS;
+        return FT_HIGH_PASS;
     }
 
     void loadSettings(XmrNode& settings) {
@@ -186,6 +198,18 @@ struct WaveformImpl : public Waveform {
 
             waveform->get("antiAliasing", &waveformAntiAliasingMode_);
             setAntiAliasing(waveformAntiAliasingMode_);
+
+            waveform->get("overlayFilter", &waveformOverlayFilter_);
+            setOverlayFilter(waveformOverlayFilter_);
+
+            const char* ft = waveform->get("type");
+            if (ft) setFilterType(ToFilterType(ft));
+
+            filterStrength_ = waveform->get("strength", 0.75f);
+            setFilterStrength(filterStrength_);
+
+            waveform->get("enabled", &filterEnabled_);
+            if (filterEnabled_) enableFilter();
         }
     }
 
@@ -201,10 +225,14 @@ struct WaveformImpl : public Waveform {
         waveform->addAttrib("waveStyle", ToString(waveformShape_));
         waveform->addAttrib("antiAliasing",
                             static_cast<long>(waveformAntiAliasingMode_));
+        waveform->addAttrib("overlayFilter", waveformOverlayFilter_);
+        waveform->addAttrib("type", ToString(filterType_));
+        waveform->addAttrib("strength", filterStrength_);
+        waveform->addAttrib("enabled", filterEnabled_);
     }
 
     // ================================================================================================
-    // ViewImpl :: member functions.
+    // Waveform :: member functions.
 
     void clearBlocks() override {
         for (auto block : waveformBlocks_) {
@@ -220,16 +248,27 @@ struct WaveformImpl : public Waveform {
 
     bool getOverlayFilter() override { return waveformOverlayFilter_; }
 
-    void enableFilter(FilterType type, double strength) override {
-        delete waveformFilter_;
-        waveformFilter_ = new WaveFilter(type, strength);
+    void setFilterType(FilterType filter) override { filterType_ = filter; }
 
+    FilterType getFilterType() override { return filterType_; }
+
+    void setFilterStrength(float value) override {
+        filterStrength_ = std::clamp(value, 0.0f, 1.0f);
+    }
+
+    float getFilterStrength() override { return filterStrength_; }
+
+    void enableFilter() override {
+        delete waveformFilter_;
+        waveformFilter_ = new WaveFilter(filterType_, filterStrength_);
+        filterEnabled_ = true;
         clearBlocks();
     }
 
     void disableFilter() override {
         delete waveformFilter_;
         waveformFilter_ = nullptr;
+        filterEnabled_ = false;
 
         clearBlocks();
     }

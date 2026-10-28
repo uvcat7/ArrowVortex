@@ -66,6 +66,9 @@ struct Editor {
     /// Closes the dialog window with the given id, if it's currently open.
     virtual void onDialogClosed(int dialogId) = 0;
 
+    /// Resets and returns the settings node used for saving dialog options.
+    virtual XmrNode* resetDialogSettings(int dialogId) = 0;
+
     /// Called by system when the application starts, with the command line
     /// arguments.
     virtual void onCommandLineArgs(const std::string* args, int numArgs) = 0;

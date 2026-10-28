@@ -57,4 +57,10 @@ DialogId EditorDialog::getId(const char* name) {
 
 const char* EditorDialog::getName(DialogId id) { return IdStrings[id]; }
 
+void EditorDialog::storeSettings() {
+    if (XmrNode* options = gEditor->resetDialogSettings(myId)) {
+        saveSettings(*options);
+    }
+}
+
 };  // namespace Vortex
