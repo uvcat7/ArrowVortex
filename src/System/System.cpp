@@ -38,6 +38,9 @@
 #include <locale>
 #include <condition_variable>
 
+static const int kMinimumWindowSize = 100;
+static const int kMaximumWindowSize = 32768;
+
 // Various statics had to be pulled out of the System singleton since
 // SDL needs non-member callback functions for event handling.
 bool myInitSuccesful = false;
@@ -45,7 +48,6 @@ Vortex::InputEvents myEvents;
 Vortex::vec2i myMousePos = {0, 0};
 Vortex::vec2i mySize = {0, 0};
 SDL_Window* window = nullptr;
-SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
 std::map<Vortex::Cursor::Icon, SDL_Cursor*> myCursorCache;
@@ -316,6 +318,13 @@ struct SystemImpl : public System {
         Shader::initExtension();
         Debug::logBlankLine();
 
+        // Set window minimum size (prevents crashes)
+        if (!SDL_SetWindowMinimumSize(window, kMinimumWindowSize,
+                                      kMinimumWindowSize)) {
+            SDL_Log("Couldn't set minimum window size to %d: %s",
+                    kMinimumWindowSize, SDL_GetError());
+        }
+
         // Make sure the window is centered on the desktop.
         myScale = SDL_GetWindowDisplayScale(window);
         setWindowSize({static_cast<int>(1200 * myScale),
@@ -527,9 +536,19 @@ struct SystemImpl : public System {
     }
 
     void setWindowSize(vec2i size) override {
-        mySize = {std::clamp(size.x, 100, 32768),
-                  std::clamp(size.y, 100, 32768)};
-        SDL_SetWindowSize(window, mySize.x, mySize.y);
+        float density = SDL_GetWindowPixelDensity(window);
+        if (density <= 0) {
+            Debug::log("Couldn't get window pixel density with error: %s\n",
+                       SDL_GetError());
+            density = 1.;
+        }
+        mySize = {std::clamp(size.x, kMinimumWindowSize, kMaximumWindowSize),
+                  std::clamp(size.y, kMinimumWindowSize, kMaximumWindowSize)};
+        // SDL does not provide a way to set the window size in pixels so it's
+        // done manually.
+        vec2i nopixel_size = {static_cast<int>(mySize.x / density),
+                              static_cast<int>(mySize.y / density)};
+        SDL_SetWindowSize(window, nopixel_size.x, nopixel_size.y);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
     }
@@ -594,10 +613,9 @@ static void ApplicationEnd() {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
-#ifdef WIN32
-    std::wstring exe_folder = Widen(SDL_GetBasePath());
-    SetCurrentDirectoryW(exe_folder.c_str());
-#endif
+    // Make sure std::filesystem calls have the correct base path in them
+    fs::current_path(reinterpret_cast<const char8_t*>(SDL_GetBasePath()));
+
     ApplicationStart();
 #ifndef NDEBUG
     Debug::openConsole();
@@ -741,14 +759,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 // Convert SDL window mouse coordinates to the app's OpenGL coordinate space.
 static vec2i windowMouseToApp(float wx, float wy) {
     int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
-    float rx = wx;
-    float ry = wy;
-    if (renderer) {
-        if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
-            HudError("Failed to get render coordinates with error: %s",
-                     SDL_GetError());
-    }
-    return {static_cast<int>(rx), static_cast<int>(ry - menu_h)};
+    return {static_cast<int>(wx), static_cast<int>(wy - menu_h)};
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
@@ -776,7 +787,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             break;
         }
         case SDL_EVENT_WINDOW_RESIZED:
-        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
+        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
+            if (!SDL_SyncWindow(window))
+            {
+                HudError("Failed to sync the window with error %s",
+                         SDL_GetError());
+            }
             myScale = SDL_GetWindowDisplayScale(window);
             vec2i next = {event->window.data1, event->window.data2};
             if (!SDL_GetWindowSizeInPixels(window, &next.x, &next.y))

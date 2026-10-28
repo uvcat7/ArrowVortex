@@ -403,6 +403,8 @@ struct EditorImpl : public Editor, public InputHandler {
             xmr_interface->addAttrib("windowMaximized", true);
         } else {
             vec2i ws = gSystem->getWindowSize();
+            // getWindowSize is usable window, not true window, so adjust
+            if (gMenubar) ws.y += gMenubar->getMenubarHeight();
             long windowSize[] = {ws.x, ws.y};
             xmr_interface->addAttrib("windowSize", windowSize, 2);
         }
