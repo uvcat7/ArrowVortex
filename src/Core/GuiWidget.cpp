@@ -17,14 +17,7 @@ int width_;
 int height_;
 uint32_t flags_;
 
-GuiWidget::GuiWidget(GuiContext* gui)
-    : gui_(gui),
-      rect_({0, 0, 128, 24}),
-      width_(128),
-      height_(24),
-      scale_(1.0f) {
-    rescale();
-}
+GuiWidget::GuiWidget(GuiContext* gui) : gui_(gui) { rescale(); }
 
 GuiWidget::~GuiWidget() {
     reinterpret_cast<GuiContextImpl*>(gui_)->removeWidget(this);
