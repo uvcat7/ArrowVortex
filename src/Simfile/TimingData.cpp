@@ -152,6 +152,8 @@ static WarpResult HandleWarp(std::vector<Event>& out, MergedTS* it,
                 case Segment::WARP:
                     warpRows += reinterpret_cast<const Warp*>(it->seg)->numRows;
                     break;
+                default:
+                    break;
             }
         } while (++it != end && it->seg->row < row);
 
@@ -200,6 +202,8 @@ static void CreateEvents(std::vector<Event>& out, double time, MergedTS* it,
                     break;
                 case Segment::WARP:
                     warp += reinterpret_cast<const Warp*>(it->seg)->numRows;
+                    break;
+                default:
                     break;
             }
         } while (++it != end && it->seg->row < row);

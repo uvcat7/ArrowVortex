@@ -102,7 +102,7 @@ void WgLineEdit::onKeyPress(KeyPress& evt) {
         }
     }
 
-    if (key == Key::DELETE || key == Key::BACKSPACE) {
+    if (key == Key::DELETE_KEY || key == Key::BACKSPACE) {
         if (lineedit_cursor_.x == lineedit_cursor_.y) {
             if (key == Key::BACKSPACE) {
                 lineedit_cursor_.y =

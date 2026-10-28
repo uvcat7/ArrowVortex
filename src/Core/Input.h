@@ -1,9 +1,6 @@
 #pragma once
 
 #include <Core/Core.h>
-#ifdef DELETE
-#undef DELETE
-#endif
 
 namespace Vortex {
 
@@ -119,7 +116,7 @@ enum Code {
     HOME,
     END,
     INSERT,
-    DELETE,
+    DELETE_KEY,
     PRINT_SCREEN,
     SCROLL_LOCK,
     PAUSE,

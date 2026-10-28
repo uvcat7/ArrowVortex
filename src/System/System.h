@@ -4,6 +4,7 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #include <SDL3/SDL.h>
+#include <System/OpenGL.h>
 
 #ifdef __linux__
 // Defines INT_MAX and INT_MIN
@@ -11,7 +12,6 @@ namespace fs = std::filesystem;
 #define MAX_PATH PATH_MAX
 #undef R_OK
 #endif
-#include <SDL3/SDL.h>
 
 namespace Vortex {
 

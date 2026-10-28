@@ -219,6 +219,8 @@ struct ChartManImpl : public ChartMan {
                         break;
                     case STREAM_32ND:
                         m_32s += measures;
+                    case STREAM_BREAK:
+                        break;
                 }
             }
             if (compressed_type == STREAM_BREAK) return out;
@@ -433,6 +435,8 @@ struct ChartManImpl : public ChartMan {
                         break;
                     case STREAM_32ND:
                         total_16ths += measures * 2;
+                        break;
+                    case STREAM_BREAK:
                         break;
                 }
             }
