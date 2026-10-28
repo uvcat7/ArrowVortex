@@ -550,7 +550,15 @@ struct SystemImpl : public System {
         // done manually.
         vec2i nopixel_size = {static_cast<int>(mySize.x / density),
                               static_cast<int>(mySize.y / density)};
+        SDL_Rect usable;
+        if (SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(window),
+                                       &usable)) {
+            nopixel_size.x = std::min(nopixel_size.x, usable.w);
+            nopixel_size.y = std::min(nopixel_size.y, usable.h);
+        }
         SDL_SetWindowSize(window, nopixel_size.x, nopixel_size.y);
+        SDL_SyncWindow(window);
+        SDL_GetWindowSizeInPixels(window, &mySize.x, &mySize.y);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
     }
@@ -761,7 +769,10 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 // Convert SDL window mouse coordinates to the app's OpenGL coordinate space.
 static vec2i windowMouseToApp(float wx, float wy) {
     int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
-    return {static_cast<int>(wx), static_cast<int>(wy - menu_h)};
+    float density = SDL_GetWindowPixelDensity(window);
+    if (density <= 0) density = 1;
+    return {static_cast<int>(wx * density),
+            static_cast<int>(wy * density) - menu_h};
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
