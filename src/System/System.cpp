@@ -789,8 +789,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_WINDOW_RESIZED:
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
-            if (!SDL_SyncWindow(window))
-            {
+            if (!SDL_SyncWindow(window)) {
                 HudError("Failed to sync the window with error %s",
                          SDL_GetError());
             }

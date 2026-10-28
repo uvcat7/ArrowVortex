@@ -436,7 +436,8 @@ struct TextOverlayImpl : public TextOverlay {
         }
 
         // Speed up the message removal if we have too many.
-        if (y > view.y && !hudEntries_.empty()) hudEntries_.erase(hudEntries_.begin());
+        if (y > view.y && !hudEntries_.empty())
+            hudEntries_.erase(hudEntries_.begin());
     }
 
     // ================================================================================================
