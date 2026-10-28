@@ -27,8 +27,9 @@ uint32_t ToColor(Difficulty dt) {
             return RGBAtoColor32(255, 98, 97, 255);
         case DIFF_CHALLENGE:
             return RGBAtoColor32(109, 142, 210, 255);
+        default:
+            return RGBAtoColor32(180, 183, 186, 255);
     };
-    return RGBAtoColor32(180, 183, 186, 255);
 }
 
 const char* ToString(SnapType st) {

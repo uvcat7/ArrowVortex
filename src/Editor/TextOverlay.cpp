@@ -247,7 +247,7 @@ struct TextOverlayImpl : public TextOverlay {
     }
 
     void onKeyPress(KeyPress& evt) override {
-        if (textOverlayMode_ == MESSAGE_LOG && evt.key == Key::DELETE &&
+        if (textOverlayMode_ == MESSAGE_LOG && evt.key == Key::DELETE_KEY &&
             !evt.handled) {
             logEntries_.clear();
             evt.handled = true;
@@ -436,7 +436,8 @@ struct TextOverlayImpl : public TextOverlay {
         }
 
         // Speed up the message removal if we have too many.
-        if (y > view.y) hudEntries_.erase(hudEntries_.begin());
+        if (y > view.y && !hudEntries_.empty())
+            hudEntries_.erase(hudEntries_.begin());
     }
 
     // ================================================================================================

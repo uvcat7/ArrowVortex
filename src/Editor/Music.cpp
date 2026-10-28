@@ -453,6 +453,12 @@ struct MusicImpl : public Music, public MixSource {
                 out_ext = ".wav";
                 encoder = "Waveform";
                 break;
+            case AudioFormat::OGG:
+                out_ext = ".ogg";
+                encoder = "Ogg Vorbis";
+                break;
+            default:
+                break;
         }
 
         auto src_ext = pathToUtf8(source.extension());

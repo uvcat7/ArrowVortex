@@ -38,7 +38,8 @@
 #include <locale>
 #include <condition_variable>
 
-#undef DELETE
+static const int kMinimumWindowSize = 100;
+static const int kMaximumWindowSize = 32768;
 
 // Various statics had to be pulled out of the System singleton since
 // SDL needs non-member callback functions for event handling.
@@ -47,7 +48,6 @@ Vortex::InputEvents myEvents;
 Vortex::vec2i myMousePos = {0, 0};
 Vortex::vec2i mySize = {0, 0};
 SDL_Window* window = nullptr;
-SDL_Renderer* renderer = nullptr;
 Vortex::Cursor::Icon myCursor = Vortex::Cursor::ARROW;
 std::map<Vortex::Cursor::Icon, SDL_SystemCursor> myCursorMap;
 std::map<Vortex::Cursor::Icon, SDL_Cursor*> myCursorCache;
@@ -99,7 +99,7 @@ static const int VKtoKCmap[] = {SDLK_GRAVE,        Key::ACCENT,
                                 SDLK_HOME,         Key::HOME,
                                 SDLK_END,          Key::END,
                                 SDLK_INSERT,       Key::INSERT,
-                                SDLK_DELETE,       Key::DELETE,
+                                SDLK_DELETE,       Key::DELETE_KEY,
                                 SDLK_PRINTSCREEN,  Key::PRINT_SCREEN,
                                 SDLK_SCROLLLOCK,   Key::SCROLL_LOCK,
                                 SDLK_PAUSE,        Key::PAUSE,
@@ -268,13 +268,20 @@ struct SystemImpl : public System {
         myCursorMap.insert({Cursor::SIZE_NESW, SDL_SYSTEM_CURSOR_NESW_RESIZE});
         myCursorMap.insert({Cursor::SIZE_NWSE, SDL_SYSTEM_CURSOR_NWSE_RESIZE});
 
-        // Create a window handle.
-        if (!SDL_CreateWindowAndRenderer("ArrowVortex", 800, 600,
-                                         SDL_WINDOW_OPENGL |
-                                             SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                             SDL_WINDOW_RESIZABLE,
-                                         &window, &renderer)) {
-            SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
+#if defined(__APPLE__)
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+
+        // Avoid creating both a Metal and SDL context on macOS
+        window =
+            SDL_CreateWindow("ArrowVortex", 800, 600,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                 SDL_WINDOW_RESIZABLE);
+        if (!window) {
+            SDL_Log("Couldn't create window: %s", SDL_GetError());
         }
 
         if (LogCheckpoint(window != nullptr, "creating window")) return;
@@ -310,6 +317,13 @@ struct SystemImpl : public System {
         // Check for shader support.
         Shader::initExtension();
         Debug::logBlankLine();
+
+        // Set window minimum size (prevents crashes)
+        if (!SDL_SetWindowMinimumSize(window, kMinimumWindowSize,
+                                      kMinimumWindowSize)) {
+            SDL_Log("Couldn't set minimum window size to %d: %s",
+                    kMinimumWindowSize, SDL_GetError());
+        }
 
         // Make sure the window is centered on the desktop.
         myScale = SDL_GetWindowDisplayScale(window);
@@ -522,9 +536,19 @@ struct SystemImpl : public System {
     }
 
     void setWindowSize(vec2i size) override {
-        mySize = {std::clamp(size.x, 100, 32768),
-                  std::clamp(size.y, 100, 32768)};
-        SDL_SetWindowSize(window, mySize.x, mySize.y);
+        float density = SDL_GetWindowPixelDensity(window);
+        if (density <= 0) {
+            Debug::log("Couldn't get window pixel density with error: %s\n",
+                       SDL_GetError());
+            density = 1.;
+        }
+        mySize = {std::clamp(size.x, kMinimumWindowSize, kMaximumWindowSize),
+                  std::clamp(size.y, kMinimumWindowSize, kMaximumWindowSize)};
+        // SDL does not provide a way to set the window size in pixels so it's
+        // done manually.
+        vec2i nopixel_size = {static_cast<int>(mySize.x / density),
+                              static_cast<int>(mySize.y / density)};
+        SDL_SetWindowSize(window, nopixel_size.x, nopixel_size.y);
         SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED);
     }
@@ -589,10 +613,9 @@ static void ApplicationEnd() {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
-#ifdef WIN32
-    std::wstring exe_folder = Widen(SDL_GetBasePath());
-    SetCurrentDirectoryW(exe_folder.c_str());
-#endif
+    // Make sure std::filesystem calls have the correct base path in them
+    fs::current_path(reinterpret_cast<const char8_t*>(SDL_GetBasePath()));
+
     ApplicationStart();
 #ifndef NDEBUG
     Debug::openConsole();
@@ -736,12 +759,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 // Convert SDL window mouse coordinates to the app's OpenGL coordinate space.
 static vec2i windowMouseToApp(float wx, float wy) {
     int menu_h = gMenubar ? gMenubar->getMenubarHeight() : 0;
-    float rx = wx;
-    float ry = wy;
-    if (!SDL_RenderCoordinatesFromWindow(renderer, wx, wy, &rx, &ry))
-        HudError("Failed to get render coordinates with error: %s",
-                 SDL_GetError());
-    return {static_cast<int>(rx), static_cast<int>(ry - menu_h)};
+    return {static_cast<int>(wx), static_cast<int>(wy - menu_h)};
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
@@ -769,7 +787,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             break;
         }
         case SDL_EVENT_WINDOW_RESIZED:
-        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
+        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
             myScale = SDL_GetWindowDisplayScale(window);
             vec2i next = {event->window.data1, event->window.data2};
             if (!SDL_GetWindowSizeInPixels(window, &next.x, &next.y))

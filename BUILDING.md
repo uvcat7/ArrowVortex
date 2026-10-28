@@ -94,3 +94,22 @@ One of the dependent development packages SDL needs is missing. Delete your cach
 This is a WSL bug and cannot be fixed. Restarting your PC tends to work temporarily.
 ### On WSL, the audio is choppy
 This can't be fixed without desyncing the audio between the host and client, as WSL uses pulseaudio to send the sound to Windows over a virtual network audio port.
+
+## MacOS
+Prerequsites:
+* Needed packages from package manager
+* CMake
+* `brew install pkg-config sdl3 nasm`
+
+### With CMake CLI
+In the terminal at the root folder of this project run:
+```
+cmake -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-osx -DPRESET_NAME={macos-debug | macos-release} -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DCMAKE_MAKE_PROGRAM="ninja"
+cmake --build build
+```
+The resulting binary will be located at `out/build/{macos-debug | macos-release}/bin/ArrowVortex`
+
+To install ArrowVortex to a folder run:
+```
+cmake --install build --prefix "{your_folder_here}"
+```

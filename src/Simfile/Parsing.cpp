@@ -209,8 +209,9 @@ bool SaveSimfile(const Simfile& sim, SimFormat format, bool backup) {
             return Osu::SaveOsu(&sim, backup);
         case SIM_DWI:
             return Dwi::SaveDwi(&sim, backup);
+        default:
+            return false;
     };
-    return false;
 }
 
 };  // namespace Vortex

@@ -6,7 +6,7 @@ namespace fs = std::filesystem;
 
 namespace Vortex {
 
-static const char* NO_ERROR = "no error";
+static const char* kNoError = "no error";
 
 /// For-loop macro to iterate over node attributes.
 /// it: name of iterator, node: pointer to root node.
@@ -200,7 +200,7 @@ struct XmrDoc : public XmrNode {
     std::string saveString(XmrSaveSettings settings);
 
     /// Description of the last occured error.
-    const char* lastError = NO_ERROR;
+    const char* lastError = kNoError;
 };
 
 };  // namespace Vortex
