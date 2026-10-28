@@ -104,12 +104,12 @@ Prerequsites:
 ### With CMake CLI
 In the terminal at the root folder of this project run:
 ```
-cmake -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-osx -DPRESET_NAME={macos-debug | macos-release} -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DCMAKE_MAKE_PROGRAM="ninja"
-cmake --build build
+cmake --preset {macos-debug | macos-release}
+cmake --build out/build/{macos-debug | macos-release}
 ```
-The resulting binary will be located at `out/build/{macos-debug | macos-release}/bin/ArrowVortex`
+The resulting app will be located at `out/build/{macos-debug | macos-release}/bin/ArrowVortex.app`
 
 To install ArrowVortex to a folder run:
 ```
-cmake --install build --prefix "{your_folder_here}"
+cmake --install out/build/macos-release --prefix "{your_folder_here}"
 ```
