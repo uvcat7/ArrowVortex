@@ -158,15 +158,14 @@ jobs:
         run: cmake --build build --config Release --parallel $(nproc)
       - name: Collect into a directory
         if: github.ref_name == 'beta'
-        run: cmake --install build --config Release --prefix ./
+        # ditto keeps the executable bit, which upload-artifact drops.
+        run: |
+          cmake --install build --config Release --prefix ./
+          ditto -c -k --keepParent ArrowVortex.app ArrowVortex-macos.zip
       - name: Upload artifact
         if: github.ref_name == 'beta'
         uses: actions/upload-artifact@v5
         with:
           name: ArrowVortex-${{ github.sha }}
-          path: |
-            bin/assets
-            bin/noteskins
-            bin/settings
-            bin/ArrowVortex
+          path: ArrowVortex-macos.zip
           if-no-files-found: error

@@ -21,10 +21,27 @@ list(APPEND SRC
 add_library(System STATIC ${SRC} ${INC}) 
 target_link_libraries(System PRIVATE Core Editor OpenGL::GL SDL3::SDL3)
 
-add_executable(ArrowVortex WIN32 System.cpp "${CMAKE_CURRENT_SOURCE_DIR}/ArrowVortex.rc")
+if(APPLE)
+	set(ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ArrowVortex.icns")
+	set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+	add_executable(ArrowVortex MACOSX_BUNDLE System.cpp ${ICON_FILE})
+	string(TIMESTAMP BUILD_DATE "%Y.%m.%d")
+	set_target_properties(ArrowVortex PROPERTIES
+		MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
+		MACOSX_BUNDLE_BUNDLE_NAME "ArrowVortex"
+		MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.uvcat7.ArrowVortex"
+		MACOSX_BUNDLE_ICON_FILE "ArrowVortex.icns"
+		MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_DATE}"
+		MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_DATE}")
+	# SDL_GetBasePath() points at Contents/Resources inside a bundle.
+	set(RESOURCE_DIR "$<TARGET_BUNDLE_CONTENT_DIR:ArrowVortex>/Resources")
+else()
+	add_executable(ArrowVortex WIN32 System.cpp "${CMAKE_CURRENT_SOURCE_DIR}/ArrowVortex.rc")
+	set(RESOURCE_DIR "$<TARGET_FILE_DIR:ArrowVortex>")
+endif()
 add_custom_command(
 	TARGET ArrowVortex POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 		${PROJECT_SOURCE_DIR}/bin
-		$<TARGET_FILE_DIR:ArrowVortex>)
+		${RESOURCE_DIR})
 target_link_libraries(ArrowVortex PRIVATE System SDL3::SDL3)

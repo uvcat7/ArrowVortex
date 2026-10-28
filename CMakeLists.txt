@@ -84,10 +84,14 @@ add_subdirectory(src/Managers)
 add_subdirectory(src/Simfile)
 add_subdirectory(src/System)
 
-install(TARGETS ArrowVortex RUNTIME)
-install(DIRECTORY bin/assets DESTINATION bin)
-install(DIRECTORY bin/noteskins DESTINATION bin)
-install(DIRECTORY bin/settings DESTINATION bin)
+if(APPLE)
+    install(TARGETS ArrowVortex BUNDLE DESTINATION .)
+else()
+    install(TARGETS ArrowVortex RUNTIME)
+    install(DIRECTORY bin/assets DESTINATION bin)
+    install(DIRECTORY bin/noteskins DESTINATION bin)
+    install(DIRECTORY bin/settings DESTINATION bin)
+endif()
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
 # Only prevent format/building on Windows, as Linux's clang-format is slightly different
