@@ -211,7 +211,7 @@ void Sound::clear() {
 
     myNumFrames = 0;
     myFrequency = 44100;
-    myIsAllocated = true;
+    myIsAllocated = false;
     myIsCompleted = false;
 }
 
