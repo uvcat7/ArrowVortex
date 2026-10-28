@@ -23,6 +23,7 @@
 #include <Editor/Editor.h>
 #include <Editor/Notefield.h>
 #include <Editor/Menubar.h>
+#include <Editor/View.h>
 
 #include <Managers/MetadataMan.h>
 #include <Managers/ChartMan.h>
@@ -121,7 +122,7 @@ struct SimfileManImpl : public SimfileMan {
             myChartIndex = -1;
             myChart = nullptr;
         }
-
+        double old_time = gView->getCursorTime();
         gStyle->update(myChart);
         gChart->update(myChart);
         gNoteskin->update(myChart);
@@ -132,6 +133,8 @@ struct SimfileManImpl : public SimfileMan {
 
         gEditor->reportChanges(VCM_CHART_CHANGED |
                                VCM_CHART_PROPERTIES_CHANGED);
+        myUpdateEndRow();
+        gView->setCursorTime(old_time);
     }
 
     void onChanges(int changes) override {
