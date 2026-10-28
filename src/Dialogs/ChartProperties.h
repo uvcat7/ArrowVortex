@@ -11,7 +11,7 @@ class DialogChartProperties : public EditorDialog, public InputHandler {
     ~DialogChartProperties();
     DialogChartProperties();
 
-    void onWindowRescale();
+    void onWindowRescale() override;
     void onChanges(int changes) override;
     void onTick() override;
 
