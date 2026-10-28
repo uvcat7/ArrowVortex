@@ -33,7 +33,7 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Add NuGet sources
-        if: ${{ secrets.GH_PACKAGES_TOKEN != '' }}
+        if: github.repository == 'uvcat7/ArrowVortex'
         shell: pwsh
         run: |
           .$(vcpkg fetch nuget) `
@@ -93,7 +93,7 @@ jobs:
             libasound2-dev libdecor-0-dev python3-venv libthai-dev libpipewire-0.3-dev \
             liburing-dev
       - name: Add NuGet sources
-        if: ${{ secrets.GH_PACKAGES_TOKEN != '' }}
+        if: github.repository == 'uvcat7/ArrowVortex'
         shell: bash
         run: |
           mono `vcpkg fetch nuget | tail -n 1` \
@@ -139,7 +139,7 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Install dependent packages
-        if: ${{ secrets.GH_PACKAGES_TOKEN != '' }}
+        if: github.repository == 'uvcat7/ArrowVortex'
         run: |
           brew install pkg-config sdl3 nasm mono
       - name: Add NuGet sources
@@ -187,7 +187,7 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Install dependent packages
-        if: ${{ secrets.GH_PACKAGES_TOKEN != '' }}
+        if: github.repository == 'uvcat7/ArrowVortex'
         run: |
           brew install pkg-config sdl3 nasm mono
       - name: Add NuGet sources
