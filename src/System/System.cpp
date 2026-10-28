@@ -796,8 +796,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
             if (new_scale <= 0.0)
                 HudError("Failed to get SDL window scale with error %s",
                          SDL_GetError());
-            else if (myScale != new_scale)
-            {
+            else if (myScale != new_scale) {
                 myScale = new_scale;
                 myEvents.addWindowRescale();
             }
