@@ -209,7 +209,7 @@ jobs:
           cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-osx
-          -DPRESET_NAME=macos-release
+          -DPRESET_NAME=macos-intel-release
           -DYML=YML
       - name: Build AV
         run: cmake --build build --config Release --parallel $(nproc)
