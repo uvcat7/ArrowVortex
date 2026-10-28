@@ -212,7 +212,7 @@ void Sound::clear() {
     myNumFrames = 0;
     myFrequency = 44100;
     myIsAllocated = true;
-    myIsCompleted = true;
+    myIsCompleted = false;
 }
 
 bool Sound::load(fs::path path, bool threaded, std::string& title,

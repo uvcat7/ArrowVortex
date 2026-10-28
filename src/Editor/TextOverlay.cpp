@@ -25,6 +25,7 @@ namespace {
 
 #define OVERLAY ((TextOverlayImpl*)gTextOverlay)
 #define TEXT_Y_START gSystem->applyScaleFactor(32)
+#define CREDITS_OFFSET 228
 
 struct HudEntry {
     std::string text;
@@ -530,7 +531,7 @@ struct TextOverlayImpl : public TextOverlay {
         vec2i win = gSystem->getWindowSize();
         int h = gSystem->applyScaleFactor(28);
         int w = gSystem->applyScaleFactor(64);
-        int y_off = 128 - 5 * gSystem->applyScaleFactor(16);
+        int y_off = CREDITS_OFFSET - 5 * gSystem->applyScaleFactor(16);
         return {win.x / 2 - 3 * w / 2, win.y / 2 - y_off, w, h};
     }
 
@@ -538,24 +539,25 @@ struct TextOverlayImpl : public TextOverlay {
         vec2i win = gSystem->getWindowSize();
         int h = gSystem->applyScaleFactor(28);
         int w = gSystem->applyScaleFactor(64);
-        int y_off = 128 - 5 * gSystem->applyScaleFactor(16);
+        int y_off = CREDITS_OFFSET - 5 * gSystem->applyScaleFactor(16);
         return {win.x / 2 + w / 2, win.y / 2 - y_off, w, h};
     }
 
     void drawAbout() {
         vec2i size = gSystem->getWindowSize();
 
-        Text::arrange(Text::BC, "ArrowVortex release v1.0.1");
+        Text::arrange(Text::BC, "ArrowVortex release v1.1.0");
         int h = gSystem->applyScaleFactor(16);
-        Text::draw(vec2i{size.x / 2, size.y / 2 - 128});
+        int y_start = size.y / 2 - CREDITS_OFFSET;
+        Text::draw(vec2i{size.x / 2, y_start});
         std::string buildDate = "Build date: " + System::getBuildData();
         Text::arrange(Text::TC, buildDate.c_str());
-        Text::draw(vec2i{size.x / 2, size.y / 2 - 128 + h});
+        Text::draw(vec2i{size.x / 2, y_start + h});
 
         Text::arrange(Text::TC,
                       "Join our Discord for support and our GitHub for source "
                       "code access!");
-        Text::draw(vec2i{size.x / 2, size.y / 2 - 128 + 3 * h});
+        Text::draw(vec2i{size.x / 2, y_start + 3 * h});
 
         recti r = getSupportButtonRect();
         GuiDraw::getButton().base.draw(r);
@@ -568,21 +570,24 @@ struct TextOverlayImpl : public TextOverlay {
         Text::draw(r);
 
         Text::arrange(Text::TC,
-                      "Current GitHub maintainers:\n"
+                      "Current GitHub maintainer:\n"
                       "@uvcat7/TheUltravioletCatastrophe\n"
-                      "@sukibaby/Jasmine\n"
                       "\n"
                       "Source code contributors:\n"
                       "@Psycast/Velocity\n"
+                      "@sukibaby/Jasmine\n"
                       "@DeltaEpsilon7787/Delta Epsilon\n"
                       "@DolpinChips/insep\n"
                       "@ScottBrenner/bren\n"
                       "@LetalexAlex\n"
                       "@SilentMystification\n"
+                      "@MAX-WiRED\n"
+                      "@OmniTroid\n"
+                      "@petoollu\n"
                       "\n"
                       "Original program and many thanks to : \n"
                       "Bram 'Fietsemaker' van de Wetering\n");
-        Text::draw(vec2i{size.x / 2, size.y / 2 - 128 + 7 * h});
+        Text::draw(vec2i{size.x / 2, y_start + 7 * h});
 
         DrawTitleText("ABOUT", "[ESC] close", nullptr);
 

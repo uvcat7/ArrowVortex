@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-project(ArrowVortex)
+project(ArrowVortex VERSION 1.1.0)
 
 set(CMAKE_CONFIGURATION_TYPES Debug;Release;MinSizeRel)
 if("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
@@ -20,8 +20,11 @@ if(WIN32)
     set(tidy_extra "-extra-arg=/EHsc;--exclude-header-filter=SDL3*;")
 endif()
 
-if(NOT APPLE)
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags}${tidy_extra}-p=build")
+find_program(CLANG_TIDY_EXE clang-tidy)
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};${tidy_flags}${tidy_extra}-p=build")
+else()
+    message(WARNING "cmake-tidy was not found, consider installing it!")
 endif()
 
 # Sometimes caching will cause CMAKE_TOOLCHAIN_FILE, build presets, and includes to not update/work, so include fallbacks by hand.
@@ -94,8 +97,8 @@ else()
 endif()
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
-# Only prevent format/building on Windows, as Linux's clang-format is slightly different
-if(WIN32)
+# Only prevent format/building on CI, since there's a separate job for it
+if("${YML}" STREQUAL "")
     add_custom_target(format ALL)
     add_custom_command(
         TARGET format
