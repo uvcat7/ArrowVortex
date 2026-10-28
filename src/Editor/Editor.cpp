@@ -98,7 +98,7 @@ static const char* iconNames[NUM_ICONS] = {
     "double",      "full selection", "half selection", "undo",      "redo",
     "calculate",   "tweak",          "search",         "copy",      "play",
     "arrow right", "folder",         "trash",          "keyboard",  "mouse"};
-  
+
 constexpr int SAVE_FILTERS_COUNT = SDL_arraysize(saveFilters);
 static SDL_DialogFileFilter saveOrderedFilters[SAVE_FILTERS_COUNT];
 static int saveFiltersOrder[SAVE_FILTERS_COUNT];
