@@ -193,7 +193,6 @@ jobs:
       - name: Add NuGet sources
         shell: bash
         run: |    
-          brew install pkg-config sdl3 nasm mono
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
