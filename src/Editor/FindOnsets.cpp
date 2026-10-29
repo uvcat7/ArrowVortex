@@ -23,6 +23,8 @@ void FindOnsets(const float* samples, int samplerate, int numFrames,
     static const char* method = "complex";
 
     auto onset = new_aubio_onset(method, bufsize, windowlen, samplerate);
+    if (!onset) return;
+
     fvec_t *samplevec = new_fvec(windowlen), *beatvec = new_fvec(2);
     for (int i = 0; i <= numFrames - windowlen; i += windowlen) {
         std::memcpy(samplevec->data, samples + i, sizeof(float) * windowlen);

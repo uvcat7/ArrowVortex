@@ -3,6 +3,7 @@
 #include <Core/Core.h>
 #include <thread>
 #include <atomic>
+#include <stop_token>
 
 namespace Vortex {
 
@@ -26,7 +27,7 @@ class BackgroundThread {
     /// Waits until the thread has terminated, after which the function returns.
     void waitUntilDone();
 
-    std::stop_token getStopToken();
+    std::stop_token getStopToken() const;
 
     /// Returns true if the thread has terminated, false if the thread is still
     /// running.
@@ -36,6 +37,7 @@ class BackgroundThread {
     virtual void exec() = 0;
 
    private:
+    std::stop_source stopSource;
     std::jthread thread;
     std::atomic_bool done;
 };

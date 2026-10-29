@@ -15,7 +15,6 @@
 #include <Simfile/Segments.h>
 #include <Simfile/Tempo.h>
 #include <System/System.h>
-#include <string>
 
 namespace Vortex {
 
@@ -101,7 +100,9 @@ void DialogAdjustSync::myCreateWidgets() {
     myBPMLabel = myLayout.add<WgLabel>();
     myBPMList = myLayout.addH<WgSelectList>(gSystem->applyScaleFactor(62));
     myBPMList->value.bind(&mySelectedResult);
-    myBPMList->setTooltip("BPM estimates calculated by the editor");
+    myBPMList->setTooltip(
+        "BPM estimates calculated by the editor, each shown with its support "
+        "relative to the best match");
 
     myLayout.row().col(118).col(118);
     myApplyBPM = myLayout.add<WgButton>();
@@ -143,12 +144,13 @@ void DialogAdjustSync::onTick() {
         // Check if the BPM detector has finished.
         if (myTempoDetector->hasResult()) {
             myDetectionResults = myTempoDetector->getResult();
-            double scalar = 0.0;
+            double best = 0.0;
             for (auto& t : myDetectionResults) {
-                scalar += t.fitness;
+                best = std::max(best, t.fitness);
             }
             for (auto& t : myDetectionResults) {
-                t.fitness /= scalar;
+                t.fitness =
+                    (best > 0.0) ? std::max(0.0, t.fitness / best) : 0.0;
                 t.offset = -t.offset;
             }
             for (int i = 0; i < myDetectionResults.size(); ++i) {

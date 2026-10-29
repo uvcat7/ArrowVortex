@@ -23,6 +23,7 @@ void BackgroundThread::start() {
 }
 
 void BackgroundThread::terminate() {
+    stopSource.request_stop();
     thread.request_stop();
     waitUntilDone();
 }
@@ -34,8 +35,8 @@ void BackgroundThread::waitUntilDone() {
     thread.join();
 }
 
-std::stop_token BackgroundThread::getStopToken() {
-    return thread.get_stop_token();
+std::stop_token BackgroundThread::getStopToken() const {
+    return stopSource.get_token();
 }
 
 bool BackgroundThread::isDone() const { return done; }
