@@ -33,6 +33,7 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Add NuGet sources
+        if: github.repository == 'uvcat7/ArrowVortex'
         shell: pwsh
         run: |
           .$(vcpkg fetch nuget) `
@@ -75,7 +76,7 @@ jobs:
     steps:
       - name: Get AV
         uses: actions/checkout@v7
-      - name: Add NuGet sources
+      - name: Install dependent packages
         shell: bash
         run: |
           sudo apt-get update && sudo apt-get upgrade -y &&
@@ -91,6 +92,10 @@ jobs:
             libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev fcitx-libs-dev \
             libasound2-dev libdecor-0-dev python3-venv libthai-dev libpipewire-0.3-dev \
             liburing-dev
+      - name: Add NuGet sources
+        if: github.repository == 'uvcat7/ArrowVortex'
+        shell: bash
+        run: |
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
@@ -126,17 +131,20 @@ jobs:
           if-no-files-found: error
 
   macos:
-    name: "Build MacOS"
+    name: "Build MacOS Silicon"
     runs-on: macos-latest
     permissions:
       contents: read
     steps:
       - name: Get AV
         uses: actions/checkout@v7
+      - name: Install dependent packages
+        if: github.repository == 'uvcat7/ArrowVortex'
+        run: |
+          brew install pkg-config sdl3 nasm mono
       - name: Add NuGet sources
         shell: bash
         run: |
-          brew install pkg-config sdl3 nasm mono
           mono `vcpkg fetch nuget | tail -n 1` \
             sources add \
             -Source "${{ env.FEED_URL }}" \
@@ -153,6 +161,55 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=arm64-osx
           -DPRESET_NAME=macos-release
+          -DYML=YML
+      - name: Build AV
+        run: cmake --build build --config Release --parallel $(nproc)
+      - name: Collect into a directory
+        if: github.ref_name == 'beta'
+        # ditto keeps the executable bit, which upload-artifact drops.
+        run: |
+          cmake --install build --config Release --prefix ./
+          ditto -c -k --keepParent ArrowVortex.app ArrowVortex-macos.zip
+      - name: Upload artifact
+        if: github.ref_name == 'beta'
+        uses: actions/upload-artifact@v5
+        with:
+          name: ArrowVortex-${{ github.sha }}
+          path: ArrowVortex-macos.zip
+          if-no-files-found: error
+
+  macos-intel:
+    name: "Build MacOS Intel"
+    runs-on: macos-26-intel
+    permissions:
+      contents: read
+    steps:
+      - name: Get AV
+        uses: actions/checkout@v7
+      - name: Install dependent packages
+        if: github.repository == 'uvcat7/ArrowVortex'
+        run: |
+          brew install pkg-config sdl3 nasm mono
+      - name: Add NuGet sources
+        shell: bash
+        run: |    
+          brew install pkg-config sdl3 nasm mono
+          mono `vcpkg fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
+      - name: Configure CMake
+        run: >
+          cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=x64-osx
+          -DPRESET_NAME=macos-intel-release
           -DYML=YML
       - name: Build AV
         run: cmake --build build --config Release --parallel $(nproc)
