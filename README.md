@@ -65,15 +65,6 @@ When the changes you would like to add are of a larger scope (e.g. adding a new 
 Pull requests to add features and fix bugs are always welcomed; however, make sure that you understand the feature you are trying to implement and that you have considered all the potential ramifications of your change before submitting one (otherwise it may be denied). 
 Please reach out to @uvcat7 with any questions. After a contribution and upon request, @uvcat7 will add you to the repository as a collaborator.
 
-## Support and Contributing to the project
-
-When you have questions about ArrowVortex and its functionality, make a discussion topic!
-
-If you would like to report bugs or suggest simple features to add, please use the issue templates to do so. Make sure an issue for your problem doesn't exist before you create a new one.
-When the changes you would like to add are of a larger scope (e.g. adding a new subsystem to the editor or redesigning a popup window), make a discussion instead.
-
-Pull requests to add features and fix bugs are always welcomed. Please reach out to @uvcat7 with any questions. After a contribution, @uvcat7 will add you to the repository as a collaborator.
-
 ## Building ArrowVortex
 
 The project uses CMake for building and vcpkg for package management. If building on Windows, Visual Studio is recommended, but it is not required.
