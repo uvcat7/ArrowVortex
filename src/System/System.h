@@ -8,12 +8,12 @@ namespace fs = std::filesystem;
 
 #ifdef __linux__
 #include <limits.h>
+#define MAX_PATH PATH_MAX
+#undef R_OK
 #endif
 #ifdef __APPLE__
 #include <climits>
 #endif
-#define MAX_PATH PATH_MAX
-#undef R_OK
 
 namespace Vortex {
 
