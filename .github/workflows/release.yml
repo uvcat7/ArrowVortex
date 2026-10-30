@@ -33,7 +33,7 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Add NuGet sources
-        if: github.repository == 'uvcat7/ArrowVortex'
+        if: github.repository == 'uvcat7/ArrowVortex' && github.event.pull_request.head.repo.fork == false
         shell: pwsh
         run: |
           .$(vcpkg fetch nuget) `
@@ -93,7 +93,7 @@ jobs:
             libasound2-dev libdecor-0-dev python3-venv libthai-dev libpipewire-0.3-dev \
             liburing-dev
       - name: Add NuGet sources
-        if: github.repository == 'uvcat7/ArrowVortex'
+        if: github.repository == 'uvcat7/ArrowVortex' && github.event.pull_request.head.repo.fork == false
         shell: bash
         run: |
           mono `vcpkg fetch nuget | tail -n 1` \
@@ -139,10 +139,10 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Install dependent packages
-        if: github.repository == 'uvcat7/ArrowVortex'
         run: |
           brew install pkg-config sdl3 nasm mono
       - name: Add NuGet sources
+        if: github.repository == 'uvcat7/ArrowVortex'  && github.event.pull_request.head.repo.fork == false
         shell: bash
         run: |
           mono `vcpkg fetch nuget | tail -n 1` \
@@ -166,9 +166,9 @@ jobs:
         run: cmake --build build --config Release --parallel $(nproc)
       - name: Collect into a directory
         if: github.ref_name == 'beta'
-        # ditto keeps the executable bit, which upload-artifact drops.
         run: |
           cmake --install build --config Release --prefix ./
+          codesign --force --deep --sign - ArrowVortex.app
           ditto -c -k --keepParent ArrowVortex.app ArrowVortex-macos.zip
       - name: Upload artifact
         if: github.ref_name == 'beta'
@@ -187,10 +187,10 @@ jobs:
       - name: Get AV
         uses: actions/checkout@v7
       - name: Install dependent packages
-        if: github.repository == 'uvcat7/ArrowVortex'
         run: |
           brew install pkg-config sdl3 nasm mono
       - name: Add NuGet sources
+        if: github.repository == 'uvcat7/ArrowVortex' && github.event.pull_request.head.repo.fork == false
         shell: bash
         run: |    
           mono `vcpkg fetch nuget | tail -n 1` \
@@ -214,9 +214,9 @@ jobs:
         run: cmake --build build --config Release --parallel $(nproc)
       - name: Collect into a directory
         if: github.ref_name == 'beta'
-        # ditto keeps the executable bit, which upload-artifact drops.
         run: |
           cmake --install build --config Release --prefix ./
+          codesign --force --deep --sign - ArrowVortex.app
           ditto -c -k --keepParent ArrowVortex.app ArrowVortex-macos.zip
       - name: Upload artifact
         if: github.ref_name == 'beta'

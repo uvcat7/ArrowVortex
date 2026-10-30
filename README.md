@@ -73,6 +73,8 @@ Currently, builds support Windows, Linux, and MacOS, but since the project is SD
 
 See the [build details](BUILDING.md) for more information.
 
+Nightly builds to get the latest changes from the beta branch are available [here](https://psycast.github.io/ArrowVortex-nightly/).
+
 ## License
 
 ArrowVortex is provided under the GPLv3 license, or at your option, any later version.
