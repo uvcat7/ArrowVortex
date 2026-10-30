@@ -7,10 +7,12 @@ namespace fs = std::filesystem;
 #include <System/OpenGL.h>
 
 #ifdef __linux__
-// Defines INT_MAX and INT_MIN
 #include <limits.h>
 #define MAX_PATH PATH_MAX
 #undef R_OK
+#endif
+#ifdef __APPLE__
+#include <climits>
 #endif
 
 namespace Vortex {
