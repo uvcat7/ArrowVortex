@@ -48,6 +48,7 @@ class BackgroundThread {
     bool isDone() const;
     bool shouldStop() const;
     virtual void exec() = 0;
+
    private:
     std::thread thread;
     std::atomic_bool done{false};
