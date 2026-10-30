@@ -6,19 +6,18 @@
 
 namespace Vortex {
 
-	class DialogCustomSnap : public EditorDialog, public InputHandler
-	{
-	public:
-		~DialogCustomSnap();
-		DialogCustomSnap();
+class DialogCustomSnap : public EditorDialog, public InputHandler {
+   public:
+    ~DialogCustomSnap();
+    DialogCustomSnap();
 
-		void onChange();
+    void onChange();
 
-	private:
-		void myCreateWidgets();
+   private:
+    void myCreateWidgets();
 
-		int myCustomSnap;
-	};
+    int myCustomSnap;
+};
 
-}; // namespace Vortex
+};  // namespace Vortex
 #pragma once

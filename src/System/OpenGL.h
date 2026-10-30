@@ -1,6 +1,23 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#include "gl/gl.h"
+#ifdef _WIN32
+#include <windows.h>
+#include <gl/gl.h>
+#undef max
+#undef min
 #undef ERROR
+
+#elif defined(__APPLE__)
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl.h>
+#ifndef APIENTRY
+#define APIENTRY
+#endif
+#ifndef GLAPIENTRY
+#define GLAPIENTRY APIENTRY
+#endif
+
+#elif defined(__linux__)
+#include "SDL3/SDL_opengl.h"
+#include "SDL3/SDL_opengl_glext.h"
+#endif

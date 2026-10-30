@@ -4,6 +4,4 @@
 
 #include <System/System.h>
 
-namespace Vortex {
-
-}; // namespace Vortex
+namespace Vortex {};  // namespace Vortex

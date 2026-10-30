@@ -5,12 +5,11 @@
 namespace Vortex {
 
 struct TextDraw {
+    static void create();
+    static void destroy();
 
-static void create();
-static void destroy();
+    static void draw();
 
-static void draw();
+};  // TextRenderer.
 
-}; // TextRenderer.
-
-}; // namespace Vortex
+};  // namespace Vortex

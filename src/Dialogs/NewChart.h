@@ -6,19 +6,18 @@
 
 namespace Vortex {
 
-class DialogNewChart : public EditorDialog
-{
-public:
-	~DialogNewChart();
-	DialogNewChart();
+class DialogNewChart : public EditorDialog {
+   public:
+    ~DialogNewChart();
+    DialogNewChart();
 
-private:
-	void myCreateWidgets();
-	void myCreateChart();
+   private:
+    void myCreateWidgets();
+    void myCreateChart();
 
-	WgDroplist* myStyleList;
-	String myStepArtist;
-	int myRating, myDifficulty, myStyle;
+    WgDroplist* myStyleList;
+    std::string myStepArtist;
+    int myRating = 1, myDifficulty = 0, myStyle = 0;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex

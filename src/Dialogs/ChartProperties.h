@@ -1,49 +1,93 @@
 #pragma once
 
 #include <Dialogs/Dialog.h>
-#include <Core/Widgets.h>
-#include <Core/WidgetsLayout.h>
 
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 
-class DialogChartProperties : public EditorDialog
-{
-public:
-	typedef DialogChartProperties DCP;
+class DialogChartProperties : public EditorDialog, public InputHandler {
+   public:
+    ~DialogChartProperties();
+    DialogChartProperties();
 
-	~DialogChartProperties();
-	DialogChartProperties();
+    void onWindowRescale() override;
+    void onChanges(int changes) override;
+    void onTick() override;
 
-	void onChanges(int changes) override;
+   private:
+    void myCreateChartProperties();
+    void mySetStepArtist();
+    void mySetDifficulty();
+    void mySetRating();
+    void myCalcRating();
 
-private:
-	void myCreateChartProperties();
-	void mySetStepArtist();
-	void mySetDifficulty();
-	void mySetRating();
-	void myCalcRating();
+    void myCreateNoteInfo();
+    void myUpdateNoteInfo();
+    void myCopyNoteInfo();
+    void mySelectNotes(int type);
 
-	void myCreateNoteInfo();
-	void myUpdateNoteInfo();
-	void myCopyNoteInfo();
-	void mySelectNotes(int type);
+    void myCreateGraph();
+    void myUpdateGraph();
 
-	void myCreateBreakdown();
-	void myUpdateBreakdown();
-	void myCopyBreakdown();
+    void myCreateBreakdown();
+    void myUpdateBreakdown();
+    void myCopyBreakdown();
 
-	class BreakdownWidget;
-	BreakdownWidget* myBreakdown;
+    class GraphWidget;
+    GraphWidget* myGraph;
 
-	WgButton* myNoteInfo[6];
-	WgLabel* myNoteDensity;
-	WgLabel* myStreamMeasureCount;
-	WgDroplist* myStyleList;
-	String myStepArtist;
+    class BreakdownWidget;
+    BreakdownWidget* myBreakdown;
 
-	int myRating, myDifficulty, myStyle;
+    WgButton* myNoteInfo[6];
+    WgLabel* myNoteDensity;
+    WgLabel* myPeakDensity;
+    WgLabel* myStreamMeasureCount;
+    WgLabel* my16thMeasureCount;
+    WgDroplist* myStyleList;
+    std::string myStepArtist;
+    bool myCompressedBreakdown = false;
+
+    int myRating = 1, myDifficulty = 0, myStyle = 0;
 };
 
-}; // namespace Vortex
+class DialogChartProperties::BreakdownWidget : public GuiWidget {
+   public:
+    ~BreakdownWidget() override;
+    explicit BreakdownWidget(GuiContext* gui);
+
+    void updateBreakdown(WgLabel* measureCount, WgLabel* measureCount16,
+                         bool compressed);
+    void selectStream(vec2i rows);
+
+    void onUpdateSize() override;
+    void onArrange(recti r) override;
+    void onTick() override;
+    void onDraw() override;
+    std::string buttonText(bool compressed);
+
+   private:
+    DialogChartProperties* myDialog;
+    std::vector<WgButton*> myButtons;
+};
+
+class DialogChartProperties::GraphWidget : public GuiWidget {
+   public:
+    ~GraphWidget() override;
+    explicit GraphWidget(GuiContext* gui);
+    void updateGraph();
+    void onDraw() override;
+    double peakNps();
+
+   private:
+    DialogChartProperties* myDialog;
+    std::vector<int> data;
+    std::vector<Vortex::recti> fill_commands;
+    double peak = 0.0;
+    int scale = 1;
+    int endMeasure = 0;
+    double endTime = 0.0;
+};
+
+};  // namespace Vortex

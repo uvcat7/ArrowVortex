@@ -1,63 +1,61 @@
 #pragma once
 
 #include <Core/GuiContext.h>
-#include <Core/Vector.h>
+#include <vector>
 
 namespace Vortex {
 
-class RowLayout : public GuiWidget
-{
-public:
-	virtual ~RowLayout();
+class RowLayout : public GuiWidget {
+   public:
+    virtual ~RowLayout();
 
-	RowLayout(GuiContext* gui, int spacing);
+    RowLayout(GuiContext* gui, int spacing);
 
-	void onUpdateSize();
-	void onArrange(recti r);
-	void onTick();
-	void onDraw();
+    void onUpdateSize() override;
+    void onArrange(recti r) override;
+    void onTick() override;
+    void onDraw() override;
 
-	void add(GuiWidget* w);
-	void addBlank();
+    void onWindowRescale() override;
 
-	RowLayout& row(bool expand = false);
-	RowLayout& col(bool expand = false);
-	RowLayout& col(int w, bool expand = false);
+    void add(GuiWidget* w);
+    void addBlank();
 
-	GuiWidget** begin();
-	GuiWidget** end();
+    RowLayout& row(bool expand = false);
+    RowLayout& col(bool expand = false);
+    RowLayout& col(int w, bool expand = false);
 
-	template <typename T>
-	T* add()
-	{
-		T* w = new T(gui_);
-		add(w);
-		return w;
-	}
+    std::vector<GuiWidget*>::const_iterator begin();
+    std::vector<GuiWidget*>::const_iterator end();
 
-	template <typename T>
-	T* add(StringRef label)
-	{
-		add<WgLabel>()->text.set(label);
-		return add<T>();
-	}
+    template <typename T>
+    T* add() {
+        T* w = new T(gui_);
+        add(w);
+        return w;
+    }
 
-	template <typename T>
-	T* addH(int height)
-	{
-		T* w = new T(gui_);
-		w->setHeight(height);
-		add(w);
-		return w;
-	}
+    template <typename T>
+    T* add(const std::string& label) {
+        add<WgLabel>()->text.set(label);
+        return add<T>();
+    }
 
-protected:
-	struct Row;
-	struct Col;
+    template <typename T>
+    T* addH(int height) {
+        T* w = new T(gui_);
+        w->setHeight(height);
+        add(w);
+        return w;
+    }
 
-	Vector<Row> row_list_;
-	Vector<GuiWidget*> widget_list_;
-	int row_spacing_;
+   protected:
+    struct Row;
+    struct Col;
+
+    std::vector<Row> row_list_;
+    std::vector<GuiWidget*> widget_list_;
+    int row_spacing_;
 };
 
-}; // namespace Vortex
+};  // namespace Vortex
