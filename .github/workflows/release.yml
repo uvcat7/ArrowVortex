@@ -164,13 +164,11 @@ jobs:
           -DYML=YML
       - name: Build AV
         run: cmake --build build --config Release --parallel $(nproc)
-      - name: Sign .app
-        run: |
-          codesign --force --deep --sign - ArrowVortex.app
       - name: Collect into a directory
         if: github.ref_name == 'beta'
         run: |
           cmake --install build --config Release --prefix ./
+          codesign --force --deep --sign - ArrowVortex.app
           ditto -c -k --keepParent ArrowVortex.app ArrowVortex-macos.zip
       - name: Upload artifact
         if: github.ref_name == 'beta'
@@ -214,13 +212,11 @@ jobs:
           -DYML=YML
       - name: Build AV
         run: cmake --build build --config Release --parallel $(nproc)
-      - name: Sign .app
-        run: |
-          codesign --force --deep --sign - ArrowVortex.app
       - name: Collect into a directory
         if: github.ref_name == 'beta'
         run: |
           cmake --install build --config Release --prefix ./
+          codesign --force --deep --sign - ArrowVortex.app
           ditto -c -k --keepParent ArrowVortex.app ArrowVortex-macos.zip
       - name: Upload artifact
         if: github.ref_name == 'beta'
