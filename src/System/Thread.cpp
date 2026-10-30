@@ -1,43 +1,41 @@
 #include <System/Thread.h>
 
-#include <Core/Utils.h>
-#include <Core/AlignedMemory.h>
-
-#include <vector>
-
 namespace Vortex {
 
-BackgroundThread::BackgroundThread() { done = false; }
+BackgroundThread::BackgroundThread()
+    : stopRequested(std::make_shared<std::atomic_bool>(false)) {}
 
-BackgroundThread::~BackgroundThread() = default;
+BackgroundThread::~BackgroundThread() { terminate(); }
 
 void BackgroundThread::start() {
-    if (isDone()) {
-        return;
+    if (thread.joinable()) {
+        if (!done.load()) return;
+        thread.join();
     }
 
-    thread = std::jthread([&]() {
+    stopRequested->store(false);
+    done.store(false);
+    thread = std::thread([this]() {
         exec();
-        done = true;
+        done.store(true);
     });
 }
 
 void BackgroundThread::terminate() {
-    thread.request_stop();
-    waitUntilDone();
+    stopRequested->store(true);
+    if (thread.joinable()) thread.join();
 }
 
 void BackgroundThread::waitUntilDone() {
-    if (!thread.joinable()) {
-        return;
-    }
-    thread.join();
+    if (thread.joinable()) thread.join();
 }
 
-std::stop_token BackgroundThread::getStopToken() {
-    return thread.get_stop_token();
+bool BackgroundThread::isDone() const { return done.load(); }
+
+bool BackgroundThread::shouldStop() const { return stopRequested->load(); }
+
+StopToken BackgroundThread::getStopToken() const {
+    return StopToken(stopRequested);
 }
 
-bool BackgroundThread::isDone() const { return done; }
-
-};  // namespace Vortex
+}  // namespace Vortex
