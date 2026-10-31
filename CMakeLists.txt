@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.28)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Target macOS 14 and higher")
     set(VCPKG_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Target macOS 14 and higher")
 endif()
 
