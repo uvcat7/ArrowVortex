@@ -112,7 +112,7 @@ GapData::GapData(int bufferSize, int downsample, int numOnsets,
       bufferSize(bufferSize) {
     window = AlignedMalloc<real>(windowSize);
     wrappedPos = AlignedMalloc<int>(numOnsets);
-    wrappedOnsets = AlignedMalloc<real>(bufferSize);
+    wrappedOnsets = AlignedMalloc<real>(bufferSize + 1);
     CreateHammingWindow(window, windowSize);
 }
 
@@ -132,7 +132,9 @@ static real GapConfidence(const GapData& gapdata, int gapPos, int interval) {
     const real* wrappedOnsets = gapdata.wrappedOnsets;
     real area = 0.0;
 
-    int beginOnset = gapPos - halfWindowSize;
+    const int windowBegin = gapPos - halfWindowSize;
+
+    int beginOnset = windowBegin;
     int endOnset = gapPos + halfWindowSize;
 
     if (beginOnset < 0) {
@@ -153,7 +155,7 @@ static real GapConfidence(const GapData& gapdata, int gapPos, int interval) {
         endOnset = interval;
     }
     for (int i = beginOnset; i < endOnset; ++i) {
-        int windowIndex = i - beginOnset;
+        int windowIndex = i - windowBegin;
         area += wrappedOnsets[i] * window[windowIndex];
     }
 
@@ -471,13 +473,12 @@ static real GetBaseOffsetValue(const GapData& gapdata, int samplerate,
 
 // Compares each offset to its corresponding offbeat value, and selects the most
 // promising one.
-static real AdjustForOffbeats(SerializedTempo* data, real offset, real bpm) {
+// The slopes buffer is computed once by the caller and shared across every BPM
+// candidate; it only depends on the audio, not on the tempo being tested.
+static real AdjustForOffbeats(SerializedTempo* data, const real* slopes,
+                              real offset, real bpm) {
     int samplerate = data->samplerate;
     int numFrames = data->numFrames;
-
-    // Create a slope representation of the waveform.
-    real* slopes = AlignedMalloc<real>(numFrames);
-    ComputeSlopes(data->samples, slopes, numFrames, samplerate);
 
     // Determine the offbeat sample position.
     real secondsPerBeat = 60.0 / bpm;
@@ -493,7 +494,6 @@ static real AdjustForOffbeats(SerializedTempo* data, real offset, real bpm) {
         sumA += slopes[static_cast<int>(posA)];
         sumB += slopes[static_cast<int>(posB)];
     }
-    AlignedFree(slopes);
 
     // Return the offset with the highest support.
     return (sumA >= sumB) ? offset : offbeat;
@@ -515,8 +515,14 @@ static void CalculateOffset(SerializedTempo* data, Onset* onsets,
     for (auto& t : tempo)
         t.offset = GetBaseOffsetValue(gapdata, samplerate, t.bpm);
 
-    // Test all onsets against their offbeat values, pick the best one.
-    for (auto& t : tempo) t.offset = AdjustForOffbeats(data, t.offset, t.bpm);
+    real* slopes = AlignedMalloc<real>(data->numFrames);
+    if (!slopes) return;
+
+    ComputeSlopes(data->samples, slopes, data->numFrames, samplerate);
+    for (auto& t : tempo)
+        t.offset = AdjustForOffbeats(data, slopes, t.offset, t.bpm);
+
+    AlignedFree(slopes);
 }
 
 // ================================================================================================
