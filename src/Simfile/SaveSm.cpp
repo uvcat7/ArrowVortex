@@ -422,8 +422,9 @@ static const char* GetDifficultyString(Difficulty difficulty) {
             return "Hard";
         case DIFF_CHALLENGE:
             return "Challenge";
+        default:
+            return "Edit";
     };
-    return "Edit";
 }
 
 static inline bool TestSectionCompression(const char* section, int width,

@@ -27,12 +27,11 @@ namespace Vortex {
 static SDL_DialogFileFilter loadFilter[] = {{"All Files (*.*)", "*"}};
 
 #define BANNER_W gSystem->applyScaleFactor(418)
-#define BANNER_H gSystem->applyScaleFactor(164)
 
 struct DialogSongProperties::BannerWidget : public GuiWidget {
     explicit BannerWidget(GuiContext* gui) : GuiWidget(gui) {
         width_ = BANNER_W;
-        height_ = BANNER_H;
+        height_ = gSystem->applyScaleFactor(164);
     }
     void onDraw() override {
         if (tex.size() == 0 || !tex[0].handle()) return;

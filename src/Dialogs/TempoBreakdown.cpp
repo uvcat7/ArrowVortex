@@ -147,7 +147,7 @@ DialogTempoBreakdown::DialogTempoBreakdown() {
     setTitle("TEMPO BREAKDOWN");
     setWidth(gSystem->applyScaleFactor(200));
 
-    setMinimumHeight(gSystem->applyScaleFactor(32));
+    setMinimumHeight(32);
     setResizeable(false, true);
 
     myList = new TempoList(getGui());

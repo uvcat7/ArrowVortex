@@ -1,13 +1,11 @@
 #include <Editor/Editor.h>
 
-#include <map>
-#include <format>
-
 #include <Core/Xmr.h>
 #include <Core/Gui.h>
 #include <Core/Draw.h>
 #include <Core/Shader.h>
 #include <Core/StringUtils.h>
+#include <Core/FontManager.h>
 
 #include <System/System.h>
 #include <System/File.h>
@@ -17,7 +15,6 @@
 #include <Editor/Menubar.h>
 #include <Editor/Action.h>
 #include <Editor/Shortcuts.h>
-
 #include <Editor/View.h>
 #include <Editor/Notefield.h>
 #include <Editor/NotefieldPreview.h>
@@ -58,7 +55,9 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <format>
 #include <fstream>
+#include <map>
 
 #include <SDL3/SDL.h>
 
@@ -92,6 +91,14 @@ static SDL_DialogFileFilter saveFilters[] = {
     {"Osu!mania (*.osu)", "osu"},   {"Dance With Intensity (*.dwi)", "dwi"},
     {"All Files (*.*)", "*"},
 };
+
+static const int NUM_ICONS = 20;
+static const char* iconNames[NUM_ICONS] = {
+    "up one",      "up half",        "down one",       "down half", "halve",
+    "double",      "full selection", "half selection", "undo",      "redo",
+    "calculate",   "tweak",          "search",         "copy",      "play",
+    "arrow right", "folder",         "trash",          "keyboard",  "mouse"};
+
 constexpr int SAVE_FILTERS_COUNT = SDL_arraysize(saveFilters);
 static SDL_DialogFileFilter saveOrderedFilters[SAVE_FILTERS_COUNT];
 static int saveFiltersOrder[SAVE_FILTERS_COUNT];
@@ -249,6 +256,17 @@ struct EditorImpl : public Editor, public InputHandler {
         text.shadowColor = RGBAtoColor32(0, 0, 0, 128);
         text.makeDefault();
 
+        // Load text glyphs.
+        Texture icons[NUM_ICONS];
+        Texture::createTiles("assets/icons text.png", 64, 64, NUM_ICONS, icons,
+                             false, Texture::ALPHA);
+        int tex_size = 16;
+        for (int i = 0; i < NUM_ICONS; ++i) {
+            Text::createGlyph(iconNames[i], icons[i], 0, tex_size / 4 - 1, 0,
+                              tex_size, tex_size);
+        }
+        FontManager::updateSpecialGlyphs();
+
         // Create the text overlay, so other editor components can show HUD
         // messages.
         TextOverlay::create();
@@ -377,22 +395,22 @@ struct EditorImpl : public Editor, public InputHandler {
             if (bgStyle) myBackgroundStyle = ToBackgroundStyle(bgStyle);
         }
 
-        XmrNode* interface = settings.child("interface");
-        if (interface) {
-            interface->get("fontSize", &myFontSize);
+        XmrNode* xmr_interface = settings.child("interface");
+        if (xmr_interface) {
+            xmr_interface->get("fontSize", &myFontSize);
 
-            fs::path path = fs::path(interface->get("fontPath"));
+            fs::path path = fs::path(xmr_interface->get("fontPath"));
             if (std::ifstream testPath(path.c_str());
                 !path.empty() && testPath.good())
                 myFontPath = pathToUtf8(path);
 
             bool winMax = false;
-            interface->get("windowMaximized", &winMax);
+            xmr_interface->get("windowMaximized", &winMax);
             if (winMax)
                 gSystem->setWindowState(true);
             else {
                 int winSize[2] = {0, 0};
-                if (interface->get("windowSize", winSize, 2)) {
+                if (xmr_interface->get("windowSize", winSize, 2)) {
                     vec2i size = {winSize[0], winSize[1]};
                     gSystem->setWindowSize(size);
                 }
@@ -414,18 +432,20 @@ struct EditorImpl : public Editor, public InputHandler {
 
         view->addAttrib("backgroundStyle", ToString(myBackgroundStyle));
 
-        XmrNode* interface = settings.addChild("interface");
+        XmrNode* xmr_interface = settings.addChild("interface");
 
-        interface->addAttrib("fontPath", myFontPath.c_str());
-        interface->addAttrib("fontSize", static_cast<long>(myFontSize));
+        xmr_interface->addAttrib("fontPath", myFontPath.c_str());
+        xmr_interface->addAttrib("fontSize", static_cast<long>(myFontSize));
 
         bool windowState = gSystem->getWindowState();
         if (windowState) {
-            interface->addAttrib("windowMaximized", true);
+            xmr_interface->addAttrib("windowMaximized", true);
         } else {
             vec2i ws = gSystem->getWindowSize();
+            // getWindowSize is usable window, not true window, so adjust
+            if (gMenubar) ws.y += gMenubar->getMenubarHeight();
             long windowSize[] = {ws.x, ws.y};
-            interface->addAttrib("windowSize", windowSize, 2);
+            xmr_interface->addAttrib("windowSize", windowSize, 2);
         }
     }
 
@@ -785,8 +805,10 @@ struct EditorImpl : public Editor, public InputHandler {
         auto coords = gView->getNotefieldCoords();
         int offset =
             gTempoBoxes->getStackWidth(meta->side, mySegmentEditor.row);
-        int x = meta->side ? coords.xr + offset + 16
-                           : coords.xl - offset - 10 - dlg->getFixedWidth();
+        int x = meta->side
+                    ? coords.xr + offset + gSystem->applyScaleFactor(16)
+                    : coords.xl - offset -
+                          gSystem->applyScaleFactor(10 + dlg->getFixedWidth());
         int y =
             gView->rowToY(mySegmentEditor.row) - (dlg->getFixedHeight() / 2);
 
@@ -850,6 +872,8 @@ struct EditorImpl : public Editor, public InputHandler {
             case DIALOG_EDIT_SEGMENT:
                 dlg = new DialogEditSegment;
                 break;
+            default:
+                break;
         };
 
         if (dlg == nullptr) {
@@ -900,6 +924,11 @@ struct EditorImpl : public Editor, public InputHandler {
                 }
             }
         }
+    }
+
+    void onWindowRescale() override {
+        FontManager::updateSpecialGlyphs();
+        gTempoBoxes->onChanges(VCM_TEMPO_CHANGED);
     }
 
     void onMenuAction(int id) override {

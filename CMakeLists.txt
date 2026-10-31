@@ -2,11 +2,15 @@ cmake_minimum_required(VERSION 3.28)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+if(APPLE)
+    set(VCPKG_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Target macOS 14 and higher")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-project(ArrowVortex)
+project(ArrowVortex VERSION 1.1.0)
 
 set(CMAKE_CONFIGURATION_TYPES Debug;Release;MinSizeRel)
 if("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
@@ -19,7 +23,13 @@ endif()
 if(WIN32)
     set(tidy_extra "-extra-arg=/EHsc;--exclude-header-filter=SDL3*;")
 endif()
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;${tidy_flags}${tidy_extra}-p=build")
+
+find_program(CLANG_TIDY_EXE clang-tidy)
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};${tidy_flags}${tidy_extra}-p=build")
+else()
+    message(WARNING "cmake-tidy was not found, consider installing it!")
+endif()
 
 # Sometimes caching will cause CMAKE_TOOLCHAIN_FILE, build presets, and includes to not update/work, so include fallbacks by hand.
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE OR "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
@@ -46,6 +56,19 @@ if("${toolchain_include}" STREQUAL "")
     endif()
 endif()
 
+if(APPLE)
+    set(_homebrew_prefix "/opt/homebrew")
+    if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+        set(_homebrew_prefix "/usr/local")
+    endif()
+    set(_homebrew_sdl3 "${_homebrew_prefix}/opt/sdl3")
+    if(EXISTS "${_homebrew_sdl3}/include")
+        list(APPEND CMAKE_PREFIX_PATH "${_homebrew_sdl3}")
+        list(APPEND toolchain_include "${_homebrew_sdl3}/include")
+        message(STATUS "Detected Homebrew SDL3 at: ${_homebrew_sdl3}")
+    endif()
+endif()
+
 message(STATUS "Including toolchain folder: ${toolchain_include}") 
 include_directories("${toolchain_include}")
 include_directories("${PROJECT_SOURCE_DIR}/src")
@@ -68,14 +91,18 @@ add_subdirectory(src/Managers)
 add_subdirectory(src/Simfile)
 add_subdirectory(src/System)
 
-install(TARGETS ArrowVortex RUNTIME)
-install(DIRECTORY bin/assets DESTINATION bin)
-install(DIRECTORY bin/noteskins DESTINATION bin)
-install(DIRECTORY bin/settings DESTINATION bin)
+if(APPLE)
+    install(TARGETS ArrowVortex BUNDLE DESTINATION .)
+else()
+    install(TARGETS ArrowVortex RUNTIME)
+    install(DIRECTORY bin/assets DESTINATION bin)
+    install(DIRECTORY bin/noteskins DESTINATION bin)
+    install(DIRECTORY bin/settings DESTINATION bin)
+endif()
 
 file(GLOB_RECURSE path_sources "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
-# Only prevent format/building on Windows, as Linux's clang-format is slightly different
-if(WIN32)
+# Only prevent format/building on CI, since there's a separate job for it
+if("${YML}" STREQUAL "")
     add_custom_target(format ALL)
     add_custom_command(
         TARGET format

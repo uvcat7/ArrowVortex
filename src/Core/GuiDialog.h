@@ -39,10 +39,12 @@ class DialogData : public GuiWidget {
 
     void onMousePress(MousePress& evt) override;
     void onMouseRelease(MouseRelease& evt) override;
+    void onWindowRescale() override;
 
     void arrange();
     void tick();
     void draw();
+    void rescale();
 
     GuiDialog* dialog_ptr_;
     GuiContext* gui_;
@@ -73,6 +75,7 @@ class DialogData : public GuiWidget {
     ActionType GetAction(int x, int y) const;
     void FinishActions();
 
+    float scale_ = 1;
     vec2i min_size_ = {0, 0};
     vec2i max_size_ = {INT_MAX, INT_MAX};
     vec2i pinned_position_ = {0, 0};

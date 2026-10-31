@@ -11,10 +11,12 @@ class RowLayout : public GuiWidget {
 
     RowLayout(GuiContext* gui, int spacing);
 
-    void onUpdateSize();
-    void onArrange(recti r);
-    void onTick();
-    void onDraw();
+    void onUpdateSize() override;
+    void onArrange(recti r) override;
+    void onTick() override;
+    void onDraw() override;
+
+    void onWindowRescale() override;
 
     void add(GuiWidget* w);
     void addBlank();

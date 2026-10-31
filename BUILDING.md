@@ -11,8 +11,8 @@ Prerequsites:
 ### With CMake CLI
 With Developer PowerShell open at root folder of this project run:
 ```pwsh
-cmake -S. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-linux -DPRESET_NAME=linux-release
-cmake --build build
+cmake --preset {windows-debug | windows-release}
+cmake --build out/build/{windows-debug | windows-release}
 ```
 The resulting binary will be located at `out\build\{windows-debug | windows-release}\bin\ArrowVortex.exe`
 
@@ -72,8 +72,8 @@ You may be missing more packages depending on your distribution and what default
 ### With CMake CLI
 In the terminal at the root folder of this project run:
 ```
-cmake -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-linux -DPRESET_NAME={linux-debug | linux-release} -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DCMAKE_MAKE_PROGRAM="ninja"
-cmake --build build
+cmake --preset {linux-debug | linux-release}
+cmake --build out/build/{linux-debug | linux-release}
 ```
 The resulting binary will be located at `out/build/{linux-debug | linux-release}/bin/ArrowVortex`
 
@@ -81,6 +81,8 @@ To install ArrowVortex to a folder run:
 ```
 cmake --install build --prefix "{your_folder_here}"
 ```
+
+A .desktop file is included to automatically install the application to set the build up for integrated GNOME/KDE/etc. support.
 
 ### With Visual Studio
 1. Use the connection manager to connect to your Linux installation (preferably WSL) over SSH: https://learn.microsoft.com/en-us/cpp/linux/connect-to-your-remote-linux-computer?view=msvc-170#connect-to-wsl
@@ -94,3 +96,22 @@ One of the dependent development packages SDL needs is missing. Delete your cach
 This is a WSL bug and cannot be fixed. Restarting your PC tends to work temporarily.
 ### On WSL, the audio is choppy
 This can't be fixed without desyncing the audio between the host and client, as WSL uses pulseaudio to send the sound to Windows over a virtual network audio port.
+
+## MacOS
+Prerequsites:
+* Needed packages from package manager
+* CMake
+* `brew install pkg-config sdl3 nasm`
+
+### With CMake CLI
+In the terminal at the root folder of this project run:
+```
+cmake --preset {macos-debug | macos-release | macos-intel-debug | macos-intel-release}
+cmake --build out/build/{macos-debug | macos-release | macos-intel-debug | macos-intel-release}
+```
+The resulting app will be located at `out/build/{preset_name}/bin/ArrowVortex.app`
+
+To install ArrowVortex to a folder run:
+```
+cmake --install out/build/macos-release --prefix "{your_folder_here}"
+```

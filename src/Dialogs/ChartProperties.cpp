@@ -52,6 +52,11 @@ DialogChartProperties::DialogChartProperties() {
     onChanges(VCM_ALL_CHANGES);
 }
 
+void DialogChartProperties::onTick() {
+    EditorDialog::onTick();
+    handleInputs(getGui()->getEvents());
+}
+
 void DialogChartProperties::onChanges(int changes) {
     if (changes & (VCM_CHART_PROPERTIES_CHANGED | VCM_CHART_CHANGED)) {
         myStyleList->clearItems();
@@ -85,6 +90,11 @@ void DialogChartProperties::onChanges(int changes) {
         myUpdateGraph();
         myUpdateNoteInfo();
     }
+}
+
+void DialogChartProperties::onWindowRescale() {
+    myUpdateGraph();
+    myUpdateBreakdown();
 }
 
 // ================================================================================================
@@ -272,8 +282,8 @@ void DialogChartProperties::mySelectNotes(int type) {
 DialogChartProperties::GraphWidget::~GraphWidget() = default;
 DialogChartProperties::GraphWidget::GraphWidget(GuiContext* gui)
     : GuiWidget(gui) {
-    width_ = 340;
-    height_ = 100;
+    setWidth(gSystem->applyScaleFactor(340));
+    setHeight(gSystem->applyScaleFactor(100));
 }
 double DialogChartProperties::GraphWidget::peakNps() { return peak; };
 
@@ -321,18 +331,17 @@ void DialogChartProperties::GraphWidget::updateGraph() {
 
     fill_commands.clear();
 
-    int scale_width = gSystem->applyScaleFactor(width_);
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     buckets = data.size();
-    double barWidth = (static_cast<double>(scale_width) / buckets);
+    double barWidth = (static_cast<double>(width_) / buckets);
     int w = barWidth + 1;
     slices = 1;
 
     for (int i = 0; i < buckets; i += slices) {
         slices = 1;
-        int x = static_cast<int>(measure_time(i) / endTime * scale_width);
+        int x = static_cast<int>(measure_time(i) / endTime * width_);
         int notes = data[i];
-        while (delta_measure_time(i, slices + 1) <= endTime / scale_width &&
+        while (delta_measure_time(i, slices + 1) <= endTime / width_ &&
                // Averaging looks bad beyond 30 seconds
                delta_measure_time(i, slices + 1) <= 30.f &&
                i + slices < buckets) {
@@ -344,8 +353,7 @@ void DialogChartProperties::GraphWidget::updateGraph() {
             height_,
             static_cast<int>(std::round(notes / delta_measure_time(i, slices) /
                                         peak * height_)));
-        w = static_cast<int>(measure_time(i + slices) / endTime * scale_width) -
-            x;
+        w = static_cast<int>(measure_time(i + slices) / endTime * width_) - x;
         int y = height_ - h;
         if (w == 0 || h == 0) continue;
         fill_commands.push_back({x, y, w, h});
@@ -357,7 +365,6 @@ void DialogChartProperties::GraphWidget::onDraw() {
         Draw::fill(rect_, Color32(20, 20, 20, 255));
         return;
     }
-    int scale_width = gSystem->applyScaleFactor(width_);
     endTime = gTempo->rowToTime(gSimfile->getEndRow());
     auto batch = Renderer::batchC();
     Draw::fill(rect_, Color32(20, 20, 20, 255));
@@ -369,7 +376,7 @@ void DialogChartProperties::GraphWidget::onDraw() {
     }
 
     double time = std::min(endTime, gView->getCursorTime());
-    int x = static_cast<int>(time / endTime * scale_width);
+    int x = static_cast<int>(time / endTime * width_);
     Draw::fill(&batch, {rect_.x + x, rect_.y, 1, height_},
                Color32(160, 160, 160, 255));
     batch.flush();

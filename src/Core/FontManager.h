@@ -24,6 +24,8 @@ struct FontManager {
 
     static const Glyph& getPlaceholderGlyph(int size);
 
+    static void updateSpecialGlyphs();
+
 };  // FontManager
 
 };  // namespace Vortex

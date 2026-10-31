@@ -5,6 +5,7 @@
 #include <Core/MapUtils.h>
 
 #include <System/Debug.h>
+#include <System/System.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -24,6 +25,12 @@ struct FontManagerInstance {
     FontData* fallback;
     Glyph placeholderGlyphs[8];
     GlyphMap specialGlyphs;
+
+    struct SpecialGlyphMetrics {
+        int dx, dy, advance, sizex, sizey;
+    };
+
+    std::map<std::string, SpecialGlyphMetrics> specialGlyphMetrics;
 };
 
 FontManagerInstance* FM;
@@ -188,12 +195,14 @@ bool FontManager::loadGlyph(const std::string& name, const Texture& texture,
         glyph.hasAlphaTex = (tex->fmt == Texture::ALPHA);
         glyph.hasPixels = 1;
         glyph.uvs = {0, 0, 1, 1};
-        glyph.box = {0, 0, sizex, sizey};
-        glyph.ofs = {dx, dy - sizey, dx + sizex, dy};
         glyph.tex = tex;
-        glyph.advance = advance ? advance : (sizex + 1);
 
-        FM->specialGlyphs.insert({name, glyph});
+        FM->specialGlyphs.insert_or_assign(name, glyph);
+        FM->specialGlyphMetrics.insert_or_assign(
+            name, FontManagerInstance::SpecialGlyphMetrics{dx, dy, advance,
+                                                           sizex, sizey});
+
+        updateSpecialGlyphs();
 
         return true;
     }
@@ -227,6 +236,22 @@ void FontManager::startFrame(float dt) {
 const Glyph& FontManager::getPlaceholderGlyph(int size) {
     int i = std::max(0, std::min(size / 8, 7));
     return FM->placeholderGlyphs[i];
+}
+
+void FontManager::updateSpecialGlyphs() {
+    for (auto& it : FM->specialGlyphMetrics) {
+        Glyph* glyph = Map::findVal(FM->specialGlyphs, it.first);
+        if (!glyph) continue;
+        auto& m = it.second;
+        int dx = gSystem->applyScaleFactor(m.dx);
+        int dy = gSystem->applyScaleFactor(m.dy);
+        int sizex = gSystem->applyScaleFactor(m.sizex);
+        int sizey = gSystem->applyScaleFactor(m.sizey);
+        glyph->box = {0, 0, sizex, sizey};
+        glyph->ofs = {dx, dy - sizey, dx + sizex, dy};
+        glyph->advance =
+            m.advance ? gSystem->applyScaleFactor(m.advance) : (sizex + 1);
+    }
 }
 
 FontData* FontManager::fallback() { return FM->fallback; }

@@ -129,8 +129,8 @@ static char* CopyStr(const xstring* str) {
 }
 
 static void SetError(XmrDoc* doc, const xstring* str) {
-    if (doc->lastError != NO_ERROR) free(const_cast<char*>(doc->lastError));
-    doc->lastError = str ? CopyStr(str) : NO_ERROR;
+    if (doc->lastError != kNoError) free(const_cast<char*>(doc->lastError));
+    doc->lastError = str ? CopyStr(str) : kNoError;
 }
 
 static XmrAttrib* NewAttrib(const char* str, int strsize, const int* vals,

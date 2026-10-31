@@ -20,7 +20,9 @@ enum EventTypes {
     ET_KEY_RELEASE,
     ET_TEXT_INPUT,
     ET_FILE_DROP,
+    ET_WINDOW_ACTIVE,
     ET_WINDOW_INACTIVE,
+    ET_WINDOW_RESCALE,
 
     NUM_EVENT_TYPES
 };
@@ -245,9 +247,21 @@ void InputEvents::addFileDrop(const char* const* files, int count, int x,
     ValidateEvents(data_);
 }
 
+void InputEvents::addWindowActive() {
+    ValidateEvents(data_);
+    AddEvent(data_, ET_WINDOW_ACTIVE, 0);
+    ValidateEvents(data_);
+}
+
 void InputEvents::addWindowInactive() {
     ValidateEvents(data_);
     AddEvent(data_, ET_WINDOW_INACTIVE, 0);
+    ValidateEvents(data_);
+}
+
+void InputEvents::addWindowRescale() {
+    ValidateEvents(data_);
+    AddEvent(data_, ET_WINDOW_RESCALE, 0);
     ValidateEvents(data_);
 }
 
@@ -333,15 +347,23 @@ static void HandleFileDrop(void* p, InputHandler* h) {
     h->onFileDrop(*static_cast<FileDrop*>(p));
 }
 
+static void HandleWindowActive(void* p, InputHandler* h) {
+    h->onWindowActive();
+}
+
 static void HandleWindowInactive(void* p, InputHandler* h) {
     h->onWindowInactive();
 }
 
+static void HandleWindowRescale(void* p, InputHandler* h) {
+    h->onWindowRescale();
+}
+
 static HandleEventFunction handleFunctions[NUM_EVENT_TYPES] = {
-    HandleDummyFunction,  HandleMouseMove,   HandleMousePress,
-    HandleMouseRelease,   HandleMouseScroll, HandleKeyPress,
-    HandleKeyRelease,     HandleTextInput,   HandleFileDrop,
-    HandleWindowInactive,
+    HandleDummyFunction, HandleMouseMove,      HandleMousePress,
+    HandleMouseRelease,  HandleMouseScroll,    HandleKeyPress,
+    HandleKeyRelease,    HandleTextInput,      HandleFileDrop,
+    HandleWindowActive,  HandleWindowInactive, HandleWindowRescale,
 };
 
 void InputHandler::handleInputs(InputEvents& events) {

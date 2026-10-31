@@ -25,7 +25,7 @@ source software. The volunteer developers, as a separate party, have acted in
 good faith to comply with this request and bear no liability for the licensing
 status of the original code as provided to them.
 
-Code from the following projects is included in this repository:
+Code from the following projects is linked to this one:
 
  1. freetype, using the FreeType License, which is compatible with GPLv3
     See https://freetype.org/license.html for more info.

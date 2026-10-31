@@ -4,14 +4,16 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #include <SDL3/SDL.h>
+#include <System/OpenGL.h>
 
 #ifdef __linux__
-// Defines INT_MAX and INT_MIN
 #include <limits.h>
 #define MAX_PATH PATH_MAX
 #undef R_OK
 #endif
-#include <SDL3/SDL.h>
+#ifdef __APPLE__
+#include <climits>
+#endif
 
 namespace Vortex {
 
@@ -102,6 +104,9 @@ struct System {
     virtual void setWindowSize(vec2i size) = 0;
 
     /// Returns the current window scale factor.
+    virtual float getScaleFactor() const = 0;
+
+    /// Applies the current window scale factor to a value.
     virtual int applyScaleFactor(int size) const = 0;
 
     /// Returns the window state, either normal or maximized.

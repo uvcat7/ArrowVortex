@@ -1,6 +1,5 @@
-#include <System/Debug.h>
-
 #include <cstdio>
+#include <string>
 #include <cstdarg>
 #include <cstring>
 #include <fcntl.h>
@@ -11,6 +10,7 @@
 
 #include <System/OpenGL.h>
 #include <System/System.h>
+#include <System/Debug.h>
 
 #undef ERROR
 
@@ -42,8 +42,8 @@ static bool sHasLogFile = false;
 void openLogFile() {
     if (sHasLogFile) return;
 
-    std::FILE* fp = nullptr;
-    if (fp = std::fopen(&sLogPath[0], "w")) {
+    std::FILE* fp = std::fopen(&sLogPath[0], "w");
+    if (fp != nullptr) {
         std::fwrite("\xEF\xBB\xBF", 1, 3, fp);  // UTF-8 BOM.
         std::fclose(fp);
     }
@@ -92,8 +92,8 @@ static const int sBufsize = 1024;
 static bool sLogBlankLine = false;
 
 static void WriteToLogAndConsole(const char* msg) {
-    FILE* fp = nullptr;
-    if (fp = std::fopen(&sLogPath[0], "a")) {
+    FILE* fp = std::fopen(&sLogPath[0], "a");
+    if (fp != nullptr) {
         std::fwrite(msg, 1, std::strlen(msg), fp);
         std::fclose(fp);
     }
@@ -143,6 +143,10 @@ void blockEnd() { sLogBlankLine = true; }
 
 namespace DebugPrivate {
 
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+
 #define MAX_IGNORE_ID_LEN (MAX_PATH + 16)
 #define MAX_DEBUG_MSG_LEN (1024)
 #define MAX_NUM_IGNORES (32)
@@ -172,6 +176,40 @@ static bool AddIgnore(const char* id) {
 // Debug :: asserts.
 
 #ifndef VORTEX_DISABLE_ASSERTS
+
+#ifndef _WIN32
+
+bool assrt(const char* exp, const char* file, int line, const char* func,
+           const char* fmt, ...) {
+    char id[MAX_IGNORE_ID_LEN];
+    std::snprintf(id, sizeof(id), "%s%i", file, line);
+
+    char buffer[MAX_DEBUG_MSG_LEN * 2];
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        char message[MAX_DEBUG_MSG_LEN];
+        std::vsnprintf(message, sizeof(message), fmt, args);
+        va_end(args);
+        std::snprintf(buffer, sizeof(buffer),
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
+                      file, line, func, message);
+    } else {
+        std::snprintf(buffer, sizeof(buffer),
+                      "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp, file,
+                      line, func);
+    }
+
+    Debug::WriteToLogAndConsole("ASSERT\n");
+    Debug::WriteToLogAndConsole("-----------------------------------");
+    Debug::WriteToLogAndConsole(buffer);
+    Debug::WriteToLogAndConsole("-----------------------------------");
+    Debug::WriteToLogAndConsole("\n");
+
+    return false;
+}
+
+#else
 
 static HHOOK sHook;
 
@@ -205,7 +243,7 @@ static int ShowMessageBox(HWND hWnd, LPCSTR lpcText, LPCSTR lpcCaption,
 bool assrt(const char* exp, const char* file, int line, const char* func,
            const char* fmt, ...) {
     char id[MAX_IGNORE_ID_LEN];
-    sprintf(id, "%s%i", file, line);
+    std::snprintf(id, MAX_IGNORE_ID_LEN, "%s%i", file, line);
 
     // Skip leading periods.
     while (file[0] == '.' && file[1] == '.' && file[2] == '\\') file += 3;
@@ -220,11 +258,13 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
             char message[MAX_DEBUG_MSG_LEN];
             vsnprintf(message, MAX_DEBUG_MSG_LEN - 1, fmt, args);
             va_end(args);
-            sprintf(buffer, "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n",
-                    exp, file, line, func, message);
+            std::snprintf(buffer, MAX_DEBUG_MSG_LEN,
+                          "Assert failed: %s\nFile: %s(%i)\nIn: %s\n%s\n", exp,
+                          file, line, func, message);
         } else {
-            sprintf(buffer, "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp,
-                    file, line, func);
+            std::snprintf(buffer, MAX_DEBUG_MSG_LEN,
+                          "Assert failed: %s\nFile: %s(%i)\nIn: %s\n", exp,
+                          file, line, func);
         }
 
         Debug::WriteToLogAndConsole("ASSERT\n");
@@ -250,6 +290,8 @@ bool assrt(const char* exp, const char* file, int line, const char* func,
 
 #endif
 
+#endif
+
 // ================================================================================================
 // Debug :: checkpoints.
 
@@ -266,7 +308,7 @@ bool glerr(const char* file, int line, const char* func) {
     int code = glGetError();
     if (code) {
         char id[MAX_IGNORE_ID_LEN];
-        sprintf(id, "%s%i", file, line);
+        std::snprintf(id, MAX_IGNORE_ID_LEN, "%s%i", file, line);
         if (!ShouldIgnore(id)) {
             Debug::blockBegin(Debug::ERROR, "openGL error");
             Debug::log("location: %s(%i)\n", file, line);

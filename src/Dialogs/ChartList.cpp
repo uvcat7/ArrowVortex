@@ -229,9 +229,9 @@ DialogChartList::DialogChartList() {
     setTitle("LIST OF CHARTS");
 
     setWidth(gSystem->applyScaleFactor(320));
-    setMinimumWidth(gSystem->applyScaleFactor(128));
-    setMaximumWidth(gSystem->applyScaleFactor(1024));
-    setMinimumHeight(gSystem->applyScaleFactor(16));
+    setMinimumWidth(128);
+    setMaximumWidth(1024);
+    setMinimumHeight(16);
 
     setResizeable(true, true);
 

@@ -233,10 +233,10 @@ DialogLabelBreakdown::~DialogLabelBreakdown() = default;
 DialogLabelBreakdown::DialogLabelBreakdown() {
     setTitle("LABELS");
     setWidth(gSystem->applyScaleFactor(298));
-    setMinimumWidth(gSystem->applyScaleFactor(298));
-    setMinimumHeight(gSystem->applyScaleFactor(152));
-    setMaximumWidth(gSystem->applyScaleFactor(1024));
-    setMaximumHeight(gSystem->applyScaleFactor(1024));
+    setMinimumWidth(298);
+    setMinimumHeight(152);
+    setMaximumWidth(1024);
+    setMaximumHeight(1024);
     setResizeable(true, true);
 
     myDisplayType = TIMESTAMP;

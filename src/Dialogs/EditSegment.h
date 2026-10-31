@@ -173,7 +173,7 @@ class DialogEditSegment : public EditorDialog, public InputHandler {
     int getFixedWidth();
     int getFixedHeight();
 
-    void onKeyPress(KeyPress& evt);
+    void onKeyPress(KeyPress& evt) override;
     void onChanges(int changes) override;
     void onTick() override;
 

@@ -665,8 +665,9 @@ struct NotesManImpl : public NotesMan {
                     mod, ignoreRegion, [&](const ExpandedNote* note) {
                         return note->type == NoteType::NOTE_LIFT;
                     });
+            default:
+                return 0;
         };
-        return 0;
     }
 
     bool noneSelected() const override {
