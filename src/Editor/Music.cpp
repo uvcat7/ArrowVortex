@@ -20,9 +20,11 @@
 
 #include <Simfile/TimingData.h>
 
+#include <Editor/Common.h>
 #include <Editor/ConvertAudio.h>
 #include <Editor/Editor.h>
-#include <Editor/Common.h>
+#include <Editor/Menubar.h>
+#include <Editor/MusicStretch.h>
 #include <Editor/TextOverlay.h>
 
 #include <System/File.h>
@@ -71,6 +73,9 @@ struct MusicImpl : public Music, public MixSource {
     std::string myTitle, myArtist;
     int myMusicSpeed;
     int myMusicVolume;
+    bool myPreservePitch = false;
+    int64_t myStretchFeedPos = 0;
+    MusicStretch myStretch;
     int myTickOffsetMs;
     double myPlayPosition;
     double myPlayStartTime;
@@ -131,6 +136,7 @@ struct MusicImpl : public Music, public MixSource {
         if (audio) {
             audio->get("musicVolume", &myMusicVolume);
             audio->get("tickOffsetMs", &myTickOffsetMs);
+            audio->get("preservePitch", &myPreservePitch);
         }
     }
 
@@ -139,6 +145,7 @@ struct MusicImpl : public Music, public MixSource {
 
         audio->addAttrib("musicVolume", static_cast<long>(myMusicVolume));
         audio->addAttrib("tickOffsetMs", static_cast<long>(myTickOffsetMs));
+        audio->addAttrib("preservePitch", myPreservePitch);
     }
 
     // ================================================================================================
@@ -149,6 +156,7 @@ struct MusicImpl : public Music, public MixSource {
 
         myMixer->close();
 
+        myStretch.clear();
         mySamples.clear();
         myTitle.clear();
         myArtist.clear();
@@ -261,7 +269,14 @@ struct MusicImpl : public Music, public MixSource {
         }
     }
 
-    void WriteSourceFrames(short* buffer, int frames, int64_t srcPos) {
+    void WriteTickFrames(short* buffer, int frames) {
+        int rate = gMusic->getSpeed();
+        if (myBeatTick.enabled) WriteTicks(buffer, frames, myBeatTick, rate);
+        if (myNoteTick.enabled) WriteTicks(buffer, frames, myNoteTick, rate);
+    }
+
+    void WriteSourceFrames(short* buffer, int frames, int64_t srcPos,
+                           bool withTicks = true) {
         short* dst = buffer;
         int musicVolume = gMusic->getVolume();
 
@@ -307,9 +322,25 @@ struct MusicImpl : public Music, public MixSource {
         }
 
         // Write beat and step ticks.
-        int rate = gMusic->getSpeed();
-        if (myBeatTick.enabled) WriteTicks(buffer, frames, myBeatTick, rate);
-        if (myNoteTick.enabled) WriteTicks(buffer, frames, myNoteTick, rate);
+        if (withTicks) WriteTickFrames(buffer, frames);
+    }
+
+    void WriteStretchedSourceFrames(short* buffer, int frames) {
+        const int chunk = 2048;
+        myMixBuffer.resize(std::max(frames, chunk) * MIX_CHANNELS);
+        short* tmp = myMixBuffer.data();
+
+        while (myStretch.available() < frames) {
+            WriteSourceFrames(tmp, chunk, myStretchFeedPos, false);
+            myStretchFeedPos += chunk;
+            if (!myStretch.push(tmp, chunk)) break;
+        }
+
+        // If there are still frames left, end with silence.
+        int n = myStretch.pull(tmp, frames) * MIX_CHANNELS;
+        for (int i = 0; i < n; ++i) {
+            buffer[i] = std::clamp(buffer[i] + tmp[i], SHRT_MIN, SHRT_MAX);
+        }
     }
 
     void writeFrames(short* buffer, int frames) override {
@@ -327,7 +358,13 @@ struct MusicImpl : public Music, public MixSource {
             int64_t srcPos = static_cast<int64_t>(myPlayPosition);
             int tmpFrames = frames * myMusicSpeed / 100;
             myMixBuffer.resize(tmpFrames * 2);
-            WriteSourceFrames(myMixBuffer.data(), tmpFrames, srcPos);
+            if (myStretch.isReady()) {
+                memset(myMixBuffer.data(), 0,
+                       sizeof(short) * MIX_CHANNELS * tmpFrames);
+                WriteTickFrames(myMixBuffer.data(), tmpFrames);
+            } else {
+                WriteSourceFrames(myMixBuffer.data(), tmpFrames, srcPos);
+            }
 
             // Interpolate to the target samplerate.
             double tmpPos = 0.0;
@@ -357,6 +394,8 @@ struct MusicImpl : public Music, public MixSource {
 
                 tmpPos += rate;
             }
+
+            if (myStretch.isReady()) WriteStretchedSourceFrames(buffer, frames);
         }
 
         myPlayPosition += srcAdvance;
@@ -525,6 +564,20 @@ struct MusicImpl : public Music, public MixSource {
     // ================================================================================================
     // MusicImpl :: general API.
 
+    void prepareStretch() {
+        myStretch.clear();
+
+        int freq = mySamples.getFrequency();
+        if (!myPreservePitch || myMusicSpeed == 100 || freq <= 0) return;
+
+        if (!myStretch.init(freq, myMusicSpeed / 100.0)) {
+            HudError("Could not preserve pitch, using resampling instead.");
+            return;
+        }
+
+        myStretchFeedPos = llround(myPlayPosition) - myStretch.leadFrames();
+    }
+
     void interruptStream() {
         if (!myIsPaused) {
             myPlayStartTime = getPlayTime();
@@ -536,6 +589,7 @@ struct MusicImpl : public Music, public MixSource {
         if (!myIsPaused) {
             myPlayPosition =
                 myPlayStartTime * static_cast<double>(mySamples.getFrequency());
+            prepareStretch();
             myPlayTimer = Debug::getElapsedTime();
             myMixer->resume();
         }
@@ -655,6 +709,16 @@ struct MusicImpl : public Music, public MixSource {
     }
 
     bool isMuted() override { return myIsMuted; }
+
+    void togglePreservePitch() override {
+        interruptStream();
+        myPreservePitch = !myPreservePitch;
+        resumeStream();
+        gMenubar->update(Menubar::AUDIO_PRESERVE_PITCH);
+        HudNote("Preserve pitch: %s", myPreservePitch ? "on" : "off");
+    }
+
+    bool getPreservePitch() override { return myPreservePitch; }
 
     void toggleBeatTick() override {
         interruptStream();

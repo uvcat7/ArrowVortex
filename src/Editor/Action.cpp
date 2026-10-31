@@ -568,6 +568,10 @@ bool Action::perform(Type action) {
             gMusic->setSpeed(gMusic->getSpeed() - 1);
             break;
         }
+        case TOGGLE_PRESERVE_PITCH: {
+            gMusic->togglePreservePitch();
+            break;
+        }
 
         case TOGGLE_BEAT_TICK: {
             gMusic->toggleBeatTick();
