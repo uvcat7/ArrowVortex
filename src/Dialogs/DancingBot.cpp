@@ -2,15 +2,15 @@
 
 #include <Core/Draw.h>
 #include <Core/Utils.h>
-#include <Core/Draw.h>
-#include <Core/Widgets.h>
 #include <Core/WidgetsLayout.h>
+#include <Core/Xmr.h>
+
+#include <Editor/View.h>
+#include <Editor/Editor.h>
 
 #include <Managers/NoteMan.h>
 #include <Managers/ChartMan.h>
-#include <Editor/View.h>
 #include <Managers/StyleMan.h>
-#include <Editor/Editor.h>
 
 #include <System/System.h>
 
@@ -268,7 +268,7 @@ void FeetPlanner::plan(int pn) {
 // ================================================================================================
 // Dancing Bot Dialog.
 
-DialogDancingBot::~DialogDancingBot() = default;
+DialogDancingBot::~DialogDancingBot() { storeSettings(); }
 
 DialogDancingBot::DialogDancingBot() {
     setTitle("DANCING BOT");
@@ -518,6 +518,20 @@ void DialogDancingBot::myGetFeetPositions(vec3f* out, int pn) {
 
         out[f] = {curPos.x, curPos.y, scale};
     }
+}
+
+// ================================================================================================
+// DialogDancingBot :: load / save settings.
+
+void DialogDancingBot::loadSettings(const XmrNode& options) {
+    myDoFootswitches = options.get("footswitch", myDoFootswitches);
+    myDoCrossovers = options.get("crossover", myDoCrossovers);
+    myAssignFeetToNotes();
+}
+
+void DialogDancingBot::saveSettings(XmrNode& options) const {
+    options.addAttrib("footswitch", myDoFootswitches);
+    options.addAttrib("crossover", myDoCrossovers);
 }
 
 };  // namespace Vortex

@@ -74,8 +74,8 @@ struct StatusbarImpl : public Statusbar {
             statusbar->get("showHover", &myShowHover);
             statusbar->get("showTime", &myShowTime);
             statusbar->get("showTimingMode", &myShowTimingMode);
-            statusbar->get("myShowScroll", &myShowScroll);
-            statusbar->get("myShowSpeed", &myShowSpeed);
+            statusbar->get("showScroll", &myShowScroll);
+            statusbar->get("showSpeed", &myShowSpeed);
         }
     }
 
@@ -91,8 +91,8 @@ struct StatusbarImpl : public Statusbar {
         statusbar->addAttrib("showHover", myShowHover);
         statusbar->addAttrib("showTime", myShowTime);
         statusbar->addAttrib("showTimingMode", myShowTimingMode);
-        statusbar->addAttrib("myShowScroll", myShowScroll);
-        statusbar->addAttrib("myShowSpeed", myShowSpeed);
+        statusbar->addAttrib("showScroll", myShowScroll);
+        statusbar->addAttrib("showSpeed", myShowSpeed);
     }
 
     // ================================================================================================

@@ -21,6 +21,8 @@ class DialogDancingBot : public EditorDialog {
     void onDraw() override;
 
     void onChanges(int changes) override;
+    void loadSettings(const XmrNode& options) override;
+    void saveSettings(XmrNode& options) const override;
 
     void onDoFootswitchesChanged();
     void onDoCrossoversChanged();

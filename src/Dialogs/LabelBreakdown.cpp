@@ -1,19 +1,18 @@
 #include <Dialogs/LabelBreakdown.h>
 
-#include <System/System.h>
-
-#include <Core/StringUtils.h>
 #include <Core/Canvas.h>
-
-#include <Managers/TempoMan.h>
-#include <Managers/SimfileMan.h>
+#include <Core/StringUtils.h>
+#include <Core/Xmr.h>
 
 #include <Editor/Common.h>
 #include <Editor/View.h>
 
+#include <Managers/TempoMan.h>
+#include <Managers/SimfileMan.h>
+
 #include <Simfile/SegmentGroup.h>
 
-#include <algorithm>
+#include <System/System.h>
 
 #define ITEM_H gSystem->applyScaleFactor(20)
 #define ITEM_W gSystem->applyScaleFactor(74)
@@ -228,7 +227,7 @@ struct DialogLabelBreakdown::LabelList : public WgScrollRegion {
 // ================================================================================================
 // DialogLabelList
 
-DialogLabelBreakdown::~DialogLabelBreakdown() = default;
+DialogLabelBreakdown::~DialogLabelBreakdown() { storeSettings(); }
 
 DialogLabelBreakdown::DialogLabelBreakdown() {
     setTitle("LABELS");
@@ -325,4 +324,17 @@ void DialogLabelBreakdown::mySetDisplayType() {
 }
 
 void DialogLabelBreakdown::myCopyLabels() { myList->copyLabels(); }
+
+// ================================================================================================
+// DialogLabelBreakdown :: load / save settings.
+
+void DialogLabelBreakdown::loadSettings(const XmrNode& options) {
+    myDisplayType = std::clamp(options.get("displayType", myDisplayType), 0, 2);
+    mySetDisplayType();
+}
+
+void DialogLabelBreakdown::saveSettings(XmrNode& options) const {
+    options.addAttrib("displayType", static_cast<long>(myDisplayType));
+}
+
 };  // namespace Vortex

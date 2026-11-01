@@ -17,6 +17,7 @@ class DialogWaveformSettings : public EditorDialog {
    private:
     void myApplyPreset();
     void myUpdateSettings();
+    void myUpdateFilter();
     void myEnableFilter();
     void myDisableFilter();
     void myToggleOverlayFilter();

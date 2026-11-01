@@ -1,15 +1,15 @@
 #include <Dialogs/GenerateNotes.h>
 
+#include <Core/Core.h>
 #include <Core/WidgetsLayout.h>
+#include <Core/Utils.h>
+#include <Core/Widgets.h>
+#include <Core/Xmr.h>
 
 #include <Editor/Common.h>
 #include <Editor/Selection.h>
 #include <Editor/StreamGenerator.h>
 
-#include <Core/Utils.h>
-
-#include <Core/Core.h>
-#include <Core/Widgets.h>
 #include <Managers/SimfileMan.h>
 #include <Managers/StyleMan.h>
 
@@ -24,7 +24,7 @@ static SnapType SpacingTypes[] = {ST_4TH,  ST_8TH,  ST_12TH,
 static const int IFP_SIZE = 24;
 static const int IFP_SPACING = 4;
 
-DialogGenerateNotes::~DialogGenerateNotes() = default;
+DialogGenerateNotes::~DialogGenerateNotes() { storeSettings(); }
 
 DialogGenerateNotes::DialogGenerateNotes() {
     setTitle("GENERATE NOTES");
@@ -97,6 +97,35 @@ void DialogGenerateNotes::myGenerateNotes() {
         streamGenerator_.generate(region.beginRow, region.endRow,
                                   SpacingTypes[spacingValue_]);
     }
+}
+
+// ================================================================================================
+// DialogGenerateNotes :: load / save settings.
+
+void DialogGenerateNotes::loadSettings(const XmrNode& options) {
+    const int maxSpacing = static_cast<int>(std::size(SpacingTypes)) - 1;
+    spacingValue_ =
+        std::clamp(options.get("spacing", spacingValue_), 0, maxSpacing);
+
+    streamGenerator_.maxColRep = std::clamp(
+        options.get("maxSingleRepetition", streamGenerator_.maxColRep), 1, 16);
+    streamGenerator_.maxBoxRep = std::clamp(
+        options.get("maxPairedRepetition", streamGenerator_.maxBoxRep), 1, 16);
+    streamGenerator_.patternDifficulty = std::clamp(
+        options.get("difficulty", streamGenerator_.patternDifficulty), 0.0f,
+        1.0f);
+    streamGenerator_.startWithRight =
+        options.get("startWithRight", streamGenerator_.startWithRight);
+}
+
+void DialogGenerateNotes::saveSettings(XmrNode& options) const {
+    options.addAttrib("spacing", static_cast<long>(spacingValue_));
+    options.addAttrib("maxSingleRepetition",
+                      static_cast<long>(streamGenerator_.maxColRep));
+    options.addAttrib("maxPairedRepetition",
+                      static_cast<long>(streamGenerator_.maxBoxRep));
+    options.addAttrib("difficulty", streamGenerator_.patternDifficulty);
+    options.addAttrib("startWithRight", streamGenerator_.startWithRight);
 }
 
 };  // namespace Vortex
